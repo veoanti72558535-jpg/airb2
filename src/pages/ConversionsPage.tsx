@@ -3,151 +3,126 @@ import { ArrowLeftRight, Wind } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import {
   convertVelocity, convertDistance, convertWeight, convertEnergy,
-  convertPressure, convertTemperature, convertAngle,
-  VelocityUnit, DistanceUnit, WeightUnit, EnergyUnit, PressureUnit, TemperatureUnit, AngleUnit,
+  convertPressure, convertTemperature, convertAngle, convertArea,
+  convertVolume, convertForce, convertPower,
+  VelocityUnit, DistanceUnit, WeightUnit, EnergyUnit, PressureUnit,
+  TemperatureUnit, AngleUnit, AreaUnit, VolumeUnit, ForceUnit, PowerUnit,
   calcMuzzleEnergy,
 } from '@/lib/conversions';
-import { useUnits } from '@/hooks/use-units';
+import { unitCategories, UnitOption } from '@/lib/units';
 import { motion } from 'framer-motion';
 
-interface ConvGroup {
-  labelKeyFr: string;
-  labelKeyEn: string;
+// ── Map category key → converter fn ──
+const convertFns: Record<string, (v: number, f: string, t: string) => number> = {
+  velocity: (v, f, t) => convertVelocity(v, f as VelocityUnit, t as VelocityUnit),
+  energy: (v, f, t) => convertEnergy(v, f as EnergyUnit, t as EnergyUnit),
+  power: (v, f, t) => convertPower(v, f as PowerUnit, t as PowerUnit),
+  force: (v, f, t) => convertForce(v, f as ForceUnit, t as ForceUnit),
+  pressure: (v, f, t) => convertPressure(v, f as PressureUnit, t as PressureUnit),
+  distance: (v, f, t) => convertDistance(v, f as DistanceUnit, t as DistanceUnit),
+  length: (v, f, t) => convertDistance(v, f as DistanceUnit, t as DistanceUnit),
+  area: (v, f, t) => convertArea(v, f as AreaUnit, t as AreaUnit),
+  volume: (v, f, t) => convertVolume(v, f as VolumeUnit, t as VolumeUnit),
+  weight: (v, f, t) => convertWeight(v, f as WeightUnit, t as WeightUnit),
+  temperature: (v, f, t) => convertTemperature(v, f as TemperatureUnit, t as TemperatureUnit),
+  correction: (v, f, t) => convertAngle(v, f as AngleUnit, t as AngleUnit),
+};
+
+const categoryIcons: Record<string, string> = {
+  velocity: '⚡', energy: '💥', power: '🔋', force: '💪',
+  pressure: '🔧', distance: '📏', length: '📐', area: '⬛',
+  volume: '🧪', weight: '⚖️', temperature: '🌡', correction: '🎯',
+};
+
+interface ConverterProps {
+  categoryKey: string;
+  options: UnitOption[];
+  defaultFrom: string;
+  defaultTo: string;
+  label: string;
   icon: string;
-  pairs: { from: string; to: string; fromSymbol: string; toSymbol: string }[];
-  convert: (v: number, from: string, to: string) => number;
 }
 
-const groups: ConvGroup[] = [
-  {
-    labelKeyFr: 'Vitesse', labelKeyEn: 'Velocity', icon: '⚡',
-    pairs: [
-      { from: 'mps', to: 'fps', fromSymbol: 'm/s', toSymbol: 'fps' },
-    ],
-    convert: (v, f, t) => convertVelocity(v, f as VelocityUnit, t as VelocityUnit),
-  },
-  {
-    labelKeyFr: 'Énergie', labelKeyEn: 'Energy', icon: '💥',
-    pairs: [
-      { from: 'joules', to: 'ftlbs', fromSymbol: 'J', toSymbol: 'ft·lbs' },
-    ],
-    convert: (v, f, t) => convertEnergy(v, f as EnergyUnit, t as EnergyUnit),
-  },
-  {
-    labelKeyFr: 'Pression', labelKeyEn: 'Pressure', icon: '🔧',
-    pairs: [
-      { from: 'bar', to: 'psi', fromSymbol: 'bar', toSymbol: 'psi' },
-      { from: 'hpa', to: 'bar', fromSymbol: 'hPa', toSymbol: 'bar' },
-      { from: 'atm', to: 'bar', fromSymbol: 'atm', toSymbol: 'bar' },
-    ],
-    convert: (v, f, t) => convertPressure(v, f as PressureUnit, t as PressureUnit),
-  },
-  {
-    labelKeyFr: 'Distance', labelKeyEn: 'Distance', icon: '📏',
-    pairs: [
-      { from: 'meters', to: 'yards', fromSymbol: 'm', toSymbol: 'yd' },
-      { from: 'mm', to: 'inches', fromSymbol: 'mm', toSymbol: 'in' },
-      { from: 'cm', to: 'inches', fromSymbol: 'cm', toSymbol: 'in' },
-      { from: 'feet', to: 'meters', fromSymbol: 'ft', toSymbol: 'm' },
-    ],
-    convert: (v, f, t) => convertDistance(v, f as DistanceUnit, t as DistanceUnit),
-  },
-  {
-    labelKeyFr: 'Poids / Masse', labelKeyEn: 'Weight / Mass', icon: '⚖️',
-    pairs: [
-      { from: 'grains', to: 'grams', fromSymbol: 'gr', toSymbol: 'g' },
-      { from: 'grams', to: 'oz', fromSymbol: 'g', toSymbol: 'oz' },
-    ],
-    convert: (v, f, t) => convertWeight(v, f as WeightUnit, t as WeightUnit),
-  },
-  {
-    labelKeyFr: 'Température', labelKeyEn: 'Temperature', icon: '🌡',
-    pairs: [
-      { from: 'celsius', to: 'fahrenheit', fromSymbol: '°C', toSymbol: '°F' },
-      { from: 'celsius', to: 'kelvin', fromSymbol: '°C', toSymbol: 'K' },
-    ],
-    convert: (v, f, t) => convertTemperature(v, f as TemperatureUnit, t as TemperatureUnit),
-  },
-  {
-    labelKeyFr: 'Angle / Correction', labelKeyEn: 'Angle / Correction', icon: '🎯',
-    pairs: [
-      { from: 'moa', to: 'mrad', fromSymbol: 'MOA', toSymbol: 'MRAD' },
-      { from: 'degrees', to: 'moa', fromSymbol: '°', toSymbol: 'MOA' },
-    ],
-    convert: (v, f, t) => convertAngle(v, f as AngleUnit, t as AngleUnit),
-  },
-];
-
-function ConverterCard({ group, locale }: { group: ConvGroup; locale: string }) {
-  const [activePair, setActivePair] = useState(0);
+function ConverterCard({ categoryKey, options, defaultFrom, defaultTo, label, icon }: ConverterProps) {
+  const [from, setFrom] = useState(defaultFrom);
+  const [to, setTo] = useState(defaultTo);
   const [value, setValue] = useState<string>('');
-  const [swapped, setSwapped] = useState(false);
-
-  const pair = group.pairs[activePair];
-  const from = swapped ? pair.to : pair.from;
-  const to = swapped ? pair.from : pair.to;
-  const fromSymbol = swapped ? pair.toSymbol : pair.fromSymbol;
-  const toSymbol = swapped ? pair.fromSymbol : pair.toSymbol;
 
   const numValue = parseFloat(value) || 0;
   const result = useMemo(() => {
-    try { return group.convert(numValue, from, to); }
-    catch { return 0; }
-  }, [numValue, from, to]);
+    try {
+      const fn = convertFns[categoryKey];
+      return fn ? fn(numValue, from, to) : 0;
+    } catch { return 0; }
+  }, [numValue, from, to, categoryKey]);
 
-  const label = locale === 'fr' ? group.labelKeyFr : group.labelKeyEn;
+  const swap = () => { setFrom(to); setTo(from); };
+
+  const fromOpt = options.find(o => o.value === from);
+  const toOpt = options.find(o => o.value === to);
+
+  const formatResult = (n: number) => {
+    if (!value) return '—';
+    if (Math.abs(n) >= 1e6 || (Math.abs(n) < 1e-3 && n !== 0)) {
+      return n.toExponential(4);
+    }
+    return n.toFixed(6).replace(/\.?0+$/, '');
+  };
+
+  const selectClass = "w-full bg-muted border border-border rounded-md px-2 py-1.5 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-primary";
 
   return (
     <div className="surface-elevated p-4 space-y-3">
-      <div className="flex items-center justify-between">
-        <h3 className="font-heading font-semibold text-sm flex items-center gap-2">
-          <span>{group.icon}</span>
-          {label}
-        </h3>
-        {group.pairs.length > 1 && (
-          <div className="flex gap-1">
-            {group.pairs.map((p, i) => (
-              <button
-                key={i}
-                onClick={() => { setActivePair(i); setSwapped(false); setValue(''); }}
-                className={`px-2 py-0.5 rounded text-[10px] font-mono transition-colors ${
-                  i === activePair ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted'
-                }`}
-              >
-                {p.fromSymbol}→{p.toSymbol}
-              </button>
+      <h3 className="font-heading font-semibold text-sm flex items-center gap-2">
+        <span>{icon}</span>
+        {label}
+      </h3>
+
+      <div className="space-y-2">
+        <div className="grid grid-cols-[1fr_auto] gap-2 items-end">
+          <div className="space-y-1">
+            <select className={selectClass} value={from} onChange={e => setFrom(e.target.value)}>
+              {options.map(o => (
+                <option key={o.value} value={o.value}>{o.symbol} — {o.labelEn}</option>
+              ))}
+            </select>
+            <input
+              type="number"
+              inputMode="decimal"
+              value={value}
+              onChange={e => setValue(e.target.value)}
+              placeholder="0"
+              className="w-full bg-muted border border-border rounded-md px-3 py-2 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary"
+            />
+          </div>
+
+          <button
+            onClick={swap}
+            className="p-2 rounded-md hover:bg-muted text-primary shrink-0"
+            title="Swap"
+            aria-label="Swap units"
+          >
+            <ArrowLeftRight className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="space-y-1">
+          <select className={selectClass} value={to} onChange={e => setTo(e.target.value)}>
+            {options.map(o => (
+              <option key={o.value} value={o.value}>{o.symbol} — {o.labelEn}</option>
             ))}
+          </select>
+          <div className="bg-primary/5 border border-primary/20 rounded-md px-3 py-2 text-sm font-mono font-semibold text-primary min-h-[38px] flex items-center justify-between gap-2">
+            <span className="truncate">{formatResult(result)}</span>
+            <span className="text-[10px] text-muted-foreground shrink-0">{toOpt?.symbol}</span>
+          </div>
+        </div>
+
+        {value && fromOpt && toOpt && (
+          <div className="text-[10px] text-muted-foreground font-mono pt-1 border-t border-border/50">
+            {numValue} {fromOpt.symbol} = {formatResult(result)} {toOpt.symbol}
           </div>
         )}
-      </div>
-
-      <div className="flex items-center gap-2">
-        <div className="flex-1">
-          <div className="text-[10px] text-muted-foreground mb-1 font-mono">{fromSymbol}</div>
-          <input
-            type="number"
-            inputMode="decimal"
-            value={value}
-            onChange={e => setValue(e.target.value)}
-            placeholder="0"
-            className="w-full bg-muted border border-border rounded-md px-3 py-2 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary"
-          />
-        </div>
-
-        <button
-          onClick={() => setSwapped(!swapped)}
-          className="p-2 rounded-md hover:bg-muted text-primary mt-4 shrink-0"
-          title="Swap"
-        >
-          <ArrowLeftRight className="h-4 w-4" />
-        </button>
-
-        <div className="flex-1">
-          <div className="text-[10px] text-muted-foreground mb-1 font-mono">{toSymbol}</div>
-          <div className="bg-primary/5 border border-primary/20 rounded-md px-3 py-2 text-sm font-mono font-semibold text-primary min-h-[38px] flex items-center">
-            {value ? result.toFixed(4).replace(/\.?0+$/, '') : '—'}
-          </div>
-        </div>
       </div>
     </div>
   );
@@ -168,15 +143,23 @@ export default function ConversionsPage() {
 
       {/* Converter cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {groups.map((g, i) => (
-          <ConverterCard key={i} group={g} locale={locale} />
+        {unitCategories.map(cat => (
+          <ConverterCard
+            key={cat.key}
+            categoryKey={cat.key}
+            options={cat.options}
+            defaultFrom={cat.defaultMetric}
+            defaultTo={cat.defaultImperial}
+            label={locale === 'fr' ? cat.labelKeyFr : cat.labelKeyEn}
+            icon={categoryIcons[cat.key] ?? '🔢'}
+          />
         ))}
       </div>
 
       {/* Quick energy calculator */}
       <div className="surface-elevated p-4">
         <h3 className="font-heading font-semibold text-sm mb-3">⚡ {t('conv.muzzleEnergy')}</h3>
-        <QuickEnergy locale={locale} />
+        <QuickEnergy />
       </div>
 
       {/* Wind speed converter */}
@@ -191,9 +174,8 @@ export default function ConversionsPage() {
   );
 }
 
-function QuickEnergy({ locale }: { locale: string }) {
+function QuickEnergy() {
   const { t } = useI18n();
-  const { symbol } = useUnits();
   const [vel, setVel] = useState('280');
   const [weight, setWeight] = useState('18');
   const v = parseFloat(vel) || 0;
@@ -232,25 +214,27 @@ function WindConverter() {
   const numKmh = parseFloat(kmh) || 0;
   const ms = numKmh / 3.6;
   const mph = numKmh * 0.621371;
+  const knot = numKmh * 0.539957;
   const inputClass = "w-full bg-muted border border-border rounded-md px-3 py-1.5 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary";
+  const resultClass = "bg-primary/5 border border-primary/20 rounded-md px-3 py-1.5 text-sm font-mono font-semibold text-primary min-h-[34px] flex items-center";
 
   return (
-    <div className="grid grid-cols-3 gap-3">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
       <div>
         <label className="text-[10px] text-muted-foreground font-mono">km/h</label>
         <input type="number" inputMode="decimal" className={inputClass} value={kmh} onChange={e => setKmh(e.target.value)} placeholder="0" />
       </div>
       <div>
         <label className="text-[10px] text-muted-foreground font-mono">m/s</label>
-        <div className="bg-primary/5 border border-primary/20 rounded-md px-3 py-1.5 text-sm font-mono font-semibold text-primary min-h-[34px] flex items-center">
-          {kmh ? ms.toFixed(1) : '—'}
-        </div>
+        <div className={resultClass}>{kmh ? ms.toFixed(2) : '—'}</div>
       </div>
       <div>
         <label className="text-[10px] text-muted-foreground font-mono">mph</label>
-        <div className="bg-primary/5 border border-primary/20 rounded-md px-3 py-1.5 text-sm font-mono font-semibold text-primary min-h-[34px] flex items-center">
-          {kmh ? mph.toFixed(1) : '—'}
-        </div>
+        <div className={resultClass}>{kmh ? mph.toFixed(2) : '—'}</div>
+      </div>
+      <div>
+        <label className="text-[10px] text-muted-foreground font-mono">kn</label>
+        <div className={resultClass}>{kmh ? knot.toFixed(2) : '—'}</div>
       </div>
     </div>
   );

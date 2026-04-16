@@ -159,6 +159,8 @@ const fr = {
   'conv.favorite': 'Favori',
   'conv.unfavorite': 'Retirer des favoris',
   'conv.favorites': 'Favoris',
+  'conv.copy': 'Copier le résultat',
+  'conv.copied': 'Résultat copié',
 
   // Docs
   'docs.title': 'Documentation technique',
@@ -401,6 +403,8 @@ const en: Record<keyof typeof fr, string> = {
   'conv.favorite': 'Favorite',
   'conv.unfavorite': 'Remove from favorites',
   'conv.favorites': 'Favorites',
+  'conv.copy': 'Copy result',
+  'conv.copied': 'Result copied',
 
   'docs.title': 'Technical Documentation',
   'docs.subtitle': 'Data sheets, manuals and diagrams',

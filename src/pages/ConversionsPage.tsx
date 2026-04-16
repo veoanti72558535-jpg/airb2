@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { ArrowLeftRight, Wind, Search, X, History, Trash2, RotateCcw, Star } from 'lucide-react';
+import { ArrowLeftRight, Wind, Search, X, History, Trash2, RotateCcw, Star, Copy, Check } from 'lucide-react';
+import { toast } from 'sonner';
 import { useI18n } from '@/lib/i18n';
 import {
   convertVelocity, convertDistance, convertWeight, convertEnergy,
@@ -104,6 +105,24 @@ function ConverterCard({ categoryKey, options, defaultFrom, defaultTo, label, ic
     return n.toFixed(6).replace(/\.?0+$/, '');
   };
 
+  const { t } = useI18n();
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    if (!value || numValue === 0) return;
+    const text = formatResult(result);
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      toast.success(t('conv.copied'), {
+        description: `${text} ${toOpt?.symbol ?? ''}`,
+      });
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      toast.error('Clipboard error');
+    }
+  };
+
   const selectClass = "w-full bg-muted border border-border rounded-md px-2 py-1.5 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-primary";
 
   return (
@@ -162,9 +181,20 @@ function ConverterCard({ categoryKey, options, defaultFrom, defaultTo, label, ic
               <option key={o.value} value={o.value}>{formatOptionLabel(o, locale)}</option>
             ))}
           </select>
-          <div className="bg-primary/5 border border-primary/20 rounded-md px-3 py-2 text-sm font-mono font-semibold text-primary min-h-[38px] flex items-center justify-between gap-2">
+          <div className="bg-primary/5 border border-primary/20 rounded-md pl-3 pr-1 py-1 text-sm font-mono font-semibold text-primary min-h-[38px] flex items-center justify-between gap-2">
             <span className="truncate">{formatResult(result)}</span>
-            <span className="text-[10px] text-muted-foreground shrink-0">{toOpt?.symbol}</span>
+            <div className="flex items-center gap-1 shrink-0">
+              <span className="text-[10px] text-muted-foreground">{toOpt?.symbol}</span>
+              <button
+                onClick={handleCopy}
+                disabled={!value || numValue === 0}
+                className="p-1.5 rounded hover:bg-primary/10 text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                title={t('conv.copy')}
+                aria-label={t('conv.copy')}
+              >
+                {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+              </button>
+            </div>
           </div>
         </div>
 

@@ -50,6 +50,8 @@ export interface Optic {
   clickUnit: 'MOA' | 'MRAD' | 'mil';
   clickValue: number;
   mountHeight?: number; // mm
+  tubeDiameter?: 25.4 | 30 | 34; // mm
+  magCalibration?: number; // x (zoom at which SFP reticle is calibrated)
   notes?: string;
   createdAt: string;
   updatedAt: string;

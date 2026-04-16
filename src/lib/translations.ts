@@ -150,6 +150,8 @@ const fr = {
   'conv.result': 'Résultat',
   'conv.muzzleEnergy': 'Énergie à la bouche',
   'conv.windSpeed': 'Vitesse du vent',
+  'conv.searchPlaceholder': 'Rechercher une catégorie ou unité…',
+  'conv.noResults': 'Aucune catégorie ne correspond',
 
   // Docs
   'docs.title': 'Documentation technique',
@@ -383,6 +385,8 @@ const en: Record<keyof typeof fr, string> = {
   'conv.result': 'Result',
   'conv.muzzleEnergy': 'Muzzle Energy',
   'conv.windSpeed': 'Wind Speed',
+  'conv.searchPlaceholder': 'Search a category or unit…',
+  'conv.noResults': 'No category matches',
 
   'docs.title': 'Technical Documentation',
   'docs.subtitle': 'Data sheets, manuals and diagrams',

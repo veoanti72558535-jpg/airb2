@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { ArrowLeftRight, Wind } from 'lucide-react';
+import { ArrowLeftRight, Wind, Search, X } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import {
   convertVelocity, convertDistance, convertWeight, convertEnergy,
@@ -130,6 +130,27 @@ function ConverterCard({ categoryKey, options, defaultFrom, defaultTo, label, ic
 
 export default function ConversionsPage() {
   const { t, locale } = useI18n();
+  const [query, setQuery] = useState('');
+
+  const normalizedQuery = query.trim().toLowerCase();
+
+  const filteredCategories = useMemo(() => {
+    if (!normalizedQuery) return unitCategories;
+    return unitCategories.filter(cat => {
+      const labelFr = cat.labelKeyFr.toLowerCase();
+      const labelEn = cat.labelKeyEn.toLowerCase();
+      const key = cat.key.toLowerCase();
+      if (labelFr.includes(normalizedQuery) || labelEn.includes(normalizedQuery) || key.includes(normalizedQuery)) {
+        return true;
+      }
+      return cat.options.some(o =>
+        o.symbol.toLowerCase().includes(normalizedQuery) ||
+        o.labelEn.toLowerCase().includes(normalizedQuery) ||
+        o.labelFr.toLowerCase().includes(normalizedQuery) ||
+        o.value.toLowerCase().includes(normalizedQuery)
+      );
+    });
+  }, [normalizedQuery]);
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
@@ -141,35 +162,67 @@ export default function ConversionsPage() {
         <p className="text-xs text-muted-foreground font-mono">{t('conv.subtitle')}</p>
       </div>
 
-      {/* Converter cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {unitCategories.map(cat => (
-          <ConverterCard
-            key={cat.key}
-            categoryKey={cat.key}
-            options={cat.options}
-            defaultFrom={cat.defaultMetric}
-            defaultTo={cat.defaultImperial}
-            label={locale === 'fr' ? cat.labelKeyFr : cat.labelKeyEn}
-            icon={categoryIcons[cat.key] ?? '🔢'}
-          />
-        ))}
+      {/* Search bar */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+        <input
+          type="search"
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+          placeholder={t('conv.searchPlaceholder')}
+          className="w-full bg-muted border border-border rounded-md pl-9 pr-9 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+          aria-label={t('conv.searchPlaceholder')}
+        />
+        {query && (
+          <button
+            onClick={() => setQuery('')}
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-background text-muted-foreground"
+            aria-label="Clear search"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
       </div>
+
+      {/* Converter cards */}
+      {filteredCategories.length === 0 ? (
+        <div className="surface-elevated p-6 text-center text-sm text-muted-foreground">
+          {t('conv.noResults')}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {filteredCategories.map(cat => (
+            <ConverterCard
+              key={cat.key}
+              categoryKey={cat.key}
+              options={cat.options}
+              defaultFrom={cat.defaultMetric}
+              defaultTo={cat.defaultImperial}
+              label={locale === 'fr' ? cat.labelKeyFr : cat.labelKeyEn}
+              icon={categoryIcons[cat.key] ?? '🔢'}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Quick energy calculator */}
-      <div className="surface-elevated p-4">
-        <h3 className="font-heading font-semibold text-sm mb-3">⚡ {t('conv.muzzleEnergy')}</h3>
-        <QuickEnergy />
-      </div>
+      {!normalizedQuery && (
+        <div className="surface-elevated p-4">
+          <h3 className="font-heading font-semibold text-sm mb-3">⚡ {t('conv.muzzleEnergy')}</h3>
+          <QuickEnergy />
+        </div>
+      )}
 
       {/* Wind speed converter */}
-      <div className="surface-elevated p-4">
-        <h3 className="font-heading font-semibold text-sm mb-3 flex items-center gap-2">
-          <Wind className="h-4 w-4 text-primary" />
-          {t('conv.windSpeed')}
-        </h3>
-        <WindConverter />
-      </div>
+      {!normalizedQuery && (
+        <div className="surface-elevated p-4">
+          <h3 className="font-heading font-semibold text-sm mb-3 flex items-center gap-2">
+            <Wind className="h-4 w-4 text-primary" />
+            {t('conv.windSpeed')}
+          </h3>
+          <WindConverter />
+        </div>
+      )}
     </motion.div>
   );
 }

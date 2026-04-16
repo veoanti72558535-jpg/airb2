@@ -12,6 +12,7 @@ export default function OpticsPage() {
   const { t } = useI18n();
   const { symbol } = useUnits();
   const [optics, setOptics] = useState<Optic[]>(opticStore.getAll());
+  const [tubeFilter, setTubeFilter] = useState<25.4 | 30 | 34 | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [editing, setEditing] = useState<Optic | null>(null);

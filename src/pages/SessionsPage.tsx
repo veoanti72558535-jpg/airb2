@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { History, Star, Trash2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { History, Star, Trash2, Search, Crosshair } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { sessionStore } from '@/lib/storage';
 import { Session } from '@/lib/types';

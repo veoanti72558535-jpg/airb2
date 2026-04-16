@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { ArrowLeftRight, Wind, Search, X } from 'lucide-react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { ArrowLeftRight, Wind, Search, X, History, Trash2, RotateCcw } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import {
   convertVelocity, convertDistance, convertWeight, convertEnergy,
@@ -11,6 +11,7 @@ import {
 } from '@/lib/conversions';
 import { unitCategories, UnitOption } from '@/lib/units';
 import { motion } from 'framer-motion';
+import { useConversionHistory, ConversionHistoryEntry } from '@/hooks/use-conversion-history';
 
 // ── Map category key → converter fn ──
 const convertFns: Record<string, (v: number, f: string, t: string) => number> = {
@@ -41,12 +42,25 @@ interface ConverterProps {
   defaultTo: string;
   label: string;
   icon: string;
+  onRecord?: (entry: { categoryKey: string; from: string; to: string; value: string; result: number }) => void;
+  prefill?: { from: string; to: string; value: string; nonce: number } | null;
 }
 
-function ConverterCard({ categoryKey, options, defaultFrom, defaultTo, label, icon }: ConverterProps) {
+function ConverterCard({ categoryKey, options, defaultFrom, defaultTo, label, icon, onRecord, prefill }: ConverterProps) {
   const [from, setFrom] = useState(defaultFrom);
   const [to, setTo] = useState(defaultTo);
   const [value, setValue] = useState<string>('');
+
+  // Apply prefill when it changes (nonce ensures repeated clicks re-trigger)
+  const lastPrefillNonce = useRef<number | null>(null);
+  useEffect(() => {
+    if (prefill && prefill.nonce !== lastPrefillNonce.current) {
+      lastPrefillNonce.current = prefill.nonce;
+      setFrom(prefill.from);
+      setTo(prefill.to);
+      setValue(prefill.value);
+    }
+  }, [prefill]);
 
   const numValue = parseFloat(value) || 0;
   const result = useMemo(() => {
@@ -55,6 +69,16 @@ function ConverterCard({ categoryKey, options, defaultFrom, defaultTo, label, ic
       return fn ? fn(numValue, from, to) : 0;
     } catch { return 0; }
   }, [numValue, from, to, categoryKey]);
+
+  // Debounced history recording — only when user has typed a non-empty, non-zero value
+  useEffect(() => {
+    if (!onRecord) return;
+    if (!value || numValue === 0) return;
+    const timer = setTimeout(() => {
+      onRecord({ categoryKey, from, to, value, result });
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [value, from, to, result, numValue, categoryKey, onRecord]);
 
   const swap = () => { setFrom(to); setTo(from); };
 
@@ -72,7 +96,7 @@ function ConverterCard({ categoryKey, options, defaultFrom, defaultTo, label, ic
   const selectClass = "w-full bg-muted border border-border rounded-md px-2 py-1.5 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-primary";
 
   return (
-    <div className="surface-elevated p-4 space-y-3">
+    <div className="surface-elevated p-4 space-y-3" data-category={categoryKey}>
       <h3 className="font-heading font-semibold text-sm flex items-center gap-2">
         <span>{icon}</span>
         {label}
@@ -131,6 +155,8 @@ function ConverterCard({ categoryKey, options, defaultFrom, defaultTo, label, ic
 export default function ConversionsPage() {
   const { t, locale } = useI18n();
   const [query, setQuery] = useState('');
+  const { entries: history, add: addHistory, clear: clearHistory, remove: removeHistory } = useConversionHistory();
+  const [prefillByCategory, setPrefillByCategory] = useState<Record<string, { from: string; to: string; value: string; nonce: number }>>({});
 
   const normalizedQuery = query.trim().toLowerCase();
 
@@ -151,6 +177,24 @@ export default function ConversionsPage() {
       );
     });
   }, [normalizedQuery]);
+
+  const handleReuse = (entry: ConversionHistoryEntry) => {
+    setPrefillByCategory(prev => ({
+      ...prev,
+      [entry.categoryKey]: {
+        from: entry.from,
+        to: entry.to,
+        value: entry.value,
+        nonce: Date.now(),
+      },
+    }));
+    setQuery('');
+    // Scroll to the matching card
+    setTimeout(() => {
+      const el = document.querySelector(`[data-category="${entry.categoryKey}"]`);
+      el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 50);
+  };
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
@@ -184,6 +228,17 @@ export default function ConversionsPage() {
         )}
       </div>
 
+      {/* History panel */}
+      {!normalizedQuery && (
+        <HistoryPanel
+          entries={history}
+          locale={locale}
+          onReuse={handleReuse}
+          onClear={clearHistory}
+          onRemove={removeHistory}
+        />
+      )}
+
       {/* Converter cards */}
       {filteredCategories.length === 0 ? (
         <div className="surface-elevated p-6 text-center text-sm text-muted-foreground">
@@ -200,6 +255,8 @@ export default function ConversionsPage() {
               defaultTo={cat.defaultImperial}
               label={locale === 'fr' ? cat.labelKeyFr : cat.labelKeyEn}
               icon={categoryIcons[cat.key] ?? '🔢'}
+              onRecord={addHistory}
+              prefill={prefillByCategory[cat.key] ?? null}
             />
           ))}
         </div>
@@ -224,6 +281,114 @@ export default function ConversionsPage() {
         </div>
       )}
     </motion.div>
+  );
+}
+
+function HistoryPanel({
+  entries,
+  locale,
+  onReuse,
+  onClear,
+  onRemove,
+}: {
+  entries: ConversionHistoryEntry[];
+  locale: string;
+  onReuse: (e: ConversionHistoryEntry) => void;
+  onClear: () => void;
+  onRemove: (id: string) => void;
+}) {
+  const { t } = useI18n();
+  const [open, setOpen] = useState(false);
+
+  const formatVal = (n: number) => {
+    if (Math.abs(n) >= 1e6 || (Math.abs(n) < 1e-3 && n !== 0)) return n.toExponential(3);
+    return Number(n.toFixed(6)).toString();
+  };
+
+  const findOpt = (categoryKey: string, value: string) => {
+    const cat = unitCategories.find(c => c.key === categoryKey);
+    return cat?.options.find(o => o.value === value);
+  };
+
+  const findCatLabel = (categoryKey: string) => {
+    const cat = unitCategories.find(c => c.key === categoryKey);
+    if (!cat) return categoryKey;
+    return locale === 'fr' ? cat.labelKeyFr : cat.labelKeyEn;
+  };
+
+  return (
+    <div className="surface-elevated p-3">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between gap-2 text-sm font-heading font-semibold"
+        aria-expanded={open}
+      >
+        <span className="flex items-center gap-2">
+          <History className="h-4 w-4 text-primary" />
+          {t('conv.history')}
+          <span className="text-[10px] font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+            {entries.length}
+          </span>
+        </span>
+        <span className="text-xs text-muted-foreground">{open ? '−' : '+'}</span>
+      </button>
+
+      {open && (
+        <div className="mt-3 space-y-2">
+          {entries.length === 0 ? (
+            <div className="text-xs text-muted-foreground text-center py-3">
+              {t('conv.historyEmpty')}
+            </div>
+          ) : (
+            <>
+              <ul className="space-y-1.5 max-h-64 overflow-y-auto">
+                {entries.map(entry => {
+                  const fromOpt = findOpt(entry.categoryKey, entry.from);
+                  const toOpt = findOpt(entry.categoryKey, entry.to);
+                  const icon = categoryIcons[entry.categoryKey] ?? '🔢';
+                  return (
+                    <li key={entry.id} className="flex items-center gap-2 text-xs">
+                      <button
+                        onClick={() => onReuse(entry)}
+                        className="flex-1 flex items-center gap-2 bg-muted hover:bg-primary/10 border border-border rounded-md px-2 py-1.5 text-left transition-colors"
+                        title={t('conv.historyReuse')}
+                      >
+                        <span className="text-sm">{icon}</span>
+                        <span className="text-[10px] text-muted-foreground shrink-0 hidden sm:inline">
+                          {findCatLabel(entry.categoryKey)}
+                        </span>
+                        <span className="font-mono truncate flex-1">
+                          <span className="text-foreground">{entry.value}</span>{' '}
+                          <span className="text-muted-foreground">{fromOpt?.symbol}</span>
+                          <span className="mx-1 text-muted-foreground">→</span>
+                          <span className="text-primary font-semibold">{formatVal(entry.result)}</span>{' '}
+                          <span className="text-muted-foreground">{toOpt?.symbol}</span>
+                        </span>
+                        <RotateCcw className="h-3 w-3 text-primary shrink-0" />
+                      </button>
+                      <button
+                        onClick={() => onRemove(entry.id)}
+                        className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-destructive shrink-0"
+                        aria-label="Remove entry"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+              <button
+                onClick={onClear}
+                className="w-full flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground hover:text-destructive py-1.5 mt-1 border-t border-border/50"
+              >
+                <Trash2 className="h-3 w-3" />
+                {t('conv.historyClear')}
+              </button>
+            </>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 

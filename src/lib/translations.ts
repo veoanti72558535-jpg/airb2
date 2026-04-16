@@ -152,6 +152,10 @@ const fr = {
   'conv.windSpeed': 'Vitesse du vent',
   'conv.searchPlaceholder': 'Rechercher une catégorie ou unité…',
   'conv.noResults': 'Aucune catégorie ne correspond',
+  'conv.history': 'Historique',
+  'conv.historyEmpty': 'Aucune conversion récente',
+  'conv.historyClear': 'Effacer',
+  'conv.historyReuse': 'Réutiliser',
 
   // Docs
   'docs.title': 'Documentation technique',
@@ -387,6 +391,10 @@ const en: Record<keyof typeof fr, string> = {
   'conv.windSpeed': 'Wind Speed',
   'conv.searchPlaceholder': 'Search a category or unit…',
   'conv.noResults': 'No category matches',
+  'conv.history': 'History',
+  'conv.historyEmpty': 'No recent conversions',
+  'conv.historyClear': 'Clear',
+  'conv.historyReuse': 'Reuse',
 
   'docs.title': 'Technical Documentation',
   'docs.subtitle': 'Data sheets, manuals and diagrams',

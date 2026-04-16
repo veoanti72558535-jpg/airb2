@@ -167,6 +167,8 @@ const fr = {
   'optics.selectAll': 'Tout sélectionner',
   'optics.deselectAll': 'Tout désélectionner',
   'optics.searchPreset': 'Rechercher (FX, Element, Discovery, MTC…)',
+  'optics.filterAll': 'Tous',
+  'optics.noMatch': 'Aucune optique pour ce diamètre.',
 
   // Sessions
   'sessions.title': 'Sessions',
@@ -459,6 +461,8 @@ const en: Record<keyof typeof fr, string> = {
   'optics.selectAll': 'Select all',
   'optics.deselectAll': 'Deselect all',
   'optics.searchPreset': 'Search (FX, Element, Discovery, MTC…)',
+  'optics.filterAll': 'All',
+  'optics.noMatch': 'No optic for this tube diameter.',
 
   'sessions.title': 'Sessions',
   'sessions.add': 'New Session',

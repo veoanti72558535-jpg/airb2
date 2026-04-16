@@ -284,6 +284,8 @@ export default function ConversionsPage() {
               icon={categoryIcons[cat.key] ?? '🔢'}
               onRecord={addHistory}
               prefill={prefillByCategory[cat.key] ?? null}
+              isFavorite={isFavorite(cat.key)}
+              onToggleFavorite={() => toggleFavorite(cat.key)}
             />
           ))}
         </div>

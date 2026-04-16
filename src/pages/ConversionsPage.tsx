@@ -36,6 +36,13 @@ const categoryIcons: Record<string, string> = {
   volume: '🧪', weight: '⚖️', temperature: '🌡', correction: '🎯',
 };
 
+/** Format a unit option label, avoiding "m/s — m/s" duplicates. */
+function formatOptionLabel(o: UnitOption, locale: string): string {
+  const name = locale === 'fr' ? o.labelFr : o.labelEn;
+  if (!name || name === o.symbol) return o.symbol;
+  return `${o.symbol} — ${name}`;
+}
+
 interface ConverterProps {
   categoryKey: string;
   options: UnitOption[];

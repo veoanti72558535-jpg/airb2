@@ -156,6 +156,9 @@ const fr = {
   'conv.historyEmpty': 'Aucune conversion récente',
   'conv.historyClear': 'Effacer',
   'conv.historyReuse': 'Réutiliser',
+  'conv.favorite': 'Favori',
+  'conv.unfavorite': 'Retirer des favoris',
+  'conv.favorites': 'Favoris',
 
   // Docs
   'docs.title': 'Documentation technique',

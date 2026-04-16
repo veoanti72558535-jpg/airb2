@@ -156,6 +156,9 @@ const fr = {
   'conv.historyEmpty': 'Aucune conversion récente',
   'conv.historyClear': 'Effacer',
   'conv.historyReuse': 'Réutiliser',
+  'conv.favorite': 'Favori',
+  'conv.unfavorite': 'Retirer des favoris',
+  'conv.favorites': 'Favoris',
 
   // Docs
   'docs.title': 'Documentation technique',
@@ -395,6 +398,9 @@ const en: Record<keyof typeof fr, string> = {
   'conv.historyEmpty': 'No recent conversions',
   'conv.historyClear': 'Clear',
   'conv.historyReuse': 'Reuse',
+  'conv.favorite': 'Favorite',
+  'conv.unfavorite': 'Remove from favorites',
+  'conv.favorites': 'Favorites',
 
   'docs.title': 'Technical Documentation',
   'docs.subtitle': 'Data sheets, manuals and diagrams',

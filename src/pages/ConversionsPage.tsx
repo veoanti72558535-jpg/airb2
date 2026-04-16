@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { ArrowLeftRight, Wind, Search, X, History, Trash2, RotateCcw } from 'lucide-react';
+import { ArrowLeftRight, Wind, Search, X, History, Trash2, RotateCcw, Star } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import {
   convertVelocity, convertDistance, convertWeight, convertEnergy,
@@ -12,6 +12,7 @@ import {
 import { unitCategories, UnitOption } from '@/lib/units';
 import { motion } from 'framer-motion';
 import { useConversionHistory, ConversionHistoryEntry } from '@/hooks/use-conversion-history';
+import { useConversionFavorites } from '@/hooks/use-conversion-favorites';
 
 // ── Map category key → converter fn ──
 const convertFns: Record<string, (v: number, f: string, t: string) => number> = {
@@ -44,9 +45,11 @@ interface ConverterProps {
   icon: string;
   onRecord?: (entry: { categoryKey: string; from: string; to: string; value: string; result: number }) => void;
   prefill?: { from: string; to: string; value: string; nonce: number } | null;
+  isFavorite?: boolean;
+  onToggleFavorite?: () => void;
 }
 
-function ConverterCard({ categoryKey, options, defaultFrom, defaultTo, label, icon, onRecord, prefill }: ConverterProps) {
+function ConverterCard({ categoryKey, options, defaultFrom, defaultTo, label, icon, onRecord, prefill, isFavorite, onToggleFavorite }: ConverterProps) {
   const [from, setFrom] = useState(defaultFrom);
   const [to, setTo] = useState(defaultTo);
   const [value, setValue] = useState<string>('');
@@ -97,10 +100,25 @@ function ConverterCard({ categoryKey, options, defaultFrom, defaultTo, label, ic
 
   return (
     <div className="surface-elevated p-4 space-y-3" data-category={categoryKey}>
-      <h3 className="font-heading font-semibold text-sm flex items-center gap-2">
-        <span>{icon}</span>
-        {label}
-      </h3>
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="font-heading font-semibold text-sm flex items-center gap-2 min-w-0">
+          <span>{icon}</span>
+          <span className="truncate">{label}</span>
+        </h3>
+        {onToggleFavorite && (
+          <button
+            onClick={onToggleFavorite}
+            className={`p-1 rounded hover:bg-muted shrink-0 transition-colors ${
+              isFavorite ? 'text-primary' : 'text-muted-foreground'
+            }`}
+            title={isFavorite ? '★' : '☆'}
+            aria-label={isFavorite ? 'Unfavorite' : 'Favorite'}
+            aria-pressed={isFavorite}
+          >
+            <Star className={`h-4 w-4 ${isFavorite ? 'fill-current' : ''}`} />
+          </button>
+        )}
+      </div>
 
       <div className="space-y-2">
         <div className="grid grid-cols-[1fr_auto] gap-2 items-end">
@@ -156,27 +174,36 @@ export default function ConversionsPage() {
   const { t, locale } = useI18n();
   const [query, setQuery] = useState('');
   const { entries: history, add: addHistory, clear: clearHistory, remove: removeHistory } = useConversionHistory();
+  const { isFavorite, toggle: toggleFavorite, favorites } = useConversionFavorites();
   const [prefillByCategory, setPrefillByCategory] = useState<Record<string, { from: string; to: string; value: string; nonce: number }>>({});
 
   const normalizedQuery = query.trim().toLowerCase();
 
   const filteredCategories = useMemo(() => {
-    if (!normalizedQuery) return unitCategories;
-    return unitCategories.filter(cat => {
-      const labelFr = cat.labelKeyFr.toLowerCase();
-      const labelEn = cat.labelKeyEn.toLowerCase();
-      const key = cat.key.toLowerCase();
-      if (labelFr.includes(normalizedQuery) || labelEn.includes(normalizedQuery) || key.includes(normalizedQuery)) {
-        return true;
-      }
-      return cat.options.some(o =>
-        o.symbol.toLowerCase().includes(normalizedQuery) ||
-        o.labelEn.toLowerCase().includes(normalizedQuery) ||
-        o.labelFr.toLowerCase().includes(normalizedQuery) ||
-        o.value.toLowerCase().includes(normalizedQuery)
-      );
-    });
-  }, [normalizedQuery]);
+    const base = !normalizedQuery
+      ? unitCategories
+      : unitCategories.filter(cat => {
+          const labelFr = cat.labelKeyFr.toLowerCase();
+          const labelEn = cat.labelKeyEn.toLowerCase();
+          const key = cat.key.toLowerCase();
+          if (labelFr.includes(normalizedQuery) || labelEn.includes(normalizedQuery) || key.includes(normalizedQuery)) {
+            return true;
+          }
+          return cat.options.some(o =>
+            o.symbol.toLowerCase().includes(normalizedQuery) ||
+            o.labelEn.toLowerCase().includes(normalizedQuery) ||
+            o.labelFr.toLowerCase().includes(normalizedQuery) ||
+            o.value.toLowerCase().includes(normalizedQuery)
+          );
+        });
+    // Pin favorites to the top, preserving favorite-pin order then original order
+    const favSet = new Set(favorites);
+    const favs = favorites
+      .map(key => base.find(c => c.key === key))
+      .filter((c): c is typeof base[number] => Boolean(c));
+    const rest = base.filter(c => !favSet.has(c.key));
+    return [...favs, ...rest];
+  }, [normalizedQuery, favorites]);
 
   const handleReuse = (entry: ConversionHistoryEntry) => {
     setPrefillByCategory(prev => ({
@@ -257,6 +284,8 @@ export default function ConversionsPage() {
               icon={categoryIcons[cat.key] ?? '🔢'}
               onRecord={addHistory}
               prefill={prefillByCategory[cat.key] ?? null}
+              isFavorite={isFavorite(cat.key)}
+              onToggleFavorite={() => toggleFavorite(cat.key)}
             />
           ))}
         </div>

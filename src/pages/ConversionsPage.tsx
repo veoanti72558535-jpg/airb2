@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { ArrowLeftRight, Wind, Search, X, History, Trash2, RotateCcw, Star } from 'lucide-react';
+import { ArrowLeftRight, Wind, Search, X, History, Trash2, RotateCcw, Star, Copy, Check } from 'lucide-react';
+import { toast } from 'sonner';
 import { useI18n } from '@/lib/i18n';
 import {
   convertVelocity, convertDistance, convertWeight, convertEnergy,

@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { ArrowLeftRight, Wind, Search, X } from 'lucide-react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { ArrowLeftRight, Wind, Search, X, History, Trash2, RotateCcw } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import {
   convertVelocity, convertDistance, convertWeight, convertEnergy,

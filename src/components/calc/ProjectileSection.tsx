@@ -12,8 +12,8 @@ interface Props {
   onSelect: (id: string) => void;
   bc: number;
   weight: number;
-  caliber: string;
-  onChange: (patch: { bc?: number; projectileWeight?: number; caliber?: string }) => void;
+  onChange: (patch: { bc?: number; projectileWeight?: number }) => void;
+  advanced?: boolean;
 }
 
 export function ProjectileSection({
@@ -22,18 +22,13 @@ export function ProjectileSection({
   onSelect,
   bc,
   weight,
-  caliber,
   onChange,
 }: Props) {
   const { t } = useI18n();
   const { symbol } = useUnits();
 
   return (
-    <Section
-      icon={Crosshair}
-      title={t('calc.sectionProjectile')}
-      description={t('calc.bc')}
-    >
+    <Section icon={Crosshair} title={t('calc.sectionProjectile')}>
       <EntitySelect
         label={t('calc.selectProjectile')}
         value={selectedId}
@@ -62,12 +57,6 @@ export function ProjectileSection({
           onChange={v => onChange({ bc: v })}
         />
       </div>
-      <Field
-        label={t('airguns.caliber')}
-        value={caliber}
-        onChange={v => onChange({ caliber: v.toString() })}
-        type="text"
-      />
     </Section>
   );
 }

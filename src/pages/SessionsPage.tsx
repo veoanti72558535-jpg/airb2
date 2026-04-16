@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { History, Star, Trash2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { History, Star, Trash2, Search, Crosshair } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { sessionStore } from '@/lib/storage';
 import { Session } from '@/lib/types';
@@ -29,10 +30,24 @@ export default function SessionsPage() {
           <h1 className="text-xl font-heading font-bold">{t('sessions.title')}</h1>
         </div>
         <div className="flex gap-1">
-          <button onClick={() => setFilter('all')} className={`px-3 py-1 rounded-md text-xs font-medium ${filter === 'all' ? 'bg-primary/10 text-primary' : 'text-muted-foreground'}`}>All</button>
+          <button onClick={() => setFilter('all')} className={`px-3 py-1 rounded-md text-xs font-medium ${filter === 'all' ? 'bg-primary/10 text-primary' : 'text-muted-foreground'}`}>{t('common.all')}</button>
           <button onClick={() => setFilter('favorites')} className={`px-3 py-1 rounded-md text-xs font-medium ${filter === 'favorites' ? 'bg-primary/10 text-primary' : 'text-muted-foreground'}`}>★</button>
         </div>
       </div>
+
+      {/* Search placeholder */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <input placeholder={t('sessions.searchPlaceholder')} className="w-full bg-muted border border-border rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary" />
+      </div>
+
+      {/* CTA */}
+      {filtered.length === 0 && (
+        <Link to="/calc" className="surface-elevated p-4 flex items-center gap-3 hover:border-primary/30 transition-colors block text-center">
+          <Crosshair className="h-5 w-5 text-primary mx-auto" />
+          <span className="text-sm font-medium text-primary">{t('sessions.createFromCalc')}</span>
+        </Link>
+      )}
 
       {filtered.length === 0 ? (
         <div className="surface-card p-8 text-center text-muted-foreground text-sm">{t('sessions.noSessions')}</div>

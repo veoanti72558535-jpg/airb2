@@ -36,6 +36,13 @@ const categoryIcons: Record<string, string> = {
   volume: '🧪', weight: '⚖️', temperature: '🌡', correction: '🎯',
 };
 
+/** Format a unit option label, avoiding "m/s — m/s" duplicates. */
+function formatOptionLabel(o: UnitOption, locale: string): string {
+  const name = locale === 'fr' ? o.labelFr : o.labelEn;
+  if (!name || name === o.symbol) return o.symbol;
+  return `${o.symbol} — ${name}`;
+}
+
 interface ConverterProps {
   categoryKey: string;
   options: UnitOption[];
@@ -43,13 +50,14 @@ interface ConverterProps {
   defaultTo: string;
   label: string;
   icon: string;
+  locale: string;
   onRecord?: (entry: { categoryKey: string; from: string; to: string; value: string; result: number }) => void;
   prefill?: { from: string; to: string; value: string; nonce: number } | null;
   isFavorite?: boolean;
   onToggleFavorite?: () => void;
 }
 
-function ConverterCard({ categoryKey, options, defaultFrom, defaultTo, label, icon, onRecord, prefill, isFavorite, onToggleFavorite }: ConverterProps) {
+function ConverterCard({ categoryKey, options, defaultFrom, defaultTo, label, icon, locale, onRecord, prefill, isFavorite, onToggleFavorite }: ConverterProps) {
   const [from, setFrom] = useState(defaultFrom);
   const [to, setTo] = useState(defaultTo);
   const [value, setValue] = useState<string>('');
@@ -125,7 +133,7 @@ function ConverterCard({ categoryKey, options, defaultFrom, defaultTo, label, ic
           <div className="space-y-1">
             <select className={selectClass} value={from} onChange={e => setFrom(e.target.value)}>
               {options.map(o => (
-                <option key={o.value} value={o.value}>{o.symbol} — {o.labelEn}</option>
+                <option key={o.value} value={o.value}>{formatOptionLabel(o, locale)}</option>
               ))}
             </select>
             <input
@@ -151,7 +159,7 @@ function ConverterCard({ categoryKey, options, defaultFrom, defaultTo, label, ic
         <div className="space-y-1">
           <select className={selectClass} value={to} onChange={e => setTo(e.target.value)}>
             {options.map(o => (
-              <option key={o.value} value={o.value}>{o.symbol} — {o.labelEn}</option>
+              <option key={o.value} value={o.value}>{formatOptionLabel(o, locale)}</option>
             ))}
           </select>
           <div className="bg-primary/5 border border-primary/20 rounded-md px-3 py-2 text-sm font-mono font-semibold text-primary min-h-[38px] flex items-center justify-between gap-2">
@@ -282,6 +290,7 @@ export default function ConversionsPage() {
               defaultTo={cat.defaultImperial}
               label={locale === 'fr' ? cat.labelKeyFr : cat.labelKeyEn}
               icon={categoryIcons[cat.key] ?? '🔢'}
+              locale={locale}
               onRecord={addHistory}
               prefill={prefillByCategory[cat.key] ?? null}
               isFavorite={isFavorite(cat.key)}

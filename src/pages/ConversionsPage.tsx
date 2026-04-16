@@ -180,22 +180,30 @@ export default function ConversionsPage() {
   const normalizedQuery = query.trim().toLowerCase();
 
   const filteredCategories = useMemo(() => {
-    if (!normalizedQuery) return unitCategories;
-    return unitCategories.filter(cat => {
-      const labelFr = cat.labelKeyFr.toLowerCase();
-      const labelEn = cat.labelKeyEn.toLowerCase();
-      const key = cat.key.toLowerCase();
-      if (labelFr.includes(normalizedQuery) || labelEn.includes(normalizedQuery) || key.includes(normalizedQuery)) {
-        return true;
-      }
-      return cat.options.some(o =>
-        o.symbol.toLowerCase().includes(normalizedQuery) ||
-        o.labelEn.toLowerCase().includes(normalizedQuery) ||
-        o.labelFr.toLowerCase().includes(normalizedQuery) ||
-        o.value.toLowerCase().includes(normalizedQuery)
-      );
-    });
-  }, [normalizedQuery]);
+    const base = !normalizedQuery
+      ? unitCategories
+      : unitCategories.filter(cat => {
+          const labelFr = cat.labelKeyFr.toLowerCase();
+          const labelEn = cat.labelKeyEn.toLowerCase();
+          const key = cat.key.toLowerCase();
+          if (labelFr.includes(normalizedQuery) || labelEn.includes(normalizedQuery) || key.includes(normalizedQuery)) {
+            return true;
+          }
+          return cat.options.some(o =>
+            o.symbol.toLowerCase().includes(normalizedQuery) ||
+            o.labelEn.toLowerCase().includes(normalizedQuery) ||
+            o.labelFr.toLowerCase().includes(normalizedQuery) ||
+            o.value.toLowerCase().includes(normalizedQuery)
+          );
+        });
+    // Pin favorites to the top, preserving favorite-pin order then original order
+    const favSet = new Set(favorites);
+    const favs = favorites
+      .map(key => base.find(c => c.key === key))
+      .filter((c): c is typeof base[number] => Boolean(c));
+    const rest = base.filter(c => !favSet.has(c.key));
+    return [...favs, ...rest];
+  }, [normalizedQuery, favorites]);
 
   const handleReuse = (entry: ConversionHistoryEntry) => {
     setPrefillByCategory(prev => ({

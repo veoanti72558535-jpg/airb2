@@ -152,6 +152,10 @@ const fr = {
   'conv.windSpeed': 'Vitesse du vent',
   'conv.searchPlaceholder': 'Rechercher une catégorie ou unité…',
   'conv.noResults': 'Aucune catégorie ne correspond',
+  'conv.history': 'Historique',
+  'conv.historyEmpty': 'Aucune conversion récente',
+  'conv.historyClear': 'Effacer',
+  'conv.historyReuse': 'Réutiliser',
 
   // Docs
   'docs.title': 'Documentation technique',

@@ -1,19 +1,23 @@
-import React, { useState } from 'react';
-import { Eye, Plus, Trash2, Edit2 } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { Eye, Plus, Trash2, Edit2, Download } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { opticStore } from '@/lib/storage';
 import { useUnits } from '@/hooks/use-units';
 import { Optic } from '@/lib/types';
 import { motion } from 'framer-motion';
 import { toast } from '@/hooks/use-toast';
+import { ImportPresetOpticsModal } from '@/components/optics/ImportPresetOpticsModal';
 
 export default function OpticsPage() {
   const { t } = useI18n();
   const { symbol } = useUnits();
   const [optics, setOptics] = useState<Optic[]>(opticStore.getAll());
   const [showForm, setShowForm] = useState(false);
+  const [showImport, setShowImport] = useState(false);
   const [editing, setEditing] = useState<Optic | null>(null);
   const [form, setForm] = useState<{ name: string; type: string; clickUnit: 'MOA' | 'MRAD' | 'mil'; clickValue: number; mountHeight: number; notes: string }>({ name: '', type: 'scope', clickUnit: 'MOA', clickValue: 0.25, mountHeight: 0, notes: '' });
+
+  const existingNames = useMemo(() => new Set(optics.map(o => o.name)), [optics]);
 
   const refresh = () => setOptics(opticStore.getAll());
 
@@ -48,9 +52,14 @@ export default function OpticsPage() {
           <Eye className="h-5 w-5 text-primary" />
           <h1 className="text-xl font-heading font-bold">{t('optics.title')}</h1>
         </div>
-        <button onClick={() => { setShowForm(!showForm); setEditing(null); }} className="px-3 py-1.5 bg-primary text-primary-foreground rounded-md text-sm font-medium flex items-center gap-1 hover:opacity-90">
-          <Plus className="h-4 w-4" />{t('optics.add')}
-        </button>
+        <div className="flex gap-1.5">
+          <button onClick={() => setShowImport(true)} className="px-3 py-1.5 bg-muted text-foreground rounded-md text-sm font-medium flex items-center gap-1 hover:bg-muted/70 border border-border">
+            <Download className="h-4 w-4" />{t('optics.importPreset')}
+          </button>
+          <button onClick={() => { setShowForm(!showForm); setEditing(null); }} className="px-3 py-1.5 bg-primary text-primary-foreground rounded-md text-sm font-medium flex items-center gap-1 hover:opacity-90">
+            <Plus className="h-4 w-4" />{t('optics.add')}
+          </button>
+        </div>
       </div>
 
       {showForm && (

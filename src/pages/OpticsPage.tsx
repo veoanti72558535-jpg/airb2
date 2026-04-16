@@ -15,7 +15,7 @@ export default function OpticsPage() {
   const [showForm, setShowForm] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [editing, setEditing] = useState<Optic | null>(null);
-  const [form, setForm] = useState<{ name: string; type: string; clickUnit: 'MOA' | 'MRAD' | 'mil'; clickValue: number; mountHeight: number; notes: string }>({ name: '', type: 'scope', clickUnit: 'MOA', clickValue: 0.25, mountHeight: 0, notes: '' });
+  const [form, setForm] = useState<{ name: string; type: string; clickUnit: 'MOA' | 'MRAD' | 'mil'; clickValue: number; mountHeight: number; tubeDiameter: 25.4 | 30 | 34; magCalibration: number | ''; notes: string }>({ name: '', type: 'scope', clickUnit: 'MOA', clickValue: 0.25, mountHeight: 0, tubeDiameter: 30, magCalibration: '', notes: '' });
 
   const existingNames = useMemo(() => new Set(optics.map(o => o.name)), [optics]);
 
@@ -23,10 +23,20 @@ export default function OpticsPage() {
 
   const handleSave = () => {
     if (!form.name) return;
+    const payload = {
+      name: form.name,
+      type: form.type,
+      clickUnit: form.clickUnit,
+      clickValue: form.clickValue,
+      mountHeight: form.mountHeight || undefined,
+      tubeDiameter: form.tubeDiameter,
+      magCalibration: form.magCalibration === '' ? undefined : Number(form.magCalibration),
+      notes: form.notes,
+    };
     if (editing) {
-      opticStore.update(editing.id, form);
+      opticStore.update(editing.id, payload);
     } else {
-      opticStore.create(form as any);
+      opticStore.create(payload as any);
     }
     refresh();
     setShowForm(false);
@@ -37,7 +47,16 @@ export default function OpticsPage() {
   const handleDelete = (id: string) => { opticStore.delete(id); refresh(); };
   const handleEdit = (o: Optic) => {
     setEditing(o);
-    setForm({ name: o.name, type: o.type ?? 'scope', clickUnit: o.clickUnit, clickValue: o.clickValue, mountHeight: o.mountHeight ?? 0, notes: o.notes ?? '' });
+    setForm({
+      name: o.name,
+      type: o.type ?? 'scope',
+      clickUnit: o.clickUnit,
+      clickValue: o.clickValue,
+      mountHeight: o.mountHeight ?? 0,
+      tubeDiameter: o.tubeDiameter ?? 30,
+      magCalibration: o.magCalibration ?? '',
+      notes: o.notes ?? '',
+    });
     setShowForm(true);
   };
 
@@ -82,6 +101,25 @@ export default function OpticsPage() {
             <div><label className="text-xs text-muted-foreground">{t('optics.mountHeight')} ({lengthSym})</label>
               <input type="number" step="1" className={inputClass} value={form.mountHeight} onChange={e => setForm(f => ({ ...f, mountHeight: +e.target.value }))} />
             </div>
+            <div><label className="text-xs text-muted-foreground">{t('optics.tubeDiameter')}</label>
+              <select className={inputClass} value={form.tubeDiameter} onChange={e => setForm(f => ({ ...f, tubeDiameter: Number(e.target.value) as 25.4 | 30 | 34 }))}>
+                <option value={25.4}>25.4 mm (1")</option>
+                <option value={30}>30 mm</option>
+                <option value={34}>34 mm</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground">{t('optics.magCalibration')}</label>
+              <input
+                type="number"
+                step="1"
+                placeholder="ex: 10, 12, 24 (FFP: vide)"
+                className={inputClass}
+                value={form.magCalibration}
+                onChange={e => setForm(f => ({ ...f, magCalibration: e.target.value === '' ? '' : +e.target.value }))}
+              />
+              <span className="text-[10px] text-muted-foreground">{t('optics.magCalibrationHint')}</span>
+            </div>
           </div>
           <div><label className="text-xs text-muted-foreground">{t('airguns.notes')}</label><textarea className={inputClass} rows={2} value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} /></div>
           <div className="flex gap-2">
@@ -97,17 +135,24 @@ export default function OpticsPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {optics.map(o => (
             <div key={o.id} className="surface-elevated p-4">
-              <div className="flex items-start justify-between">
-                <div>
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
                   <div className="font-semibold text-sm">{o.name}</div>
-                  <div className="flex gap-2 mt-1">
+                  <div className="flex flex-wrap gap-1.5 mt-1.5">
                     <span className="tactical-badge">{o.clickUnit}</span>
                     <span className="tactical-badge">{o.clickValue} {corrSym}/click</span>
-                    {o.type && <span className="text-xs text-muted-foreground">{o.type}</span>}
+                    {o.tubeDiameter && <span className="tactical-badge">⌀ {o.tubeDiameter}mm</span>}
+                    {o.magCalibration && <span className="tactical-badge">cal {o.magCalibration}×</span>}
+                    {o.type && <span className="text-[10px] text-muted-foreground self-center">{o.type}</span>}
                   </div>
-                  {o.mountHeight ? <span className="text-xs text-muted-foreground font-mono">{t('optics.mountHeight')}: {o.mountHeight} {lengthSym}</span> : null}
+                  {o.mountHeight ? (
+                    <div className="text-[11px] text-muted-foreground font-mono mt-1.5">
+                      {t('optics.mountHeight')}: {o.mountHeight} {lengthSym}
+                    </div>
+                  ) : null}
+                  {o.notes && <div className="text-[11px] text-muted-foreground mt-1 line-clamp-2">{o.notes}</div>}
                 </div>
-                <div className="flex gap-1">
+                <div className="flex gap-1 shrink-0">
                   <button onClick={() => handleEdit(o)} className="p-1.5 rounded hover:bg-muted text-muted-foreground"><Edit2 className="h-3.5 w-3.5" /></button>
                   <button onClick={() => handleDelete(o.id)} className="p-1.5 rounded hover:bg-destructive/10 text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
                 </div>

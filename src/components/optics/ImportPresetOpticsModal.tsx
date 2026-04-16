@@ -154,7 +154,9 @@ export function ImportPresetOpticsModal({ open, onClose, onImported, existingNam
                       <div className="text-sm font-medium truncate">{o.name}</div>
                       <div className="flex flex-wrap gap-1.5 mt-1">
                         <span className="tactical-badge">{o.clickValue} {o.clickUnit}/click</span>
-                        {o.mountHeight ? <span className="text-[10px] text-muted-foreground font-mono">mount {o.mountHeight}mm</span> : null}
+                        {o.tubeDiameter && <span className="tactical-badge">⌀ {o.tubeDiameter}mm</span>}
+                        {o.magCalibration && <span className="tactical-badge">cal {o.magCalibration}×</span>}
+                        {o.mountHeight ? <span className="text-[10px] text-muted-foreground font-mono self-center">mount {o.mountHeight}mm</span> : null}
                       </div>
                       {o.notes && <div className="text-[11px] text-muted-foreground mt-1">{o.notes}</div>}
                       {exists && <div className="text-[10px] text-muted-foreground mt-1 italic">{t('optics.alreadyExists')}</div>}

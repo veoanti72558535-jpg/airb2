@@ -116,6 +116,13 @@ export default function OpticsPage() {
           ))}
         </div>
       )}
+
+      <ImportPresetOpticsModal
+        open={showImport}
+        onClose={() => setShowImport(false)}
+        onImported={refresh}
+        existingNames={existingNames}
+      />
     </motion.div>
   );
 }

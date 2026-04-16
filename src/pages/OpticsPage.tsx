@@ -11,7 +11,7 @@ export default function OpticsPage() {
   const [optics, setOptics] = useState<Optic[]>(opticStore.getAll());
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Optic | null>(null);
-  const [form, setForm] = useState({ name: '', type: 'scope', clickUnit: 'MOA' as const, clickValue: 0.25, mountHeight: 0, notes: '' });
+  const [form, setForm] = useState<{ name: string; type: string; clickUnit: 'MOA' | 'MRAD' | 'mil'; clickValue: number; mountHeight: number; notes: string }>({ name: '', type: 'scope', clickUnit: 'MOA', clickValue: 0.25, mountHeight: 0, notes: '' });
 
   const refresh = () => setOptics(opticStore.getAll());
 

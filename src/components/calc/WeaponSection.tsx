@@ -75,6 +75,16 @@ export function WeaponSection({
         emptyText={t('calc.noOptics')}
         addHref="/library"
       />
+      {(() => {
+        const o = optics.find(x => x.id === selectedOptic);
+        if (!o?.magCalibration) return null;
+        return (
+          <div className="-mt-1 flex items-start gap-1.5 rounded-md border border-warning/30 bg-warning/5 px-2.5 py-1.5 text-[11px] text-warning">
+            <span aria-hidden className="mt-px">⚠</span>
+            <span>{t('calc.sfpReticleHint', { mag: o.magCalibration })}</span>
+          </div>
+        );
+      })()}
       <div className="grid grid-cols-2 gap-2.5">
         <Field
           label={t('calc.sightHeight')}

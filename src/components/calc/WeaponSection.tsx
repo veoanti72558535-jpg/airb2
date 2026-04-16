@@ -61,11 +61,16 @@ export function WeaponSection({
         label={t('calc.selectOptic')}
         value={selectedOptic}
         onChange={onSelectOptic}
-        options={optics.map(o => ({
-          id: o.id,
-          label: o.name,
-          sub: `${o.clickValue} ${o.clickUnit}`,
-        }))}
+        options={optics.map(o => {
+          const parts = [`${o.clickValue} ${o.clickUnit}`];
+          if (o.tubeDiameter) parts.push(`⌀${o.tubeDiameter}mm`);
+          if (o.magCalibration) parts.push(`cal ${o.magCalibration}×`);
+          return {
+            id: o.id,
+            label: o.name,
+            sub: parts.join(' · '),
+          };
+        })}
         placeholder={t('calc.manualEntry')}
         emptyText={t('calc.noOptics')}
         addHref="/library"

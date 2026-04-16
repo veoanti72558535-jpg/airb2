@@ -140,7 +140,7 @@ export default function OpticsPage() {
                   <div className="font-semibold text-sm">{o.name}</div>
                   <div className="flex flex-wrap gap-1.5 mt-1.5">
                     <span className="tactical-badge">{o.clickUnit}</span>
-                    <span className="tactical-badge">{o.clickValue} {corrSym}/click</span>
+                    <span className="tactical-badge">{o.clickValue} {o.clickUnit}/click</span>
                     {o.tubeDiameter && <span className="tactical-badge">⌀ {o.tubeDiameter}mm</span>}
                     {o.magCalibration && <span className="tactical-badge">cal {o.magCalibration}×</span>}
                     {o.type && <span className="text-[10px] text-muted-foreground self-center">{o.type}</span>}

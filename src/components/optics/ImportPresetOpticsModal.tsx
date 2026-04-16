@@ -77,13 +77,13 @@ export function ImportPresetOpticsModal({ open, onClose, onImported, existingNam
       {open && (
         <motion.div
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4"
+          className="fixed inset-0 z-[60] bg-background/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4"
           onClick={onClose}
         >
           <motion.div
             initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 40, opacity: 0 }}
             onClick={e => e.stopPropagation()}
-            className="surface-elevated w-full sm:max-w-2xl max-h-[90vh] flex flex-col rounded-t-xl sm:rounded-xl"
+            className="surface-elevated w-full sm:max-w-2xl max-h-[calc(100vh-5rem)] sm:max-h-[90vh] mb-16 sm:mb-0 flex flex-col rounded-t-xl sm:rounded-xl"
           >
             {/* Header */}
             <div className="p-4 border-b border-border flex items-start justify-between gap-3">

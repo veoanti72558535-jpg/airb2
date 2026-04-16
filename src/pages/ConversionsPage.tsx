@@ -174,6 +174,7 @@ export default function ConversionsPage() {
   const { t, locale } = useI18n();
   const [query, setQuery] = useState('');
   const { entries: history, add: addHistory, clear: clearHistory, remove: removeHistory } = useConversionHistory();
+  const { isFavorite, toggle: toggleFavorite, favorites } = useConversionFavorites();
   const [prefillByCategory, setPrefillByCategory] = useState<Record<string, { from: string; to: string; value: string; nonce: number }>>({});
 
   const normalizedQuery = query.trim().toLowerCase();

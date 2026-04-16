@@ -159,6 +159,8 @@ const fr = {
   'conv.favorite': 'Favori',
   'conv.unfavorite': 'Retirer des favoris',
   'conv.favorites': 'Favoris',
+  'conv.copy': 'Copier le résultat',
+  'conv.copied': 'Résultat copié',
 
   // Docs
   'docs.title': 'Documentation technique',

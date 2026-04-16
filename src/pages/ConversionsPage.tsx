@@ -163,9 +163,20 @@ function ConverterCard({ categoryKey, options, defaultFrom, defaultTo, label, ic
               <option key={o.value} value={o.value}>{formatOptionLabel(o, locale)}</option>
             ))}
           </select>
-          <div className="bg-primary/5 border border-primary/20 rounded-md px-3 py-2 text-sm font-mono font-semibold text-primary min-h-[38px] flex items-center justify-between gap-2">
+          <div className="bg-primary/5 border border-primary/20 rounded-md pl-3 pr-1 py-1 text-sm font-mono font-semibold text-primary min-h-[38px] flex items-center justify-between gap-2">
             <span className="truncate">{formatResult(result)}</span>
-            <span className="text-[10px] text-muted-foreground shrink-0">{toOpt?.symbol}</span>
+            <div className="flex items-center gap-1 shrink-0">
+              <span className="text-[10px] text-muted-foreground">{toOpt?.symbol}</span>
+              <button
+                onClick={handleCopy}
+                disabled={!value || numValue === 0}
+                className="p-1.5 rounded hover:bg-primary/10 text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                title={t('conv.copy')}
+                aria-label={t('conv.copy')}
+              >
+                {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+              </button>
+            </div>
           </div>
         </div>
 

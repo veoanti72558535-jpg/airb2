@@ -391,6 +391,10 @@ const en: Record<keyof typeof fr, string> = {
   'conv.windSpeed': 'Wind Speed',
   'conv.searchPlaceholder': 'Search a category or unit…',
   'conv.noResults': 'No category matches',
+  'conv.history': 'History',
+  'conv.historyEmpty': 'No recent conversions',
+  'conv.historyClear': 'Clear',
+  'conv.historyReuse': 'Reuse',
 
   'docs.title': 'Technical Documentation',
   'docs.subtitle': 'Data sheets, manuals and diagrams',

@@ -385,6 +385,8 @@ const en: Record<keyof typeof fr, string> = {
   'conv.result': 'Result',
   'conv.muzzleEnergy': 'Muzzle Energy',
   'conv.windSpeed': 'Wind Speed',
+  'conv.searchPlaceholder': 'Search a category or unit…',
+  'conv.noResults': 'No category matches',
 
   'docs.title': 'Technical Documentation',
   'docs.subtitle': 'Data sheets, manuals and diagrams',

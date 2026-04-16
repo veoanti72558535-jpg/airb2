@@ -50,13 +50,14 @@ interface ConverterProps {
   defaultTo: string;
   label: string;
   icon: string;
+  locale: string;
   onRecord?: (entry: { categoryKey: string; from: string; to: string; value: string; result: number }) => void;
   prefill?: { from: string; to: string; value: string; nonce: number } | null;
   isFavorite?: boolean;
   onToggleFavorite?: () => void;
 }
 
-function ConverterCard({ categoryKey, options, defaultFrom, defaultTo, label, icon, onRecord, prefill, isFavorite, onToggleFavorite }: ConverterProps) {
+function ConverterCard({ categoryKey, options, defaultFrom, defaultTo, label, icon, locale, onRecord, prefill, isFavorite, onToggleFavorite }: ConverterProps) {
   const [from, setFrom] = useState(defaultFrom);
   const [to, setTo] = useState(defaultTo);
   const [value, setValue] = useState<string>('');

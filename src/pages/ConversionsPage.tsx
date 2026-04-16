@@ -133,7 +133,7 @@ function ConverterCard({ categoryKey, options, defaultFrom, defaultTo, label, ic
           <div className="space-y-1">
             <select className={selectClass} value={from} onChange={e => setFrom(e.target.value)}>
               {options.map(o => (
-                <option key={o.value} value={o.value}>{o.symbol} — {o.labelEn}</option>
+                <option key={o.value} value={o.value}>{formatOptionLabel(o, locale)}</option>
               ))}
             </select>
             <input

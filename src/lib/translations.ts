@@ -150,6 +150,8 @@ const fr = {
   'conv.result': 'Résultat',
   'conv.muzzleEnergy': 'Énergie à la bouche',
   'conv.windSpeed': 'Vitesse du vent',
+  'conv.searchPlaceholder': 'Rechercher une catégorie ou unité…',
+  'conv.noResults': 'Aucune catégorie ne correspond',
 
   // Docs
   'docs.title': 'Documentation technique',

@@ -381,6 +381,8 @@ const en: Record<keyof typeof fr, string> = {
   'conv.to': 'To',
   'conv.value': 'Value',
   'conv.result': 'Result',
+  'conv.muzzleEnergy': 'Muzzle Energy',
+  'conv.windSpeed': 'Wind Speed',
 
   'docs.title': 'Technical Documentation',
   'docs.subtitle': 'Data sheets, manuals and diagrams',
@@ -410,6 +412,9 @@ const en: Record<keyof typeof fr, string> = {
   'settings.theme': 'Theme',
   'settings.themeSystem': 'System',
   'settings.units': 'Preferred Units',
+  'settings.unitSystem': 'Unit System',
+  'settings.unitPrefs': 'Units by Category',
+  'settings.unitPrefsDesc': 'Customize unit display preferences',
   'settings.defaultMode': 'Default Mode',
   'settings.weather': 'Auto Weather',
   'settings.weatherDesc': 'Auto-fill weather data',

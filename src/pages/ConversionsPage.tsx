@@ -42,12 +42,25 @@ interface ConverterProps {
   defaultTo: string;
   label: string;
   icon: string;
+  onRecord?: (entry: { categoryKey: string; from: string; to: string; value: string; result: number }) => void;
+  prefill?: { from: string; to: string; value: string; nonce: number } | null;
 }
 
-function ConverterCard({ categoryKey, options, defaultFrom, defaultTo, label, icon }: ConverterProps) {
+function ConverterCard({ categoryKey, options, defaultFrom, defaultTo, label, icon, onRecord, prefill }: ConverterProps) {
   const [from, setFrom] = useState(defaultFrom);
   const [to, setTo] = useState(defaultTo);
   const [value, setValue] = useState<string>('');
+
+  // Apply prefill when it changes (nonce ensures repeated clicks re-trigger)
+  const lastPrefillNonce = useRef<number | null>(null);
+  useEffect(() => {
+    if (prefill && prefill.nonce !== lastPrefillNonce.current) {
+      lastPrefillNonce.current = prefill.nonce;
+      setFrom(prefill.from);
+      setTo(prefill.to);
+      setValue(prefill.value);
+    }
+  }, [prefill]);
 
   const numValue = parseFloat(value) || 0;
   const result = useMemo(() => {
@@ -56,6 +69,16 @@ function ConverterCard({ categoryKey, options, defaultFrom, defaultTo, label, ic
       return fn ? fn(numValue, from, to) : 0;
     } catch { return 0; }
   }, [numValue, from, to, categoryKey]);
+
+  // Debounced history recording — only when user has typed a non-empty, non-zero value
+  useEffect(() => {
+    if (!onRecord) return;
+    if (!value || numValue === 0) return;
+    const timer = setTimeout(() => {
+      onRecord({ categoryKey, from, to, value, result });
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [value, from, to, result, numValue, categoryKey, onRecord]);
 
   const swap = () => { setFrom(to); setTo(from); };
 
@@ -73,7 +96,7 @@ function ConverterCard({ categoryKey, options, defaultFrom, defaultTo, label, ic
   const selectClass = "w-full bg-muted border border-border rounded-md px-2 py-1.5 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-primary";
 
   return (
-    <div className="surface-elevated p-4 space-y-3">
+    <div className="surface-elevated p-4 space-y-3" data-category={categoryKey}>
       <h3 className="font-heading font-semibold text-sm flex items-center gap-2">
         <span>{icon}</span>
         {label}

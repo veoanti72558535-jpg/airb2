@@ -148,6 +148,8 @@ const fr = {
   'conv.to': 'Vers',
   'conv.value': 'Valeur',
   'conv.result': 'Résultat',
+  'conv.muzzleEnergy': 'Énergie à la bouche',
+  'conv.windSpeed': 'Vitesse du vent',
 
   // Docs
   'docs.title': 'Documentation technique',
@@ -180,6 +182,9 @@ const fr = {
   'settings.theme': 'Thème',
   'settings.themeSystem': 'Système',
   'settings.units': 'Unités préférées',
+  'settings.unitSystem': 'Système d\'unités',
+  'settings.unitPrefs': 'Unités par catégorie',
+  'settings.unitPrefsDesc': 'Personnaliser l\'affichage des unités',
   'settings.defaultMode': 'Mode par défaut',
   'settings.weather': 'Météo automatique',
   'settings.weatherDesc': 'Remplissage automatique des données météo',

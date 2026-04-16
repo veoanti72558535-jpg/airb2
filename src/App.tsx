@@ -8,12 +8,14 @@ import { ThemeProvider } from "@/lib/theme";
 import Layout from "@/components/Layout";
 import Dashboard from "@/pages/Dashboard";
 import QuickCalc from "@/pages/QuickCalc";
-import AirgunsPage from "@/pages/AirgunsPage";
-import ProjectilesPage from "@/pages/ProjectilesPage";
-import OpticsPage from "@/pages/OpticsPage";
+import LibraryPage from "@/pages/LibraryPage";
 import SessionsPage from "@/pages/SessionsPage";
 import ConversionsPage from "@/pages/ConversionsPage";
-import NotFound from "./pages/NotFound.tsx";
+import DocsPage from "@/pages/DocsPage";
+import SearchPage from "@/pages/SearchPage";
+import SettingsPage from "@/pages/SettingsPage";
+import AdminPage from "@/pages/AdminPage";
+import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
@@ -29,11 +31,17 @@ const App = () => (
               <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/calc" element={<QuickCalc />} />
-                <Route path="/airguns" element={<AirgunsPage />} />
-                <Route path="/projectiles" element={<ProjectilesPage />} />
-                <Route path="/optics" element={<OpticsPage />} />
+                <Route path="/library" element={<LibraryPage />} />
                 <Route path="/sessions" element={<SessionsPage />} />
                 <Route path="/conversions" element={<ConversionsPage />} />
+                <Route path="/docs" element={<DocsPage />} />
+                <Route path="/search" element={<SearchPage />} />
+                <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/admin" element={<AdminPage />} />
+                {/* Legacy routes */}
+                <Route path="/airguns" element={<LibraryPage />} />
+                <Route path="/projectiles" element={<LibraryPage />} />
+                <Route path="/optics" element={<LibraryPage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Layout>

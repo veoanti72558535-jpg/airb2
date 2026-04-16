@@ -100,10 +100,25 @@ function ConverterCard({ categoryKey, options, defaultFrom, defaultTo, label, ic
 
   return (
     <div className="surface-elevated p-4 space-y-3" data-category={categoryKey}>
-      <h3 className="font-heading font-semibold text-sm flex items-center gap-2">
-        <span>{icon}</span>
-        {label}
-      </h3>
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="font-heading font-semibold text-sm flex items-center gap-2 min-w-0">
+          <span>{icon}</span>
+          <span className="truncate">{label}</span>
+        </h3>
+        {onToggleFavorite && (
+          <button
+            onClick={onToggleFavorite}
+            className={`p-1 rounded hover:bg-muted shrink-0 transition-colors ${
+              isFavorite ? 'text-primary' : 'text-muted-foreground'
+            }`}
+            title={isFavorite ? '★' : '☆'}
+            aria-label={isFavorite ? 'Unfavorite' : 'Favorite'}
+            aria-pressed={isFavorite}
+          >
+            <Star className={`h-4 w-4 ${isFavorite ? 'fill-current' : ''}`} />
+          </button>
+        )}
+      </div>
 
       <div className="space-y-2">
         <div className="grid grid-cols-[1fr_auto] gap-2 items-end">

@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { Target, Plus, Trash2, Edit2 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { airgunStore } from '@/lib/storage';
+import { useUnits } from '@/hooks/use-units';
 import { Airgun } from '@/lib/types';
 import { motion } from 'framer-motion';
 import { toast } from '@/hooks/use-toast';
 
 export default function AirgunsPage() {
   const { t } = useI18n();
+  const { symbol } = useUnits();
   const [airguns, setAirguns] = useState<Airgun[]>(airgunStore.getAll());
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Airgun | null>(null);
@@ -40,6 +42,9 @@ export default function AirgunsPage() {
     setShowForm(true);
   };
 
+  const lengthSym = symbol('length');
+  const pressSym = symbol('pressure');
+  const distSym = symbol('distance');
   const inputClass = "w-full bg-muted border border-border rounded-md px-3 py-1.5 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary";
 
   return (
@@ -79,15 +84,15 @@ export default function AirgunsPage() {
               </select>
             </div>
             <div>
-              <label className="text-xs text-muted-foreground">{t('airguns.barrelLength')} (mm)</label>
+              <label className="text-xs text-muted-foreground">{t('airguns.barrelLength')} ({lengthSym})</label>
               <input type="number" className={inputClass} value={form.barrelLength} onChange={e => setForm(f => ({ ...f, barrelLength: +e.target.value }))} />
             </div>
             <div>
-              <label className="text-xs text-muted-foreground">{t('airguns.regPressure')} (bar)</label>
+              <label className="text-xs text-muted-foreground">{t('airguns.regPressure')} ({pressSym})</label>
               <input type="number" className={inputClass} value={form.regPressure} onChange={e => setForm(f => ({ ...f, regPressure: +e.target.value }))} />
             </div>
             <div>
-              <label className="text-xs text-muted-foreground">{t('airguns.fillPressure')} (bar)</label>
+              <label className="text-xs text-muted-foreground">{t('airguns.fillPressure')} ({pressSym})</label>
               <input type="number" className={inputClass} value={form.fillPressure} onChange={e => setForm(f => ({ ...f, fillPressure: +e.target.value }))} />
             </div>
           </div>
@@ -119,9 +124,9 @@ export default function AirgunsPage() {
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground font-mono">
-                {a.barrelLength && <span>{t('airguns.barrelLength')}: {a.barrelLength}mm</span>}
-                {a.regPressure && <span>Reg: {a.regPressure} bar</span>}
-                {a.fillPressure && <span>Fill: {a.fillPressure} bar</span>}
+                {a.barrelLength && <span>{t('airguns.barrelLength')}: {a.barrelLength} {lengthSym}</span>}
+                {a.regPressure && <span>Reg: {a.regPressure} {pressSym}</span>}
+                {a.fillPressure && <span>Fill: {a.fillPressure} {pressSym}</span>}
               </div>
               {a.notes && <p className="text-xs text-muted-foreground mt-2 italic">{a.notes}</p>}
             </div>

@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { Eye, Plus, Trash2, Edit2 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { opticStore } from '@/lib/storage';
+import { useUnits } from '@/hooks/use-units';
 import { Optic } from '@/lib/types';
 import { motion } from 'framer-motion';
 import { toast } from '@/hooks/use-toast';
 
 export default function OpticsPage() {
   const { t } = useI18n();
+  const { symbol } = useUnits();
   const [optics, setOptics] = useState<Optic[]>(opticStore.getAll());
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Optic | null>(null);
@@ -35,6 +37,8 @@ export default function OpticsPage() {
     setShowForm(true);
   };
 
+  const lengthSym = symbol('length');
+  const corrSym = symbol('correction');
   const inputClass = "w-full bg-muted border border-border rounded-md px-3 py-1.5 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary";
 
   return (
@@ -63,8 +67,11 @@ export default function OpticsPage() {
                 <option>MOA</option><option>MRAD</option>
               </select>
             </div>
-            <div><label className="text-xs text-muted-foreground">{t('optics.clickValue')}</label>
+            <div><label className="text-xs text-muted-foreground">{t('optics.clickValue')} ({corrSym}/click)</label>
               <input type="number" step="0.01" className={inputClass} value={form.clickValue} onChange={e => setForm(f => ({ ...f, clickValue: +e.target.value }))} />
+            </div>
+            <div><label className="text-xs text-muted-foreground">{t('optics.mountHeight')} ({lengthSym})</label>
+              <input type="number" step="1" className={inputClass} value={form.mountHeight} onChange={e => setForm(f => ({ ...f, mountHeight: +e.target.value }))} />
             </div>
           </div>
           <div><label className="text-xs text-muted-foreground">{t('airguns.notes')}</label><textarea className={inputClass} rows={2} value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} /></div>
@@ -86,9 +93,10 @@ export default function OpticsPage() {
                   <div className="font-semibold text-sm">{o.name}</div>
                   <div className="flex gap-2 mt-1">
                     <span className="tactical-badge">{o.clickUnit}</span>
-                    <span className="tactical-badge">{o.clickValue} / click</span>
+                    <span className="tactical-badge">{o.clickValue} {corrSym}/click</span>
                     {o.type && <span className="text-xs text-muted-foreground">{o.type}</span>}
                   </div>
+                  {o.mountHeight ? <span className="text-xs text-muted-foreground font-mono">{t('optics.mountHeight')}: {o.mountHeight} {lengthSym}</span> : null}
                 </div>
                 <div className="flex gap-1">
                   <button onClick={() => handleEdit(o)} className="p-1.5 rounded hover:bg-muted text-muted-foreground"><Edit2 className="h-3.5 w-3.5" /></button>

@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { Zap, Plus, Trash2, Edit2 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { projectileStore } from '@/lib/storage';
+import { useUnits } from '@/hooks/use-units';
 import { Projectile } from '@/lib/types';
 import { motion } from 'framer-motion';
 import { toast } from '@/hooks/use-toast';
 
 export default function ProjectilesPage() {
   const { t } = useI18n();
+  const { symbol } = useUnits();
   const [projectiles, setProjectiles] = useState<Projectile[]>(projectileStore.getAll());
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Projectile | null>(null);
@@ -39,6 +41,8 @@ export default function ProjectilesPage() {
     setShowForm(true);
   };
 
+  const weightSym = symbol('weight');
+  const lengthSym = symbol('length');
   const inputClass = "w-full bg-muted border border-border rounded-md px-3 py-1.5 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary";
 
   return (
@@ -58,7 +62,7 @@ export default function ProjectilesPage() {
           <div className="grid grid-cols-2 gap-3">
             <div><label className="text-xs text-muted-foreground">{t('projectiles.brand')}</label><input className={inputClass} value={form.brand} onChange={e => setForm(f => ({ ...f, brand: e.target.value }))} /></div>
             <div><label className="text-xs text-muted-foreground">{t('projectiles.model')}</label><input className={inputClass} value={form.model} onChange={e => setForm(f => ({ ...f, model: e.target.value }))} /></div>
-            <div><label className="text-xs text-muted-foreground">{t('projectiles.weight')} (gr)</label><input type="number" step="0.5" className={inputClass} value={form.weight} onChange={e => setForm(f => ({ ...f, weight: +e.target.value }))} /></div>
+            <div><label className="text-xs text-muted-foreground">{t('projectiles.weight')} ({weightSym})</label><input type="number" step="0.5" className={inputClass} value={form.weight} onChange={e => setForm(f => ({ ...f, weight: +e.target.value }))} /></div>
             <div><label className="text-xs text-muted-foreground">{t('projectiles.bc')}</label><input type="number" step="0.001" className={inputClass} value={form.bc} onChange={e => setForm(f => ({ ...f, bc: +e.target.value }))} /></div>
             <div>
               <label className="text-xs text-muted-foreground">{t('projectiles.shape')}</label>
@@ -75,6 +79,14 @@ export default function ProjectilesPage() {
               <select className={inputClass} value={form.caliber} onChange={e => setForm(f => ({ ...f, caliber: e.target.value }))}>
                 <option>.177</option><option>.22</option><option>.25</option><option>.30</option>
               </select>
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground">{t('projectiles.length')} ({lengthSym})</label>
+              <input type="number" step="0.1" className={inputClass} value={form.length} onChange={e => setForm(f => ({ ...f, length: +e.target.value }))} />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground">{t('projectiles.diameter')} ({lengthSym})</label>
+              <input type="number" step="0.01" className={inputClass} value={form.diameter} onChange={e => setForm(f => ({ ...f, diameter: +e.target.value }))} />
             </div>
             <div>
               <label className="text-xs text-muted-foreground">{t('projectiles.material')}</label>
@@ -105,7 +117,7 @@ export default function ProjectilesPage() {
                   <div className="font-semibold text-sm">{p.brand} {p.model}</div>
                   <div className="flex gap-2 mt-0.5">
                     <span className="tactical-badge">{p.caliber}</span>
-                    <span className="tactical-badge">{p.weight} gr</span>
+                    <span className="tactical-badge">{p.weight} {weightSym}</span>
                     <span className="tactical-badge">BC {p.bc}</span>
                   </div>
                 </div>

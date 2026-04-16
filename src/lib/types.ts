@@ -114,6 +114,7 @@ export interface Session {
 export interface AppSettings {
   unitSystem: 'metric' | 'imperial';
   advancedMode: boolean;
+  unitPreferences?: Record<string, string>;
   featureFlags: {
     ai: boolean;
     weather: boolean;

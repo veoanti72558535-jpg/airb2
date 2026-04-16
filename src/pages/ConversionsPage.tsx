@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { ArrowLeftRight, Wind } from 'lucide-react';
+import { ArrowLeftRight, Wind, Search, X } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import {
   convertVelocity, convertDistance, convertWeight, convertEnergy,

@@ -159,7 +159,7 @@ function ConverterCard({ categoryKey, options, defaultFrom, defaultTo, label, ic
         <div className="space-y-1">
           <select className={selectClass} value={to} onChange={e => setTo(e.target.value)}>
             {options.map(o => (
-              <option key={o.value} value={o.value}>{o.symbol} — {o.labelEn}</option>
+              <option key={o.value} value={o.value}>{formatOptionLabel(o, locale)}</option>
             ))}
           </select>
           <div className="bg-primary/5 border border-primary/20 rounded-md px-3 py-2 text-sm font-mono font-semibold text-primary min-h-[38px] flex items-center justify-between gap-2">

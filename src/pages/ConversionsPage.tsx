@@ -11,6 +11,7 @@ import {
 } from '@/lib/conversions';
 import { unitCategories, UnitOption } from '@/lib/units';
 import { motion } from 'framer-motion';
+import { useConversionHistory, ConversionHistoryEntry } from '@/hooks/use-conversion-history';
 
 // ── Map category key → converter fn ──
 const convertFns: Record<string, (v: number, f: string, t: string) => number> = {

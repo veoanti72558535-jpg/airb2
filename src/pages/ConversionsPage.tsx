@@ -105,6 +105,24 @@ function ConverterCard({ categoryKey, options, defaultFrom, defaultTo, label, ic
     return n.toFixed(6).replace(/\.?0+$/, '');
   };
 
+  const { t } = useI18n();
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    if (!value || numValue === 0) return;
+    const text = formatResult(result);
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      toast.success(t('conv.copied'), {
+        description: `${text} ${toOpt?.symbol ?? ''}`,
+      });
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      toast.error('Clipboard error');
+    }
+  };
+
   const selectClass = "w-full bg-muted border border-border rounded-md px-2 py-1.5 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-primary";
 
   return (

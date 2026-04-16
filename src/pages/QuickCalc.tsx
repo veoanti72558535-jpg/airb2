@@ -4,6 +4,7 @@ import { useI18n } from '@/lib/i18n';
 import { calculateTrajectory } from '@/lib/ballistics';
 import { BallisticInput, BallisticResult, WeatherSnapshot } from '@/lib/types';
 import { sessionStore, getSettings } from '@/lib/storage';
+import { useUnits } from '@/hooks/use-units';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { motion } from 'framer-motion';
 import { toast } from '@/hooks/use-toast';
@@ -39,6 +40,7 @@ function defaultInput(): BallisticInput {
 export default function QuickCalc() {
   const { t } = useI18n();
   const settings = getSettings();
+  const { symbol } = useUnits();
   const [input, setInput] = useState<BallisticInput>(defaultInput);
   const [results, setResults] = useState<BallisticResult[] | null>(null);
   const [view, setView] = useState<'table' | 'chart'>('table');
@@ -74,23 +76,33 @@ export default function QuickCalc() {
     }));
   };
 
+  // Unit symbols from preferences
+  const velUnit = symbol('velocity');
+  const weightUnit = symbol('weight');
+  const lengthUnit = symbol('length');
+  const distUnit = symbol('distance');
+  const tempUnit = symbol('temperature');
+  const pressUnit = symbol('pressure');
+  const corrUnit = symbol('correction');
+  const energyUnit = symbol('energy');
+
   const fields = [
-    { key: 'muzzleVelocity', label: t('calc.muzzleVelocity'), unit: 'm/s', step: 1 },
+    { key: 'muzzleVelocity', label: t('calc.muzzleVelocity'), unit: velUnit, step: 1 },
     { key: 'bc', label: t('calc.bc'), unit: '', step: 0.001 },
-    { key: 'projectileWeight', label: t('calc.projectileWeight'), unit: 'gr', step: 0.5 },
-    { key: 'sightHeight', label: t('calc.sightHeight'), unit: 'mm', step: 1 },
-    { key: 'zeroRange', label: t('calc.zeroRange'), unit: 'm', step: 5 },
-    { key: 'maxRange', label: t('calc.maxRange'), unit: 'm', step: 10 },
-    { key: 'rangeStep', label: t('calc.rangeStep'), unit: 'm', step: 5 },
+    { key: 'projectileWeight', label: t('calc.projectileWeight'), unit: weightUnit, step: 0.5 },
+    { key: 'sightHeight', label: t('calc.sightHeight'), unit: lengthUnit, step: 1 },
+    { key: 'zeroRange', label: t('calc.zeroRange'), unit: distUnit, step: 5 },
+    { key: 'maxRange', label: t('calc.maxRange'), unit: distUnit, step: 10 },
+    { key: 'rangeStep', label: t('calc.rangeStep'), unit: distUnit, step: 5 },
   ];
 
   const weatherFields = [
-    { key: 'windSpeed', label: t('calc.windSpeed'), unit: 'm/s', step: 0.5 },
+    { key: 'windSpeed', label: t('calc.windSpeed'), unit: velUnit, step: 0.5 },
     { key: 'windAngle', label: t('calc.windAngle'), unit: '°', step: 5 },
-    { key: 'temperature', label: t('calc.temperature'), unit: '°C', step: 1 },
+    { key: 'temperature', label: t('calc.temperature'), unit: tempUnit, step: 1 },
     { key: 'pressure', label: t('calc.pressure'), unit: 'hPa', step: 1 },
     { key: 'humidity', label: t('calc.humidity'), unit: '%', step: 5 },
-    { key: 'altitude', label: t('calc.altitude'), unit: 'm', step: 50 },
+    { key: 'altitude', label: t('calc.altitude'), unit: distUnit, step: 50 },
   ];
 
   return (
@@ -110,37 +122,39 @@ export default function QuickCalc() {
         <div className="surface-elevated p-4 space-y-3">
           <h3 className="font-heading font-semibold text-sm flex items-center gap-2">
             <Crosshair className="h-4 w-4 text-primary" />
-            {t('calc.title')}
+            {t('calc.sectionProjectile')}
           </h3>
           {fields.map(f => (
             <div key={f.key} className="flex items-center gap-2">
               <label className="text-xs text-muted-foreground min-w-[120px]">{f.label}</label>
               <input
                 type="number"
+                inputMode="decimal"
                 step={f.step}
                 value={(input as any)[f.key]}
                 onChange={e => updateInput(f.key, parseFloat(e.target.value) || 0)}
                 className="flex-1 bg-muted border border-border rounded-md px-3 py-1.5 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary"
               />
-              {f.unit && <span className="text-xs text-muted-foreground font-mono w-8">{f.unit}</span>}
+              {f.unit && <span className="text-[10px] text-muted-foreground font-mono w-10 text-right">{f.unit}</span>}
             </div>
           ))}
         </div>
 
         {/* Weather */}
         <div className="surface-elevated p-4 space-y-3">
-          <h3 className="font-heading font-semibold text-sm">🌤 Météo / Weather</h3>
+          <h3 className="font-heading font-semibold text-sm">🌤 {t('calc.sectionWeather')}</h3>
           {(settings.advancedMode ? weatherFields : weatherFields.slice(0, 2)).map(f => (
             <div key={f.key} className="flex items-center gap-2">
               <label className="text-xs text-muted-foreground min-w-[120px]">{f.label}</label>
               <input
                 type="number"
+                inputMode="decimal"
                 step={f.step}
                 value={(input.weather as any)[f.key]}
                 onChange={e => updateWeather(f.key, parseFloat(e.target.value) || 0)}
                 className="flex-1 bg-muted border border-border rounded-md px-3 py-1.5 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary"
               />
-              <span className="text-xs text-muted-foreground font-mono w-8">{f.unit}</span>
+              <span className="text-[10px] text-muted-foreground font-mono w-10 text-right">{f.unit}</span>
             </div>
           ))}
         </div>
@@ -181,13 +195,13 @@ export default function QuickCalc() {
               <table className="w-full text-xs font-mono">
                 <thead>
                   <tr className="border-b border-border text-muted-foreground">
-                    <th className="px-3 py-2 text-left">{t('calc.range')}<br/><span className="text-[10px]">m</span></th>
-                    <th className="px-3 py-2 text-right">{t('calc.drop')}<br/><span className="text-[10px]">mm</span></th>
-                    <th className="px-3 py-2 text-right">{t('calc.holdover')}<br/><span className="text-[10px]">MOA</span></th>
-                    <th className="px-3 py-2 text-right">{t('calc.velocity')}<br/><span className="text-[10px]">m/s</span></th>
-                    <th className="px-3 py-2 text-right">{t('calc.energy')}<br/><span className="text-[10px]">J</span></th>
+                    <th className="px-3 py-2 text-left">{t('calc.range')}<br/><span className="text-[10px]">{distUnit}</span></th>
+                    <th className="px-3 py-2 text-right">{t('calc.drop')}<br/><span className="text-[10px]">{lengthUnit}</span></th>
+                    <th className="px-3 py-2 text-right">{t('calc.holdover')}<br/><span className="text-[10px]">{corrUnit}</span></th>
+                    <th className="px-3 py-2 text-right">{t('calc.velocity')}<br/><span className="text-[10px]">{velUnit}</span></th>
+                    <th className="px-3 py-2 text-right">{t('calc.energy')}<br/><span className="text-[10px]">{energyUnit}</span></th>
                     <th className="px-3 py-2 text-right">{t('calc.tof')}<br/><span className="text-[10px]">s</span></th>
-                    <th className="px-3 py-2 text-right">{t('calc.windDrift')}<br/><span className="text-[10px]">mm</span></th>
+                    <th className="px-3 py-2 text-right">{t('calc.windDrift')}<br/><span className="text-[10px]">{lengthUnit}</span></th>
                     <th className="px-3 py-2 text-right">{t('calc.clicksElev')}</th>
                   </tr>
                 </thead>
@@ -223,8 +237,8 @@ export default function QuickCalc() {
                     }}
                   />
                   <Legend />
-                  <Line type="monotone" dataKey="drop" name={t('calc.drop') + ' (mm)'} stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
-                  <Line type="monotone" dataKey="velocity" name={t('calc.velocity') + ' (m/s)'} stroke="hsl(var(--tactical))" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="drop" name={`${t('calc.drop')} (${lengthUnit})`} stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="velocity" name={`${t('calc.velocity')} (${velUnit})`} stroke="hsl(var(--tactical))" strokeWidth={2} dot={false} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -234,7 +248,7 @@ export default function QuickCalc() {
           <div className="flex gap-2">
             <input
               type="text"
-              placeholder="Session name..."
+              placeholder={t('calc.saveSession') + '...'}
               value={sessionName}
               onChange={e => setSessionName(e.target.value)}
               className="flex-1 bg-muted border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"

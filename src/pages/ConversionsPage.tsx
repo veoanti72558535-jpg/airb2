@@ -290,6 +290,7 @@ export default function ConversionsPage() {
               defaultTo={cat.defaultImperial}
               label={locale === 'fr' ? cat.labelKeyFr : cat.labelKeyEn}
               icon={categoryIcons[cat.key] ?? '🔢'}
+              locale={locale}
               onRecord={addHistory}
               prefill={prefillByCategory[cat.key] ?? null}
               isFavorite={isFavorite(cat.key)}

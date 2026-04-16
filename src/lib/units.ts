@@ -121,7 +121,7 @@ export const unitCategories: UnitCategory[] = [
     options: [
       { value: 'atm', labelFr: 'atm', labelEn: 'atm', symbol: 'atm' },
       { value: 'pa', labelFr: 'Pa', labelEn: 'Pa', symbol: 'Pa' },
-      { value: 'hpa', labelFr: 'hPa (mbar)', labelEn: 'hPa (mbar)', symbol: 'hPa' },
+      { value: 'hpa', labelFr: 'mbar', labelEn: 'mbar', symbol: 'hPa' },
       { value: 'kpa', labelFr: 'kPa', labelEn: 'kPa', symbol: 'kPa' },
       { value: 'mpa', labelFr: 'MPa', labelEn: 'MPa', symbol: 'MPa' },
       { value: 'bar', labelFr: 'bar', labelEn: 'bar', symbol: 'bar' },
@@ -130,7 +130,7 @@ export const unitCategories: UnitCategory[] = [
       { value: 'ksi', labelFr: 'ksi', labelEn: 'ksi', symbol: 'ksi' },
       { value: 'kgfcm2', labelFr: 'kgf/cm²', labelEn: 'kgf/cm²', symbol: 'kgf/cm²' },
       { value: 'kgfm2', labelFr: 'kgf/m²', labelEn: 'kgf/m²', symbol: 'kgf/m²' },
-      { value: 'mmhg', labelFr: 'mmHg (Torr)', labelEn: 'mmHg (Torr)', symbol: 'mmHg' },
+      { value: 'mmhg', labelFr: 'Torr', labelEn: 'Torr', symbol: 'mmHg' },
       { value: 'cmhg', labelFr: 'cmHg', labelEn: 'cmHg', symbol: 'cmHg' },
       { value: 'inhg', labelFr: 'inHg', labelEn: 'inHg', symbol: 'inHg' },
       { value: 'mmh2o', labelFr: 'mmH₂O', labelEn: 'mmH₂O', symbol: 'mmH₂O' },

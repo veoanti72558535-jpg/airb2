@@ -200,6 +200,38 @@ export default function OpticsPage() {
         </div>
       )}
 
+      {optics.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-[11px] uppercase tracking-wide text-muted-foreground mr-1">
+            {t('optics.filterBrand')}
+          </span>
+          <button
+            onClick={() => setBrandFilter(null)}
+            className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+              brandFilter === null
+                ? 'bg-primary/10 text-primary border border-primary/40'
+                : 'bg-muted text-muted-foreground border border-border hover:bg-muted/70'
+            }`}
+          >
+            {t('optics.filterAll')} ({optics.length})
+          </button>
+          {brandOptions.map(b => (
+            <button
+              key={b}
+              onClick={() => setBrandFilter(brandFilter === b ? null : b)}
+              disabled={brandCounts[b] === 0}
+              className={`px-2.5 py-1 rounded text-xs font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+                brandFilter === b
+                  ? 'bg-primary/10 text-primary border border-primary/40'
+                  : 'bg-muted text-muted-foreground border border-border hover:bg-muted/70'
+              }`}
+            >
+              {b} ({brandCounts[b]})
+            </button>
+          ))}
+        </div>
+      )}
+
       {optics.length === 0 ? (
         <div className="surface-card p-8 text-center text-muted-foreground text-sm">{t('common.noData')}</div>
       ) : filteredOptics.length === 0 ? (

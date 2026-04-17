@@ -278,6 +278,9 @@ export function ResultsCard({
           label={t('calc.remainingEnergy')}
           value={result.energy.toFixed(1)}
           unit={energyUnit}
+          danger={
+            energyThresholdJ != null && energyThresholdJ > 0 && result.energy > energyThresholdJ
+          }
         />
         <Stat
           icon={Clock}

@@ -340,43 +340,97 @@ export default function ProjectilesPage() {
       ) : filteredProjectiles.length === 0 ? (
         <div className="surface-card p-8 text-center text-muted-foreground text-sm">{t('projectiles.noMatch')}</div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {filteredProjectiles.map(p => (
-            <Link
-              key={p.id}
-              to={`/library/projectile/${p.id}`}
-              className="surface-elevated p-4 block hover:border-primary/40 transition-colors"
-            >
-              <div className="flex items-start justify-between mb-2">
-                <div className="min-w-0 flex-1">
-                  <div className="font-semibold text-sm">{p.brand} {p.model}</div>
-                  <div className="flex flex-wrap gap-1.5 mt-1">
-                    <span className="tactical-badge">{p.caliber}</span>
-                    <span className="tactical-badge">{p.weight} {weightSym}</span>
-                    <span className="tactical-badge">BC {p.bc}{p.bcModel ? ` ${p.bcModel}` : ''}</span>
-                    {p.projectileType && p.projectileType !== 'pellet' && (
-                      <span className="tactical-badge">{p.projectileType}</span>
-                    )}
-                  </div>
-                  {(p.length || p.diameter || p.shape || p.material) && (
-                    <div className="text-[11px] text-muted-foreground font-mono mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5">
-                      {p.length ? <span>L {p.length}{lengthSym}</span> : null}
-                      {p.diameter ? <span>⌀ {p.diameter}{lengthSym}</span> : null}
-                      {p.shape ? <span>{p.shape}</span> : null}
-                      {p.material ? <span>{p.material}</span> : null}
+        <div className={`grid grid-cols-1 sm:grid-cols-2 gap-3 ${compareIds.length > 0 ? 'pb-24' : ''}`}>
+          {filteredProjectiles.map(p => {
+            const isCompared = compareIds.includes(p.id);
+            return (
+              <div
+                key={p.id}
+                className={`surface-elevated p-4 transition-colors relative ${
+                  isCompared ? 'border-primary/60 ring-1 ring-primary/30' : 'hover:border-primary/40'
+                }`}
+              >
+                <Link to={`/library/projectile/${p.id}`} className="block">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="min-w-0 flex-1 pr-2">
+                      <div className="font-semibold text-sm">{p.brand} {p.model}</div>
+                      <div className="flex flex-wrap gap-1.5 mt-1">
+                        <span className="tactical-badge">{p.caliber}</span>
+                        <span className="tactical-badge">{p.weight} {weightSym}</span>
+                        <span className="tactical-badge">BC {p.bc}{p.bcModel ? ` ${p.bcModel}` : ''}</span>
+                        {p.projectileType && p.projectileType !== 'pellet' && (
+                          <span className="tactical-badge">{p.projectileType}</span>
+                        )}
+                      </div>
+                      {(p.length || p.diameter || p.shape || p.material) && (
+                        <div className="text-[11px] text-muted-foreground font-mono mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5">
+                          {p.length ? <span>L {p.length}{lengthSym}</span> : null}
+                          {p.diameter ? <span>⌀ {p.diameter}{lengthSym}</span> : null}
+                          {p.shape ? <span>{p.shape}</span> : null}
+                          {p.material ? <span>{p.material}</span> : null}
+                        </div>
+                      )}
+                      {p.notes && <p className="text-[11px] text-muted-foreground mt-1 italic line-clamp-2">{p.notes}</p>}
                     </div>
-                  )}
-                  {p.notes && <p className="text-[11px] text-muted-foreground mt-1 italic line-clamp-2">{p.notes}</p>}
-                </div>
-                <div className="flex gap-1 shrink-0">
-                  <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleEdit(p); }} className="p-1.5 rounded hover:bg-muted text-muted-foreground"><Edit2 className="h-3.5 w-3.5" /></button>
-                  <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDelete(p.id); }} className="p-1.5 rounded hover:bg-destructive/10 text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
-                </div>
+                    <div className="flex gap-1 shrink-0">
+                      <button
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleCompare(p.id); }}
+                        title={t('projectiles.compare')}
+                        className={`p-1.5 rounded ${isCompared ? 'bg-primary/15 text-primary' : 'hover:bg-muted text-muted-foreground'}`}
+                      >
+                        <GitCompare className="h-3.5 w-3.5" />
+                      </button>
+                      <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleEdit(p); }} className="p-1.5 rounded hover:bg-muted text-muted-foreground"><Edit2 className="h-3.5 w-3.5" /></button>
+                      <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDelete(p.id); }} className="p-1.5 rounded hover:bg-destructive/10 text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
+                    </div>
+                  </div>
+                </Link>
               </div>
-            </Link>
-          ))}
+            );
+          })}
         </div>
       )}
+
+      {/* Floating compare bar */}
+      {compareIds.length > 0 && (
+        <motion.div
+          initial={{ y: 60, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-40 surface-elevated shadow-xl border border-primary/30 rounded-full px-2 py-1.5 flex items-center gap-2"
+        >
+          <span className="text-xs font-medium px-2 text-foreground">
+            {compareIds.length} / {MAX_COMPARE}
+          </span>
+          <button
+            onClick={() => setShowCompare(true)}
+            disabled={compareIds.length < 2}
+            className="px-3 py-1.5 bg-primary text-primary-foreground rounded-full text-xs font-semibold flex items-center gap-1 hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <GitCompare className="h-3.5 w-3.5" />
+            {t('projectiles.compareSelected', { count: compareIds.length })}
+          </button>
+          <button
+            onClick={() => setCompareIds([])}
+            className="p-1.5 rounded-full hover:bg-muted text-muted-foreground"
+            aria-label={t('projectiles.compareClear')}
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </motion.div>
+      )}
+
+      <CompareProjectilesModal
+        open={showCompare}
+        onClose={() => setShowCompare(false)}
+        projectiles={compareSelected}
+        onRemove={(id) => {
+          setCompareIds(prev => {
+            const next = prev.filter(x => x !== id);
+            if (next.length < 2) setShowCompare(false);
+            return next;
+          });
+        }}
+      />
     </motion.div>
   );
 }

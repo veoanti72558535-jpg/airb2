@@ -132,6 +132,25 @@ export default function QuickCalc() {
   const [results, setResults] = useState<BallisticResult[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sessionName, setSessionName] = useState('');
+  // Live mirror of the configured energy threshold so the header chip refreshes
+  // when the user changes it in Settings (cross-tab via 'storage' event, or
+  // intra-tab via window focus / re-mount).
+  const [energyThresholdJ, setEnergyThresholdJ] = useState<number | null>(() => {
+    const s = getSettings();
+    return s.energyThresholdJ === undefined ? 16.27 : s.energyThresholdJ;
+  });
+  useEffect(() => {
+    const refresh = () => {
+      const s = getSettings();
+      setEnergyThresholdJ(s.energyThresholdJ === undefined ? 16.27 : s.energyThresholdJ);
+    };
+    window.addEventListener('storage', refresh);
+    window.addEventListener('focus', refresh);
+    return () => {
+      window.removeEventListener('storage', refresh);
+      window.removeEventListener('focus', refresh);
+    };
+  }, []);
 
   const projectiles = useMemo<Projectile[]>(() => projectileStore.getAll(), []);
   const airguns = useMemo<Airgun[]>(() => airgunStore.getAll(), []);

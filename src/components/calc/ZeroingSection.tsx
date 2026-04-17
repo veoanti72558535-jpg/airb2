@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { Crosshair, MapPin, Loader2, AlertCircle, Cloud, RotateCw } from 'lucide-react';
+import { z } from 'zod';
 import { useI18n } from '@/lib/i18n';
 import { Section } from './Section';
 import { UnitField } from './UnitField';
@@ -8,6 +10,12 @@ import { WeatherSnapshot } from '@/lib/types';
 import { useWeather } from '@/hooks/use-weather';
 import { getSettings } from '@/lib/storage';
 import { cn } from '@/lib/utils';
+
+// Strict bounds — Open-Meteo rejects out-of-range
+const coordsSchema = z.object({
+  lat: z.number().finite().min(-90).max(90),
+  lon: z.number().finite().min(-180).max(180),
+});
 
 interface Props {
   zeroRange: number;

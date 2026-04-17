@@ -199,7 +199,24 @@ export function ZeroingSection({
           )}
 
           {autoEnabled && showManualCoords && (
-            <div className="rounded-md border border-border/60 bg-background/40 p-2.5 space-y-2">
+            <div className="rounded-md border border-border/60 bg-background/40 p-2.5 space-y-3">
+              <CitySearch
+                disabled={api.status === 'loading'}
+                onPick={(city, label) => {
+                  setLatInput(String(city.latitude));
+                  setLonInput(String(city.longitude));
+                  setCoordsError(null);
+                  void api.fetchByCoords(city.latitude, city.longitude, {
+                    force: true,
+                    locationLabel: label,
+                  });
+                }}
+              />
+              <div className="flex items-center gap-2 text-[10px] uppercase tracking-wide text-muted-foreground font-mono">
+                <span className="h-px flex-1 bg-border" />
+                <span>{t('weather.or')}</span>
+                <span className="h-px flex-1 bg-border" />
+              </div>
               <p className="text-[10px] text-muted-foreground">{t('weather.manualCoordsHint')}</p>
               <div className="grid grid-cols-[1fr_1fr_auto] gap-2 items-end">
                 <label className="space-y-1">

@@ -10,6 +10,7 @@ import {
   BallisticInput,
   BallisticResult,
   DragModel,
+  DragTablePoint,
   Optic,
   OpticFocalPlane,
   Projectile,
@@ -45,6 +46,7 @@ interface FormState {
   projectileType: ProjectileType;
   projectileLength?: number;
   projectileDiameter?: number;
+  customDragTable?: DragTablePoint[];
   // Velocity
   muzzleVelocity: number;
   // Weapon
@@ -163,6 +165,7 @@ export default function QuickCalc() {
       projectileDiameter: i.projectileDiameter ?? proj?.diameter,
       muzzleVelocity: i.muzzleVelocity,
       airgunId: session.airgunId ?? '',
+      customDragTable: i.customDragTable ?? proj?.customDragTable,
       tuneId: session.tuneId ?? '',
       twistRate: i.twistRate,
       opticId: session.opticId ?? '',

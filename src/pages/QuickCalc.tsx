@@ -688,8 +688,22 @@ export default function QuickCalc() {
               </button>
             </div>
           </div>
+
+          {/* Compare-with-another CTA — only after a save or rehydration from
+              ?session. Manual edits clear currentSessionId so a stale snapshot
+              can never be silently compared. */}
+          {currentSessionId && sessionStore.getAll().length >= 2 && (
+            <button
+              type="button"
+              onClick={() => setComparePickerOpen(true)}
+              className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-md border border-primary/30 text-primary bg-primary/5 text-xs font-medium hover:bg-primary/10 transition-colors"
+            >
+              <ArrowLeftRight className="h-3.5 w-3.5" />
+              {t('compare.compareFromCalcCta')}
+            </button>
+          )}
         </motion.div>
-      ) : (
+
         <div className="rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
           {t('calc.empty')}
         </div>

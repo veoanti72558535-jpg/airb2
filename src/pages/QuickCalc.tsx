@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Crosshair, RotateCcw, Save, Sparkles, Settings2 } from 'lucide-react';
+import { Crosshair, RotateCcw, Save, Sparkles, Settings2, Zap } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useI18n } from '@/lib/i18n';
 import { calculateTrajectory } from '@/lib/ballistics';

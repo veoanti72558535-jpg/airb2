@@ -132,6 +132,15 @@ export function WeatherLocationPicker({ weather, api, autoEnabled }: Props) {
             <Cloud className="h-3 w-3" />
             {sourceLabel}
           </span>
+          {api.fromCache && source === 'auto' && (
+            <span
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded border text-[10px] font-mono uppercase tracking-wide bg-muted/40 text-muted-foreground border-border"
+              title={t('weather.fromCacheHint')}
+            >
+              <Database className="h-3 w-3" />
+              {t('weather.fromCache')}
+            </span>
+          )}
           {weather.provider && (
             <span className="text-[10px] text-muted-foreground font-mono">
               {weather.location ?? weather.provider} · {formatAge(weather.timestamp, locale)}

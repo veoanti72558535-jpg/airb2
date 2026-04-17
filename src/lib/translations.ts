@@ -230,6 +230,8 @@ const fr = {
   'projectiles.compareSelected': 'Comparer ({count})',
   'projectiles.compareTitle': 'Comparaison de projectiles',
   'projectiles.compareHint': 'Simulation à {v} m/s, zéro 30 m, atmosphère standard (15 °C, 1013 hPa)',
+  'projectiles.compareVelocity': 'Vélocité de simulation',
+  'projectiles.compareVelocityHint': 'Ajustez pour voir l’impact de la puissance',
   'projectiles.compareMetric': 'Métrique',
   'projectiles.compareDropSection': 'Chute (sight-line)',
   'projectiles.compareDropAt': 'Chute @ {r} m',

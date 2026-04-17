@@ -76,7 +76,7 @@ export function EnvironmentSection({ weather, onReplace, onPatchManual, advanced
               type="button"
               onClick={() =>
                 weather.latitude != null && weather.longitude != null
-                  ? api.fetchByCoords(weather.latitude, weather.longitude)
+                  ? api.fetchByCoords(weather.latitude, weather.longitude, { force: true })
                   : api.fetchByLocation()
               }
               disabled={api.status === 'loading'}

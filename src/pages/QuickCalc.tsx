@@ -42,6 +42,7 @@ interface FormState {
   zeroRange: number;
   clickValue: number;
   clickUnit: 'MOA' | 'MRAD';
+  currentMag?: number;
   // Distance
   targetDistance: number;
   useRange: boolean;
@@ -137,7 +138,7 @@ export default function QuickCalc() {
   const handleSelectOptic = (id: string) => {
     const o = optics.find(x => x.id === id);
     if (!o) {
-      update({ opticId: '' });
+      update({ opticId: '', currentMag: undefined });
       return;
     }
     update({
@@ -145,6 +146,7 @@ export default function QuickCalc() {
       sightHeight: o.mountHeight ?? form.sightHeight,
       clickValue: o.clickValue,
       clickUnit: o.clickUnit === 'mil' ? 'MRAD' : o.clickUnit,
+      currentMag: o.magCalibration,
     });
   };
 
@@ -296,6 +298,7 @@ export default function QuickCalc() {
           zeroRange={form.zeroRange}
           clickValue={form.clickValue}
           clickUnit={form.clickUnit}
+          currentMag={form.currentMag}
           onChange={update}
           advanced={advanced}
         />

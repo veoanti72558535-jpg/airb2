@@ -497,13 +497,18 @@ export function CompareProjectilesModal({
           <button
             type="button"
             onClick={() => {
-              const allExpanded = !collapsed.drop && !collapsed.vel && !collapsed.energy;
-              setCollapsed({ drop: allExpanded, vel: allExpanded, energy: allExpanded });
+              const allExpanded = !collapsed.drop && !collapsed.vel && !collapsed.energy && !collapsed.overThreshold;
+              setCollapsed({
+                drop: allExpanded,
+                vel: allExpanded,
+                energy: allExpanded,
+                overThreshold: allExpanded,
+              });
             }}
             className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-[11px] font-medium hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-            title={(!collapsed.drop && !collapsed.vel && !collapsed.energy) ? t('projectiles.compareCollapseAll') : t('projectiles.compareExpandAll')}
+            title={(!collapsed.drop && !collapsed.vel && !collapsed.energy && !collapsed.overThreshold) ? t('projectiles.compareCollapseAll') : t('projectiles.compareExpandAll')}
           >
-            {(!collapsed.drop && !collapsed.vel && !collapsed.energy) ? (
+            {(!collapsed.drop && !collapsed.vel && !collapsed.energy && !collapsed.overThreshold) ? (
               <>
                 <Minimize2 className="h-3 w-3" />
                 <span>{t('projectiles.compareCollapseAll')}</span>

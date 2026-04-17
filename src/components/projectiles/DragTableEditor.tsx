@@ -352,10 +352,13 @@ function DragTablePreview({ table, t }: PreviewProps) {
       </div>
 
       <svg
+        ref={svgRef}
         viewBox={`0 0 ${W} ${H}`}
-        className="w-full h-auto"
+        className="w-full h-auto touch-none"
         role="img"
         aria-label={t('projectiles.dragTablePreview')}
+        onPointerMove={handlePointerMove}
+        onPointerLeave={() => setHover(null)}
       >
         {/* grid + axis labels */}
         {yTicks.map((y, i) => (

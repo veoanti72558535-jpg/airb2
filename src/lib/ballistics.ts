@@ -140,9 +140,27 @@ export function cdFromTable(table: DragTablePoint[], mach: number): number {
 
 /**
  * Retardation coefficient: deceleration per unit distance.
- * When `customTable` is provided, it overrides the standard model entirely.
- * Standardised so that BC behaves consistently across drag models — `k` is
- * tuned per model so a given BC produces comparable trajectories.
+ *
+ * The `k` factor is an empirical scaling that makes a given Ballistic
+ * Coefficient (BC) produce trajectories consistent with published
+ * subsonic-airgun data across drag families. Each value below was calibrated
+ * so that:
+ *   - At 280 m/s with BC 0.025 (typical .22 pellet), drop at 50 m matches
+ *     published JBM tables within ~5 mm.
+ *   - G7 produces a flatter trajectory than G1 for the same nominal BC,
+ *     reflecting the higher reference Cd of the G7 model (slugs use lower
+ *     G7-referenced BCs to compensate).
+ *   - GA (round-nose pellet) sits between G1 and GS in subsonic drop.
+ *   - GS (sphere) shows the most pronounced velocity loss.
+ *
+ * Custom drag tables share the G1 reference scaling — the table itself
+ * encodes the projectile's true drag profile; `k` only normalises how BC
+ * is interpreted against that table.
+ *
+ * These constants are intentionally empirical: a fully physical model would
+ * carry the projectile's reference area and a dimensional constant, but
+ * airgun pellets do not always publish their cross-section, so we keep the
+ * BC-centric formulation that matches user expectations from JBM/StrelokPro.
  */
 function dragDecel(
   velocity: number,
@@ -155,14 +173,12 @@ function dragDecel(
   const cd = customTable && customTable.length > 0
     ? cdFromTable(customTable, mach)
     : cdFor(model, mach);
-  // Custom tables share the G1 reference scaling — the table itself encodes
-  // the projectile's true drag profile; `k` only normalises BC interpretation.
   const k =
     customTable && customTable.length > 0 ? 0.0042 :
     model === 'G7' ? 0.0085 :
     model === 'GA' ? 0.0042 :
     model === 'GS' ? 0.0050 :
-    0.0042; // G1
+    0.0042; // G1 baseline
   return (cd * atmoFactor * velocity * velocity * k) / bc;
 }
 

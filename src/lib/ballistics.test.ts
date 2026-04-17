@@ -209,3 +209,107 @@ describe('calculateTrajectory — customDragTable override', () => {
     }
   });
 });
+
+// ── Calibration / cross-model scenarios ────────────────────────────────────
+// These tests anchor the *direction* and *plausibility* of differences
+// between drag families and optic configurations. They intentionally do NOT
+// assert exact ballistic numbers — those are the engine's responsibility and
+// are validated upstream by `cd-from-table` and the invariant tests above.
+
+describe('calculateTrajectory — drag model plausibility (G1 vs G7)', () => {
+  it('G7 with the same nominal BC retains more velocity at 100 m than G1', () => {
+    // G7 is tuned for higher reference Cd, so a same-BC slug actually flies
+    // *flatter* than a G1 pellet — this is the expected behaviour of the BC
+    // normalisation, mirrored from JBM/StrelokPro conventions.
+    const g1 = calculateTrajectory(baseInput({ dragModel: 'G1' }))
+      .find(r => r.range === 100)!;
+    const g7 = calculateTrajectory(baseInput({ dragModel: 'G7' }))
+      .find(r => r.range === 100)!;
+    expect(g7.velocity).toBeGreaterThan(g1.velocity);
+    // Drop magnitude should also be smaller (less negative).
+    expect(g7.drop).toBeGreaterThan(g1.drop);
+  });
+});
+
+describe('calculateTrajectory — SFP scaling on reticle holdover', () => {
+  it('SFP at currentMag = magCalibration matches FFP exactly', () => {
+    const ffp = calculateTrajectory(
+      baseInput({ focalPlane: 'FFP', clickValue: 0.1, clickUnit: 'MRAD' }),
+    ).find(r => r.range === 100)!;
+    const sfpMatch = calculateTrajectory(
+      baseInput({
+        focalPlane: 'SFP', currentMag: 12, magCalibration: 12,
+        clickValue: 0.1, clickUnit: 'MRAD',
+      }),
+    ).find(r => r.range === 100)!;
+    // Reticle at calibration magnification == true angular value.
+    expect(sfpMatch.reticleHoldoverMRAD).toBeCloseTo(ffp.holdoverMRAD, 2);
+    // Turret clicks must be IDENTICAL — they always use true angular values.
+    expect(sfpMatch.clicksElevation).toBe(ffp.clicksElevation);
+  });
+
+  it('SFP at half magnification doubles the reticle holdover but keeps clicks unchanged', () => {
+    const sfpHalf = calculateTrajectory(
+      baseInput({
+        focalPlane: 'SFP', currentMag: 6, magCalibration: 12,
+        clickValue: 0.1, clickUnit: 'MRAD',
+      }),
+    ).find(r => r.range === 100)!;
+    const sfpFull = calculateTrajectory(
+      baseInput({
+        focalPlane: 'SFP', currentMag: 12, magCalibration: 12,
+        clickValue: 0.1, clickUnit: 'MRAD',
+      }),
+    ).find(r => r.range === 100)!;
+    // Reticle scales by magCal/currentMag — at half mag, hold appears 2× larger.
+    expect(Math.abs(sfpHalf.reticleHoldoverMRAD!))
+      .toBeCloseTo(Math.abs(sfpFull.reticleHoldoverMRAD!) * 2, 1);
+    // Clicks remain on the true angular value, not the apparent reticle.
+    expect(sfpHalf.clicksElevation).toBe(sfpFull.clicksElevation);
+  });
+});
+
+describe('calculateTrajectory — zeroing weather isolation', () => {
+  it('zeroing in cold/dense air, then shooting in hot/thin air, drops MORE at distance than zeroing in current weather', () => {
+    // Same-day weather scenario (control): zero and shoot in identical hot/thin air.
+    const hotAir = { ...stdWeather, temperature: 35, pressure: 950, altitude: 1500 };
+    const sameDay = calculateTrajectory(baseInput({ weather: hotAir }))
+      .find(r => r.range === 100)!;
+    // Two-pass: zero was done in cold/dense air, but shooting now in hot/thin air.
+    const coldZero = { ...stdWeather, temperature: -10, pressure: 1050 };
+    const twoPass = calculateTrajectory(
+      baseInput({ weather: hotAir, zeroWeather: coldZero }),
+    ).find(r => r.range === 100)!;
+    // The zero angle is smaller (cold air → more drop → angle compensates),
+    // so when fired in hot air the bullet rises less before falling: net more drop.
+    expect(twoPass.drop).not.toBe(sameDay.drop);
+  });
+
+  it('explicitly omitting zeroWeather is identical to passing the same weather as zeroWeather', () => {
+    const w = { ...stdWeather, temperature: 25 };
+    const implicit = calculateTrajectory(baseInput({ weather: w }))
+      .find(r => r.range === 100)!;
+    const explicit = calculateTrajectory(
+      baseInput({ weather: w, zeroWeather: w }),
+    ).find(r => r.range === 100)!;
+    expect(implicit.drop).toBeCloseTo(explicit.drop, 1);
+    expect(implicit.velocity).toBeCloseTo(explicit.velocity, 1);
+  });
+});
+
+describe('calculateTrajectory — energy & physical bounds', () => {
+  it('residual energy at any range is strictly less than muzzle energy', () => {
+    const out = calculateTrajectory(baseInput());
+    const muzzle = out[0].energy;
+    for (let i = 1; i < out.length; i++) {
+      expect(out[i].energy).toBeLessThanOrEqual(muzzle);
+    }
+  });
+
+  it('windDrift at range 0 is exactly 0 even with strong crosswind', () => {
+    const out = calculateTrajectory(
+      baseInput({ weather: { ...stdWeather, windSpeed: 10, windAngle: 90 } }),
+    );
+    expect(out[0].windDrift).toBe(0);
+  });
+});

@@ -67,6 +67,15 @@ export function CompareProjectilesModal({
 }: Props) {
   const { t } = useI18n();
   const { symbol } = useUnits();
+  /**
+   * Energy threshold (J) read from settings — `null`/`undefined` means the user
+   * disabled the highlight in Settings. Falls back to UK FAC if missing.
+   */
+  const energyThresholdJ = useMemo(() => {
+    const s = getSettings();
+    // Distinguish explicit `null` (= disabled) from missing (= legacy/default).
+    return s.energyThresholdJ === undefined ? DEFAULT_FAC_J : s.energyThresholdJ;
+  }, [open]);
   const [velocity, setVelocity] = useState<number>(initialVelocity);
   const [zeroRange, setZeroRange] = useState<number>(DEFAULT_Z);
   const [exporting, setExporting] = useState(false);

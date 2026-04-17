@@ -1098,6 +1098,17 @@ export function CompareProjectilesModal({
                       (m, x) => (x.maxRange !== null && (m === null || x.maxRange > m) ? x.maxRange : m),
                       null,
                     );
+                    // Second-best useful range (strictly less than the winner) — to show the gap in the tooltip.
+                    const secondMaxRange = overByProjectile.reduce<number | null>(
+                      (m, x) =>
+                        x.maxRange !== null && bestMaxRange !== null && x.maxRange < bestMaxRange &&
+                        (m === null || x.maxRange > m)
+                          ? x.maxRange
+                          : m,
+                      null,
+                    );
+                    const rangeGap =
+                      bestMaxRange !== null && secondMaxRange !== null ? bestMaxRange - secondMaxRange : null;
                     return (
                       <>
                         {/* Max useful range row */}
@@ -1122,7 +1133,11 @@ export function CompareProjectilesModal({
                                       ? 'text-tactical font-semibold bg-tactical/10'
                                       : 'text-destructive font-semibold',
                                 )}
-                                title={isWinner ? t('projectiles.compareOverThresholdBest') : undefined}
+                                title={isWinner
+                                  ? (rangeGap !== null
+                                      ? t('projectiles.compareBestRangeDiff', { gap: rangeGap.toString() })
+                                      : t('projectiles.compareBestRangeOnly'))
+                                  : undefined}
                               >
                                 {isWinner && <span aria-hidden className="mr-1">★</span>}
                                 {maxRange === null

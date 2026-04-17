@@ -82,16 +82,27 @@ export function WeaponSection({
         emptyText={t('calc.noOptics')}
         addHref="/library"
       />
-      {(() => {
-        const o = optics.find(x => x.id === selectedOptic);
-        if (!o?.magCalibration) return null;
-        return (
+      {magCal != null && (
+        <>
           <div className="-mt-1 flex items-start gap-1.5 rounded-md border border-warning/30 bg-warning/5 px-2.5 py-1.5 text-[11px] text-warning">
             <span aria-hidden className="mt-px">⚠</span>
-            <span>{t('calc.sfpReticleHint', { mag: o.magCalibration })}</span>
+            <span>{t('calc.sfpReticleHint', { mag: magCal })}</span>
           </div>
-        );
-      })()}
+          <Field
+            label={t('calc.currentMag')}
+            unit="×"
+            value={currentMag ?? magCal}
+            step={1}
+            onChange={v => onChange({ currentMag: v })}
+          />
+          {magMismatch && (
+            <div className="-mt-1 flex items-start gap-1.5 rounded-md border border-destructive/40 bg-destructive/5 px-2.5 py-1.5 text-[11px] text-destructive">
+              <span aria-hidden className="mt-px">⚠</span>
+              <span>{t('calc.magMismatch', { cal: magCal })}</span>
+            </div>
+          )}
+        </>
+      )}
       <div className="grid grid-cols-2 gap-2.5">
         <Field
           label={t('calc.sightHeight')}

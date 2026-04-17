@@ -471,7 +471,8 @@ const en: Record<keyof typeof fr, string> = {
   'optics.deselectAll': 'Deselect all',
   'optics.searchPreset': 'Search (FX, Element, Discovery, MTC…)',
   'optics.filterAll': 'All',
-  'optics.noMatch': 'No optic for this tube diameter.',
+  'optics.filterBrand': 'Brand',
+  'optics.noMatch': 'No optic for these filters.',
 
   'sessions.title': 'Sessions',
   'sessions.add': 'New Session',

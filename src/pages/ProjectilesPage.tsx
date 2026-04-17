@@ -116,11 +116,21 @@ export default function ProjectilesPage() {
         </motion.div>
       )}
 
+      {projectiles.length > 0 && (
+        <SearchBar
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder={t('projectiles.search')}
+        />
+      )}
+
       {projectiles.length === 0 ? (
         <div className="surface-card p-8 text-center text-muted-foreground text-sm">{t('common.noData')}</div>
+      ) : filteredProjectiles.length === 0 ? (
+        <div className="surface-card p-8 text-center text-muted-foreground text-sm">{t('projectiles.noMatch')}</div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {projectiles.map(p => (
+          {filteredProjectiles.map(p => (
             <div key={p.id} className="surface-elevated p-4">
               <div className="flex items-start justify-between mb-2">
                 <div>

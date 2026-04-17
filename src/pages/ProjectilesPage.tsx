@@ -28,19 +28,7 @@ export default function ProjectilesPage() {
   const [editing, setEditing] = useState<Projectile | null>(null);
   const [form, setForm] = useState({ brand: '', model: '', weight: 18, bc: 0.025, shape: 'domed', caliber: '.177', length: 0, diameter: 0, material: 'lead', notes: '', dataSource: '' });
 
-  // Derive brand list + counts from actual data (case-insensitive, original casing kept).
-  const brandCounts = useMemo(() => {
-    const map = new Map<string, { display: string; count: number }>();
-    projectiles.forEach(p => {
-      const raw = (p.brand ?? '').trim();
-      if (!raw) return;
-      const key = raw.toLowerCase();
-      const existing = map.get(key);
-      if (existing) existing.count++;
-      else map.set(key, { display: raw, count: 1 });
-    });
-    return Array.from(map.values()).sort((a, b) => b.count - a.count || a.display.localeCompare(b.display));
-  }, [projectiles]);
+  const brandCounts = useBrandCounts(projectiles, p => p.brand);
 
   const calToken = (s: string) => {
     const m = (s ?? '').match(/\.\d+/);

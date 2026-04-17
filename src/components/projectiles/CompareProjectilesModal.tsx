@@ -263,13 +263,23 @@ export function CompareProjectilesModal({
                             <div
                               className={cn(
                                 'mt-1 text-[10px] font-mono normal-case inline-flex items-center gap-1 rounded px-1 -mx-1',
-                                isMax
-                                  ? 'text-tactical font-semibold bg-tactical/10'
-                                  : 'text-muted-foreground'
+                                e.joules > FAC_LIMIT_J
+                                  ? 'text-destructive font-semibold bg-destructive/10'
+                                  : isMax
+                                    ? 'text-tactical font-semibold bg-tactical/10'
+                                    : 'text-muted-foreground'
                               )}
-                              title={t('projectiles.compareMuzzleEnergy')}
+                              title={
+                                e.joules > FAC_LIMIT_J
+                                  ? t('projectiles.compareFacOver')
+                                  : t('projectiles.compareMuzzleEnergy')
+                              }
                             >
-                              {isMax && <span aria-hidden>★</span>}
+                              {e.joules > FAC_LIMIT_J ? (
+                                <span aria-hidden>⚠</span>
+                              ) : isMax ? (
+                                <span aria-hidden>★</span>
+                              ) : null}
                               {e.fpe.toFixed(1)} fpe · {e.joules.toFixed(1)} J
                             </div>
                           </div>

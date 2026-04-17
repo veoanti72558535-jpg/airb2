@@ -15,10 +15,13 @@ export default function AirgunsPage() {
   const [airguns, setAirguns] = useState<Airgun[]>(airgunStore.getAll());
   const [searchParam, setSearchParam] = useUrlFilter('q');
   const [brandParam, setBrandParam] = useUrlFilter('brand');
+  const [caliberParam, setCaliberParam] = useUrlFilter('caliber');
   const searchQuery = searchParam ?? '';
   const setSearchQuery = (v: string) => setSearchParam(v);
   const brandFilter = brandParam;
   const setBrandFilter = (v: string | null) => setBrandParam(v);
+  const caliberFilter = caliberParam;
+  const setCaliberFilter = (v: string | null) => setCaliberParam(v);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Airgun | null>(null);
   const [form, setForm] = useState({ brand: '', model: '', caliber: '.177', barrelLength: 600, regPressure: 110, fillPressure: 250, powerSetting: '', defaultSightHeight: 40, defaultZeroRange: 30, notes: '' });

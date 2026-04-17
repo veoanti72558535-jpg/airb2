@@ -536,6 +536,8 @@ interface DropChartProps {
     curve: { range: number; drop: number }[];
   }[];
   t: (key: string, vars?: Record<string, string | number>) => string;
+  /** Render a taller chart for fullscreen mode. */
+  tall?: boolean;
 }
 
 /**
@@ -543,7 +545,7 @@ interface DropChartProps {
  * Uses a shared Y scale so curves are directly comparable. Drop is plotted
  * with negative values (below sight line) downward, matching shooter intuition.
  */
-function DropChart({ rows, t }: DropChartProps) {
+function DropChart({ rows, t, tall = false }: DropChartProps) {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [hoverX, setHoverX] = useState<number | null>(null); // distance in meters
 

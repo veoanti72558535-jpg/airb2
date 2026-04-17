@@ -31,20 +31,7 @@ export default function ProjectilesPage() {
 
   const brandCounts = useBrandCounts(projectiles, p => p.brand);
 
-  const calToken = (s: string) => {
-    const m = (s ?? '').match(/\.\d+/);
-    return m ? m[0] : '';
-  };
-  const CALIBERS = ['.177', '.22', '.25', '.30'];
-  const caliberCounts = useMemo(() => {
-    const map = new Map<string, number>();
-    projectiles.forEach(p => {
-      const c = calToken(p.caliber);
-      if (!c) return;
-      map.set(c, (map.get(c) ?? 0) + 1);
-    });
-    return CALIBERS.map(c => ({ value: c, count: map.get(c) ?? 0 })).filter(x => x.count > 0);
-  }, [projectiles]);
+  const caliberCounts = useMemo(() => buildCaliberCounts(projectiles, p => p.caliber), [projectiles]);
 
   const filteredProjectiles = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();

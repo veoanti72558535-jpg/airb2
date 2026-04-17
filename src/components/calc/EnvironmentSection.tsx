@@ -9,6 +9,7 @@ import { WeatherSnapshot } from '@/lib/types';
 import { useWeather } from '@/hooks/use-weather';
 import { getSettings } from '@/lib/storage';
 import { cn } from '@/lib/utils';
+import { CitySearch } from './CitySearch';
 
 // Strict bounds — Open-Meteo rejects out-of-range, but failing fast in the UI
 // gives a clearer error than a generic "HTTP 400".

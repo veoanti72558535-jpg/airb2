@@ -298,6 +298,7 @@ export default function QuickCalc() {
           zeroRange={form.zeroRange}
           clickValue={form.clickValue}
           clickUnit={form.clickUnit}
+          currentMag={form.currentMag}
           onChange={update}
           advanced={advanced}
         />

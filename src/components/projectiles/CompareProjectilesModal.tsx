@@ -1,5 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { X, GitCompare, Gauge, RotateCcw, Target, Download, Maximize2, Minimize2, Copy, Check, FileText, ChevronDown, ChevronRight, EyeOff, GripVertical, ListOrdered, ArrowLeftRight } from 'lucide-react';
+import { X, GitCompare, Gauge, RotateCcw, Target, Download, Maximize2, Minimize2, Copy, Check, FileText, ChevronDown, ChevronRight, EyeOff, GripVertical, ListOrdered, ArrowLeftRight, ArrowDownAZ } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+} from '@/components/ui/dropdown-menu';
 import {
   DndContext,
   PointerSensor,
@@ -526,45 +535,70 @@ export function CompareProjectilesModal({
                   const effectiveSort: 'usefulRange' | 'bc' | 'weight' =
                     sortMode ?? (energyThresholdJ !== null ? 'usefulRange' : 'bc');
                   const usefulRangeAvailable = energyThresholdJ !== null;
-                  // Cycle: usefulRange → bc → weight → usefulRange (skip usefulRange when no threshold).
-                  const cycle: ('usefulRange' | 'bc' | 'weight')[] = usefulRangeAvailable
+                  // Available criteria — usefulRange only when an energy threshold is set.
+                  const available: ('usefulRange' | 'bc' | 'weight')[] = usefulRangeAvailable
                     ? ['usefulRange', 'bc', 'weight']
                     : ['bc', 'weight'];
-                  const idx = cycle.indexOf(effectiveSort);
-                  const nextMode = cycle[(idx + 1) % cycle.length];
-                  const canToggle = cycle.length > 1;
+                  const canToggle = available.length > 1;
                   const labelFor = (m: 'usefulRange' | 'bc' | 'weight') =>
                     m === 'usefulRange'
                       ? t('projectiles.compareSortByUsefulRange')
                       : m === 'bc'
                         ? t('projectiles.compareSortByBc')
                         : t('projectiles.compareSortByWeight');
-                  const label = labelFor(effectiveSort);
-                  const hint = canToggle
-                    ? t('projectiles.compareSortToggleHint', { next: labelFor(nextMode) })
-                    : effectiveSort === 'usefulRange'
+                  const hintFor = (m: 'usefulRange' | 'bc' | 'weight') =>
+                    m === 'usefulRange'
                       ? t('projectiles.compareSortByUsefulRangeHint', { j: (energyThresholdJ ?? 0).toFixed(2) })
-                      : effectiveSort === 'bc'
+                      : m === 'bc'
                         ? t('projectiles.compareSortByBcHint')
                         : t('projectiles.compareSortByWeightHint');
+                  const label = labelFor(effectiveSort);
+                  const triggerHint = canToggle
+                    ? t('projectiles.compareSortMenuHint')
+                    : hintFor(effectiveSort);
                   return (
                     <span className="inline-flex items-center gap-1">
-                      <HoverHint label={hint}>
-                        <button
-                          type="button"
-                          onClick={canToggle ? () => setSortMode(nextMode) : undefined}
-                          disabled={!canToggle}
-                          className={cn(
-                            'inline-flex items-center gap-0.5 rounded bg-muted px-1.5 py-0.5 text-[10px] font-mono font-medium text-muted-foreground',
-                            canToggle && 'hover:bg-muted/70 hover:text-foreground cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-primary',
-                            !canToggle && 'cursor-default'
-                          )}
-                          aria-label={hint}
-                        >
-                          <span aria-hidden>↓</span>
-                          {label}
-                        </button>
-                      </HoverHint>
+                      <DropdownMenu>
+                        <HoverHint label={triggerHint}>
+                          <DropdownMenuTrigger asChild>
+                            <button
+                              type="button"
+                              disabled={!canToggle}
+                              className={cn(
+                                'inline-flex items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-[10px] font-mono font-medium text-muted-foreground',
+                                canToggle && 'hover:bg-muted/70 hover:text-foreground cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-primary data-[state=open]:bg-muted/70 data-[state=open]:text-foreground',
+                                !canToggle && 'cursor-default'
+                              )}
+                              aria-label={triggerHint}
+                            >
+                              <ArrowDownAZ className="h-2.5 w-2.5" aria-hidden />
+                              {label}
+                              {canToggle && <ChevronDown className="h-2.5 w-2.5 opacity-60" aria-hidden />}
+                            </button>
+                          </DropdownMenuTrigger>
+                        </HoverHint>
+                        <DropdownMenuContent align="start" className="min-w-[10rem]">
+                          <DropdownMenuLabel className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold">
+                            {t('projectiles.compareSortMenuLabel')}
+                          </DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuRadioGroup
+                            value={effectiveSort}
+                            onValueChange={(v) => setSortMode(v as 'usefulRange' | 'bc' | 'weight')}
+                          >
+                            {available.map((m) => (
+                              <DropdownMenuRadioItem
+                                key={m}
+                                value={m}
+                                className="text-xs"
+                                title={hintFor(m)}
+                              >
+                                {labelFor(m)}
+                              </DropdownMenuRadioItem>
+                            ))}
+                          </DropdownMenuRadioGroup>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                       <HoverHint label={t('projectiles.compareSortManualEnableHint')}>
                         <button
                           type="button"

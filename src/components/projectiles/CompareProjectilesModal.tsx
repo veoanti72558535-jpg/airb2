@@ -554,11 +554,17 @@ export function CompareProjectilesModal({
                     return { id: p.id, fpe, joules };
                   });
                   const maxFpe = energies.reduce((m, e) => (e.fpe > m ? e.fpe : m), 0);
-                  return rows.map(({ p }) => {
+                  // Shared Y scale across all sparklines so curves are visually comparable.
+                  const globalMaxJ = rows.reduce((m, r) => {
+                    const local = r.energyCurve.reduce((mm, pt) => (pt.energy > mm ? pt.energy : mm), 0);
+                    return local > m ? local : m;
+                  }, 0);
+                  return rows.map(({ p, energyCurve }, idx) => {
                     const e = energies.find(x => x.id === p.id)!;
                     // Highlight only when there's >1 row and this row is (uniquely or jointly) the max.
                     const isMax =
                       rows.length > 1 && Math.abs(e.fpe - maxFpe) < 0.05;
+                    const seriesColor = SERIES_COLORS[idx % SERIES_COLORS.length];
                     return (
                       <th key={p.id} className="text-left font-medium px-3 py-2 min-w-[160px]">
                         <div className="flex items-start justify-between gap-2">
@@ -591,6 +597,16 @@ export function CompareProjectilesModal({
                               ) : null}
                               {e.fpe.toFixed(1)} fpe · {e.joules.toFixed(1)} J
                             </div>
+                            <EnergySparkline
+                              curve={energyCurve}
+                              color={seriesColor}
+                              globalMaxJ={globalMaxJ}
+                              thresholdJ={energyThresholdJ}
+                              label={t('projectiles.compareEnergySparklineTitle', {
+                                start: energyCurve[0]?.energy.toFixed(1) ?? '—',
+                                end: energyCurve[energyCurve.length - 1]?.energy.toFixed(1) ?? '—',
+                              })}
+                            />
                           </div>
                           <button
                             onClick={() => onRemove(p.id)}

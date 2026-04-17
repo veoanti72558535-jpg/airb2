@@ -236,15 +236,72 @@ function DragTablePreview({ table, t }: PreviewProps) {
 
   const xToPx = (x: number) => PAD_L + ((x - xMin) / (xMax - xMin)) * innerW;
   const yToPx = (y: number) => PAD_T + ((yMax - y) / (yMax - yMin)) * innerH;
+  const pxToX = (px: number) => xMin + ((px - PAD_L) / innerW) * (xMax - xMin);
 
   const buildPath = (pts: { mach: number; cd: number }[]) =>
     pts
       .map((p, i) => `${i === 0 ? 'M' : 'L'}${xToPx(p.mach).toFixed(1)},${yToPx(p.cd).toFixed(1)}`)
       .join(' ');
 
+  // Linear interpolation of the imported table at an arbitrary Mach (clamped
+  // to the table extents — outside the imported range we'd be extrapolating
+  // which has no physical meaning for a measured Cd curve).
+  const interpImported = (mach: number): number | null => {
+    if (mach < table[0].mach || mach > table[table.length - 1].mach) return null;
+    for (let i = 1; i < table.length; i++) {
+      const a = table[i - 1];
+      const b = table[i];
+      if (mach <= b.mach) {
+        const t = (mach - a.mach) / (b.mach - a.mach);
+        return a.cd + (b.cd - a.cd) * t;
+      }
+    }
+    return table[table.length - 1].cd;
+  };
+
+  // Hover state — `null` = not hovering. `mach` is in data units.
+  const [hover, setHover] = useState<number | null>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
+
+  const handlePointerMove = useCallback((e: React.PointerEvent<SVGSVGElement>) => {
+    const svg = svgRef.current;
+    if (!svg) return;
+    // Convert client coords → SVG viewBox coords so the math stays correct
+    // regardless of CSS scaling (the SVG is width:100%).
+    const rect = svg.getBoundingClientRect();
+    const vbX = ((e.clientX - rect.left) / rect.width) * W;
+    if (vbX < PAD_L || vbX > W - PAD_R) {
+      setHover(null);
+      return;
+    }
+    setHover(pxToX(vbX));
+  }, [pxToX]);
+
   // 3 ticks on each axis
   const xTicks = [xMin, (xMin + xMax) / 2, xMax];
   const yTicks = [yMin, (yMin + yMax) / 2, yMax];
+
+  // Build tooltip rows for the hovered Mach: imported value (if in range) plus
+  // every currently-enabled reference curve, in the same colour as the line.
+  const hoverRows = hover === null
+    ? []
+    : [
+        ...(interpImported(hover) !== null
+          ? [{ label: t('projectiles.dragTableImported'), color: 'hsl(var(--primary))', cd: interpImported(hover)! }]
+          : []),
+        ...refCurves.map(r => ({ label: r.model, color: r.color, cd: cdFor(r.model, hover) })),
+      ];
+
+  // Tooltip box dimensions (sized to fit ~5 rows). Positioned to flip sides
+  // when near the right edge so it never clips out of the viewBox.
+  const TT_W = 78;
+  const TT_LINE_H = 10;
+  const TT_H = 14 + hoverRows.length * TT_LINE_H;
+  const tooltipX = hover !== null && xToPx(hover) + TT_W + 8 > W - PAD_R
+    ? xToPx(hover) - TT_W - 6
+    : hover !== null
+      ? xToPx(hover) + 6
+      : 0;
 
   return (
     <div className="space-y-1.5">

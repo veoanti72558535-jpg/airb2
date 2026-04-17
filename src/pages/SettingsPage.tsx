@@ -8,11 +8,47 @@ import { unitCategories } from '@/lib/units';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
+/** Preset thresholds (J) — covers the most common airgun regulations. */
+const ENERGY_PRESETS: { key: string; value: number | null; labelKey: string }[] = [
+  { key: 'off', value: null, labelKey: 'settings.energyThresholdOff' },
+  { key: 'fr', value: 7.5, labelKey: 'settings.energyThresholdFr' },
+  { key: 'uk', value: 16.27, labelKey: 'settings.energyThresholdUk' },
+  { key: 'custom', value: -1, labelKey: 'settings.energyThresholdCustom' },
+];
+
 export default function SettingsPage() {
   const { t, locale, setLocale } = useI18n();
   const { theme, toggleTheme } = useTheme();
   const settings = getSettings();
   const { prefs, setUnitPref } = useUnits();
+
+  // Identify which preset matches the stored value (null/7.5/16.27 → preset; anything else → custom).
+  const currentThreshold = settings.energyThresholdJ === undefined ? 16.27 : settings.energyThresholdJ;
+  const matchedPreset = ENERGY_PRESETS.find(p => p.value === currentThreshold);
+  const initialPresetKey = matchedPreset ? matchedPreset.key : 'custom';
+  const [presetKey, setPresetKey] = useState<string>(initialPresetKey);
+  const [customJ, setCustomJ] = useState<string>(
+    initialPresetKey === 'custom' && currentThreshold !== null ? String(currentThreshold) : '12'
+  );
+
+  const applyEnergyPreset = (key: string) => {
+    setPresetKey(key);
+    if (key === 'custom') {
+      const parsed = parseFloat(customJ);
+      saveSettings({ ...settings, energyThresholdJ: Number.isFinite(parsed) && parsed > 0 ? parsed : 12 });
+    } else {
+      const preset = ENERGY_PRESETS.find(p => p.key === key);
+      if (preset) saveSettings({ ...settings, energyThresholdJ: preset.value });
+    }
+  };
+
+  const applyCustomValue = (raw: string) => {
+    setCustomJ(raw);
+    const parsed = parseFloat(raw);
+    if (Number.isFinite(parsed) && parsed > 0) {
+      saveSettings({ ...settings, energyThresholdJ: parsed });
+    }
+  };
 
   const toggleAdvanced = () => {
     saveSettings({ ...settings, advancedMode: !settings.advancedMode });

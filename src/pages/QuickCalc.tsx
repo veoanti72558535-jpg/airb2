@@ -645,7 +645,32 @@ export default function QuickCalc() {
         {error && (
           <p className="mt-2 text-xs text-destructive font-mono">{error}</p>
         )}
-      </div>
+          </div>
+
+          {/* Compare-with-another CTA — only available once the current form
+              maps to a saved session (handleSave or rehydration). Manual edits
+              clear currentSessionId because a stale snapshot would mislead. */}
+          {currentSessionId && sessionStore.getAll().length >= 2 && (
+            <button
+              type="button"
+              onClick={() => setComparePickerOpen(true)}
+              className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-md border border-primary/30 text-primary bg-primary/5 text-xs font-medium hover:bg-primary/10 transition-colors"
+            >
+              <ArrowLeftRight className="h-3.5 w-3.5" />
+              {t('compare.compareFromCalcCta')}
+            </button>
+          )}
+
+          <SessionPickerDialog
+            open={comparePickerOpen}
+            onOpenChange={setComparePickerOpen}
+            source={currentSessionId ? sessionStore.getById(currentSessionId) ?? null : null}
+            sessions={sessionStore.getAll()}
+            onPick={(other) => {
+              if (!currentSessionId) return;
+              navigate(`/compare?a=${currentSessionId}&b=${other.id}`);
+            }}
+          />
 
       {results && heroResult ? (
         <motion.div

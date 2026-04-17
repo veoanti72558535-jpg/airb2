@@ -233,41 +233,55 @@ export function CompareProjectilesModal({
                 <th className="text-left font-medium px-3 py-2 sticky left-0 bg-muted/40 z-10">
                   {t('projectiles.compareMetric')}
                 </th>
-                {rows.map(({ p }) => {
-                  // FPE = (grains × fps²) / 450240. Weight is grains; slider velocity is m/s.
-                  const weightGrains = p.weight;
+                {(() => {
+                  // Pre-compute FPE for all rows so we can highlight the maximum.
                   const velocityFps = velocity * 3.28084;
-                  const fpe = (weightGrains * velocityFps * velocityFps) / 450240;
-                  // Joules for metric users: 0.5 × m(kg) × v²(m/s²). 1 grain = 0.0000648 kg.
-                  const joules = 0.5 * (weightGrains * 0.0000647989) * velocity * velocity;
-                  return (
-                    <th key={p.id} className="text-left font-medium px-3 py-2 min-w-[160px]">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <div className="text-xs font-semibold text-foreground normal-case truncate">
-                            {p.brand} {p.model}
+                  const energies = rows.map(({ p }) => {
+                    const fpe = (p.weight * velocityFps * velocityFps) / 450240;
+                    const joules = 0.5 * (p.weight * 0.0000647989) * velocity * velocity;
+                    return { id: p.id, fpe, joules };
+                  });
+                  const maxFpe = energies.reduce((m, e) => (e.fpe > m ? e.fpe : m), 0);
+                  return rows.map(({ p }) => {
+                    const e = energies.find(x => x.id === p.id)!;
+                    // Highlight only when there's >1 row and this row is (uniquely or jointly) the max.
+                    const isMax =
+                      rows.length > 1 && Math.abs(e.fpe - maxFpe) < 0.05;
+                    return (
+                      <th key={p.id} className="text-left font-medium px-3 py-2 min-w-[160px]">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <div className="text-xs font-semibold text-foreground normal-case truncate">
+                              {p.brand} {p.model}
+                            </div>
+                            <div className="text-[10px] text-muted-foreground font-mono">
+                              {p.caliber} · {p.bcModel ?? 'G1'}
+                            </div>
+                            <div
+                              className={cn(
+                                'mt-1 text-[10px] font-mono normal-case inline-flex items-center gap-1 rounded px-1 -mx-1',
+                                isMax
+                                  ? 'text-tactical font-semibold bg-tactical/10'
+                                  : 'text-muted-foreground'
+                              )}
+                              title={t('projectiles.compareMuzzleEnergy')}
+                            >
+                              {isMax && <span aria-hidden>★</span>}
+                              {e.fpe.toFixed(1)} fpe · {e.joules.toFixed(1)} J
+                            </div>
                           </div>
-                          <div className="text-[10px] text-muted-foreground font-mono">
-                            {p.caliber} · {p.bcModel ?? 'G1'}
-                          </div>
-                          <div
-                            className="mt-1 text-[10px] font-mono text-tactical normal-case"
-                            title={t('projectiles.compareMuzzleEnergy')}
+                          <button
+                            onClick={() => onRemove(p.id)}
+                            className="p-0.5 rounded hover:bg-muted text-muted-foreground shrink-0"
+                            aria-label={t('common.delete')}
                           >
-                            {fpe.toFixed(1)} fpe · {joules.toFixed(1)} J
-                          </div>
+                            <X className="h-3 w-3" />
+                          </button>
                         </div>
-                        <button
-                          onClick={() => onRemove(p.id)}
-                          className="p-0.5 rounded hover:bg-muted text-muted-foreground shrink-0"
-                          aria-label={t('common.delete')}
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </div>
-                    </th>
-                  );
-                })}
+                      </th>
+                    );
+                  });
+                })()}
               </tr>
             </thead>
             <tbody className="divide-y divide-border">

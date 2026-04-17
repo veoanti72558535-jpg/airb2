@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { X, GitCompare, Gauge, RotateCcw, Target, Download, Maximize2, Minimize2, Copy, Check } from 'lucide-react';
+import { X, GitCompare, Gauge, RotateCcw, Target, Download, Maximize2, Minimize2, Copy, Check, FileText } from 'lucide-react';
 import { toPng } from 'html-to-image';
+import { jsPDF } from 'jspdf';
 import { Projectile, WeatherSnapshot } from '@/lib/types';
 import { getSettings } from '@/lib/storage';
 import { calculateTrajectory } from '@/lib/ballistics';
@@ -80,6 +81,7 @@ export function CompareProjectilesModal({
   const [velocity, setVelocity] = useState<number>(initialVelocity);
   const [zeroRange, setZeroRange] = useState<number>(DEFAULT_Z);
   const [exporting, setExporting] = useState(false);
+  const [exportingPdf, setExportingPdf] = useState(false);
   const [copying, setCopying] = useState(false);
   const [copied, setCopied] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
@@ -151,6 +153,78 @@ export function CompareProjectilesModal({
       setCopying(false);
     }
   };
+
+  /**
+   * Render the chart+table area to PNG, then embed it into a single-page PDF
+   * sized to the captured aspect ratio. We choose orientation (portrait vs
+   * landscape) from the snapshot's aspect so the image fills the page without
+   * letterboxing. A4 dimensions are used in millimetres (jsPDF default unit).
+   */
+  const handleExportPdf = async () => {
+    if (!exportRef.current || rows.length === 0) return;
+    setExportingPdf(true);
+    try {
+      const dataUrl = await toPng(exportRef.current, {
+        backgroundColor:
+          getComputedStyle(document.body).getPropertyValue('background-color') || '#111827',
+        pixelRatio: 2,
+        cacheBust: true,
+        style: { fontFamily: getComputedStyle(document.body).fontFamily },
+      });
+
+      // Probe natural pixel dimensions of the rendered snapshot to compute the
+      // aspect ratio — we can't trust the wrapper's bounding box (CSS scaling).
+      const img = new Image();
+      img.src = dataUrl;
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = () => reject(new Error('image load failed'));
+      });
+      const ratio = img.naturalWidth / img.naturalHeight;
+      const orientation: 'p' | 'l' = ratio >= 1 ? 'l' : 'p';
+
+      // A4: 210 × 297 mm. Reserve 10 mm margins on each side.
+      const pdf = new jsPDF({ orientation, unit: 'mm', format: 'a4' });
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = pdf.internal.pageSize.getHeight();
+      const margin = 10;
+      const maxW = pageW - margin * 2;
+      const maxH = pageH - margin * 2 - 14; // leave room for the title strip
+
+      // Fit-to-page while preserving aspect ratio.
+      let imgW = maxW;
+      let imgH = imgW / ratio;
+      if (imgH > maxH) {
+        imgH = maxH;
+        imgW = imgH * ratio;
+      }
+      const x = (pageW - imgW) / 2;
+      const y = margin + 14;
+
+      // Title strip at the top of the page so the export carries provenance.
+      const stamp = new Date().toISOString().slice(0, 10);
+      pdf.setFontSize(12);
+      pdf.text('AirBallistik — Projectile comparison', margin, margin + 4);
+      pdf.setFontSize(9);
+      pdf.setTextColor(120);
+      pdf.text(
+        `${stamp} · MV ${velocity} m/s · zero ${zeroRange} m`,
+        margin,
+        margin + 9,
+      );
+      pdf.setTextColor(0);
+
+      pdf.addImage(dataUrl, 'PNG', x, y, imgW, imgH, undefined, 'FAST');
+      pdf.save(`airballistik-compare-${stamp}.pdf`);
+      toast.success(t('projectiles.compareExportPdfSuccess'));
+    } catch (err) {
+      console.error('Export PDF failed', err);
+      toast.error(t('projectiles.compareExportPdfError'));
+    } finally {
+      setExportingPdf(false);
+    }
+  };
+
   useEffect(() => {
     if (open) {
       setVelocity(initialVelocity);
@@ -266,6 +340,19 @@ export function CompareProjectilesModal({
               <Download className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">
                 {exporting ? t('projectiles.compareExporting') : t('projectiles.compareExport')}
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={handleExportPdf}
+              disabled={exportingPdf || rows.length === 0}
+              className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-[11px] font-medium hover:bg-muted text-muted-foreground hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              title={t('projectiles.compareExportPdf')}
+              aria-label={t('projectiles.compareExportPdf')}
+            >
+              <FileText className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">
+                {exportingPdf ? t('projectiles.compareExportingPdf') : t('projectiles.compareExportPdf')}
               </span>
             </button>
             <button

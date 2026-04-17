@@ -340,22 +340,38 @@ export function ResultsCard({
                 </tr>
               </thead>
               <tbody>
-                {rows.map(r => (
-                  <tr
-                    key={r.range}
-                    className={`border-b border-border/20 ${
-                      r.range === result.range ? 'bg-primary/10 font-semibold' : ''
-                    }`}
-                  >
-                    <td className="py-1.5 pr-2">{r.range}{distUnit}</td>
-                    <td className="text-right py-1.5 px-2">{r.drop.toFixed(1)}</td>
-                    <td className="text-right py-1.5 px-2">
-                      {(clickUnit === 'MOA' ? r.holdover : r.holdoverMRAD).toFixed(2)}
-                    </td>
-                    <td className="text-right py-1.5 px-2">{r.windDrift.toFixed(1)}</td>
-                    <td className="text-right py-1.5 pl-2">{r.velocity.toFixed(0)}</td>
-                  </tr>
-                ))}
+                {rows.map(r => {
+                  const isSelected = r.range === result.range;
+                  const isOverThreshold =
+                    energyThresholdJ != null && energyThresholdJ > 0 && r.energy > energyThresholdJ;
+                  return (
+                    <tr
+                      key={r.range}
+                      className={cn(
+                        'border-b border-border/20',
+                        isOverThreshold &&
+                          'bg-destructive/10 text-destructive hover:bg-destructive/15',
+                        isSelected &&
+                          (isOverThreshold
+                            ? 'font-semibold ring-1 ring-inset ring-destructive/40'
+                            : 'bg-primary/10 font-semibold'),
+                      )}
+                      title={
+                        isOverThreshold
+                          ? `${r.energy.toFixed(1)} J > ${energyThresholdJ!.toFixed(2)} J`
+                          : undefined
+                      }
+                    >
+                      <td className="py-1.5 pr-2">{r.range}{distUnit}</td>
+                      <td className="text-right py-1.5 px-2">{r.drop.toFixed(1)}</td>
+                      <td className="text-right py-1.5 px-2">
+                        {(clickUnit === 'MOA' ? r.holdover : r.holdoverMRAD).toFixed(2)}
+                      </td>
+                      <td className="text-right py-1.5 px-2">{r.windDrift.toFixed(1)}</td>
+                      <td className="text-right py-1.5 pl-2">{r.velocity.toFixed(0)}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

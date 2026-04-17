@@ -85,11 +85,19 @@ export function CompareProjectilesModal({
   const [copying, setCopying] = useState(false);
   const [copied, setCopied] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
-  /** Per-section collapsed state — lets users focus on a single metric. Defaults expanded. */
-  const [collapsed, setCollapsed] = useState<{ vel: boolean; energy: boolean }>({
-    vel: false,
-    energy: false,
+  /** Per-section collapsed state — persisted in localStorage so it survives modal re-opens. */
+  const [collapsed, setCollapsed] = useState<{ vel: boolean; energy: boolean }>(() => {
+    try {
+      const raw = localStorage.getItem('compare-sections-collapsed');
+      if (raw) return JSON.parse(raw) as { vel: boolean; energy: boolean };
+    } catch { /* ignore */ }
+    return { vel: false, energy: false };
   });
+
+  // Persist whenever collapsed state changes.
+  useEffect(() => {
+    try { localStorage.setItem('compare-sections-collapsed', JSON.stringify(collapsed)); } catch { /* ignore */ }
+  }, [collapsed]);
   /** Wraps the chart + table — that's what gets snapshotted to PNG. */
   const exportRef = useRef<HTMLDivElement | null>(null);
 

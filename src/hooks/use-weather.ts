@@ -14,6 +14,8 @@ export type WeatherStatus = 'idle' | 'locating' | 'loading' | 'error';
 export interface UseWeatherApi {
   status: WeatherStatus;
   error: string | null;
+  /** True when the current snapshot was served from the local cache. */
+  fromCache: boolean;
   /** Fetch by browser geolocation. Resolves silently on failure. */
   fetchByLocation: () => Promise<void>;
   /** Fetch using explicit coordinates. Pass `force` to bypass the local cache. */
@@ -52,14 +54,18 @@ export function useWeather(
 ): UseWeatherApi {
   const [status, setStatus] = useState<WeatherStatus>('idle');
   const [error, setError] = useState<string | null>(null);
+  // True when the LAST successful fetch was served from the cache. Reset by
+  // any forced refetch (`{ force: true }`) so the UI badge stays in sync.
+  const [fromCache, setFromCache] = useState<boolean>(false);
 
   const fetchByCoords = useCallback(
     async (lat: number, lon: number, opts?: { force?: boolean; locationLabel?: string }) => {
       setStatus('loading');
       setError(null);
       try {
-        const { snapshot } = await fetchWeather({ latitude: lat, longitude: lon }, opts);
-        setWeather(snapshot);
+        const result = await fetchWeather({ latitude: lat, longitude: lon }, opts);
+        setWeather(result.snapshot);
+        setFromCache(Boolean(result.fromCache));
         setStatus('idle');
       } catch (e) {
         setStatus('error');
@@ -105,6 +111,7 @@ export function useWeather(
       setWeather({ ...next, manualOverrides: [], source: 'manual' });
       setStatus('idle');
       setError(null);
+      setFromCache(false);
     },
     [setWeather],
   );
@@ -112,6 +119,7 @@ export function useWeather(
   return {
     status,
     error,
+    fromCache,
     fetchByLocation,
     fetchByCoords,
     patchManual,

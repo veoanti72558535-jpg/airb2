@@ -16,6 +16,8 @@ export interface FetchWeatherResult {
   snapshot: WeatherSnapshot;
   /** Human-readable label like "Lat 48.85, Lon 2.35". */
   label: string;
+  /** True when the snapshot came from the local cache (no network call). */
+  fromCache?: boolean;
 }
 
 const OPEN_METEO_URL = 'https://api.open-meteo.com/v1/forecast';
@@ -136,7 +138,7 @@ export async function fetchOpenMeteo(
   // (e.g. an explicit "Refresh" button).
   if (!options?.force) {
     const cached = getCachedWeather(point.latitude, point.longitude);
-    if (cached) return cached;
+    if (cached) return { ...cached, fromCache: true };
   }
 
   const params = new URLSearchParams({

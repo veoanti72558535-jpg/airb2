@@ -117,11 +117,21 @@ export default function AirgunsPage() {
         </motion.div>
       )}
 
+      {airguns.length > 0 && (
+        <SearchBar
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder={t('airguns.search')}
+        />
+      )}
+
       {airguns.length === 0 ? (
         <div className="surface-card p-8 text-center text-muted-foreground text-sm">{t('common.noData')}</div>
+      ) : filteredAirguns.length === 0 ? (
+        <div className="surface-card p-8 text-center text-muted-foreground text-sm">{t('airguns.noMatch')}</div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {airguns.map(a => (
+          {filteredAirguns.map(a => (
             <div key={a.id} className="surface-elevated p-4">
               <div className="flex items-start justify-between mb-2">
                 <div>

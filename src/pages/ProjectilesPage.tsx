@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Zap, Plus, Trash2, Edit2 } from 'lucide-react';
+import { Zap, Plus, Trash2, Edit2, Download } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { projectileStore } from '@/lib/storage';
 import { useUnits } from '@/hooks/use-units';
@@ -13,6 +13,8 @@ import { FilterChips } from '@/components/FilterChips';
 import { useBrandCounts } from '@/hooks/use-brand-counts';
 import { calToken, buildCaliberCounts } from '@/lib/caliber';
 import { AdvancedDisclosure } from '@/components/AdvancedDisclosure';
+import { ImportPresetProjectilesModal } from '@/components/projectiles/ImportPresetProjectilesModal';
+import { seedProjectileKey } from '@/lib/seed-projectiles';
 
 interface FormState {
   brand: string;
@@ -60,8 +62,14 @@ export default function ProjectilesPage() {
   const caliberFilter = caliberParam;
   const setCaliberFilter = (v: string | null) => setCaliberParam(v);
   const [showForm, setShowForm] = useState(false);
+  const [showImport, setShowImport] = useState(false);
   const [editing, setEditing] = useState<Projectile | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
+
+  const existingKeys = useMemo(
+    () => new Set(projectiles.map(p => seedProjectileKey({ brand: p.brand, model: p.model, weight: p.weight, caliber: p.caliber }))),
+    [projectiles]
+  );
 
   const brandCounts = useBrandCounts(projectiles, p => p.brand);
   const caliberCounts = useMemo(() => buildCaliberCounts(projectiles, p => p.caliber), [projectiles]);
@@ -133,15 +141,27 @@ export default function ProjectilesPage() {
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
         <div className="flex items-center gap-2">
           <Zap className="h-5 w-5 text-primary" />
           <h1 className="text-xl font-heading font-bold">{t('projectiles.title')}</h1>
         </div>
-        <button onClick={() => { setShowForm(!showForm); setEditing(null); setForm(emptyForm); }} className="px-3 py-1.5 bg-primary text-primary-foreground rounded-md text-sm font-medium flex items-center gap-1 hover:opacity-90">
-          <Plus className="h-4 w-4" />{t('projectiles.add')}
-        </button>
+        <div className="flex gap-2">
+          <button onClick={() => setShowImport(true)} className="px-3 py-1.5 bg-muted text-foreground rounded-md text-sm font-medium flex items-center gap-1 hover:bg-muted/70 border border-border">
+            <Download className="h-4 w-4" />{t('projectiles.importPreset')}
+          </button>
+          <button onClick={() => { setShowForm(!showForm); setEditing(null); setForm(emptyForm); }} className="px-3 py-1.5 bg-primary text-primary-foreground rounded-md text-sm font-medium flex items-center gap-1 hover:opacity-90">
+            <Plus className="h-4 w-4" />{t('projectiles.add')}
+          </button>
+        </div>
       </div>
+
+      <ImportPresetProjectilesModal
+        open={showImport}
+        onClose={() => setShowImport(false)}
+        onImported={refresh}
+        existingKeys={existingKeys}
+      />
 
       {showForm && (
         <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="surface-elevated p-4 pb-20 md:pb-4 space-y-3">

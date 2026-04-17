@@ -45,6 +45,31 @@ export function EnvironmentSection({ weather, onReplace, onPatchManual, advanced
   const api = useWeather(weather, onReplace);
   const source = api.effectiveSource(weather);
 
+  // Manual coords UI — collapsed by default, opens a small lat/lon form so users
+  // can fetch weather without granting browser geolocation (sandbox previews,
+  // remote shooting plans, ranges with poor GPS).
+  const [showManualCoords, setShowManualCoords] = useState(false);
+  const [latInput, setLatInput] = useState<string>(
+    weather.latitude != null ? String(weather.latitude) : '',
+  );
+  const [lonInput, setLonInput] = useState<string>(
+    weather.longitude != null ? String(weather.longitude) : '',
+  );
+  const [coordsError, setCoordsError] = useState<string | null>(null);
+
+  const submitManualCoords = () => {
+    const parsed = coordsSchema.safeParse({
+      lat: Number(latInput.replace(',', '.')),
+      lon: Number(lonInput.replace(',', '.')),
+    });
+    if (!parsed.success) {
+      setCoordsError(t('weather.errInvalidCoords'));
+      return;
+    }
+    setCoordsError(null);
+    void api.fetchByCoords(parsed.data.lat, parsed.data.lon, { force: true });
+  };
+
   const sourceLabel =
     source === 'auto' ? t('weather.sourceAuto') :
     source === 'mixed' ? t('weather.sourceMixed') :

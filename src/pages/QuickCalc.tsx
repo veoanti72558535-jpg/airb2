@@ -98,6 +98,7 @@ function defaultForm(): FormState {
     projectileDiameter: 5.5,
     muzzleVelocity: 280,
     airgunId: '',
+    tuneId: '',
     barrelLength: 600,
     twistRate: 16,
     opticId: '',
@@ -132,6 +133,7 @@ export default function QuickCalc() {
   const projectiles = useMemo<Projectile[]>(() => projectileStore.getAll(), []);
   const airguns = useMemo<Airgun[]>(() => airgunStore.getAll(), []);
   const optics = useMemo<Optic[]>(() => opticStore.getAll(), []);
+  const tunes = useMemo<Tune[]>(() => tuneStore.getAll(), []);
 
   useEffect(() => {
     saveSettings({ ...getSettings(), advancedMode: advanced });
@@ -161,6 +163,7 @@ export default function QuickCalc() {
       projectileDiameter: i.projectileDiameter ?? proj?.diameter,
       muzzleVelocity: i.muzzleVelocity,
       airgunId: session.airgunId ?? '',
+      tuneId: session.tuneId ?? '',
       twistRate: i.twistRate,
       opticId: session.opticId ?? '',
       focalPlane: i.focalPlane ?? 'FFP',

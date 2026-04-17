@@ -118,3 +118,66 @@ describe('calculateTrajectory — click conversions', () => {
     expect(Math.abs(fine)).toBeGreaterThan(Math.abs(coarse));
   });
 });
+
+describe('calculateTrajectory — customDragTable override', () => {
+  // Subsonic pellet flight stays well under Mach 1 (≈ 0.5–0.8). G1 in that
+  // band sits around Cd ≈ 0.23. Building a table whose Cd is **deliberately
+  // ~3× higher** at every realistic Mach guarantees a measurable drag
+  // increase regardless of which exact Mach the pellet visits during flight.
+  // We only assert the *direction* of the change (more drag ⇒ slower ⇒
+  // more drop) so the test stays robust to future engine refinements.
+  const HIGH_DRAG_TABLE = [
+    { mach: 0.0, cd: 0.70 },
+    { mach: 0.5, cd: 0.70 },
+    { mach: 0.7, cd: 0.70 },
+    { mach: 0.9, cd: 0.75 },
+    { mach: 1.0, cd: 0.85 },
+    { mach: 1.2, cd: 0.80 },
+    { mach: 2.0, cd: 0.70 },
+  ];
+
+  it('full trajectory with a high-drag custom table drops more than G1 baseline', () => {
+    const baseline = calculateTrajectory(baseInput({ dragModel: 'G1' }));
+    const overridden = calculateTrajectory(
+      baseInput({ dragModel: 'G1', customDragTable: HIGH_DRAG_TABLE }),
+    );
+
+    // Same range grid — sanity check we're comparing apples to apples.
+    expect(overridden.map(r => r.range)).toEqual(baseline.map(r => r.range));
+
+    const baselineFinal = baseline.find(r => r.range === 100)!;
+    const overriddenFinal = overridden.find(r => r.range === 100)!;
+
+    // Override produces strictly more drop (more negative) and lower
+    // residual velocity. Both must move together — if only one changes it
+    // would suggest the table is being read for one phase but not the other.
+    expect(overriddenFinal.drop).toBeLessThan(baselineFinal.drop);
+    expect(overriddenFinal.velocity).toBeLessThan(baselineFinal.velocity);
+  });
+
+  it('a custom table that mirrors G1 produces a near-identical trajectory', () => {
+    // Sanity / regression: when the user supplies a table that *matches* the
+    // built-in model, the override path should not introduce drift. We use
+    // sampled G1 values so we're not coupling to floating-point identity.
+    const G1_LIKE_TABLE = [
+      { mach: 0.0, cd: 0.225 },
+      { mach: 0.5, cd: 0.230 },
+      { mach: 0.7, cd: 0.235 },
+      { mach: 0.9, cd: 0.260 },
+      { mach: 1.0, cd: 0.450 },
+      { mach: 1.2, cd: 0.500 },
+      { mach: 2.0, cd: 0.380 },
+    ];
+
+    const native = calculateTrajectory(baseInput({ dragModel: 'G1' }))
+      .find(r => r.range === 100)!.drop;
+    const viaTable = calculateTrajectory(
+      baseInput({ dragModel: 'G1', customDragTable: G1_LIKE_TABLE }),
+    ).find(r => r.range === 100)!.drop;
+
+    // Wide tolerance (50 mm @ 100 m on a ~3000 mm drop, < 2%) — the table is
+    // a coarse 7-point sample of G1 so we can't expect bit-exact equality,
+    // only that the override doesn't catastrophically diverge.
+    expect(Math.abs(viaTable - native)).toBeLessThan(50);
+  });
+});

@@ -149,6 +149,29 @@ export function ResultsCard({
         </div>
       </header>
 
+      {/* Energy threshold warning — surfaced prominently right under the
+          header so users notice it before reading the numbers. Uses the
+          destructive token (red) to match the comparison-modal convention. */}
+      {energyOverThreshold && (
+        <div
+          role="alert"
+          className="flex items-start gap-2 rounded-lg border border-destructive/40 bg-destructive/10 p-2.5 text-destructive"
+        >
+          <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-semibold font-mono">
+              {t('calc.energyOverWarning', {
+                j: initialEnergy.toFixed(1),
+                threshold: energyThresholdJ!.toFixed(2),
+              })}
+            </p>
+            <p className="text-[10px] text-destructive/80 mt-0.5">
+              {t('calc.energyOverWarningHint')}
+            </p>
+          </div>
+        </div>
+      )}
+
       {weather && (
         <div className="flex flex-wrap items-center gap-1.5 text-[10px] font-mono">
           <span

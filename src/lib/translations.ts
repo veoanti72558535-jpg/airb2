@@ -261,6 +261,10 @@ const fr = {
   'sessions.loaded': 'Session rechargée',
   'sessions.badgeAuto': 'Météo auto',
   'sessions.badgeMixed': 'Météo mixte',
+  'sessions.filterByEntity': 'Filtrer par équipement',
+  'sessions.filterAirgun': 'Arme',
+  'sessions.filterProjectile': 'Projectile',
+  'sessions.filterOptic': 'Optique',
 
   // Weather
   'weather.useMyLocation': 'Utiliser ma position',
@@ -683,6 +687,10 @@ const en: Record<keyof typeof fr, string> = {
   'sessions.loaded': 'Session reloaded',
   'sessions.badgeAuto': 'Auto weather',
   'sessions.badgeMixed': 'Mixed weather',
+  'sessions.filterByEntity': 'Filter by equipment',
+  'sessions.filterAirgun': 'Airgun',
+  'sessions.filterProjectile': 'Projectile',
+  'sessions.filterOptic': 'Optic',
 
   'weather.useMyLocation': 'Use my location',
   'weather.refresh': 'Refresh',

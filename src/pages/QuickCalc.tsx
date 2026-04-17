@@ -427,7 +427,8 @@ export default function QuickCalc() {
         <div className="md:col-span-2">
           <EnvironmentSection
             weather={form.weather}
-            onChange={updateWeather}
+            onPatchManual={updateWeather}
+            onReplace={next => update({ weather: next })}
             advanced={advanced}
           />
         </div>

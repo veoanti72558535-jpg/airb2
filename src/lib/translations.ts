@@ -177,6 +177,7 @@ const fr = {
   'optics.searchPreset': 'Rechercher (FX, Element, Discovery, MTC…)',
   'optics.filterAll': 'Tous',
   'optics.filterBrand': 'Marque',
+  'optics.filterCaliber': 'Calibre',
   'optics.search': 'Rechercher par nom ou notes…',
   'optics.noMatch': 'Aucune optique pour ces filtres.',
   'optics.resetFilters': 'Réinitialiser les filtres',

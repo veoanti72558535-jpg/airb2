@@ -173,6 +173,13 @@ const fr = {
   'airguns.search': 'Rechercher par marque, modèle ou notes…',
   'airguns.noMatch': 'Aucune arme ne correspond à la recherche.',
   'airguns.advancedHint': 'Pas de rayure, hauteur de lunette, zéro par défaut',
+  'airguns.importPreset': 'Importer armes',
+  'airguns.importTitle': 'Bibliothèque d\'armes pré-configurées',
+  'airguns.importDesc': 'Sélectionnez les modèles à ajouter à votre bibliothèque. Les valeurs (longueur canon, pressions, capacité chargeur) sont basées sur les fiches constructeur — ajustez selon votre exemplaire spécifique.',
+  'airguns.importSelected': 'Importer ({count})',
+  'airguns.importDone': '{count} arme(s) ajoutée(s)',
+  'airguns.alreadyExists': 'Déjà dans votre bibliothèque',
+  'airguns.searchPreset': 'Rechercher (FX, Daystate, Hatsan, Cricket…)',
 
   // Tunes
   'tunes.title': 'Tunes',
@@ -584,6 +591,13 @@ const en: Record<keyof typeof fr, string> = {
   'airguns.search': 'Search by brand, model or notes…',
   'airguns.noMatch': 'No airgun matches your search.',
   'airguns.advancedHint': 'Twist rate, sight height, default zero',
+  'airguns.importPreset': 'Import airguns',
+  'airguns.importTitle': 'Preset airgun library',
+  'airguns.importDesc': 'Select models to add to your library. Values (barrel length, pressures, magazine capacity) are based on manufacturer specs — verify against your specific unit.',
+  'airguns.importSelected': 'Import ({count})',
+  'airguns.importDone': '{count} airgun(s) added',
+  'airguns.alreadyExists': 'Already in your library',
+  'airguns.searchPreset': 'Search (FX, Daystate, Hatsan, Cricket…)',
 
   'tunes.title': 'Tunes',
   'tunes.add': 'Add Tune',

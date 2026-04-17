@@ -105,7 +105,7 @@ export function CompareProjectilesModal({
   /** Distance currently hovered in the DropChart (in meters) — synchronises sparklines. */
   const [hoverRange, setHoverRange] = useState<number | null>(null);
   /** Sort mode override — `null` = auto (useful range when threshold set, BC otherwise). */
-  const [sortMode, setSortMode] = useState<'usefulRange' | 'bc' | null>(null);
+  const [sortMode, setSortMode] = useState<'usefulRange' | 'bc' | 'weight' | null>(null);
   /** When true, columns are reorderable via drag-and-drop and `manualOrder` overrides auto-sort. */
   const [manualMode, setManualMode] = useState(false);
   /**
@@ -391,7 +391,7 @@ export function CompareProjectilesModal({
     // order is deterministic when projectiles tie (e.g. two BCs equal).
     const tieBreak = (a: typeof computed[number], b: typeof computed[number]) =>
       `${a.p.brand} ${a.p.model}`.localeCompare(`${b.p.brand} ${b.p.model}`);
-    const effectiveSort: 'usefulRange' | 'bc' =
+    const effectiveSort: 'usefulRange' | 'bc' | 'weight' =
       sortMode ?? (energyThresholdJ !== null ? 'usefulRange' : 'bc');
     if (effectiveSort === 'usefulRange' && energyThresholdJ !== null) {
       const maxUsefulRange = (row: typeof computed[number]) => {
@@ -403,6 +403,13 @@ export function CompareProjectilesModal({
       };
       return [...computed].sort((a, b) => {
         const diff = maxUsefulRange(b) - maxUsefulRange(a);
+        return diff !== 0 ? diff : tieBreak(a, b);
+      });
+    }
+    if (effectiveSort === 'weight') {
+      // Heaviest first — useful for spotting heavy slugs/pellets at a glance.
+      return [...computed].sort((a, b) => {
+        const diff = b.p.weight - a.p.weight;
         return diff !== 0 ? diff : tieBreak(a, b);
       });
     }
@@ -491,24 +498,30 @@ export function CompareProjectilesModal({
                       </span>
                     );
                   }
-                  const effectiveSort: 'usefulRange' | 'bc' =
+                  const effectiveSort: 'usefulRange' | 'bc' | 'weight' =
                     sortMode ?? (energyThresholdJ !== null ? 'usefulRange' : 'bc');
                   const usefulRangeAvailable = energyThresholdJ !== null;
-                  const nextMode: 'usefulRange' | 'bc' =
-                    effectiveSort === 'usefulRange' ? 'bc' : 'usefulRange';
-                  const canToggle = usefulRangeAvailable; // only meaningful when threshold exists
-                  const label = effectiveSort === 'usefulRange'
-                    ? t('projectiles.compareSortByUsefulRange')
-                    : t('projectiles.compareSortByBc');
+                  // Cycle: usefulRange → bc → weight → usefulRange (skip usefulRange when no threshold).
+                  const cycle: ('usefulRange' | 'bc' | 'weight')[] = usefulRangeAvailable
+                    ? ['usefulRange', 'bc', 'weight']
+                    : ['bc', 'weight'];
+                  const idx = cycle.indexOf(effectiveSort);
+                  const nextMode = cycle[(idx + 1) % cycle.length];
+                  const canToggle = cycle.length > 1;
+                  const labelFor = (m: 'usefulRange' | 'bc' | 'weight') =>
+                    m === 'usefulRange'
+                      ? t('projectiles.compareSortByUsefulRange')
+                      : m === 'bc'
+                        ? t('projectiles.compareSortByBc')
+                        : t('projectiles.compareSortByWeight');
+                  const label = labelFor(effectiveSort);
                   const hint = canToggle
-                    ? t('projectiles.compareSortToggleHint', {
-                        next: nextMode === 'usefulRange'
-                          ? t('projectiles.compareSortByUsefulRange')
-                          : t('projectiles.compareSortByBc'),
-                      })
+                    ? t('projectiles.compareSortToggleHint', { next: labelFor(nextMode) })
                     : effectiveSort === 'usefulRange'
                       ? t('projectiles.compareSortByUsefulRangeHint', { j: (energyThresholdJ ?? 0).toFixed(2) })
-                      : t('projectiles.compareSortByBcHint');
+                      : effectiveSort === 'bc'
+                        ? t('projectiles.compareSortByBcHint')
+                        : t('projectiles.compareSortByWeightHint');
                   return (
                     <span className="inline-flex items-center gap-1">
                       <button

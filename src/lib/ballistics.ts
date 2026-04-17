@@ -9,6 +9,7 @@ import {
   BallisticInput,
   BallisticResult,
   DragModel,
+  DragTablePoint,
   WeatherSnapshot,
 } from './types';
 
@@ -109,15 +110,48 @@ function cdFor(model: DragModel, mach: number): number {
 }
 
 /**
+ * Linear interpolation of Cd against a custom Mach/Cd table.
+ * Assumes the table is sorted ascending by Mach. Outside the table range,
+ * the nearest endpoint value is returned (no extrapolation).
+ */
+function cdFromTable(table: DragTablePoint[], mach: number): number {
+  if (table.length === 0) return 0;
+  if (mach <= table[0].mach) return table[0].cd;
+  if (mach >= table[table.length - 1].mach) return table[table.length - 1].cd;
+  for (let i = 0; i < table.length - 1; i++) {
+    const a = table[i];
+    const b = table[i + 1];
+    if (mach >= a.mach && mach <= b.mach) {
+      const span = b.mach - a.mach;
+      if (span <= 0) return a.cd;
+      const t = (mach - a.mach) / span;
+      return a.cd + t * (b.cd - a.cd);
+    }
+  }
+  return table[table.length - 1].cd;
+}
+
+/**
  * Retardation coefficient: deceleration per unit distance.
+ * When `customTable` is provided, it overrides the standard model entirely.
  * Standardised so that BC behaves consistently across drag models — `k` is
  * tuned per model so a given BC produces comparable trajectories.
  */
-function dragDecel(velocity: number, bc: number, atmoFactor: number, model: DragModel): number {
+function dragDecel(
+  velocity: number,
+  bc: number,
+  atmoFactor: number,
+  model: DragModel,
+  customTable?: DragTablePoint[],
+): number {
   const mach = velocity / 343;
-  const cd = cdFor(model, mach);
-  // Empirical scale aligns the engine output across drag models for a given BC.
+  const cd = customTable && customTable.length > 0
+    ? cdFromTable(customTable, mach)
+    : cdFor(model, mach);
+  // Custom tables share the G1 reference scaling — the table itself encodes
+  // the projectile's true drag profile; `k` only normalises BC interpretation.
   const k =
+    customTable && customTable.length > 0 ? 0.0042 :
     model === 'G7' ? 0.0085 :
     model === 'GA' ? 0.0042 :
     model === 'GS' ? 0.0050 :
@@ -163,13 +197,14 @@ function findZeroAngle(
   zeroRange: number,
   atmoFactor: number,
   model: DragModel,
+  customTable: DragTablePoint[] | undefined,
 ): number {
   let low = -0.01;
   let high = 0.05;
   const dt = 0.0005;
   for (let i = 0; i < 50; i++) {
     const mid = (low + high) / 2;
-    const y = simulateToRange(muzzleVelocity, bc, mid, sightHeightM, zeroRange, atmoFactor, dt, model);
+    const y = simulateToRange(muzzleVelocity, bc, mid, sightHeightM, zeroRange, atmoFactor, dt, model, customTable);
     if (Math.abs(y) < 0.00001) break;
     if (y > 0) high = mid;
     else low = mid;
@@ -186,6 +221,7 @@ function simulateToRange(
   atmoFactor: number,
   dt: number,
   model: DragModel,
+  customTable: DragTablePoint[] | undefined,
 ): number {
   let x = 0;
   let y = 0;
@@ -194,7 +230,7 @@ function simulateToRange(
   while (x < targetRange) {
     const v = Math.sqrt(vx * vx + vy * vy);
     if (v < 1) break;
-    const decel = dragDecel(v, bc, atmoFactor, model);
+    const decel = dragDecel(v, bc, atmoFactor, model, customTable);
     const ax = -(decel * vx) / v;
     const ay = -GRAVITY - (decel * vy) / v;
     vx += ax * dt;
@@ -228,6 +264,7 @@ export function calculateTrajectory(input: BallisticInput): BallisticResult[] {
     projectileLength,
     projectileDiameter,
     zeroWeather,
+    customDragTable,
   } = input;
 
   // Two-pass zeroing weather: zero at zero conditions, fly through current conditions.
@@ -253,6 +290,7 @@ export function calculateTrajectory(input: BallisticInput): BallisticResult[] {
     zeroRange,
     zeroAtmoFactor,
     dragModel,
+    customDragTable,
   );
 
   const results: BallisticResult[] = [];
@@ -292,7 +330,7 @@ export function calculateTrajectory(input: BallisticInput): BallisticResult[] {
     const v = Math.sqrt(vx * vx + vy * vy);
     if (v < 1) break;
 
-    const decel = dragDecel(v, bc, flightAtmoFactor, dragModel);
+    const decel = dragDecel(v, bc, flightAtmoFactor, dragModel, customDragTable);
     const ax = -(decel * vx) / v;
     const ay = -GRAVITY - (decel * vy) / v;
     // Crosswind lag: the projectile is pushed sideways at a fraction of crosswind speed.

@@ -33,6 +33,13 @@ export interface Tune {
   updatedAt: string;
 }
 
+export interface DragTablePoint {
+  /** Mach number (≥0). */
+  mach: number;
+  /** Drag coefficient at this Mach. */
+  cd: number;
+}
+
 export interface Projectile {
   id: string;
   brand: string;
@@ -48,6 +55,12 @@ export interface Projectile {
   material?: string;
   notes?: string;
   dataSource?: string;
+  /**
+   * Optional custom Cd vs Mach table. When present, the engine bypasses the
+   * standard drag model and interpolates linearly between points.
+   * Source: Doppler radar export, JBM table, or manual measurement.
+   */
+  customDragTable?: DragTablePoint[];
   createdAt: string;
   updatedAt: string;
 }
@@ -126,6 +139,11 @@ export interface BallisticInput {
   projectileDiameter?: number;
   /** When set, used as the atmosphere during the zeroing pass instead of `weather`. */
   zeroWeather?: WeatherSnapshot;
+  /**
+   * Optional custom Cd vs Mach table. When present, overrides `dragModel` for
+   * the entire trajectory (linear interpolation between provided points).
+   */
+  customDragTable?: DragTablePoint[];
 }
 
 export interface BallisticResult {

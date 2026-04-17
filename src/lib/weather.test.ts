@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { geocodeCity } from './weather';
+import { geocodeCity, fetchOpenMeteo, clearWeatherCache } from './weather';
 
 describe('geocodeCity', () => {
   const realFetch = global.fetch;
@@ -123,5 +123,74 @@ describe('geocodeCity', () => {
     await geocodeCity('Paris', { signal: ctrl.signal });
     const init = fetchSpy.mock.calls[0][1] as RequestInit | undefined;
     expect(init?.signal).toBe(ctrl.signal);
+  });
+});
+
+describe('fetchOpenMeteo cache behavior', () => {
+  const realFetch = global.fetch;
+  let fetchSpy: ReturnType<typeof vi.fn>;
+
+  const okResponse = () =>
+    ({
+      ok: true,
+      json: async () => ({
+        elevation: 35,
+        current: {
+          temperature_2m: 12.5,
+          relative_humidity_2m: 70,
+          pressure_msl: 1015,
+          surface_pressure: 1010,
+          wind_speed_10m: 3.2,
+          wind_direction_10m: 180,
+        },
+      }),
+    }) as Response;
+
+  beforeEach(() => {
+    clearWeatherCache();
+    fetchSpy = vi.fn();
+    global.fetch = fetchSpy as unknown as typeof fetch;
+  });
+
+  afterEach(() => {
+    clearWeatherCache();
+    global.fetch = realFetch;
+    vi.restoreAllMocks();
+  });
+
+  it('1st call hits network (fromCache absent), 2nd call same coords hits cache (fromCache=true), force:true bypasses cache', async () => {
+    fetchSpy.mockResolvedValueOnce(okResponse());
+
+    const first = await fetchOpenMeteo({ latitude: 48.8534, longitude: 2.3488 });
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(first.fromCache).toBeFalsy();
+    expect(first.snapshot.temperature).toBe(12.5);
+    expect(first.snapshot.source).toBe('auto');
+
+    // 2nd call — same coords (rounded to 2 decimals → same cache key), no network call.
+    const second = await fetchOpenMeteo({ latitude: 48.8534, longitude: 2.3488 });
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(second.fromCache).toBe(true);
+    expect(second.snapshot.temperature).toBe(12.5);
+
+    // 3rd call with force:true — bypasses cache, hits network again, fromCache absent.
+    fetchSpy.mockResolvedValueOnce(okResponse());
+    const third = await fetchOpenMeteo({ latitude: 48.8534, longitude: 2.3488 }, { force: true });
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+    expect(third.fromCache).toBeFalsy();
+  });
+
+  it('uses provided locationLabel and falls back to coord string', async () => {
+    fetchSpy.mockResolvedValueOnce(okResponse());
+    const labelled = await fetchOpenMeteo(
+      { latitude: 45.75, longitude: 4.85 },
+      { locationLabel: 'Lyon, FR' },
+    );
+    expect(labelled.snapshot.location).toBe('Lyon, FR');
+
+    clearWeatherCache();
+    fetchSpy.mockResolvedValueOnce(okResponse());
+    const fallback = await fetchOpenMeteo({ latitude: 45.75, longitude: 4.85 });
+    expect(fallback.snapshot.location).toBe('45.75, 4.85');
   });
 });

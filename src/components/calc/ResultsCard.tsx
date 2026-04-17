@@ -31,6 +31,7 @@ function Stat({
   unit,
   emphasis,
   sub,
+  danger,
 }: {
   icon: React.ElementType;
   label: string;
@@ -38,22 +39,57 @@ function Stat({
   unit?: string;
   emphasis?: boolean;
   sub?: string;
+  /** When true, paints the cell with the destructive token to flag a threshold breach. */
+  danger?: boolean;
 }) {
   return (
     <div
-      className={`rounded-lg border border-border/60 bg-background/40 p-3 ${
-        emphasis ? 'ring-1 ring-primary/40' : ''
-      }`}
+      className={cn(
+        'rounded-lg border p-3',
+        danger
+          ? 'border-destructive/50 bg-destructive/10 ring-1 ring-destructive/40'
+          : cn('border-border/60 bg-background/40', emphasis && 'ring-1 ring-primary/40'),
+      )}
     >
-      <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-muted-foreground">
+      <div
+        className={cn(
+          'flex items-center gap-1.5 text-[10px] uppercase tracking-wide',
+          danger ? 'text-destructive' : 'text-muted-foreground',
+        )}
+      >
         <Icon className="h-3 w-3" />
         {label}
       </div>
       <div className="mt-1 flex items-baseline gap-1">
-        <span className="font-mono font-semibold text-base text-foreground">{value}</span>
-        {unit && <span className="text-[10px] text-muted-foreground font-mono">{unit}</span>}
+        <span
+          className={cn(
+            'font-mono font-semibold text-base',
+            danger ? 'text-destructive' : 'text-foreground',
+          )}
+        >
+          {value}
+        </span>
+        {unit && (
+          <span
+            className={cn(
+              'text-[10px] font-mono',
+              danger ? 'text-destructive/80' : 'text-muted-foreground',
+            )}
+          >
+            {unit}
+          </span>
+        )}
       </div>
-      {sub && <div className="text-[10px] text-muted-foreground/80 font-mono mt-0.5">{sub}</div>}
+      {sub && (
+        <div
+          className={cn(
+            'text-[10px] font-mono mt-0.5',
+            danger ? 'text-destructive/80' : 'text-muted-foreground/80',
+          )}
+        >
+          {sub}
+        </div>
+      )}
     </div>
   );
 }
@@ -242,6 +278,9 @@ export function ResultsCard({
           label={t('calc.remainingEnergy')}
           value={result.energy.toFixed(1)}
           unit={energyUnit}
+          danger={
+            energyThresholdJ != null && energyThresholdJ > 0 && result.energy > energyThresholdJ
+          }
         />
         <Stat
           icon={Clock}

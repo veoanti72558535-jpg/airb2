@@ -1556,3 +1556,55 @@ function DropChart({ rows, t, tall = false, hoverRange, onHoverRange, colorById 
     </div>
   );
 }
+
+interface SortableProjectileHeaderProps {
+  id: string;
+  draggable: boolean;
+  dragLabel: string;
+  children: React.ReactNode;
+}
+
+/**
+ * Sortable `<th>` wrapper for projectile columns. When `draggable` is false the
+ * header renders identically to a static `<th>`; when true, a small drag handle
+ * appears and pointer/keyboard interactions on the whole header reorder the column.
+ *
+ * The drag handle is a separate element with its own listeners so users can still
+ * click the close (X) button without triggering a drag.
+ */
+function SortableProjectileHeader({ id, draggable, dragLabel, children }: SortableProjectileHeaderProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id, disabled: !draggable });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.6 : 1,
+    cursor: isDragging ? 'grabbing' : undefined,
+  };
+  return (
+    <th
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        'text-left font-medium px-3 py-2 min-w-[160px] align-top',
+        isDragging && 'z-20 relative'
+      )}
+    >
+      <div className="flex items-start justify-between gap-2">
+        {draggable && (
+          <button
+            type="button"
+            {...attributes}
+            {...listeners}
+            className="p-0.5 rounded hover:bg-muted text-muted-foreground shrink-0 cursor-grab active:cursor-grabbing focus:outline-none focus-visible:ring-1 focus-visible:ring-primary touch-none"
+            title={dragLabel}
+            aria-label={dragLabel}
+          >
+            <GripVertical className="h-3.5 w-3.5" />
+          </button>
+        )}
+        {children}
+      </div>
+    </th>
+  );
+}

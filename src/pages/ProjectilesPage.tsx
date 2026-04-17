@@ -15,10 +15,13 @@ export default function ProjectilesPage() {
   const [projectiles, setProjectiles] = useState<Projectile[]>(projectileStore.getAll());
   const [searchParam, setSearchParam] = useUrlFilter('q');
   const [brandParam, setBrandParam] = useUrlFilter('brand');
+  const [caliberParam, setCaliberParam] = useUrlFilter('caliber');
   const searchQuery = searchParam ?? '';
   const setSearchQuery = (v: string) => setSearchParam(v);
   const brandFilter = brandParam;
   const setBrandFilter = (v: string | null) => setBrandParam(v);
+  const caliberFilter = caliberParam;
+  const setCaliberFilter = (v: string | null) => setCaliberParam(v);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Projectile | null>(null);
   const [form, setForm] = useState({ brand: '', model: '', weight: 18, bc: 0.025, shape: 'domed', caliber: '.177', length: 0, diameter: 0, material: 'lead', notes: '', dataSource: '' });

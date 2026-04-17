@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { X, GitCompare, Gauge, RotateCcw, Target, Download } from 'lucide-react';
+import { X, GitCompare, Gauge, RotateCcw, Target, Download, Maximize2, Minimize2 } from 'lucide-react';
 import { toPng } from 'html-to-image';
 import { Projectile, WeatherSnapshot } from '@/lib/types';
 import { getSettings } from '@/lib/storage';
@@ -80,6 +80,7 @@ export function CompareProjectilesModal({
   const [velocity, setVelocity] = useState<number>(initialVelocity);
   const [zeroRange, setZeroRange] = useState<number>(DEFAULT_Z);
   const [exporting, setExporting] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
   /** Wraps the chart + table — that's what gets snapshotted to PNG. */
   const exportRef = useRef<HTMLDivElement | null>(null);
 
@@ -115,8 +116,23 @@ export function CompareProjectilesModal({
     if (open) {
       setVelocity(initialVelocity);
       setZeroRange(DEFAULT_Z);
+    } else {
+      setFullscreen(false);
     }
   }, [open, initialVelocity]);
+
+  // Esc exits fullscreen first, then closes (handled by browser default for second press via onClose elsewhere).
+  useEffect(() => {
+    if (!open || !fullscreen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        setFullscreen(false);
+      }
+    };
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
+  }, [open, fullscreen]);
 
   const rows = useMemo(() => {
     if (!open || projectiles.length === 0) return [];
@@ -155,8 +171,20 @@ export function CompareProjectilesModal({
   const weightSym = symbol('weight');
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-2 sm:p-4">
-      <div className="surface-elevated w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+    <div
+      className={cn(
+        'fixed inset-0 z-50 flex justify-center bg-black/60 backdrop-blur-sm',
+        fullscreen
+          ? 'items-stretch p-0'
+          : 'items-end sm:items-center p-2 sm:p-4'
+      )}
+    >
+      <div
+        className={cn(
+          'surface-elevated w-full overflow-hidden flex flex-col',
+          fullscreen ? 'max-w-none h-full max-h-none rounded-none border-0' : 'max-w-4xl max-h-[90vh]'
+        )}
+      >
         {/* Header */}
         <div className="flex items-start justify-between gap-3 p-4 border-b border-border">
           <div className="flex items-center gap-2 min-w-0">
@@ -183,6 +211,16 @@ export function CompareProjectilesModal({
               <span className="hidden sm:inline">
                 {exporting ? t('projectiles.compareExporting') : t('projectiles.compareExport')}
               </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setFullscreen(f => !f)}
+              className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+              title={fullscreen ? t('projectiles.compareExitFullscreen') : t('projectiles.compareFullscreen')}
+              aria-label={fullscreen ? t('projectiles.compareExitFullscreen') : t('projectiles.compareFullscreen')}
+              aria-pressed={fullscreen}
+            >
+              {fullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
             </button>
             <button
               onClick={onClose}
@@ -281,10 +319,11 @@ export function CompareProjectilesModal({
           </div>
         </div>
 
-        {/* Snapshot region — chart + table + legend get exported as PNG */}
-        <div ref={exportRef} className="bg-card">
-          {/* Drop chart */}
-          <DropChart rows={rows} t={t} />
+        {/* Scrollable region containing the snapshotted chart + table */}
+        <div className={cn('overflow-auto', fullscreen ? 'flex-1' : '')}>
+          <div ref={exportRef} className="bg-card">
+            {/* Drop chart */}
+            <DropChart rows={rows} t={t} tall={fullscreen} />
 
         {/* Table */}
         <div className="overflow-auto">
@@ -479,7 +518,8 @@ export function CompareProjectilesModal({
               <span>{t('projectiles.compareFacLegend', { j: energyThresholdJ.toFixed(2) })}</span>
             </div>
           )}
-        </div>{/* /exportRef */}
+          </div>{/* /exportRef */}
+        </div>{/* /scroll wrapper */}
 
         {/* Footer */}
         <div className="p-3 border-t border-border text-[10px] text-muted-foreground">
@@ -496,6 +536,8 @@ interface DropChartProps {
     curve: { range: number; drop: number }[];
   }[];
   t: (key: string, vars?: Record<string, string | number>) => string;
+  /** Render a taller chart for fullscreen mode. */
+  tall?: boolean;
 }
 
 /**
@@ -503,14 +545,14 @@ interface DropChartProps {
  * Uses a shared Y scale so curves are directly comparable. Drop is plotted
  * with negative values (below sight line) downward, matching shooter intuition.
  */
-function DropChart({ rows, t }: DropChartProps) {
+function DropChart({ rows, t, tall = false }: DropChartProps) {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [hoverX, setHoverX] = useState<number | null>(null); // distance in meters
 
   if (rows.length === 0 || rows.every(r => r.curve.length === 0)) return null;
 
   const W = 600;
-  const H = 180;
+  const H = tall ? 360 : 180;
   const PAD_L = 36;
   const PAD_R = 12;
   const PAD_T = 12;
@@ -610,7 +652,7 @@ function DropChart({ rows, t }: DropChartProps) {
         <svg
           ref={svgRef}
           viewBox={`0 0 ${W} ${H}`}
-          className="w-full h-auto touch-none"
+          className={cn('w-full h-auto touch-none', tall && 'max-h-[60vh]')}
           role="img"
           aria-label={t('projectiles.compareChartTitle')}
           onPointerMove={handlePointer}

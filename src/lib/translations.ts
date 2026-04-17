@@ -750,6 +750,8 @@ const en: Record<keyof typeof fr, string> = {
   'calc.energyThresholdBadge': 'Energy limit: {j} J',
   'calc.energyThresholdOff': 'Energy limit: off',
   'calc.energyThresholdHint': 'Configure in Settings',
+  'calc.energyOverWarning': 'Initial energy {j} J — above {threshold} J threshold',
+  'calc.energyOverWarningHint': 'Check local regulations before shooting.',
   'projectiles.compareExport': 'Export PNG',
   'projectiles.compareExporting': 'Exporting…',
   'projectiles.compareExportSuccess': 'Image exported',

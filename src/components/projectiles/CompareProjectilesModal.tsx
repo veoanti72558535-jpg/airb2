@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { X, GitCompare, Gauge, RotateCcw, Target, Download, Maximize2, Minimize2, Copy, Check, FileText } from 'lucide-react';
+import { X, GitCompare, Gauge, RotateCcw, Target, Download, Maximize2, Minimize2, Copy, Check, FileText, ChevronDown, ChevronRight } from 'lucide-react';
 import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
 import { Projectile, WeatherSnapshot } from '@/lib/types';
@@ -85,6 +85,11 @@ export function CompareProjectilesModal({
   const [copying, setCopying] = useState(false);
   const [copied, setCopied] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
+  /** Per-section collapsed state — lets users focus on a single metric. Defaults expanded. */
+  const [collapsed, setCollapsed] = useState<{ vel: boolean; energy: boolean }>({
+    vel: false,
+    energy: false,
+  });
   /** Wraps the chart + table — that's what gets snapshotted to PNG. */
   const exportRef = useRef<HTMLDivElement | null>(null);
 
@@ -604,17 +609,33 @@ export function CompareProjectilesModal({
                 );
               })}
 
-              {/* Velocity section — residual speed at each distance */}
+              {/* Velocity section — residual speed at each distance.
+                  Header is a button so users can collapse the whole group
+                  when they want to focus on energy (or vice-versa). */}
               <tr className="bg-muted/20">
-                <td colSpan={rows.length + 1} className="px-3 py-1.5 text-[10px] uppercase tracking-wide text-muted-foreground font-semibold">
-                  {t('projectiles.compareVelocitySection')}
+                <td colSpan={rows.length + 1} className="p-0">
+                  <button
+                    type="button"
+                    onClick={() => setCollapsed(c => ({ ...c, vel: !c.vel }))}
+                    aria-expanded={!collapsed.vel}
+                    aria-controls="cmp-vel-rows"
+                    title={collapsed.vel ? t('projectiles.compareExpandSection') : t('projectiles.compareCollapseSection')}
+                    className="w-full flex items-center gap-1.5 px-3 py-1.5 text-[10px] uppercase tracking-wide text-muted-foreground font-semibold hover:text-foreground hover:bg-muted/30 transition-colors text-left"
+                  >
+                    {collapsed.vel ? (
+                      <ChevronRight className="h-3 w-3 shrink-0" aria-hidden />
+                    ) : (
+                      <ChevronDown className="h-3 w-3 shrink-0" aria-hidden />
+                    )}
+                    {t('projectiles.compareVelocitySection')}
+                  </button>
                 </td>
               </tr>
-              {COMPARE_RANGES.map(r => {
+              {!collapsed.vel && COMPARE_RANGES.map(r => {
                 // Highest residual velocity at this distance — projectile that retains speed best.
                 const bestVel = Math.max(...rows.map(x => x.vels[r] ?? -Infinity));
                 return (
-                  <tr key={`v-${r}`}>
+                  <tr key={`v-${r}`} id="cmp-vel-rows">
                     <td className="px-3 py-2 text-xs text-muted-foreground sticky left-0 bg-card z-10">
                       {t('projectiles.compareVelocityAt', { r })}
                     </td>
@@ -641,13 +662,27 @@ export function CompareProjectilesModal({
 
               {/* Energy section — residual energy at each distance, highlights over-threshold rows */}
               <tr className="bg-muted/20">
-                <td colSpan={rows.length + 1} className="px-3 py-1.5 text-[10px] uppercase tracking-wide text-muted-foreground font-semibold">
-                  {t('projectiles.compareEnergyOnlySection')}
+                <td colSpan={rows.length + 1} className="p-0">
+                  <button
+                    type="button"
+                    onClick={() => setCollapsed(c => ({ ...c, energy: !c.energy }))}
+                    aria-expanded={!collapsed.energy}
+                    aria-controls="cmp-energy-rows"
+                    title={collapsed.energy ? t('projectiles.compareExpandSection') : t('projectiles.compareCollapseSection')}
+                    className="w-full flex items-center gap-1.5 px-3 py-1.5 text-[10px] uppercase tracking-wide text-muted-foreground font-semibold hover:text-foreground hover:bg-muted/30 transition-colors text-left"
+                  >
+                    {collapsed.energy ? (
+                      <ChevronRight className="h-3 w-3 shrink-0" aria-hidden />
+                    ) : (
+                      <ChevronDown className="h-3 w-3 shrink-0" aria-hidden />
+                    )}
+                    {t('projectiles.compareEnergyOnlySection')}
+                  </button>
                 </td>
               </tr>
-              {COMPARE_RANGES.map(r => {
+              {!collapsed.energy && COMPARE_RANGES.map(r => {
                 return (
-                  <tr key={`e-${r}`}>
+                  <tr key={`e-${r}`} id="cmp-energy-rows">
                     <td className="px-3 py-2 text-xs text-muted-foreground sticky left-0 bg-card z-10">
                       {t('projectiles.compareEnergyOnlyAt', { r })}
                     </td>

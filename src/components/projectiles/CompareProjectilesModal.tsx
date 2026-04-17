@@ -1088,6 +1088,9 @@ export function CompareProjectilesModal({
                 </td>
               </tr>
               {!collapsed.energy && COMPARE_RANGES.map(r => {
+                // Highest energy at this distance — used to compute symmetric "vs best" tooltips.
+                const energiesAt = rows.map(x => x.energies[r]).filter((e): e is number => e !== undefined);
+                const bestEnergy = energiesAt.length ? Math.max(...energiesAt) : null;
                 return (
                   <tr key={`e-${r}`} id="cmp-energy-rows">
                     <td className="px-3 py-2 text-xs text-muted-foreground sticky left-0 bg-card z-10">
@@ -1096,6 +1099,15 @@ export function CompareProjectilesModal({
                     {rows.map(({ p, energies }) => {
                       const j = energies[r];
                       const overFac = energyThresholdJ !== null && j !== undefined && j > energyThresholdJ;
+                      // Symmetric tooltip: gap to the highest energy at this distance.
+                      const vsBestGap = j !== undefined && bestEnergy !== null && j < bestEnergy && rows.length > 1
+                        ? bestEnergy - j
+                        : null;
+                      const title = overFac
+                        ? t('projectiles.compareFacOver')
+                        : vsBestGap !== null
+                          ? t('projectiles.compareEnergyVsBest', { gap: vsBestGap.toFixed(1) })
+                          : undefined;
                       return (
                         <td
                           key={p.id}
@@ -1103,7 +1115,7 @@ export function CompareProjectilesModal({
                             'px-3 py-2 font-mono text-xs',
                             overFac && 'text-destructive font-semibold bg-destructive/10'
                           )}
-                          title={overFac ? t('projectiles.compareFacOver') : undefined}
+                          title={title}
                         >
                           {overFac && <span aria-hidden className="mr-1">⚠</span>}
                           {j !== undefined ? `${j.toFixed(1)} J` : '—'}
@@ -1178,6 +1190,11 @@ export function CompareProjectilesModal({
                               maxRange !== null &&
                               bestMaxRange !== null &&
                               maxRange === bestMaxRange;
+                            // Symmetric tooltip on non-winning (but still > threshold) cells.
+                            const vsBestGap =
+                              !isWinner && maxRange !== null && bestMaxRange !== null && maxRange < bestMaxRange
+                                ? bestMaxRange - maxRange
+                                : null;
                             return (
                               <td
                                 key={id}
@@ -1193,7 +1210,9 @@ export function CompareProjectilesModal({
                                   ? (rangeGap !== null
                                       ? t('projectiles.compareBestRangeDiff', { gap: rangeGap.toString() })
                                       : t('projectiles.compareBestRangeOnly'))
-                                  : undefined}
+                                  : vsBestGap !== null
+                                    ? t('projectiles.compareRangeVsBest', { gap: vsBestGap.toString() })
+                                    : undefined}
                               >
                                 {isWinner && <span aria-hidden className="mr-1">★</span>}
                                 {maxRange === null

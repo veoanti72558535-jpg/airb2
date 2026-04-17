@@ -15,10 +15,13 @@ export default function AirgunsPage() {
   const [airguns, setAirguns] = useState<Airgun[]>(airgunStore.getAll());
   const [searchParam, setSearchParam] = useUrlFilter('q');
   const [brandParam, setBrandParam] = useUrlFilter('brand');
+  const [caliberParam, setCaliberParam] = useUrlFilter('caliber');
   const searchQuery = searchParam ?? '';
   const setSearchQuery = (v: string) => setSearchParam(v);
   const brandFilter = brandParam;
   const setBrandFilter = (v: string | null) => setBrandParam(v);
+  const caliberFilter = caliberParam;
+  const setCaliberFilter = (v: string | null) => setCaliberParam(v);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Airgun | null>(null);
   const [form, setForm] = useState({ brand: '', model: '', caliber: '.177', barrelLength: 600, regPressure: 110, fillPressure: 250, powerSetting: '', defaultSightHeight: 40, defaultZeroRange: 30, notes: '' });
@@ -37,15 +40,33 @@ export default function AirgunsPage() {
     return Array.from(map.values()).sort((a, b) => b.count - a.count || a.display.localeCompare(b.display));
   }, [airguns]);
 
+  // Canonical caliber token (".177", ".22", ".25", ".30") extracted from stored value.
+  const calToken = (s: string) => {
+    const m = (s ?? '').match(/\.\d+/);
+    return m ? m[0] : '';
+  };
+  const CALIBERS = ['.177', '.22', '.25', '.30'];
+  const caliberCounts = useMemo(() => {
+    const map = new Map<string, number>();
+    airguns.forEach(a => {
+      const c = calToken(a.caliber);
+      if (!c) return;
+      map.set(c, (map.get(c) ?? 0) + 1);
+    });
+    return CALIBERS.map(c => ({ value: c, count: map.get(c) ?? 0 })).filter(x => x.count > 0);
+  }, [airguns]);
+
   const filteredAirguns = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     const bf = brandFilter?.toLowerCase() ?? null;
+    const cf = caliberFilter ?? null;
     return airguns.filter(a => {
       if (bf && (a.brand ?? '').toLowerCase() !== bf) return false;
+      if (cf && calToken(a.caliber) !== cf) return false;
       if (q && !`${a.brand} ${a.model} ${a.notes ?? ''}`.toLowerCase().includes(q)) return false;
       return true;
     });
-  }, [airguns, searchQuery, brandFilter]);
+  }, [airguns, searchQuery, brandFilter, caliberFilter]);
 
   const refresh = () => setAirguns(airgunStore.getAll());
 
@@ -78,7 +99,8 @@ export default function AirgunsPage() {
   const pressSym = symbol('pressure');
   const inputClass = "w-full bg-muted border border-border rounded-md px-3 py-1.5 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary";
 
-  const hasAnyFilter = (brandFilter !== null && brandFilter !== '') || searchQuery.trim() !== '';
+  const hasAnyFilter = (brandFilter !== null && brandFilter !== '') || (caliberFilter !== null && caliberFilter !== '') || searchQuery.trim() !== '';
+  const resetAllFilters = () => { setBrandFilter(null); setCaliberFilter(null); setSearchQuery(''); };
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
@@ -184,13 +206,47 @@ export default function AirgunsPage() {
           })}
           {hasAnyFilter && (
             <button
-              onClick={() => { setBrandFilter(null); setSearchQuery(''); }}
+              onClick={resetAllFilters}
               className="ml-auto px-2.5 py-1 rounded text-xs font-medium transition-colors bg-destructive/10 text-destructive border border-destructive/30 hover:bg-destructive/20 inline-flex items-center gap-1"
             >
               <RotateCcw className="h-3 w-3" />
               {t('optics.resetFilters')}
             </button>
           )}
+        </div>
+      )}
+
+      {airguns.length > 0 && caliberCounts.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-[11px] uppercase tracking-wide text-muted-foreground mr-1">
+            {t('optics.filterCaliber')}
+          </span>
+          <button
+            onClick={() => setCaliberFilter(null)}
+            className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+              caliberFilter === null
+                ? 'bg-primary/10 text-primary border border-primary/40'
+                : 'bg-muted text-muted-foreground border border-border hover:bg-muted/70'
+            }`}
+          >
+            {t('optics.filterAll')} ({airguns.length})
+          </button>
+          {caliberCounts.map(({ value, count }) => {
+            const active = caliberFilter === value;
+            return (
+              <button
+                key={value}
+                onClick={() => setCaliberFilter(active ? null : value)}
+                className={`px-2.5 py-1 rounded text-xs font-mono font-medium transition-colors ${
+                  active
+                    ? 'bg-primary/10 text-primary border border-primary/40'
+                    : 'bg-muted text-muted-foreground border border-border hover:bg-muted/70'
+                }`}
+              >
+                {value} ({count})
+              </button>
+            );
+          })}
         </div>
       )}
 

@@ -467,6 +467,30 @@ export function CompareProjectilesModal({
               <div className="flex items-center gap-1.5 flex-wrap">
                 <h2 className="text-sm font-heading font-semibold">{t('projectiles.compareTitle')}</h2>
                 {rows.length >= 2 && (() => {
+                  // When manual mode is active, the badge shows "manuel" with a reset button.
+                  if (manualMode) {
+                    return (
+                      <span className="inline-flex items-center gap-1">
+                        <span
+                          className="inline-flex items-center gap-0.5 rounded bg-primary/15 text-primary px-1.5 py-0.5 text-[10px] font-mono font-medium"
+                          title={t('projectiles.compareSortManualHint')}
+                        >
+                          <ListOrdered className="h-2.5 w-2.5" aria-hidden />
+                          {t('projectiles.compareSortManual')}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => { setManualMode(false); setManualOrder(null); }}
+                          className="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted focus:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+                          title={t('projectiles.compareSortResetHint')}
+                          aria-label={t('projectiles.compareSortResetHint')}
+                        >
+                          <RotateCcw className="h-2.5 w-2.5" aria-hidden />
+                          {t('projectiles.compareSortReset')}
+                        </button>
+                      </span>
+                    );
+                  }
                   const effectiveSort: 'usefulRange' | 'bc' =
                     sortMode ?? (energyThresholdJ !== null ? 'usefulRange' : 'bc');
                   const usefulRangeAvailable = energyThresholdJ !== null;
@@ -486,21 +510,37 @@ export function CompareProjectilesModal({
                       ? t('projectiles.compareSortByUsefulRangeHint', { j: (energyThresholdJ ?? 0).toFixed(2) })
                       : t('projectiles.compareSortByBcHint');
                   return (
-                    <button
-                      type="button"
-                      onClick={canToggle ? () => setSortMode(nextMode) : undefined}
-                      disabled={!canToggle}
-                      className={cn(
-                        'inline-flex items-center gap-0.5 rounded bg-muted px-1.5 py-0.5 text-[10px] font-mono font-medium text-muted-foreground',
-                        canToggle && 'hover:bg-muted/70 hover:text-foreground cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-primary',
-                        !canToggle && 'cursor-default'
-                      )}
-                      title={hint}
-                      aria-label={hint}
-                    >
-                      <span aria-hidden>↓</span>
-                      {label}
-                    </button>
+                    <span className="inline-flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={canToggle ? () => setSortMode(nextMode) : undefined}
+                        disabled={!canToggle}
+                        className={cn(
+                          'inline-flex items-center gap-0.5 rounded bg-muted px-1.5 py-0.5 text-[10px] font-mono font-medium text-muted-foreground',
+                          canToggle && 'hover:bg-muted/70 hover:text-foreground cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-primary',
+                          !canToggle && 'cursor-default'
+                        )}
+                        title={hint}
+                        aria-label={hint}
+                      >
+                        <span aria-hidden>↓</span>
+                        {label}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          // Initialise manualOrder from the current row order so dragging starts from "what you see now".
+                          setManualOrder(rows.map(r => r.p.id));
+                          setManualMode(true);
+                        }}
+                        className="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted focus:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+                        title={t('projectiles.compareSortManualEnableHint')}
+                        aria-label={t('projectiles.compareSortManualEnable')}
+                      >
+                        <GripVertical className="h-2.5 w-2.5" aria-hidden />
+                        {t('projectiles.compareSortManualEnable')}
+                      </button>
+                    </span>
                   );
                 })()}
               </div>

@@ -272,8 +272,10 @@ export function CompareProjectilesModal({
           </div>
         </div>
 
-        {/* Drop chart */}
-        <DropChart rows={rows} t={t} />
+        {/* Snapshot region — chart + table + legend get exported as PNG */}
+        <div ref={exportRef} className="bg-card">
+          {/* Drop chart */}
+          <DropChart rows={rows} t={t} />
 
         {/* Table */}
         <div className="overflow-auto">

@@ -419,31 +419,46 @@ export function CompareProjectilesModal({
                   {t('projectiles.compareEnergySection')}
                 </td>
               </tr>
-              {COMPARE_RANGES.map(r => (
-                <tr key={`v-${r}`}>
-                  <td className="px-3 py-2 text-xs text-muted-foreground sticky left-0 bg-card z-10">
-                    {t('projectiles.compareEnergyAt', { r })}
-                  </td>
-                  {rows.map(({ p, vels, energies }) => {
-                    const j = energies[r];
-                    const overFac = j !== undefined && j > FAC_LIMIT_J;
-                    return (
-                      <td
-                        key={p.id}
-                        className={cn(
-                          'px-3 py-2 font-mono text-xs',
-                          overFac && 'text-destructive font-semibold bg-destructive/10'
-                        )}
-                        title={overFac ? t('projectiles.compareFacOver') : undefined}
-                      >
-                        {vels[r] !== undefined
-                          ? `${vels[r].toFixed(0)} m/s · ${j.toFixed(1)} J`
-                          : '—'}
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
+              {COMPARE_RANGES.map(r => {
+                // Highest residual velocity at this distance — projectile that retains speed best.
+                const bestVel = Math.max(...rows.map(x => x.vels[r] ?? -Infinity));
+                return (
+                  <tr key={`v-${r}`}>
+                    <td className="px-3 py-2 text-xs text-muted-foreground sticky left-0 bg-card z-10">
+                      {t('projectiles.compareEnergyAt', { r })}
+                    </td>
+                    {rows.map(({ p, vels, energies }) => {
+                      const j = energies[r];
+                      const v = vels[r];
+                      const overFac = j !== undefined && j > FAC_LIMIT_J;
+                      // FAC red wins over "best velocity" green when both apply.
+                      const isFastest = !overFac && v !== undefined && v === bestVel && rows.length > 1;
+                      return (
+                        <td
+                          key={p.id}
+                          className={cn(
+                            'px-3 py-2 font-mono text-xs',
+                            overFac && 'text-destructive font-semibold bg-destructive/10',
+                            isFastest && 'text-tactical font-semibold bg-tactical/10'
+                          )}
+                          title={
+                            overFac
+                              ? t('projectiles.compareFacOver')
+                              : isFastest
+                                ? t('projectiles.compareFastest')
+                                : undefined
+                          }
+                        >
+                          {isFastest && <span aria-hidden className="mr-1">★</span>}
+                          {v !== undefined
+                            ? `${v.toFixed(0)} m/s · ${j.toFixed(1)} J`
+                            : '—'}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

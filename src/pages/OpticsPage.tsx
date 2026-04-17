@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Eye, Plus, Trash2, Edit2, Download } from 'lucide-react';
+import { Eye, Plus, Trash2, Edit2, Download, Search, X } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { opticStore } from '@/lib/storage';
 import { useUnits } from '@/hooks/use-units';
@@ -14,6 +14,7 @@ export default function OpticsPage() {
   const [optics, setOptics] = useState<Optic[]>(opticStore.getAll());
   const [tubeFilter, setTubeFilter] = useState<25.4 | 30 | 34 | null>(null);
   const [brandFilter, setBrandFilter] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [editing, setEditing] = useState<Optic | null>(null);
@@ -93,15 +94,18 @@ export default function OpticsPage() {
     return counts;
   }, [optics]);
 
-  const filteredOptics = useMemo(
-    () =>
-      optics.filter(o => {
-        if (tubeFilter && o.tubeDiameter !== tubeFilter) return false;
-        if (brandFilter && detectBrand(o.name) !== brandFilter) return false;
-        return true;
-      }),
-    [optics, tubeFilter, brandFilter]
-  );
+  const filteredOptics = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return optics.filter(o => {
+      if (tubeFilter && o.tubeDiameter !== tubeFilter) return false;
+      if (brandFilter && detectBrand(o.name) !== brandFilter) return false;
+      if (q) {
+        const hay = `${o.name} ${o.notes ?? ''}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }, [optics, tubeFilter, brandFilter, searchQuery]);
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
@@ -166,6 +170,28 @@ export default function OpticsPage() {
             <button onClick={() => { setShowForm(false); setEditing(null); }} className="px-4 py-2 bg-muted text-muted-foreground rounded-md text-sm">{t('common.cancel')}</button>
           </div>
         </motion.div>
+      )}
+
+      {optics.length > 0 && (
+        <div className="relative">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder={t('optics.search')}
+            className="w-full bg-muted border border-border rounded-md pl-8 pr-8 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-muted-foreground/10 text-muted-foreground"
+              aria-label="Clear search"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
       )}
 
       {optics.length > 0 && (

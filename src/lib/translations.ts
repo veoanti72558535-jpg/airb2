@@ -173,6 +173,7 @@ const fr = {
   'optics.searchPreset': 'Rechercher (FX, Element, Discovery, MTC…)',
   'optics.filterAll': 'Tous',
   'optics.filterBrand': 'Marque',
+  'optics.search': 'Rechercher par nom ou notes…',
   'optics.noMatch': 'Aucune optique pour ces filtres.',
 
   // Sessions
@@ -472,6 +473,7 @@ const en: Record<keyof typeof fr, string> = {
   'optics.searchPreset': 'Search (FX, Element, Discovery, MTC…)',
   'optics.filterAll': 'All',
   'optics.filterBrand': 'Brand',
+  'optics.search': 'Search by name or notes…',
   'optics.noMatch': 'No optic for these filters.',
 
   'sessions.title': 'Sessions',

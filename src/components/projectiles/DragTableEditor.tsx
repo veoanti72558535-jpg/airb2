@@ -291,21 +291,61 @@ function DragTablePreview({ table, t }: PreviewProps) {
 
   // Hover state — `null` = not hovering. `mach` is in data units.
   const [hover, setHover] = useState<number | null>(null);
+  // Touch interactions are sticky: a tap pins the tooltip until the user
+  // taps elsewhere. Mouse hover never sets this flag, so desktop UX is
+  // unchanged (move-to-track, leave-to-clear).
+  const [pinned, setPinned] = useState(false);
   const svgRef = useRef<SVGSVGElement>(null);
 
-  const handlePointerMove = useCallback((e: React.PointerEvent<SVGSVGElement>) => {
+  /** Convert a pointer event clientX to a Mach value, or null if outside the plot. */
+  const pointerToMach = useCallback((clientX: number): number | null => {
     const svg = svgRef.current;
-    if (!svg) return;
+    if (!svg) return null;
     // Convert client coords → SVG viewBox coords so the math stays correct
     // regardless of CSS scaling (the SVG is width:100%).
     const rect = svg.getBoundingClientRect();
-    const vbX = ((e.clientX - rect.left) / rect.width) * W;
-    if (vbX < PAD_L || vbX > W - PAD_R) {
-      setHover(null);
-      return;
-    }
-    setHover(pxToX(vbX));
+    const vbX = ((clientX - rect.left) / rect.width) * W;
+    if (vbX < PAD_L || vbX > W - PAD_R) return null;
+    return pxToX(vbX);
   }, [pxToX]);
+
+  const handlePointerMove = useCallback((e: React.PointerEvent<SVGSVGElement>) => {
+    // Only mouse-move tracks live; touch is handled by tap (pointerdown) so
+    // the user doesn't have to keep their finger on the screen.
+    if (e.pointerType !== 'mouse') return;
+    setHover(pointerToMach(e.clientX));
+  }, [pointerToMach]);
+
+  const handlePointerLeave = useCallback((e: React.PointerEvent<SVGSVGElement>) => {
+    // Only clear on mouse-leave; touch must persist until an outside tap.
+    if (e.pointerType !== 'mouse') return;
+    setHover(null);
+  }, []);
+
+  /** Tap handler — pins (or re-positions) the tooltip on touch / pen. */
+  const handlePointerDown = useCallback((e: React.PointerEvent<SVGSVGElement>) => {
+    if (e.pointerType === 'mouse') return;
+    const m = pointerToMach(e.clientX);
+    if (m === null) return;
+    setHover(m);
+    setPinned(true);
+  }, [pointerToMach]);
+
+  // Dismiss a pinned tooltip when the user taps anywhere outside the SVG.
+  // Listen on `pointerdown` so it fires before any click handlers on sibling
+  // controls, matching native popover behaviour.
+  useEffect(() => {
+    if (!pinned) return;
+    const onDocPointerDown = (e: PointerEvent) => {
+      if (e.pointerType === 'mouse') return;
+      const svg = svgRef.current;
+      if (svg && e.target instanceof Node && svg.contains(e.target)) return;
+      setHover(null);
+      setPinned(false);
+    };
+    document.addEventListener('pointerdown', onDocPointerDown);
+    return () => document.removeEventListener('pointerdown', onDocPointerDown);
+  }, [pinned]);
 
   // 3 ticks on each axis
   const xTicks = [xMin, (xMin + xMax) / 2, xMax];

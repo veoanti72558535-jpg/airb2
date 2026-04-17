@@ -199,4 +199,10 @@ export interface AppSettings {
   };
   /** When true, the calculator may suggest auto-fill from a weather provider. */
   weatherAutoSuggest?: boolean;
+  /**
+   * User-configurable energy threshold (in Joules) used to flag muzzle/residual
+   * energy in the projectile comparison view. `null` disables the highlight.
+   * Common values: 7.5 J (France airgun limit), 16.27 J (UK FAC, ≈12 ft·lb).
+   */
+  energyThresholdJ?: number | null;
 }

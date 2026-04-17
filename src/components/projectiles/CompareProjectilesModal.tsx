@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { X, GitCompare, Gauge, RotateCcw, Target, Download } from 'lucide-react';
 import { toPng } from 'html-to-image';
 import { Projectile, WeatherSnapshot } from '@/lib/types';
+import { getSettings } from '@/lib/storage';
 import { calculateTrajectory } from '@/lib/ballistics';
 import { useI18n } from '@/lib/i18n';
 import { useUnits } from '@/hooks/use-units';
@@ -27,9 +28,8 @@ interface Props {
 const COMPARE_RANGES = [25, 50, 75, 100] as const;
 const CHART_STEP = 5; // m — fine sampling for the SVG drop chart
 const CHART_MAX = 100; // m
-/** UK FAC airgun threshold: 12 ft·lb ≈ 16.27 J. Above this requires a Firearms Certificate. */
-const FAC_LIMIT_J = 16.27;
-const FAC_LIMIT_FPE = 12;
+/** Default fallback when no setting is stored — UK FAC threshold (12 ft·lb ≈ 16.27 J). */
+const DEFAULT_FAC_J = 16.27;
 
 /** Distinct hues for up to 4 projectiles. Tuned for dark + light themes. */
 const SERIES_COLORS = [
@@ -68,6 +68,15 @@ export function CompareProjectilesModal({
 }: Props) {
   const { t } = useI18n();
   const { symbol } = useUnits();
+  /**
+   * Energy threshold (J) read from settings — `null`/`undefined` means the user
+   * disabled the highlight in Settings. Falls back to UK FAC if missing.
+   */
+  const energyThresholdJ = useMemo(() => {
+    const s = getSettings();
+    // Distinguish explicit `null` (= disabled) from missing (= legacy/default).
+    return s.energyThresholdJ === undefined ? DEFAULT_FAC_J : s.energyThresholdJ;
+  }, [open]);
   const [velocity, setVelocity] = useState<number>(initialVelocity);
   const [zeroRange, setZeroRange] = useState<number>(DEFAULT_Z);
   const [exporting, setExporting] = useState(false);
@@ -312,19 +321,19 @@ export function CompareProjectilesModal({
                             <div
                               className={cn(
                                 'mt-1 text-[10px] font-mono normal-case inline-flex items-center gap-1 rounded px-1 -mx-1',
-                                e.joules > FAC_LIMIT_J
+                                energyThresholdJ !== null && e.joules > energyThresholdJ
                                   ? 'text-destructive font-semibold bg-destructive/10'
                                   : isMax
                                     ? 'text-tactical font-semibold bg-tactical/10'
                                     : 'text-muted-foreground'
                               )}
                               title={
-                                e.joules > FAC_LIMIT_J
+                                energyThresholdJ !== null && e.joules > energyThresholdJ
                                   ? t('projectiles.compareFacOver')
                                   : t('projectiles.compareMuzzleEnergy')
                               }
                             >
-                              {e.joules > FAC_LIMIT_J ? (
+                              {energyThresholdJ !== null && e.joules > energyThresholdJ ? (
                                 <span aria-hidden>⚠</span>
                               ) : isMax ? (
                                 <span aria-hidden>★</span>
@@ -430,7 +439,7 @@ export function CompareProjectilesModal({
                     {rows.map(({ p, vels, energies }) => {
                       const j = energies[r];
                       const v = vels[r];
-                      const overFac = j !== undefined && j > FAC_LIMIT_J;
+                      const overFac = energyThresholdJ !== null && j !== undefined && j > energyThresholdJ;
                       // FAC red wins over "best velocity" green when both apply.
                       const isFastest = !overFac && v !== undefined && v === bestVel && rows.length > 1;
                       return (
@@ -463,11 +472,13 @@ export function CompareProjectilesModal({
           </table>
         </div>
 
-          {/* FAC threshold legend */}
-          <div className="px-4 py-2 border-t border-border bg-card/40 flex items-center gap-2 text-[10px] text-muted-foreground">
-            <span className="inline-block h-2 w-2 rounded-full bg-destructive shrink-0" aria-hidden />
-            <span>{t('projectiles.compareFacLegend')}</span>
-          </div>
+          {/* FAC threshold legend — hidden when the user disabled the highlight */}
+          {energyThresholdJ !== null && (
+            <div className="px-4 py-2 border-t border-border bg-card/40 flex items-center gap-2 text-[10px] text-muted-foreground">
+              <span className="inline-block h-2 w-2 rounded-full bg-destructive shrink-0" aria-hidden />
+              <span>{t('projectiles.compareFacLegend', { j: energyThresholdJ.toFixed(2) })}</span>
+            </div>
+          )}
         </div>{/* /exportRef */}
 
         {/* Footer */}

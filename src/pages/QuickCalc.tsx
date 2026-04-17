@@ -127,6 +127,7 @@ function defaultForm(): FormState {
 
 export default function QuickCalc() {
   const { t } = useI18n();
+  const navigate = useNavigate();
   const settings = getSettings();
   const [searchParams, setSearchParams] = useSearchParams();
   const [advanced, setAdvanced] = useState(settings.advancedMode);
@@ -134,6 +135,10 @@ export default function QuickCalc() {
   const [results, setResults] = useState<BallisticResult[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sessionName, setSessionName] = useState('');
+  /** Id of the session currently mirrored in the form — set after a save or
+   *  after rehydration from ?session=. Drives the "Compare with another" CTA. */
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [comparePickerOpen, setComparePickerOpen] = useState(false);
   // Live mirror of the configured energy threshold so the header chip refreshes
   // when the user changes it in Settings (cross-tab via 'storage' event, or
   // intra-tab via window focus / re-mount).

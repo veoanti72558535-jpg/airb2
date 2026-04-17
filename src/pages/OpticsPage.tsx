@@ -199,80 +199,33 @@ export default function OpticsPage() {
       )}
 
       {optics.length > 0 && (
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-[11px] uppercase tracking-wide text-muted-foreground mr-1">
-            {t('optics.tubeDiameter')}
-          </span>
-          <button
-            onClick={() => setTubeFilter(null)}
-            className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
-              tubeFilter === null
-                ? 'bg-primary/10 text-primary border border-primary/40'
-                : 'bg-muted text-muted-foreground border border-border hover:bg-muted/70'
-            }`}
-          >
-            {t('optics.filterAll')} ({optics.length})
-          </button>
-          {tubeOptions.map(d => (
-            <button
-              key={d}
-              onClick={() => setTubeFilter(tubeFilter === d ? null : d)}
-              disabled={tubeCounts[String(d)] === 0}
-              className={`px-2.5 py-1 rounded text-xs font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
-                tubeFilter === d
-                  ? 'bg-primary/10 text-primary border border-primary/40'
-                  : 'bg-muted text-muted-foreground border border-border hover:bg-muted/70'
-              }`}
-            >
-              ⌀ {d}mm ({tubeCounts[String(d)]})
-            </button>
-          ))}
-        </div>
+        <FilterChips
+          label={t('optics.tubeDiameter')}
+          value={tubeFilter === null ? null : String(tubeFilter)}
+          onChange={v => setTubeFilter(v === null ? null : (Number(v) as 25.4 | 30 | 34))}
+          totalCount={optics.length}
+          options={tubeOptions.map(d => ({
+            value: String(d),
+            label: `⌀ ${d}mm`,
+            count: tubeCounts[String(d)],
+          }))}
+        />
       )}
 
       {optics.length > 0 && (
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-[11px] uppercase tracking-wide text-muted-foreground mr-1">
-            {t('optics.filterBrand')}
-          </span>
-          <button
-            onClick={() => setBrandFilter(null)}
-            className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
-              brandFilter === null
-                ? 'bg-primary/10 text-primary border border-primary/40'
-                : 'bg-muted text-muted-foreground border border-border hover:bg-muted/70'
-            }`}
-          >
-            {t('optics.filterAll')} ({optics.length})
-          </button>
-          {brandOptions.map(b => (
-            <button
-              key={b}
-              onClick={() => setBrandFilter(brandFilter === b ? null : b)}
-              disabled={brandCounts[b] === 0}
-              className={`px-2.5 py-1 rounded text-xs font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
-                brandFilter === b
-                  ? 'bg-primary/10 text-primary border border-primary/40'
-                  : 'bg-muted text-muted-foreground border border-border hover:bg-muted/70'
-              }`}
-            >
-              {b} ({brandCounts[b]})
-            </button>
-          ))}
-          {(tubeFilter !== null || brandFilter !== null || searchQuery.trim() !== '') && (
-            <button
-              onClick={() => {
-                setTubeFilter(null);
-                setBrandFilter(null);
-                setSearchQuery('');
-              }}
-              className="ml-auto px-2.5 py-1 rounded text-xs font-medium transition-colors bg-destructive/10 text-destructive border border-destructive/30 hover:bg-destructive/20 inline-flex items-center gap-1"
-            >
-              <RotateCcw className="h-3 w-3" />
-              {t('optics.resetFilters')}
-            </button>
-          )}
-        </div>
+        <FilterChips
+          label={t('optics.filterBrand')}
+          value={brandFilter}
+          onChange={setBrandFilter}
+          totalCount={optics.length}
+          options={brandOptions.map(b => ({ value: b, count: brandCounts[b] }))}
+          onReset={() => {
+            setTubeFilter(null);
+            setBrandFilter(null);
+            setSearchQuery('');
+          }}
+          showReset={tubeFilter !== null || brandFilter !== null || searchQuery.trim() !== ''}
+        />
       )}
 
       {optics.length === 0 ? (

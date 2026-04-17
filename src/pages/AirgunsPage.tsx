@@ -99,7 +99,8 @@ export default function AirgunsPage() {
   const pressSym = symbol('pressure');
   const inputClass = "w-full bg-muted border border-border rounded-md px-3 py-1.5 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary";
 
-  const hasAnyFilter = (brandFilter !== null && brandFilter !== '') || searchQuery.trim() !== '';
+  const hasAnyFilter = (brandFilter !== null && brandFilter !== '') || (caliberFilter !== null && caliberFilter !== '') || searchQuery.trim() !== '';
+  const resetAllFilters = () => { setBrandFilter(null); setCaliberFilter(null); setSearchQuery(''); };
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">

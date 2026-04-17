@@ -105,7 +105,7 @@ export function EntitySelect({
   };
 
   return (
-    <div className="space-y-1" ref={wrapperRef}>
+    <div className={cn('space-y-1', open && 'relative z-50')} ref={wrapperRef}>
       <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
         {label}
       </label>

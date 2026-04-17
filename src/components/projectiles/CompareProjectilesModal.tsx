@@ -80,6 +80,7 @@ export function CompareProjectilesModal({
   const [velocity, setVelocity] = useState<number>(initialVelocity);
   const [zeroRange, setZeroRange] = useState<number>(DEFAULT_Z);
   const [exporting, setExporting] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
   /** Wraps the chart + table — that's what gets snapshotted to PNG. */
   const exportRef = useRef<HTMLDivElement | null>(null);
 

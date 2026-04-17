@@ -1,4 +1,4 @@
-import { TrendingDown, Wind, Zap, Clock, Crosshair, Compass, Cloud } from 'lucide-react';
+import { TrendingDown, Wind, Zap, Clock, Crosshair, Compass, Cloud, AlertTriangle } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { BallisticResult, OpticFocalPlane, WeatherSnapshot } from '@/lib/types';
 import { useUnits } from '@/hooks/use-units';
@@ -16,6 +16,12 @@ interface Props {
   weather?: WeatherSnapshot;
   /** Optional separate zeroing weather snapshot — flagged when present. */
   zeroWeather?: WeatherSnapshot;
+  /**
+   * Configured energy alert threshold in Joules. When the muzzle (range = 0)
+   * energy exceeds this, a destructive banner is shown. `null` disables the
+   * warning entirely. `undefined` falls back to a sensible default.
+   */
+  energyThresholdJ?: number | null;
 }
 
 function Stat({

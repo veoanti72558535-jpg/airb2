@@ -1,7 +1,8 @@
-import { TrendingDown, Wind, Zap, Clock, Crosshair, Compass } from 'lucide-react';
+import { TrendingDown, Wind, Zap, Clock, Crosshair, Compass, Cloud } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
-import { BallisticResult, OpticFocalPlane } from '@/lib/types';
+import { BallisticResult, OpticFocalPlane, WeatherSnapshot } from '@/lib/types';
 import { useUnits } from '@/hooks/use-units';
+import { cn } from '@/lib/utils';
 
 interface Props {
   result: BallisticResult;
@@ -11,6 +12,10 @@ interface Props {
   currentMag?: number;
   magCalibration?: number;
   advanced?: boolean;
+  /** Weather actually used in the calculation — surfaced as a traceability strip. */
+  weather?: WeatherSnapshot;
+  /** Optional separate zeroing weather snapshot — flagged when present. */
+  zeroWeather?: WeatherSnapshot;
 }
 
 function Stat({
@@ -47,6 +52,19 @@ function Stat({
   );
 }
 
+/** Human-readable age of an ISO timestamp ("just now", "12 min ago", date fallback). */
+function formatAge(iso: string | undefined, locale: 'fr' | 'en'): string {
+  if (!iso) return '';
+  const diff = Date.now() - new Date(iso).getTime();
+  if (Number.isNaN(diff) || diff < 0) return '';
+  const mins = Math.floor(diff / 60_000);
+  if (mins < 1) return locale === 'fr' ? "à l'instant" : 'just now';
+  if (mins < 60) return locale === 'fr' ? `il y a ${mins} min` : `${mins} min ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return locale === 'fr' ? `il y a ${hours} h` : `${hours}h ago`;
+  return new Date(iso).toLocaleDateString(locale);
+}
+
 export function ResultsCard({
   result,
   rows,
@@ -55,8 +73,10 @@ export function ResultsCard({
   currentMag,
   magCalibration,
   advanced,
+  weather,
+  zeroWeather,
 }: Props) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { symbol } = useUnits();
   const distUnit = symbol('distance');
   const lengthUnit = symbol('length');
@@ -80,6 +100,22 @@ export function ResultsCard({
     currentMag > 0 &&
     Math.abs(currentMag - magCalibration) > 0.01;
 
+  // ── Weather traceability strip ──────────────────────────────────────────
+  // Shows the source (auto/mixed/manual), provider & location label, age,
+  // and a hint when a separate zeroing snapshot was used. Helps users trust
+  // (and audit) the inputs that produced the displayed numbers.
+  const wSource = weather?.source ?? 'manual';
+  const sourceLabel =
+    wSource === 'auto' ? t('weather.sourceAuto') :
+    wSource === 'mixed' ? t('weather.sourceMixed') :
+    t('weather.sourceManual');
+  const sourceClass =
+    wSource === 'auto' ? 'bg-primary/15 text-primary border-primary/30' :
+    wSource === 'mixed' ? 'bg-amber-500/15 text-amber-500 border-amber-500/30 dark:text-amber-400' :
+    'bg-muted text-muted-foreground border-border';
+  const providerLabel = weather?.location ?? weather?.provider;
+  const ageLabel = wSource !== 'manual' ? formatAge(weather?.timestamp, locale) : '';
+
   return (
     <section className="rounded-xl border border-primary/30 bg-gradient-to-br from-card via-card/80 to-primary/5 p-4 space-y-4 shadow-lg">
       <header className="flex items-center justify-between">
@@ -97,6 +133,33 @@ export function ResultsCard({
           </p>
         </div>
       </header>
+
+      {weather && (
+        <div className="flex flex-wrap items-center gap-1.5 text-[10px] font-mono">
+          <span
+            className={cn(
+              'inline-flex items-center gap-1 px-2 py-0.5 rounded border uppercase tracking-wide',
+              sourceClass,
+            )}
+          >
+            <Cloud className="h-3 w-3" />
+            {sourceLabel}
+          </span>
+          {providerLabel && (
+            <span className="text-muted-foreground truncate max-w-[60%]">{providerLabel}</span>
+          )}
+          {ageLabel && <span className="text-muted-foreground">· {ageLabel}</span>}
+          {zeroWeather && (
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded border border-border/60 text-muted-foreground uppercase tracking-wide">
+              {t('sessions.badgeZeroWeather')}
+            </span>
+          )}
+          <span className="text-muted-foreground/70">
+            · {weather.temperature.toFixed(0)}°C / {weather.pressure.toFixed(0)}hPa /{' '}
+            {weather.humidity.toFixed(0)}% / {weather.windSpeed.toFixed(1)}m/s
+          </span>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-2">
         <Stat

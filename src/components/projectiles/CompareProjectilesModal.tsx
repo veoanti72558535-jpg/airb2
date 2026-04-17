@@ -343,9 +343,18 @@ export function CompareProjectilesModal({
                   (energyThresholdJ !== null && collapsed.overThreshold ? 1 : 0);
                 if (hidden === 0) return null;
                 return (
-                  <p className="mt-0.5 text-[10px] text-tactical font-medium">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setCollapsed({ drop: false, vel: false, energy: false, overThreshold: false })
+                    }
+                    className="mt-0.5 inline-flex items-center gap-1 text-[10px] text-tactical font-medium hover:underline focus:outline-none focus-visible:ring-1 focus-visible:ring-tactical rounded"
+                    title={t('projectiles.compareExpandAll')}
+                    aria-label={t('projectiles.compareExpandAll')}
+                  >
+                    <Maximize2 className="h-2.5 w-2.5" aria-hidden />
                     {t('projectiles.compareHiddenCount', { hidden, total })}
-                  </p>
+                  </button>
                 );
               })()}
             </div>

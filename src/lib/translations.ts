@@ -681,6 +681,8 @@ const en: Record<keyof typeof fr, string> = {
   'projectiles.compareSelected': 'Compare ({count})',
   'projectiles.compareTitle': 'Projectile comparison',
   'projectiles.compareHint': 'Simulated at {v} m/s, 30 m zero, standard atmosphere (15 °C, 1013 hPa)',
+  'projectiles.compareVelocity': 'Simulation velocity',
+  'projectiles.compareVelocityHint': 'Adjust to see how power affects gaps',
   'projectiles.compareMetric': 'Metric',
   'projectiles.compareDropSection': 'Drop (sight-line)',
   'projectiles.compareDropAt': 'Drop @ {r} m',

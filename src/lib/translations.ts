@@ -129,6 +129,8 @@ const fr = {
   'airguns.defaultSightHeight': 'Hauteur lunette par défaut',
   'airguns.defaultZeroRange': 'Distance zéro par défaut',
   'airguns.notes': 'Notes',
+  'airguns.search': 'Rechercher par marque, modèle ou notes…',
+  'airguns.noMatch': 'Aucune arme ne correspond à la recherche.',
 
   // Tunes
   'tunes.title': 'Tunes',

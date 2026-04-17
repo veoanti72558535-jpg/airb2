@@ -517,17 +517,37 @@ function DropChart({ rows, t }: DropChartProps) {
           {t('projectiles.compareChartY')}
         </text>
 
-        {rows.map(({ p, curve }, i) => (
-          <path
-            key={p.id}
-            d={buildPath(curve)}
-            fill="none"
-            stroke={SERIES_COLORS[i % SERIES_COLORS.length]}
-            strokeWidth={1.75}
-            strokeLinejoin="round"
-            strokeLinecap="round"
-          />
-        ))}
+        {rows.map(({ p, curve }, i) => {
+          const color = SERIES_COLORS[i % SERIES_COLORS.length];
+          return (
+            <g key={p.id}>
+              <path
+                d={buildPath(curve)}
+                fill="none"
+                stroke={color}
+                strokeWidth={1.75}
+                strokeLinejoin="round"
+                strokeLinecap="round"
+              />
+              {/* Markers at comparison distances */}
+              {COMPARE_RANGES.map(r => {
+                const pt = curve.find(c => c.range === r);
+                if (!pt) return null;
+                return (
+                  <circle
+                    key={`${p.id}-${r}`}
+                    cx={xToPx(pt.range)}
+                    cy={yToPx(pt.drop)}
+                    r={3}
+                    fill={color}
+                    stroke="hsl(var(--card))"
+                    strokeWidth={1}
+                  />
+                );
+              })}
+            </g>
+          );
+        })}
       </svg>
     </div>
   );

@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { History, Star, Trash2, Search, Crosshair, Play, Filter, X } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { History, Star, Trash2, Search, Crosshair, Play, Filter, X, ArrowLeftRight, CheckSquare } from 'lucide-react';
+import { toast } from 'sonner';
 import { useI18n } from '@/lib/i18n';
 import {
   sessionStore,
@@ -11,9 +12,12 @@ import {
 import { Session } from '@/lib/types';
 import { motion } from 'framer-motion';
 import { EntitySelect } from '@/components/calc/EntitySelect';
+import { Checkbox } from '@/components/ui/checkbox';
+import { SessionPickerDialog } from '@/components/compare/SessionPickerDialog';
 
 export default function SessionsPage() {
   const { t } = useI18n();
+  const navigate = useNavigate();
   const [sessions, setSessions] = useState<Session[]>(sessionStore.getAll());
   const [filter, setFilter] = useState<'all' | 'favorites'>('all');
   const [query, setQuery] = useState('');
@@ -21,6 +25,13 @@ export default function SessionsPage() {
   const [projectileId, setProjectileId] = useState('');
   const [opticId, setOpticId] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+
+  // ── Compare flow state ────────────────────────────────────────────────
+  // Selection mode: user toggles checkboxes on cards, then "Compare (2)".
+  // Per-card picker: quick "Compare with…" CTA opens SessionPickerDialog.
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [pickerSource, setPickerSource] = useState<Session | null>(null);
 
   const airguns = useMemo(() => airgunStore.getAll(), []);
   const projectiles = useMemo(() => projectileStore.getAll(), []);
@@ -33,7 +44,11 @@ export default function SessionsPage() {
     if (s) { sessionStore.update(id, { favorite: !s.favorite }); refresh(); }
   };
 
-  const handleDelete = (id: string) => { sessionStore.delete(id); refresh(); };
+  const handleDelete = (id: string) => {
+    sessionStore.delete(id);
+    setSelectedIds(ids => ids.filter(x => x !== id));
+    refresh();
+  };
 
   const activeFilterCount =
     (airgunId ? 1 : 0) + (projectileId ? 1 : 0) + (opticId ? 1 : 0);
@@ -42,6 +57,38 @@ export default function SessionsPage() {
     setAirgunId('');
     setProjectileId('');
     setOpticId('');
+  };
+
+  const toggleSelection = (id: string) => {
+    setSelectedIds(prev => {
+      if (prev.includes(id)) return prev.filter(x => x !== id);
+      if (prev.length >= 2) {
+        toast.info(t('compare.selectExactlyTwo'));
+        return prev;
+      }
+      return [...prev, id];
+    });
+  };
+
+  const enterSelectionMode = () => {
+    setSelectionMode(true);
+    setSelectedIds([]);
+  };
+
+  const exitSelectionMode = () => {
+    setSelectionMode(false);
+    setSelectedIds([]);
+  };
+
+  const launchCompareFromSelection = () => {
+    if (selectedIds.length !== 2) return;
+    const [a, b] = selectedIds;
+    navigate(`/compare?a=${a}&b=${b}`);
+  };
+
+  const launchCompareWithPicker = (other: Session) => {
+    if (!pickerSource) return;
+    navigate(`/compare?a=${pickerSource.id}&b=${other.id}`);
   };
 
   const filtered = useMemo(() => {
@@ -55,14 +102,45 @@ export default function SessionsPage() {
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }, [sessions, filter, query, airgunId, projectileId, opticId]);
 
+  const canCompareAtAll = sessions.length >= 2;
+
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
         <div className="flex items-center gap-2">
           <History className="h-5 w-5 text-primary" />
           <h1 className="text-xl font-heading font-bold">{t('sessions.title')}</h1>
         </div>
-        <div className="flex gap-1">
+        <div className="flex gap-1 items-center">
+          {!selectionMode ? (
+            <button
+              onClick={enterSelectionMode}
+              disabled={!canCompareAtAll}
+              title={!canCompareAtAll ? t('compare.selectExactlyTwo') : t('compare.selectionMode')}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium border border-border text-muted-foreground hover:bg-muted/40 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <CheckSquare className="h-3.5 w-3.5" />
+              {t('compare.selectionMode')}
+            </button>
+          ) : (
+            <>
+              <button
+                onClick={launchCompareFromSelection}
+                disabled={selectedIds.length !== 2}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <ArrowLeftRight className="h-3.5 w-3.5" />
+                {t('compare.compareSelection', { count: selectedIds.length })}
+              </button>
+              <button
+                onClick={exitSelectionMode}
+                className="inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] text-muted-foreground hover:text-foreground hover:bg-muted/40"
+              >
+                <X className="h-3 w-3" />
+                {t('compare.exitSelection')}
+              </button>
+            </>
+          )}
           <button onClick={() => setFilter('all')} className={`px-3 py-1 rounded-md text-xs font-medium ${filter === 'all' ? 'bg-primary/10 text-primary' : 'text-muted-foreground'}`}>{t('common.all')}</button>
           <button onClick={() => setFilter('favorites')} className={`px-3 py-1 rounded-md text-xs font-medium ${filter === 'favorites' ? 'bg-primary/10 text-primary' : 'text-muted-foreground'}`}>★</button>
         </div>
@@ -154,6 +232,13 @@ export default function SessionsPage() {
         </div>
       )}
 
+      {/* Selection-mode hint banner */}
+      {selectionMode && (
+        <div className="rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-[11px] text-primary font-mono">
+          {t('compare.selectExactlyTwo')}
+        </div>
+      )}
+
       {/* CTA */}
       {filtered.length === 0 && sessions.length === 0 && (
         <Link to="/calc" className="surface-elevated p-4 flex items-center gap-3 hover:border-primary/30 transition-colors block text-center">
@@ -176,10 +261,28 @@ export default function SessionsPage() {
             const wsrc = s.input.weather?.source;
             if (wsrc === 'auto') advBadges.push(t('sessions.badgeAuto'));
             else if (wsrc === 'mixed') advBadges.push(t('sessions.badgeMixed'));
+            const isSelected = selectedIds.includes(s.id);
             return (
-              <div key={s.id} className="surface-elevated p-4">
+              <div
+                key={s.id}
+                className={`surface-elevated p-4 transition-colors ${
+                  selectionMode && isSelected ? 'ring-1 ring-primary border-primary/50' : ''
+                }`}
+              >
                 <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0">
+                  {selectionMode && (
+                    <div className="pt-1">
+                      <Checkbox
+                        checked={isSelected}
+                        onCheckedChange={() => toggleSelection(s.id)}
+                        aria-label={`Select ${s.name}`}
+                      />
+                    </div>
+                  )}
+                  <div
+                    className="flex-1 min-w-0 cursor-pointer"
+                    onClick={() => selectionMode && toggleSelection(s.id)}
+                  >
                     <div className="font-semibold text-sm truncate">{s.name}</div>
                     <div className="text-xs text-muted-foreground font-mono mt-1">
                       {s.input.muzzleVelocity} m/s • BC {s.input.bc} • {s.input.projectileWeight} gr • Zero {s.input.zeroRange}m
@@ -194,21 +297,31 @@ export default function SessionsPage() {
                       </div>
                     )}
                   </div>
-                  <div className="flex gap-1 shrink-0">
-                    <Link
-                      to={`/calc?session=${s.id}`}
-                      title={t('sessions.openInCalc')}
-                      className="p-1.5 rounded hover:bg-primary/10 text-primary"
-                    >
-                      <Play className="h-4 w-4" />
-                    </Link>
-                    <button onClick={() => toggleFav(s.id)} className={`p-1.5 rounded ${s.favorite ? 'text-primary' : 'text-muted-foreground hover:text-primary'}`}>
-                      <Star className="h-4 w-4" fill={s.favorite ? 'currentColor' : 'none'} />
-                    </button>
-                    <button onClick={() => handleDelete(s.id)} className="p-1.5 rounded hover:bg-destructive/10 text-destructive">
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
+                  {!selectionMode && (
+                    <div className="flex gap-1 shrink-0">
+                      <Link
+                        to={`/calc?session=${s.id}`}
+                        title={t('sessions.openInCalc')}
+                        className="p-1.5 rounded hover:bg-primary/10 text-primary"
+                      >
+                        <Play className="h-4 w-4" />
+                      </Link>
+                      <button
+                        onClick={() => setPickerSource(s)}
+                        disabled={sessions.length < 2}
+                        title={t('compare.compareWith')}
+                        className="p-1.5 rounded hover:bg-primary/10 text-muted-foreground hover:text-primary disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                      >
+                        <ArrowLeftRight className="h-4 w-4" />
+                      </button>
+                      <button onClick={() => toggleFav(s.id)} className={`p-1.5 rounded ${s.favorite ? 'text-primary' : 'text-muted-foreground hover:text-primary'}`}>
+                        <Star className="h-4 w-4" fill={s.favorite ? 'currentColor' : 'none'} />
+                      </button>
+                      <button onClick={() => handleDelete(s.id)} className="p-1.5 rounded hover:bg-destructive/10 text-destructive">
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  )}
                 </div>
                 {/* Quick summary */}
                 {s.results.length > 0 && (
@@ -226,6 +339,15 @@ export default function SessionsPage() {
           })}
         </div>
       )}
+
+      {/* Per-card "Compare with…" picker */}
+      <SessionPickerDialog
+        open={pickerSource !== null}
+        onOpenChange={(open) => { if (!open) setPickerSource(null); }}
+        source={pickerSource}
+        sessions={sessions}
+        onPick={launchCompareWithPicker}
+      />
     </motion.div>
   );
 }

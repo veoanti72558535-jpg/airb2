@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Crosshair, RotateCcw, Save, Sparkles, Settings2, Zap } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Crosshair, RotateCcw, Save, Sparkles, Settings2, Zap, ArrowLeftRight } from 'lucide-react';
+import { SessionPickerDialog } from '@/components/compare/SessionPickerDialog';
 import { toast } from 'sonner';
 import { useI18n } from '@/lib/i18n';
 import { calculateTrajectory } from '@/lib/ballistics';
@@ -125,6 +125,7 @@ function defaultForm(): FormState {
 
 export default function QuickCalc() {
   const { t } = useI18n();
+  const navigate = useNavigate();
   const settings = getSettings();
   const [searchParams, setSearchParams] = useSearchParams();
   const [advanced, setAdvanced] = useState(settings.advancedMode);
@@ -132,6 +133,10 @@ export default function QuickCalc() {
   const [results, setResults] = useState<BallisticResult[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sessionName, setSessionName] = useState('');
+  /** Id of the session currently mirrored in the form — set after a save or
+   *  after rehydration from ?session=. Drives the "Compare with another" CTA. */
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [comparePickerOpen, setComparePickerOpen] = useState(false);
   // Live mirror of the configured energy threshold so the header chip refreshes
   // when the user changes it in Settings (cross-tab via 'storage' event, or
   // intra-tab via window focus / re-mount).
@@ -208,6 +213,7 @@ export default function QuickCalc() {
     setForm(hydrated);
     setResults(session.results ?? null);
     setSessionName(session.name);
+    setCurrentSessionId(session.id);
     if (i.dragModel === 'G7' || i.zeroWeather || i.focalPlane === 'SFP' || i.twistRate) setAdvanced(true);
     toast.success(t('sessions.loaded'), { description: session.name });
     setSearchParams(prev => { const p = new URLSearchParams(prev); p.delete('session'); return p; });
@@ -287,13 +293,19 @@ export default function QuickCalc() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const update = (patch: Partial<FormState>) =>
+  const update = (patch: Partial<FormState>) => {
+    // Any manual edit makes the form diverge from the saved session — drop the
+    // currentSessionId link so the "Compare with another" CTA doesn't compare
+    // a stale snapshot.
+    setCurrentSessionId(null);
     setForm(prev => ({ ...prev, ...patch }));
+  };
 
   // Manual edits to weather track per-field overrides so the source can shift
   // from "auto" → "mixed" → "manual" without losing the auto base data.
   const FIELD_KEYS = ['temperature','humidity','pressure','altitude','windSpeed','windAngle'] as const;
-  const updateWeather = (patch: Partial<WeatherSnapshot>) =>
+  const updateWeather = (patch: Partial<WeatherSnapshot>) => {
+    setCurrentSessionId(null);
     setForm(prev => {
       const overrides = new Set(prev.weather.manualOverrides ?? []);
       for (const k of FIELD_KEYS) {
@@ -315,9 +327,12 @@ export default function QuickCalc() {
             : 'mixed';
       return { ...prev, weather: next };
     });
+  };
 
-  const updateZeroWeather = (patch: Partial<WeatherSnapshot>) =>
+  const updateZeroWeather = (patch: Partial<WeatherSnapshot>) => {
+    setCurrentSessionId(null);
     setForm(prev => ({ ...prev, zeroWeather: { ...prev.zeroWeather, ...patch } }));
+  };
 
   const handleSelectProjectile = (id: string) => {
     const p = projectiles.find(x => x.id === id);
@@ -431,12 +446,13 @@ export default function QuickCalc() {
     setResults(null);
     setError(null);
     setSessionName('');
+    setCurrentSessionId(null);
   };
 
   const handleSave = () => {
     if (!results) return;
     const name = sessionName.trim() || `Session ${new Date().toLocaleString()}`;
-    sessionStore.create({
+    const created = sessionStore.create({
       name,
       airgunId: form.airgunId || undefined,
       tuneId: form.tuneId || undefined,
@@ -447,6 +463,7 @@ export default function QuickCalc() {
       tags: [],
       favorite: false,
     });
+    setCurrentSessionId(created.id);
     toast.success(t('calc.sessionSaved'), { description: name });
     setSessionName('');
   };
@@ -628,6 +645,7 @@ export default function QuickCalc() {
         )}
       </div>
 
+
       {results && heroResult ? (
         <motion.div
           initial={{ opacity: 0, y: 12 }}
@@ -668,12 +686,39 @@ export default function QuickCalc() {
               </button>
             </div>
           </div>
+
+          {/* Compare-with-another CTA — only after a save or rehydration from
+              ?session. Manual edits clear currentSessionId so a stale snapshot
+              can never be silently compared. */}
+          {currentSessionId && sessionStore.getAll().length >= 2 && (
+            <button
+              type="button"
+              onClick={() => setComparePickerOpen(true)}
+              className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-md border border-primary/30 text-primary bg-primary/5 text-xs font-medium hover:bg-primary/10 transition-colors"
+            >
+              <ArrowLeftRight className="h-3.5 w-3.5" />
+              {t('compare.compareFromCalcCta')}
+            </button>
+          )}
         </motion.div>
       ) : (
         <div className="rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
           {t('calc.empty')}
         </div>
       )}
+
+      {/* Compare picker — mounted at root so it survives results toggling. */}
+      <SessionPickerDialog
+        open={comparePickerOpen}
+        onOpenChange={setComparePickerOpen}
+        source={currentSessionId ? sessionStore.getById(currentSessionId) ?? null : null}
+        sessions={sessionStore.getAll()}
+        onPick={(other) => {
+          if (!currentSessionId) return;
+          navigate(`/compare?a=${currentSessionId}&b=${other.id}`);
+        }}
+      />
+
     </motion.div>
   );
 }

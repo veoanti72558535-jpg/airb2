@@ -25,7 +25,7 @@ const OPEN_METEO_URL = 'https://api.open-meteo.com/v1/forecast';
 // re-opening the calculator from the same spot reuses the snapshot instead of
 // hitting the network. TTL is short enough that conditions stay relevant.
 const CACHE_KEY = 'pcp-weather-cache';
-const CACHE_TTL_MS = 15 * 60_000; // 15 min
+const CACHE_TTL_MS = 30 * 60_000; // 30 min
 const CACHE_MAX_ENTRIES = 16;
 
 interface CacheEntry {

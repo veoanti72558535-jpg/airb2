@@ -280,6 +280,8 @@ const fr = {
   'projectiles.compareEnergyOnlySection': 'Énergie résiduelle',
   'projectiles.compareEnergyAt': '@ {r} m',
   'projectiles.compareVelocityAt': 'V @ {r} m',
+  'projectiles.compareCollapseSection': 'Replier la section',
+  'projectiles.compareExpandSection': 'Déplier la section',
   'projectiles.compareEnergyOnlyAt': 'E @ {r} m',
   'projectiles.compareDisclaimer': 'Valeurs indicatives — vélocité unifiée pour isoler l\'effet du BC. Les chutes réelles dépendent de votre arme et de votre tune.',
   'projectiles.compareMax': 'Maximum 4 projectiles',

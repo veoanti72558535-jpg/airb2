@@ -116,8 +116,23 @@ export function CompareProjectilesModal({
     if (open) {
       setVelocity(initialVelocity);
       setZeroRange(DEFAULT_Z);
+    } else {
+      setFullscreen(false);
     }
   }, [open, initialVelocity]);
+
+  // Esc exits fullscreen first, then closes (handled by browser default for second press via onClose elsewhere).
+  useEffect(() => {
+    if (!open || !fullscreen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        setFullscreen(false);
+      }
+    };
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
+  }, [open, fullscreen]);
 
   const rows = useMemo(() => {
     if (!open || projectiles.length === 0) return [];

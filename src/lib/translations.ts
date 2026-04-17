@@ -263,6 +263,10 @@ const fr = {
   'weather.lon': 'Longitude',
   'weather.fetchAtCoords': 'Récupérer ici',
   'weather.errInvalidCoords': 'Coordonnées invalides : latitude entre -90 et 90, longitude entre -180 et 180.',
+  'weather.citySearch': 'Rechercher une ville',
+  'weather.citySearchPlaceholder': 'Ex : Paris, Lyon, Marseille…',
+  'weather.errGeocode': 'Recherche indisponible — réessayez ou saisissez les coordonnées.',
+  'weather.noCityFound': 'Aucune ville trouvée.',
 
   // Conversions
   'conv.title': 'Conversions d\'unités',

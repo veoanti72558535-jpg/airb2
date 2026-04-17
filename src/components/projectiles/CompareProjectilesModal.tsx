@@ -476,6 +476,15 @@ export function CompareProjectilesModal({
               <div className="flex items-center gap-1.5 flex-wrap">
                 <h2 className="text-sm font-heading font-semibold">{t('projectiles.compareTitle')}</h2>
                 {rows.length >= 2 && (() => {
+                  // Reverse current row order — works in both auto and manual mode.
+                  // Snapshots the visible order, flips it, and switches to manual mode
+                  // so the user can keep editing from there.
+                  const reverseOrder = () => {
+                    const reversed = [...rows.map(r => r.p.id)].reverse();
+                    setManualOrder(reversed);
+                    setManualMode(true);
+                    toast.success(t('projectiles.compareSortReversed'), { duration: 1500 });
+                  };
                   // When manual mode is active, the badge shows "manuel" with a reset button.
                   if (manualMode) {
                     return (
@@ -487,6 +496,16 @@ export function CompareProjectilesModal({
                           <ListOrdered className="h-2.5 w-2.5" aria-hidden />
                           {t('projectiles.compareSortManual')}
                         </span>
+                        <button
+                          type="button"
+                          onClick={reverseOrder}
+                          className="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted focus:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+                          title={t('projectiles.compareSortReverseHint')}
+                          aria-label={t('projectiles.compareSortReverse')}
+                        >
+                          <ArrowLeftRight className="h-2.5 w-2.5" aria-hidden />
+                          {t('projectiles.compareSortReverse')}
+                        </button>
                         <button
                           type="button"
                           onClick={() => { setManualMode(false); setManualOrder(null); }}
@@ -554,6 +573,16 @@ export function CompareProjectilesModal({
                       >
                         <GripVertical className="h-2.5 w-2.5" aria-hidden />
                         {t('projectiles.compareSortManualEnable')}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={reverseOrder}
+                        className="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted focus:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+                        title={t('projectiles.compareSortReverseHint')}
+                        aria-label={t('projectiles.compareSortReverse')}
+                      >
+                        <ArrowLeftRight className="h-2.5 w-2.5" aria-hidden />
+                        {t('projectiles.compareSortReverse')}
                       </button>
                     </span>
                   );

@@ -373,6 +373,19 @@ const fr = {
   'common.copyLink': 'Copier le lien filtré',
   'common.linkCopied': 'Lien copié dans le presse-papiers',
   'common.copyFailed': 'Impossible de copier le lien',
+
+  // Detail pages
+  'detail.back': 'Retour à la bibliothèque',
+  'detail.useInCalc': 'Utiliser dans le calcul',
+  'detail.linkedSessions': 'Sessions liées',
+  'detail.noLinkedSessions': 'Aucune session liée à cet élément.',
+  'detail.essentials': 'Essentiel',
+  'detail.advanced': 'Avancé',
+  'detail.metadata': 'Métadonnées',
+  'detail.createdAt': 'Créé le',
+  'detail.updatedAt': 'Modifié le',
+  'detail.notFound': 'Élément introuvable',
+  'detail.notFoundHint': 'Cet élément a peut-être été supprimé.',
 } as const;
 
 const en: Record<keyof typeof fr, string> = {
@@ -733,6 +746,18 @@ const en: Record<keyof typeof fr, string> = {
   'common.copyLink': 'Copy filtered link',
   'common.linkCopied': 'Link copied to clipboard',
   'common.copyFailed': 'Failed to copy link',
+
+  'detail.back': 'Back to library',
+  'detail.useInCalc': 'Use in calculator',
+  'detail.linkedSessions': 'Linked sessions',
+  'detail.noLinkedSessions': 'No session is linked to this item.',
+  'detail.essentials': 'Essentials',
+  'detail.advanced': 'Advanced',
+  'detail.metadata': 'Metadata',
+  'detail.createdAt': 'Created',
+  'detail.updatedAt': 'Updated',
+  'detail.notFound': 'Item not found',
+  'detail.notFoundHint': 'This item may have been deleted.',
 };
 
 export const translations = { fr, en } as const;

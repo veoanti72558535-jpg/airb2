@@ -9,6 +9,9 @@ import Layout from "@/components/Layout";
 import Dashboard from "@/pages/Dashboard";
 import QuickCalc from "@/pages/QuickCalc";
 import LibraryPage from "@/pages/LibraryPage";
+import AirgunDetailPage from "@/pages/AirgunDetailPage";
+import ProjectileDetailPage from "@/pages/ProjectileDetailPage";
+import OpticDetailPage from "@/pages/OpticDetailPage";
 import SessionsPage from "@/pages/SessionsPage";
 import ConversionsPage from "@/pages/ConversionsPage";
 import DocsPage from "@/pages/DocsPage";
@@ -32,6 +35,9 @@ const App = () => (
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/calc" element={<QuickCalc />} />
                 <Route path="/library" element={<LibraryPage />} />
+                <Route path="/library/airgun/:id" element={<AirgunDetailPage />} />
+                <Route path="/library/projectile/:id" element={<ProjectileDetailPage />} />
+                <Route path="/library/optic/:id" element={<OpticDetailPage />} />
                 <Route path="/sessions" element={<SessionsPage />} />
                 <Route path="/conversions" element={<ConversionsPage />} />
                 <Route path="/docs" element={<DocsPage />} />

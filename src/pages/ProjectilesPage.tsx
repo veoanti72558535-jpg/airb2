@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Zap, Plus, Trash2, Edit2 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { projectileStore } from '@/lib/storage';
@@ -258,7 +259,11 @@ export default function ProjectilesPage() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {filteredProjectiles.map(p => (
-            <div key={p.id} className="surface-elevated p-4">
+            <Link
+              key={p.id}
+              to={`/library/projectile/${p.id}`}
+              className="surface-elevated p-4 block hover:border-primary/40 transition-colors"
+            >
               <div className="flex items-start justify-between mb-2">
                 <div className="min-w-0 flex-1">
                   <div className="font-semibold text-sm">{p.brand} {p.model}</div>
@@ -281,11 +286,11 @@ export default function ProjectilesPage() {
                   {p.notes && <p className="text-[11px] text-muted-foreground mt-1 italic line-clamp-2">{p.notes}</p>}
                 </div>
                 <div className="flex gap-1 shrink-0">
-                  <button onClick={() => handleEdit(p)} className="p-1.5 rounded hover:bg-muted text-muted-foreground"><Edit2 className="h-3.5 w-3.5" /></button>
-                  <button onClick={() => handleDelete(p.id)} className="p-1.5 rounded hover:bg-destructive/10 text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
+                  <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleEdit(p); }} className="p-1.5 rounded hover:bg-muted text-muted-foreground"><Edit2 className="h-3.5 w-3.5" /></button>
+                  <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDelete(p.id); }} className="p-1.5 rounded hover:bg-destructive/10 text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}

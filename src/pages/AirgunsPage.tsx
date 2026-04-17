@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Target, Plus, Trash2, Edit2 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { airgunStore } from '@/lib/storage';
@@ -264,7 +265,11 @@ export default function AirgunsPage() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {filteredAirguns.map(a => (
-            <div key={a.id} className="surface-elevated p-4">
+            <Link
+              key={a.id}
+              to={`/library/airgun/${a.id}`}
+              className="surface-elevated p-4 block hover:border-primary/40 transition-colors"
+            >
               <div className="flex items-start justify-between mb-2">
                 <div className="min-w-0 flex-1">
                   <div className="font-semibold text-sm">{a.brand} {a.model}</div>
@@ -275,8 +280,8 @@ export default function AirgunsPage() {
                   </div>
                 </div>
                 <div className="flex gap-1 shrink-0">
-                  <button onClick={() => handleEdit(a)} className="p-1.5 rounded hover:bg-muted text-muted-foreground"><Edit2 className="h-3.5 w-3.5" /></button>
-                  <button onClick={() => handleDelete(a.id)} className="p-1.5 rounded hover:bg-destructive/10 text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
+                  <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleEdit(a); }} className="p-1.5 rounded hover:bg-muted text-muted-foreground"><Edit2 className="h-3.5 w-3.5" /></button>
+                  <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDelete(a.id); }} className="p-1.5 rounded hover:bg-destructive/10 text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[11px] text-muted-foreground font-mono">
@@ -286,7 +291,7 @@ export default function AirgunsPage() {
                 {a.fillPressure ? <span>Fill: {a.fillPressure} {pressSym}</span> : null}
               </div>
               {a.notes && <p className="text-xs text-muted-foreground mt-2 italic">{a.notes}</p>}
-            </div>
+            </Link>
           ))}
         </div>
       )}

@@ -185,6 +185,78 @@ export default function QuickCalc() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Prefill from ?airgun=&projectile=&optic= when navigating from a detail page.
+  // Skipped if a session is being rehydrated (handled above).
+  useEffect(() => {
+    if (searchParams.get('session')) return;
+    const airgunId = searchParams.get('airgun');
+    const projectileId = searchParams.get('projectile');
+    const opticId = searchParams.get('optic');
+    if (!airgunId && !projectileId && !opticId) return;
+
+    let advancedHint = false;
+    setForm(prev => {
+      let next = { ...prev };
+      if (projectileId) {
+        const p = projectiles.find(x => x.id === projectileId);
+        if (p) {
+          next = {
+            ...next,
+            projectileId,
+            bc: p.bc,
+            projectileWeight: p.weight,
+            projectileLength: p.length ?? next.projectileLength,
+            projectileDiameter: p.diameter ?? next.projectileDiameter,
+            dragModel: p.bcModel ?? next.dragModel,
+            projectileType: p.projectileType ?? next.projectileType,
+          };
+          if (p.bcModel === 'G7') advancedHint = true;
+        }
+      }
+      if (airgunId) {
+        const a = airguns.find(x => x.id === airgunId);
+        if (a) {
+          next = {
+            ...next,
+            airgunId,
+            barrelLength: a.barrelLength ?? next.barrelLength,
+            twistRate: a.twistRate ?? next.twistRate,
+            sightHeight: a.defaultSightHeight ?? next.sightHeight,
+            zeroRange: a.defaultZeroRange ?? next.zeroRange,
+          };
+          if (a.twistRate) advancedHint = true;
+        }
+      }
+      if (opticId) {
+        const o = optics.find(x => x.id === opticId);
+        if (o) {
+          next = {
+            ...next,
+            opticId,
+            sightHeight: o.mountHeight ?? next.sightHeight,
+            clickValue: o.clickValue,
+            clickUnit: o.clickUnit === 'mil' ? 'MRAD' : o.clickUnit,
+            focalPlane: o.focalPlane ?? next.focalPlane,
+            magCalibration: o.magCalibration ?? next.magCalibration,
+            currentMag: o.magCalibration ?? next.currentMag,
+          };
+          if (o.focalPlane === 'SFP') advancedHint = true;
+        }
+      }
+      return next;
+    });
+    if (advancedHint) setAdvanced(true);
+    toast.success(t('detail.useInCalc'));
+    setSearchParams(prev => {
+      const p = new URLSearchParams(prev);
+      p.delete('airgun');
+      p.delete('projectile');
+      p.delete('optic');
+      return p;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const update = (patch: Partial<FormState>) =>
     setForm(prev => ({ ...prev, ...patch }));
 

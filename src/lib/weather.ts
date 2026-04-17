@@ -80,7 +80,18 @@ export function clearWeatherCache(): void {
  * Returns a fully populated WeatherSnapshot tagged as `auto`.
  * Throws on network/HTTP failure — callers should handle it.
  */
-export async function fetchOpenMeteo(point: GeoPoint): Promise<FetchWeatherResult> {
+export async function fetchOpenMeteo(
+  point: GeoPoint,
+  options?: { force?: boolean },
+): Promise<FetchWeatherResult> {
+  // Cache short-circuit: avoid refetch when the user re-opens the calculator
+  // shortly after the last lookup. Caller can pass `force: true` to bypass
+  // (e.g. an explicit "Refresh" button).
+  if (!options?.force) {
+    const cached = getCachedWeather(point.latitude, point.longitude);
+    if (cached) return cached;
+  }
+
   const params = new URLSearchParams({
     latitude: point.latitude.toFixed(4),
     longitude: point.longitude.toFixed(4),
@@ -124,7 +135,9 @@ export async function fetchOpenMeteo(point: GeoPoint): Promise<FetchWeatherResul
     manualOverrides: [],
   };
 
-  return { snapshot, label: snapshot.location! };
+  const result: FetchWeatherResult = { snapshot, label: snapshot.location! };
+  putCachedWeather(point.latitude, point.longitude, result);
+  return result;
 }
 
 /** Stable alias — callers can swap providers later without touching code. */

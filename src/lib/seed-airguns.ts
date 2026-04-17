@@ -20,22 +20,50 @@ export type SeedAirgun = Omit<Airgun, 'id' | 'createdAt' | 'updatedAt'>;
 
 export const SEED_AIRGUNS: SeedAirgun[] = [
   // ============================================================
-  // FX AIRGUNS (Sweden)
+  // FX AIRGUNS (Sweden) — catalogue officiel fxairguns.com/rifles
   // ============================================================
-  { brand: 'FX', model: 'Impact M3 Compact', caliber: '.22', barrelLength: 500, twistRate: 16, regPressure: 110, fillPressure: 250, powerSetting: 'Power wheel + macro/micro reg', defaultSightHeight: 45, defaultZeroRange: 30, notes: '.177/.22/.25/.30 · Mag 28/21/18/16 · Bottle 480cc · Réservoir 580cc · STX Superior Heavy Liner' },
-  { brand: 'FX', model: 'Impact M3 Standard', caliber: '.25', barrelLength: 600, twistRate: 16, regPressure: 110, fillPressure: 250, powerSetting: 'Power wheel + dual regulator', defaultSightHeight: 45, defaultZeroRange: 35, notes: '.177/.22/.25/.30 · Mag 28/21/18/16 · Bottle 480cc · STX Superior Heavy Liner' },
-  { brand: 'FX', model: 'Impact M3 Sniper', caliber: '.30', barrelLength: 700, twistRate: 18, regPressure: 110, fillPressure: 250, powerSetting: 'Power wheel + dual regulator', defaultSightHeight: 50, defaultZeroRange: 40, notes: '.22/.25/.30 · Mag 21/18/16 · Bottle 580cc · Canon long pour slugs' },
+  // --- Impact M4 (flagship Dynamic Block) ---
+  { brand: 'FX', model: 'Impact M4 Compact', caliber: '.22', barrelLength: 500, twistRate: 16, regPressure: 110, fillPressure: 250, powerSetting: 'Power wheel + dual reg + AMP', defaultSightHeight: 45, defaultZeroRange: 30, notes: '.177/.22/.25/.30 · Mag 28/21/18/16 · Bottle 480cc · STX Superior Heavy · Quick Tune System' },
+  { brand: 'FX', model: 'Impact M4 Standard', caliber: '.25', barrelLength: 600, twistRate: 16, regPressure: 110, fillPressure: 250, powerSetting: 'Power wheel + dual reg + AMP', defaultSightHeight: 45, defaultZeroRange: 35, notes: '.177/.22/.25/.30 · Mag 28/21/18/16 · Bottle 480cc · QTS + AMP régulateur' },
+  { brand: 'FX', model: 'Impact M4 Sniper', caliber: '.30', barrelLength: 700, twistRate: 18, regPressure: 110, fillPressure: 250, powerSetting: 'Power wheel + dual reg + AMP', defaultSightHeight: 50, defaultZeroRange: 40, notes: '.22/.25/.30/.35 · Mag 21/18/16/12 · Bottle 580cc · Long range slug' },
+
+  // --- DRS Series (Dynamic Recoiling System) ---
+  { brand: 'FX', model: 'DRS Classic', caliber: '.22', barrelLength: 500, twistRate: 16, regPressure: 110, fillPressure: 250, powerSetting: 'Adjustable hammer + reg', defaultSightHeight: 45, defaultZeroRange: 30, notes: '.177/.22/.25/.30 · Sporter traditionnel · Bottle 480cc · STX Heavy Liner' },
+  { brand: 'FX', model: 'DRS Tactical', caliber: '.25', barrelLength: 600, twistRate: 16, regPressure: 110, fillPressure: 250, powerSetting: 'Adjustable hammer + reg', defaultSightHeight: 45, defaultZeroRange: 35, notes: '.22/.25/.30 · Crosse tactical chassis · Bottle 480cc · Slug-ready' },
+  { brand: 'FX', model: 'DRS Pro', caliber: '.30', barrelLength: 700, twistRate: 18, regPressure: 110, fillPressure: 250, powerSetting: 'Power wheel + dual reg', defaultSightHeight: 50, defaultZeroRange: 40, notes: '.22/.25/.30/.35 · MDT Elite Chassis · Bottle 580cc · High-end long range' },
+
+  // --- Leopard (bullpup tactique nouveau) ---
+  { brand: 'FX', model: 'Leopard', caliber: '.22', barrelLength: 500, twistRate: 16, regPressure: 110, fillPressure: 250, powerSetting: 'Adjustable hammer + reg', defaultSightHeight: 42, defaultZeroRange: 30, notes: '.177/.22/.25/.30 · Bullpup tactique · Bottle 480cc · STX Superior' },
+
+  // --- King (chasse pure) ---
+  { brand: 'FX', model: 'King', caliber: '.25', barrelLength: 600, twistRate: 16, regPressure: 110, fillPressure: 250, powerSetting: 'Adjustable hammer + reg', defaultSightHeight: 45, defaultZeroRange: 35, notes: '.22/.25/.30 · Sporter chasse · Crosse GRS Nordic Wolf · Bottle 480cc' },
+
+  // --- Panthera MKII (Dynamic Block race) ---
+  { brand: 'FX', model: 'Panthera MKII 500', caliber: '.22', barrelLength: 500, twistRate: 16, regPressure: 110, fillPressure: 250, powerSetting: 'Power wheel + dual reg', defaultSightHeight: 45, defaultZeroRange: 30, notes: '.22/.25/.30 · Mag 21/18/16 · Race-style chassis · Bottle 580cc' },
+  { brand: 'FX', model: 'Panthera MKII 700', caliber: '.30', barrelLength: 700, twistRate: 18, regPressure: 110, fillPressure: 250, powerSetting: 'Power wheel + dual reg', defaultSightHeight: 50, defaultZeroRange: 40, notes: '.22/.25/.30 · EBR / long range · Slug-ready · Bottle 580cc' },
+
+  // --- Dynamic MKII (sporter Dynamic Block) ---
+  { brand: 'FX', model: 'Dynamic MKII 500', caliber: '.22', barrelLength: 500, twistRate: 16, regPressure: 110, fillPressure: 250, powerSetting: 'Power wheel + dual reg', defaultSightHeight: 42, defaultZeroRange: 30, notes: '.22/.25/.30 · Mag 21/18/16 · Sporter ergonomique · Bottle 480cc' },
+  { brand: 'FX', model: 'Dynamic MKII 600', caliber: '.25', barrelLength: 600, twistRate: 16, regPressure: 110, fillPressure: 250, powerSetting: 'Power wheel + dual reg', defaultSightHeight: 45, defaultZeroRange: 35, notes: '.22/.25/.30 · Mag 18/16/13 · Slug capable · Bottle 480cc' },
+
+  // --- Maverick (Dual reg compact bottle) ---
   { brand: 'FX', model: 'Maverick Compact', caliber: '.22', barrelLength: 500, twistRate: 16, regPressure: 110, fillPressure: 250, powerSetting: 'Dual regulator', defaultSightHeight: 45, defaultZeroRange: 30, notes: '.22/.25/.30 · Mag 21/18/16 · Bottle 500cc · Carbon shroud' },
-  { brand: 'FX', model: 'Maverick Sniper', caliber: '.25', barrelLength: 700, twistRate: 18, regPressure: 110, fillPressure: 250, powerSetting: 'Dual regulator', defaultSightHeight: 50, defaultZeroRange: 40, notes: '.22/.25/.30 · Mag 21/18/16 · Bottle 580cc · Slug-ready' },
+  { brand: 'FX', model: 'Maverick Sniper', caliber: '.25', barrelLength: 700, twistRate: 18, regPressure: 110, fillPressure: 250, powerSetting: 'Dual regulator', defaultSightHeight: 50, defaultZeroRange: 40, notes: '.22/.25/.30 · Mag 21/18/16 · Bottle 580cc · Slug-ready long range' },
+
+  // --- Crown MKII (External reg classic) ---
   { brand: 'FX', model: 'Crown MKII Standard', caliber: '.22', barrelLength: 600, twistRate: 16, regPressure: 110, fillPressure: 230, powerSetting: 'External regulator', defaultSightHeight: 42, defaultZeroRange: 35, notes: '.177/.22/.25/.30 · Mag 18/16/13/12 · Tube 480cc · Bois ou synthétique' },
   { brand: 'FX', model: 'Crown MKII Continuum', caliber: '.25', barrelLength: 700, twistRate: 18, regPressure: 110, fillPressure: 230, powerSetting: 'External regulator', defaultSightHeight: 45, defaultZeroRange: 40, notes: '.22/.25/.30 · Smooth Twist X · Slug-ready' },
-  { brand: 'FX', model: 'Dreamline Lite', caliber: '.22', barrelLength: 500, twistRate: 16, regPressure: 110, fillPressure: 230, powerSetting: 'Power wheel', defaultSightHeight: 40, defaultZeroRange: 30, notes: '.177/.22/.25 · Mag 18/16/13 · Tube 480cc · Modulaire' },
-  { brand: 'FX', model: 'Dreamline Classic', caliber: '.22', barrelLength: 600, twistRate: 16, regPressure: 110, fillPressure: 250, powerSetting: 'Power wheel + reg', defaultSightHeight: 42, defaultZeroRange: 35, notes: '.177/.22/.25/.30 · Crosse bois traditionnelle' },
-  { brand: 'FX', model: 'Dreamline Tactical', caliber: '.22', barrelLength: 600, twistRate: 16, regPressure: 110, fillPressure: 250, powerSetting: 'Power wheel + reg', defaultSightHeight: 45, defaultZeroRange: 35, notes: '.177/.22/.25/.30 · Crosse AR-style ajustable' },
+
+  // --- Wildcat MKIII (bullpup léger) ---
   { brand: 'FX', model: 'Wildcat MKIII Compact', caliber: '.22', barrelLength: 500, twistRate: 16, regPressure: 100, fillPressure: 230, powerSetting: 'Hammer spring adj.', defaultSightHeight: 40, defaultZeroRange: 30, notes: '.177/.22/.25 · Mag 18/16/13 · Bullpup · Tube 480cc' },
   { brand: 'FX', model: 'Wildcat MKIII Sniper', caliber: '.25', barrelLength: 700, twistRate: 18, regPressure: 100, fillPressure: 230, powerSetting: 'Hammer spring adj.', defaultSightHeight: 45, defaultZeroRange: 40, notes: '.22/.25 · Bullpup long range · Slug-ready' },
-  { brand: 'FX', model: 'Panthera 500', caliber: '.22', barrelLength: 500, twistRate: 16, regPressure: 110, fillPressure: 250, powerSetting: 'Power wheel + dual reg', defaultSightHeight: 45, defaultZeroRange: 30, notes: '.22/.25/.30 · Mag 21/18/16 · Race-style · Bottle 580cc' },
-  { brand: 'FX', model: 'Panthera 700', caliber: '.30', barrelLength: 700, twistRate: 18, regPressure: 110, fillPressure: 250, powerSetting: 'Power wheel + dual reg', defaultSightHeight: 50, defaultZeroRange: 40, notes: '.22/.25/.30 · Long range / EBR · Slug-ready' },
+  { brand: 'FX', model: 'Wildcat MKIII BT Sniper', caliber: '.25', barrelLength: 700, twistRate: 18, regPressure: 100, fillPressure: 230, powerSetting: 'Hammer spring adj.', defaultSightHeight: 45, defaultZeroRange: 40, notes: '.22/.25 · Bullpup tactique · Bottle 480cc' },
+
+  // --- Dreamline (modulaire entrée/milieu de gamme) ---
+  { brand: 'FX', model: 'Dreamline Lite', caliber: '.22', barrelLength: 500, twistRate: 16, regPressure: 110, fillPressure: 230, powerSetting: 'Power wheel', defaultSightHeight: 40, defaultZeroRange: 30, notes: '.177/.22/.25 · Mag 18/16/13 · Tube 480cc · Modulaire entrée gamme' },
+  { brand: 'FX', model: 'Dreamline Classic', caliber: '.22', barrelLength: 600, twistRate: 16, regPressure: 110, fillPressure: 250, powerSetting: 'Power wheel + reg', defaultSightHeight: 42, defaultZeroRange: 35, notes: '.177/.22/.25/.30 · Crosse bois noyer traditionnelle' },
+  { brand: 'FX', model: 'Dreamline Tactical', caliber: '.22', barrelLength: 600, twistRate: 16, regPressure: 110, fillPressure: 250, powerSetting: 'Power wheel + reg', defaultSightHeight: 45, defaultZeroRange: 35, notes: '.177/.22/.25/.30 · Crosse AR-style ajustable' },
+  { brand: 'FX', model: 'Dreamline Bullpup', caliber: '.22', barrelLength: 500, twistRate: 16, regPressure: 110, fillPressure: 230, powerSetting: 'Power wheel + reg', defaultSightHeight: 42, defaultZeroRange: 30, notes: '.177/.22/.25 · Bullpup modulaire · Tube 480cc' },
 
   // ============================================================
   // DAYSTATE (UK)

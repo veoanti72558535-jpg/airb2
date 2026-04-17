@@ -9,6 +9,7 @@ import {
   BallisticInput,
   BallisticResult,
   DragModel,
+  DragTablePoint,
   WeatherSnapshot,
 } from './types';
 

@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { X, GitCompare, Gauge, RotateCcw, Target } from 'lucide-react';
+import { X, GitCompare, Gauge, RotateCcw, Target, Download } from 'lucide-react';
+import { toPng } from 'html-to-image';
 import { Projectile, WeatherSnapshot } from '@/lib/types';
 import { calculateTrajectory } from '@/lib/ballistics';
 import { useI18n } from '@/lib/i18n';
 import { useUnits } from '@/hooks/use-units';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 const MIN_V = 200;
 const MAX_V = 380;
@@ -68,6 +70,36 @@ export function CompareProjectilesModal({
   const { symbol } = useUnits();
   const [velocity, setVelocity] = useState<number>(initialVelocity);
   const [zeroRange, setZeroRange] = useState<number>(DEFAULT_Z);
+  const [exporting, setExporting] = useState(false);
+  /** Wraps the chart + table — that's what gets snapshotted to PNG. */
+  const exportRef = useRef<HTMLDivElement | null>(null);
+
+  /** Render the chart+table as a PNG and trigger a download. */
+  const handleExport = async () => {
+    if (!exportRef.current || rows.length === 0) return;
+    setExporting(true);
+    try {
+      const dataUrl = await toPng(exportRef.current, {
+        // Use the actual rendered card background so the snapshot matches the theme.
+        backgroundColor: getComputedStyle(document.body).getPropertyValue('background-color') || '#111827',
+        pixelRatio: 2,
+        cacheBust: true,
+        // Inline current font-family so JetBrains Mono / Inter survive the snapshot.
+        style: { fontFamily: getComputedStyle(document.body).fontFamily },
+      });
+      const a = document.createElement('a');
+      const stamp = new Date().toISOString().slice(0, 10);
+      a.download = `airballistik-compare-${stamp}.png`;
+      a.href = dataUrl;
+      a.click();
+      toast.success(t('projectiles.compareExportSuccess'));
+    } catch (err) {
+      console.error('Export PNG failed', err);
+      toast.error(t('projectiles.compareExportError'));
+    } finally {
+      setExporting(false);
+    }
+  };
 
   // Reset sliders when modal re-opens with a new initial velocity.
   useEffect(() => {
@@ -129,13 +161,28 @@ export function CompareProjectilesModal({
               </p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded hover:bg-muted text-muted-foreground"
-            aria-label={t('common.close')}
-          >
-            <X className="h-4 w-4" />
-          </button>
+          <div className="flex items-center gap-1 shrink-0">
+            <button
+              type="button"
+              onClick={handleExport}
+              disabled={exporting || rows.length === 0}
+              className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-[11px] font-medium hover:bg-muted text-muted-foreground hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              title={t('projectiles.compareExport')}
+              aria-label={t('projectiles.compareExport')}
+            >
+              <Download className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">
+                {exporting ? t('projectiles.compareExporting') : t('projectiles.compareExport')}
+              </span>
+            </button>
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded hover:bg-muted text-muted-foreground"
+              aria-label={t('common.close')}
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
         </div>
 
         {/* Sliders: velocity + zero range */}
@@ -225,8 +272,10 @@ export function CompareProjectilesModal({
           </div>
         </div>
 
-        {/* Drop chart */}
-        <DropChart rows={rows} t={t} />
+        {/* Snapshot region — chart + table + legend get exported as PNG */}
+        <div ref={exportRef} className="bg-card">
+          {/* Drop chart */}
+          <DropChart rows={rows} t={t} />
 
         {/* Table */}
         <div className="overflow-auto">
@@ -399,11 +448,12 @@ export function CompareProjectilesModal({
           </table>
         </div>
 
-        {/* FAC threshold legend */}
-        <div className="px-4 py-2 border-t border-border bg-card/40 flex items-center gap-2 text-[10px] text-muted-foreground">
-          <span className="inline-block h-2 w-2 rounded-full bg-destructive shrink-0" aria-hidden />
-          <span>{t('projectiles.compareFacLegend')}</span>
-        </div>
+          {/* FAC threshold legend */}
+          <div className="px-4 py-2 border-t border-border bg-card/40 flex items-center gap-2 text-[10px] text-muted-foreground">
+            <span className="inline-block h-2 w-2 rounded-full bg-destructive shrink-0" aria-hidden />
+            <span>{t('projectiles.compareFacLegend')}</span>
+          </div>
+        </div>{/* /exportRef */}
 
         {/* Footer */}
         <div className="p-3 border-t border-border text-[10px] text-muted-foreground">

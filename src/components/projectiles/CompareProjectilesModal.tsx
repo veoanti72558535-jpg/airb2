@@ -472,11 +472,13 @@ export function CompareProjectilesModal({
           </table>
         </div>
 
-          {/* FAC threshold legend */}
-          <div className="px-4 py-2 border-t border-border bg-card/40 flex items-center gap-2 text-[10px] text-muted-foreground">
-            <span className="inline-block h-2 w-2 rounded-full bg-destructive shrink-0" aria-hidden />
-            <span>{t('projectiles.compareFacLegend')}</span>
-          </div>
+          {/* FAC threshold legend — hidden when the user disabled the highlight */}
+          {energyThresholdJ !== null && (
+            <div className="px-4 py-2 border-t border-border bg-card/40 flex items-center gap-2 text-[10px] text-muted-foreground">
+              <span className="inline-block h-2 w-2 rounded-full bg-destructive shrink-0" aria-hidden />
+              <span>{t('projectiles.compareFacLegend', { j: energyThresholdJ.toFixed(2) })}</span>
+            </div>
+          )}
         </div>{/* /exportRef */}
 
         {/* Footer */}

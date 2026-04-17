@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, useCallback } from 'react';
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { Upload, X, Check, AlertTriangle, FileText, Trash2 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { DragModel, DragTablePoint } from '@/lib/types';

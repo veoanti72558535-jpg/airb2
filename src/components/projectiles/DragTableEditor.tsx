@@ -380,12 +380,27 @@ function DragTablePreview({ table, t }: PreviewProps) {
           }),
         ];
 
+  // Identify the reference curve closest to the imported value at the hovered
+  // Mach. Marked with a ★ in the tooltip so users immediately spot the best-
+  // matching standard model. `null` when no imported baseline is in range.
+  const closestRefLabel: string | null = (() => {
+    if (importedAtHover === null) return null;
+    const refs = hoverRows.filter(r => r.delta !== null);
+    if (refs.length === 0) return null;
+    return refs.reduce((best, r) =>
+      Math.abs(r.delta!) < Math.abs(best.delta!) ? r : best,
+    ).label;
+  })();
+
   // Tooltip box dimensions (sized to fit ~5 rows). Positioned to flip sides
   // when near the right edge so it never clips out of the viewBox.
   // Widened to accommodate the extra Δ column (e.g. "G7: 0.412 Δ+0.018").
+  // Extra `BIG_MACH_H` reserves room for the large Mach value rendered
+  // beneath the rows so it stays within the box and never collides.
   const TT_W = 110;
   const TT_LINE_H = 10;
-  const TT_H = 14 + hoverRows.length * TT_LINE_H;
+  const BIG_MACH_H = 16;
+  const TT_H = 14 + hoverRows.length * TT_LINE_H + BIG_MACH_H;
   const tooltipX = hover !== null && xToPx(hover) + TT_W + 8 > W - PAD_R
     ? xToPx(hover) - TT_W - 6
     : hover !== null

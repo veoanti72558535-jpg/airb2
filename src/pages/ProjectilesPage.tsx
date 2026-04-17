@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Zap, Plus, Trash2, Edit2 } from 'lucide-react';
+import { Zap, Plus, Trash2, Edit2, RotateCcw } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { projectileStore } from '@/lib/storage';
 import { useUnits } from '@/hooks/use-units';
@@ -14,19 +14,40 @@ export default function ProjectilesPage() {
   const { symbol } = useUnits();
   const [projectiles, setProjectiles] = useState<Projectile[]>(projectileStore.getAll());
   const [searchParam, setSearchParam] = useUrlFilter('q');
+  const [brandParam, setBrandParam] = useUrlFilter('brand');
   const searchQuery = searchParam ?? '';
   const setSearchQuery = (v: string) => setSearchParam(v);
+  const brandFilter = brandParam;
+  const setBrandFilter = (v: string | null) => setBrandParam(v);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Projectile | null>(null);
   const [form, setForm] = useState({ brand: '', model: '', weight: 18, bc: 0.025, shape: 'domed', caliber: '.177', length: 0, diameter: 0, material: 'lead', notes: '', dataSource: '' });
 
+  // Derive brand list + counts from actual data (case-insensitive, original casing kept).
+  const brandCounts = useMemo(() => {
+    const map = new Map<string, { display: string; count: number }>();
+    projectiles.forEach(p => {
+      const raw = (p.brand ?? '').trim();
+      if (!raw) return;
+      const key = raw.toLowerCase();
+      const existing = map.get(key);
+      if (existing) existing.count++;
+      else map.set(key, { display: raw, count: 1 });
+    });
+    return Array.from(map.values()).sort((a, b) => b.count - a.count || a.display.localeCompare(b.display));
+  }, [projectiles]);
+
   const filteredProjectiles = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    if (!q) return projectiles;
-    return projectiles.filter(p =>
-      `${p.brand} ${p.model} ${p.notes ?? ''}`.toLowerCase().includes(q)
-    );
-  }, [projectiles, searchQuery]);
+    const bf = brandFilter?.toLowerCase() ?? null;
+    return projectiles.filter(p => {
+      if (bf && (p.brand ?? '').toLowerCase() !== bf) return false;
+      if (q && !`${p.brand} ${p.model} ${p.notes ?? ''}`.toLowerCase().includes(q)) return false;
+      return true;
+    });
+  }, [projectiles, searchQuery, brandFilter]);
+
+  const hasAnyFilter = (brandFilter !== null && brandFilter !== '') || searchQuery.trim() !== '';
 
   const refresh = () => setProjectiles(projectileStore.getAll());
 
@@ -128,6 +149,49 @@ export default function ProjectilesPage() {
           total={projectiles.length}
           showCopyLink
         />
+      )}
+
+      {projectiles.length > 0 && brandCounts.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-[11px] uppercase tracking-wide text-muted-foreground mr-1">
+            {t('optics.filterBrand')}
+          </span>
+          <button
+            onClick={() => setBrandFilter(null)}
+            className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+              brandFilter === null
+                ? 'bg-primary/10 text-primary border border-primary/40'
+                : 'bg-muted text-muted-foreground border border-border hover:bg-muted/70'
+            }`}
+          >
+            {t('optics.filterAll')} ({projectiles.length})
+          </button>
+          {brandCounts.map(({ display, count }) => {
+            const active = (brandFilter ?? '').toLowerCase() === display.toLowerCase();
+            return (
+              <button
+                key={display}
+                onClick={() => setBrandFilter(active ? null : display)}
+                className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+                  active
+                    ? 'bg-primary/10 text-primary border border-primary/40'
+                    : 'bg-muted text-muted-foreground border border-border hover:bg-muted/70'
+                }`}
+              >
+                {display} ({count})
+              </button>
+            );
+          })}
+          {hasAnyFilter && (
+            <button
+              onClick={() => { setBrandFilter(null); setSearchQuery(''); }}
+              className="ml-auto px-2.5 py-1 rounded text-xs font-medium transition-colors bg-destructive/10 text-destructive border border-destructive/30 hover:bg-destructive/20 inline-flex items-center gap-1"
+            >
+              <RotateCcw className="h-3 w-3" />
+              {t('optics.resetFilters')}
+            </button>
+          )}
+        </div>
       )}
 
       {projectiles.length === 0 ? (

@@ -661,6 +661,8 @@ function DropChart({ rows, t }: DropChartProps) {
 
           {rows.map(({ p, curve }, i) => {
             const color = SERIES_COLORS[i % SERIES_COLORS.length];
+            // Stagger draw-in slightly per series so they read as distinct strokes.
+            const delay = i * 0.08;
             return (
               <g key={p.id}>
                 <path
@@ -670,12 +672,16 @@ function DropChart({ rows, t }: DropChartProps) {
                   strokeWidth={1.75}
                   strokeLinejoin="round"
                   strokeLinecap="round"
-                  className="compare-path"
+                  className="compare-path compare-path-draw"
+                  pathLength={1}
+                  style={{ animationDelay: `${delay}s` }}
                 />
-                {/* Markers at comparison distances */}
+                {/* Markers at comparison distances — fade in once stroke has reached them */}
                 {COMPARE_RANGES.map(r => {
                   const pt = curve.find(c => c.range === r);
                   if (!pt) return null;
+                  // Marker appears proportional to its x-position along the stroke.
+                  const markerDelay = delay + 0.9 * (pt.range / xMax);
                   return (
                     <circle
                       key={`${p.id}-${r}`}
@@ -685,8 +691,8 @@ function DropChart({ rows, t }: DropChartProps) {
                       fill={color}
                       stroke="hsl(var(--card))"
                       strokeWidth={1}
-                      className="compare-marker"
-                      style={{ cursor: 'help' }}
+                      className="compare-marker compare-marker-draw"
+                      style={{ cursor: 'help', animationDelay: `${markerDelay}s` }}
                     >
                       <title>{`${p.brand} ${p.model} — ${pt.range} m · ${pt.drop.toFixed(1)} mm`}</title>
                     </circle>

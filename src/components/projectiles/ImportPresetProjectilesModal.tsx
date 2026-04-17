@@ -17,7 +17,8 @@ interface Props {
 
 const BRANDS = ['JSB', 'H&N', 'Air Arms', 'Crosman', 'Predator', 'NSA', 'FX', 'Air Venturi', 'Patriot', 'ZAN'] as const;
 const CALIBERS = ['.177', '.20', '.22', '.25', '.30', '.35'] as const;
-type TypeFilter = 'all' | 'pellet' | 'slug';
+type TypeFilter = 'all' | 'pellet' | 'slug' | 'other';
+type SortKey = 'name' | 'weight' | 'bc';
 
 export function ImportPresetProjectilesModal({ open, onClose, onImported, existingKeys }: Props) {
   const { t } = useI18n();
@@ -25,18 +26,28 @@ export function ImportPresetProjectilesModal({ open, onClose, onImported, existi
   const [activeBrand, setActiveBrand] = useState<string | null>(null);
   const [activeCaliber, setActiveCaliber] = useState<string | null>(null);
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
+  const [sortKey, setSortKey] = useState<SortKey>('name');
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return SEED_PROJECTILES.filter(p => {
+    const tokens = q ? q.split(/\s+/).filter(Boolean) : [];
+    const list = SEED_PROJECTILES.filter(p => {
       if (activeBrand && p.brand !== activeBrand) return false;
       if (activeCaliber && p.caliber !== activeCaliber) return false;
-      if (typeFilter !== 'all' && p.projectileType !== typeFilter) return false;
-      if (q && !`${p.brand} ${p.model}`.toLowerCase().includes(q)) return false;
+      if (typeFilter !== 'all' && (p.projectileType ?? 'pellet') !== typeFilter) return false;
+      if (tokens.length) {
+        const hay = `${p.brand} ${p.model} ${p.caliber} ${p.weight} ${p.bc}`.toLowerCase();
+        if (!tokens.every(tok => hay.includes(tok))) return false;
+      }
       return true;
     });
-  }, [query, activeBrand, activeCaliber, typeFilter]);
+    const sorted = [...list];
+    if (sortKey === 'weight') sorted.sort((a, b) => a.weight - b.weight);
+    else if (sortKey === 'bc') sorted.sort((a, b) => b.bc - a.bc);
+    else sorted.sort((a, b) => `${a.brand} ${a.model}`.localeCompare(`${b.brand} ${b.model}`));
+    return sorted;
+  }, [query, activeBrand, activeCaliber, typeFilter, sortKey]);
 
   const toggle = (key: string) => {
     setSelected(s => {
@@ -118,15 +129,33 @@ export function ImportPresetProjectilesModal({ open, onClose, onImported, existi
               </div>
 
               {/* Type filter */}
-              <div className="flex gap-1">
-                {(['all', 'pellet', 'slug'] as TypeFilter[]).map(tf => (
+              <div className="flex gap-1 flex-wrap">
+                {(['all', 'pellet', 'slug', 'other'] as TypeFilter[]).map(tf => (
                   <button
                     key={tf}
                     onClick={() => setTypeFilter(tf)}
                     className={cn('px-2.5 py-1 rounded text-xs font-medium',
                       typeFilter === tf ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted')}
                   >
-                    {tf === 'all' ? t('optics.filterAll') : tf === 'pellet' ? t('projectiles.typePellet') : t('projectiles.typeSlug')}
+                    {tf === 'all' ? t('optics.filterAll')
+                      : tf === 'pellet' ? t('projectiles.typePellet')
+                      : tf === 'slug' ? t('projectiles.typeSlug')
+                      : t('projectiles.typeOther')}
+                  </button>
+                ))}
+              </div>
+
+              {/* Sort */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium">{t('common.sortBy')}</span>
+                {(['name', 'weight', 'bc'] as SortKey[]).map(sk => (
+                  <button
+                    key={sk}
+                    onClick={() => setSortKey(sk)}
+                    className={cn('px-2.5 py-1 rounded text-xs font-medium',
+                      sortKey === sk ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted')}
+                  >
+                    {sk === 'name' ? t('common.sortName') : sk === 'weight' ? t('common.sortWeight') : t('common.sortBc')}
                   </button>
                 ))}
               </div>

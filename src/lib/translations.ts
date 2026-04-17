@@ -706,6 +706,7 @@ const en: Record<keyof typeof fr, string> = {
   'projectiles.compareDropSection': 'Drop (sight-line)',
   'projectiles.compareDropAt': 'Drop @ {r} m',
   'projectiles.compareFlattest': 'Flattest trajectory at this distance',
+  'projectiles.compareFastest': 'Best velocity retention at this distance',
   'projectiles.compareFacOver': 'Above FAC threshold (16.27 J / 12 fpe)',
   'projectiles.compareFacLegend': 'Red highlight — energy above the UK FAC legal threshold (16.27 J / 12 fpe). Regulations vary by country.',
   'projectiles.compareExport': 'Export PNG',

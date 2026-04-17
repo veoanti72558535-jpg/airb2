@@ -213,6 +213,16 @@ export function CompareProjectilesModal({
               </span>
             </button>
             <button
+              type="button"
+              onClick={() => setFullscreen(f => !f)}
+              className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+              title={fullscreen ? t('projectiles.compareExitFullscreen') : t('projectiles.compareFullscreen')}
+              aria-label={fullscreen ? t('projectiles.compareExitFullscreen') : t('projectiles.compareFullscreen')}
+              aria-pressed={fullscreen}
+            >
+              {fullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+            </button>
+            <button
               onClick={onClose}
               className="p-1.5 rounded hover:bg-muted text-muted-foreground"
               aria-label={t('common.close')}

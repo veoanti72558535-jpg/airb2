@@ -4,6 +4,7 @@ import { SearchBar } from '@/components/SearchBar';
 import { useI18n } from '@/lib/i18n';
 import { opticStore } from '@/lib/storage';
 import { useUnits } from '@/hooks/use-units';
+import { useUrlFilter } from '@/hooks/use-url-filter';
 import { Optic } from '@/lib/types';
 import { motion } from 'framer-motion';
 import { toast } from '@/hooks/use-toast';
@@ -13,9 +14,21 @@ export default function OpticsPage() {
   const { t } = useI18n();
   const { symbol } = useUnits();
   const [optics, setOptics] = useState<Optic[]>(opticStore.getAll());
-  const [tubeFilter, setTubeFilter] = useState<25.4 | 30 | 34 | null>(null);
-  const [brandFilter, setBrandFilter] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
+
+  const [tubeParam, setTubeParam] = useUrlFilter('tube');
+  const [brandParam, setBrandParam] = useUrlFilter('brand');
+  const [searchParam, setSearchParam] = useUrlFilter('q');
+
+  const tubeFilter: 25.4 | 30 | 34 | null =
+    tubeParam === '25.4' ? 25.4 : tubeParam === '30' ? 30 : tubeParam === '34' ? 34 : null;
+  const setTubeFilter = (v: 25.4 | 30 | 34 | null) => setTubeParam(v == null ? null : String(v));
+
+  const brandFilter = brandParam;
+  const setBrandFilter = (v: string | null) => setBrandParam(v);
+
+  const searchQuery = searchParam ?? '';
+  const setSearchQuery = (v: string) => setSearchParam(v);
+
   const [showForm, setShowForm] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [editing, setEditing] = useState<Optic | null>(null);

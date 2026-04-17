@@ -302,3 +302,168 @@ export function CompareProjectilesModal({
     </div>
   );
 }
+
+interface DropChartProps {
+  rows: {
+    p: Projectile;
+    curve: { range: number; drop: number }[];
+  }[];
+  t: (key: string, vars?: Record<string, string | number>) => string;
+}
+
+/**
+ * Compact SVG chart of drop (mm, Y) vs distance (m, X) for each projectile.
+ * Uses a shared Y scale so curves are directly comparable. Drop is plotted
+ * with negative values (below sight line) downward, matching shooter intuition.
+ */
+function DropChart({ rows, t }: DropChartProps) {
+  if (rows.length === 0 || rows.every(r => r.curve.length === 0)) return null;
+
+  const W = 600;
+  const H = 180;
+  const PAD_L = 36;
+  const PAD_R = 12;
+  const PAD_T = 12;
+  const PAD_B = 24;
+  const innerW = W - PAD_L - PAD_R;
+  const innerH = H - PAD_T - PAD_B;
+
+  let minDrop = 0;
+  let maxDrop = 0;
+  for (const { curve } of rows) {
+    for (const pt of curve) {
+      if (pt.drop < minDrop) minDrop = pt.drop;
+      if (pt.drop > maxDrop) maxDrop = pt.drop;
+    }
+  }
+  if (maxDrop < 0) maxDrop = 0;
+  if (minDrop > 0) minDrop = 0;
+  const span = Math.max(1, maxDrop - minDrop);
+  const yMin = minDrop - span * 0.08;
+  const yMax = maxDrop + span * 0.04;
+
+  const xMax = CHART_MAX;
+  const xToPx = (x: number) => PAD_L + (x / xMax) * innerW;
+  const yToPx = (y: number) => PAD_T + ((yMax - y) / (yMax - yMin)) * innerH;
+
+  const xTicks = [0, 25, 50, 75, 100];
+  const yTickCount = 4;
+  const yTicks: number[] = [];
+  for (let i = 0; i <= yTickCount; i++) {
+    yTicks.push(yMin + ((yMax - yMin) * i) / yTickCount);
+  }
+
+  const buildPath = (curve: { range: number; drop: number }[]) =>
+    curve
+      .map((pt, i) => `${i === 0 ? 'M' : 'L'}${xToPx(pt.range).toFixed(1)},${yToPx(pt.drop).toFixed(1)}`)
+      .join(' ');
+
+  return (
+    <div className="px-4 py-3 border-b border-border bg-card/40">
+      <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
+        <h3 className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+          {t('projectiles.compareChartTitle')}
+        </h3>
+        <div className="flex flex-wrap gap-x-3 gap-y-1 justify-end">
+          {rows.map(({ p }, i) => (
+            <div key={p.id} className="flex items-center gap-1.5 text-[10px]">
+              <span
+                className="inline-block h-0.5 w-3 rounded"
+                style={{ backgroundColor: SERIES_COLORS[i % SERIES_COLORS.length] }}
+              />
+              <span className="text-foreground truncate max-w-[140px]">
+                {p.brand} {p.model}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        className="w-full h-auto"
+        role="img"
+        aria-label={t('projectiles.compareChartTitle')}
+      >
+        {yTicks.map((y, i) => (
+          <g key={`y-${i}`}>
+            <line
+              x1={PAD_L}
+              x2={W - PAD_R}
+              y1={yToPx(y)}
+              y2={yToPx(y)}
+              stroke="hsl(var(--border))"
+              strokeWidth={0.5}
+              strokeDasharray={Math.abs(y) < 0.01 ? undefined : '2 3'}
+            />
+            <text
+              x={PAD_L - 4}
+              y={yToPx(y)}
+              textAnchor="end"
+              dominantBaseline="middle"
+              className="fill-muted-foreground"
+              fontSize={9}
+              fontFamily="ui-monospace, monospace"
+            >
+              {y.toFixed(0)}
+            </text>
+          </g>
+        ))}
+
+        {xTicks.map(x => (
+          <g key={`x-${x}`}>
+            <line
+              x1={xToPx(x)}
+              x2={xToPx(x)}
+              y1={PAD_T}
+              y2={H - PAD_B}
+              stroke="hsl(var(--border))"
+              strokeWidth={0.5}
+              strokeDasharray="2 3"
+            />
+            <text
+              x={xToPx(x)}
+              y={H - PAD_B + 12}
+              textAnchor="middle"
+              className="fill-muted-foreground"
+              fontSize={9}
+              fontFamily="ui-monospace, monospace"
+            >
+              {x}
+            </text>
+          </g>
+        ))}
+
+        <text
+          x={W - PAD_R}
+          y={H - 4}
+          textAnchor="end"
+          className="fill-muted-foreground"
+          fontSize={9}
+        >
+          {t('projectiles.compareChartX')}
+        </text>
+        <text
+          x={4}
+          y={PAD_T + 4}
+          textAnchor="start"
+          className="fill-muted-foreground"
+          fontSize={9}
+        >
+          {t('projectiles.compareChartY')}
+        </text>
+
+        {rows.map(({ p, curve }, i) => (
+          <path
+            key={p.id}
+            d={buildPath(curve)}
+            fill="none"
+            stroke={SERIES_COLORS[i % SERIES_COLORS.length]}
+            strokeWidth={1.75}
+            strokeLinejoin="round"
+            strokeLinecap="round"
+          />
+        ))}
+      </svg>
+    </div>
+  );
+}

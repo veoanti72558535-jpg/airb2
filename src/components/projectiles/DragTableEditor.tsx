@@ -636,7 +636,7 @@ function DragTablePreview({ table, t }: PreviewProps) {
                     fontSize={7.5}
                     fontFamily="ui-monospace, monospace"
                   >
-                    {`${row.label}: ${row.cd.toFixed(3)}`}
+                    {`${row.label === closestRefLabel ? '★ ' : ''}${row.label}: ${row.cd.toFixed(3)}`}
                   </text>
                   {deltaTxt && (
                     <text
@@ -653,6 +653,20 @@ function DragTablePreview({ table, t }: PreviewProps) {
                 </g>
               );
             })}
+            {/* Large Mach value — anchored near the bottom of the tooltip so
+                it reads as the dominant context cue. Centred horizontally and
+                rendered with the primary token for visual hierarchy. */}
+            <text
+              x={tooltipX + TT_W / 2}
+              y={PAD_T + TT_H - 4}
+              textAnchor="middle"
+              fontSize={13}
+              fontWeight={700}
+              fontFamily="ui-monospace, monospace"
+              className="fill-primary"
+            >
+              {`M ${hover.toFixed(2)}`}
+            </text>
           </g>
         )}
       </svg>

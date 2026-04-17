@@ -3,6 +3,7 @@ import { Target, Plus, Trash2, Edit2 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { airgunStore } from '@/lib/storage';
 import { useUnits } from '@/hooks/use-units';
+import { useUrlFilter } from '@/hooks/use-url-filter';
 import { Airgun } from '@/lib/types';
 import { motion } from 'framer-motion';
 import { toast } from '@/hooks/use-toast';
@@ -12,7 +13,9 @@ export default function AirgunsPage() {
   const { t } = useI18n();
   const { symbol } = useUnits();
   const [airguns, setAirguns] = useState<Airgun[]>(airgunStore.getAll());
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchParam, setSearchParam] = useUrlFilter('q');
+  const searchQuery = searchParam ?? '';
+  const setSearchQuery = (v: string) => setSearchParam(v);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Airgun | null>(null);
   const [form, setForm] = useState({ brand: '', model: '', caliber: '.177', barrelLength: 600, regPressure: 110, fillPressure: 250, powerSetting: '', defaultSightHeight: 40, defaultZeroRange: 30, notes: '' });

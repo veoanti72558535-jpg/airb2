@@ -284,7 +284,35 @@ export default function ProjectilesPage() {
         />
       )}
 
-      {projectiles.length === 0 ? (
+      {projectiles.length > 0 && (
+        <div className="flex items-center gap-2 flex-wrap text-xs">
+          <span className="uppercase tracking-wide text-muted-foreground font-medium">{t('projectiles.filterType')}</span>
+          {(['all', 'pellet', 'slug', 'other'] as const).map(tf => (
+            <button
+              key={tf}
+              onClick={() => setTypeFilter(tf)}
+              className={`px-2.5 py-1 rounded font-medium ${typeFilter === tf ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted'}`}
+            >
+              {tf === 'all' ? t('optics.filterAll')
+                : tf === 'pellet' ? t('projectiles.typePellet')
+                : tf === 'slug' ? t('projectiles.typeSlug')
+                : t('projectiles.typeOther')}
+            </button>
+          ))}
+          <span className="mx-2 h-4 w-px bg-border" />
+          <span className="uppercase tracking-wide text-muted-foreground font-medium">{t('common.sortBy')}</span>
+          {(['name', 'weight', 'bc'] as const).map(sk => (
+            <button
+              key={sk}
+              onClick={() => setSortKey(sk)}
+              className={`px-2.5 py-1 rounded font-medium ${sortKey === sk ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted'}`}
+            >
+              {sk === 'name' ? t('common.sortName') : sk === 'weight' ? t('common.sortWeight') : t('common.sortBc')}
+            </button>
+          ))}
+        </div>
+      )}
+
         <div className="surface-card p-8 text-center text-muted-foreground text-sm">{t('common.noData')}</div>
       ) : filteredProjectiles.length === 0 ? (
         <div className="surface-card p-8 text-center text-muted-foreground text-sm">{t('projectiles.noMatch')}</div>

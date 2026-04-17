@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Target, Plus, Trash2, Edit2 } from 'lucide-react';
+import { Target, Plus, Trash2, Edit2, RotateCcw } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { airgunStore } from '@/lib/storage';
 import { useUnits } from '@/hooks/use-units';
@@ -14,19 +14,38 @@ export default function AirgunsPage() {
   const { symbol } = useUnits();
   const [airguns, setAirguns] = useState<Airgun[]>(airgunStore.getAll());
   const [searchParam, setSearchParam] = useUrlFilter('q');
+  const [brandParam, setBrandParam] = useUrlFilter('brand');
   const searchQuery = searchParam ?? '';
   const setSearchQuery = (v: string) => setSearchParam(v);
+  const brandFilter = brandParam;
+  const setBrandFilter = (v: string | null) => setBrandParam(v);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Airgun | null>(null);
   const [form, setForm] = useState({ brand: '', model: '', caliber: '.177', barrelLength: 600, regPressure: 110, fillPressure: 250, powerSetting: '', defaultSightHeight: 40, defaultZeroRange: 30, notes: '' });
 
+  // Derive brand list + counts from actual data (case-insensitive, original casing kept).
+  const brandCounts = useMemo(() => {
+    const map = new Map<string, { display: string; count: number }>();
+    airguns.forEach(a => {
+      const raw = (a.brand ?? '').trim();
+      if (!raw) return;
+      const key = raw.toLowerCase();
+      const existing = map.get(key);
+      if (existing) existing.count++;
+      else map.set(key, { display: raw, count: 1 });
+    });
+    return Array.from(map.values()).sort((a, b) => b.count - a.count || a.display.localeCompare(b.display));
+  }, [airguns]);
+
   const filteredAirguns = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    if (!q) return airguns;
-    return airguns.filter(a =>
-      `${a.brand} ${a.model} ${a.notes ?? ''}`.toLowerCase().includes(q)
-    );
-  }, [airguns, searchQuery]);
+    const bf = brandFilter?.toLowerCase() ?? null;
+    return airguns.filter(a => {
+      if (bf && (a.brand ?? '').toLowerCase() !== bf) return false;
+      if (q && !`${a.brand} ${a.model} ${a.notes ?? ''}`.toLowerCase().includes(q)) return false;
+      return true;
+    });
+  }, [airguns, searchQuery, brandFilter]);
 
   const refresh = () => setAirguns(airgunStore.getAll());
 
@@ -57,8 +76,9 @@ export default function AirgunsPage() {
 
   const lengthSym = symbol('length');
   const pressSym = symbol('pressure');
-  const distSym = symbol('distance');
   const inputClass = "w-full bg-muted border border-border rounded-md px-3 py-1.5 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary";
+
+  const hasAnyFilter = (brandFilter !== null && brandFilter !== '') || searchQuery.trim() !== '';
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
@@ -129,6 +149,49 @@ export default function AirgunsPage() {
           total={airguns.length}
           showCopyLink
         />
+      )}
+
+      {airguns.length > 0 && brandCounts.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-[11px] uppercase tracking-wide text-muted-foreground mr-1">
+            {t('optics.filterBrand')}
+          </span>
+          <button
+            onClick={() => setBrandFilter(null)}
+            className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+              brandFilter === null
+                ? 'bg-primary/10 text-primary border border-primary/40'
+                : 'bg-muted text-muted-foreground border border-border hover:bg-muted/70'
+            }`}
+          >
+            {t('optics.filterAll')} ({airguns.length})
+          </button>
+          {brandCounts.map(({ display, count }) => {
+            const active = (brandFilter ?? '').toLowerCase() === display.toLowerCase();
+            return (
+              <button
+                key={display}
+                onClick={() => setBrandFilter(active ? null : display)}
+                className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+                  active
+                    ? 'bg-primary/10 text-primary border border-primary/40'
+                    : 'bg-muted text-muted-foreground border border-border hover:bg-muted/70'
+                }`}
+              >
+                {display} ({count})
+              </button>
+            );
+          })}
+          {hasAnyFilter && (
+            <button
+              onClick={() => { setBrandFilter(null); setSearchQuery(''); }}
+              className="ml-auto px-2.5 py-1 rounded text-xs font-medium transition-colors bg-destructive/10 text-destructive border border-destructive/30 hover:bg-destructive/20 inline-flex items-center gap-1"
+            >
+              <RotateCcw className="h-3 w-3" />
+              {t('optics.resetFilters')}
+            </button>
+          )}
+        </div>
       )}
 
       {airguns.length === 0 ? (

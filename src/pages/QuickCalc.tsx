@@ -306,7 +306,8 @@ export default function QuickCalc() {
   // Manual edits to weather track per-field overrides so the source can shift
   // from "auto" → "mixed" → "manual" without losing the auto base data.
   const FIELD_KEYS = ['temperature','humidity','pressure','altitude','windSpeed','windAngle'] as const;
-  const updateWeather = (patch: Partial<WeatherSnapshot>) =>
+  const updateWeather = (patch: Partial<WeatherSnapshot>) => {
+    setCurrentSessionId(null);
     setForm(prev => {
       const overrides = new Set(prev.weather.manualOverrides ?? []);
       for (const k of FIELD_KEYS) {
@@ -328,9 +329,12 @@ export default function QuickCalc() {
             : 'mixed';
       return { ...prev, weather: next };
     });
+  };
 
-  const updateZeroWeather = (patch: Partial<WeatherSnapshot>) =>
+  const updateZeroWeather = (patch: Partial<WeatherSnapshot>) => {
+    setCurrentSessionId(null);
     setForm(prev => ({ ...prev, zeroWeather: { ...prev.zeroWeather, ...patch } }));
+  };
 
   const handleSelectProjectile = (id: string) => {
     const p = projectiles.find(x => x.id === id);

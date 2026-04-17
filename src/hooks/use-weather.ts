@@ -14,6 +14,8 @@ export type WeatherStatus = 'idle' | 'locating' | 'loading' | 'error';
 export interface UseWeatherApi {
   status: WeatherStatus;
   error: string | null;
+  /** True when the current snapshot was served from the local cache. */
+  fromCache: boolean;
   /** Fetch by browser geolocation. Resolves silently on failure. */
   fetchByLocation: () => Promise<void>;
   /** Fetch using explicit coordinates. Pass `force` to bypass the local cache. */

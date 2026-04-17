@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { X, GitCompare, Gauge, RotateCcw, Target, Download } from 'lucide-react';
 import { toPng } from 'html-to-image';
 import { Projectile, WeatherSnapshot } from '@/lib/types';
+import { getSettings } from '@/lib/storage';
 import { calculateTrajectory } from '@/lib/ballistics';
 import { useI18n } from '@/lib/i18n';
 import { useUnits } from '@/hooks/use-units';

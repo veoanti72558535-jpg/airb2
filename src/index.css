@@ -111,6 +111,33 @@
   .tactical-badge {
     @apply bg-tactical/15 text-tactical text-xs font-medium px-2 py-0.5 rounded;
   }
+
+  /* Smooth transitions for the compare-modal SVG chart when sliders change.
+     Animates marker position/size and curve path morphing. */
+  .compare-marker {
+    transition:
+      cx 220ms ease-out,
+      cy 220ms ease-out,
+      r 180ms ease-out,
+      fill 180ms ease-out;
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: compare-marker-pop 240ms ease-out;
+  }
+  .compare-path {
+    transition: d 220ms ease-out, stroke 180ms ease-out;
+  }
+  @keyframes compare-marker-pop {
+    0% { opacity: 0; transform: scale(0.4); }
+    60% { opacity: 1; transform: scale(1.25); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .compare-marker, .compare-path {
+      transition: none;
+      animation: none;
+    }
+  }
 }
 
 /* Custom scrollbar */

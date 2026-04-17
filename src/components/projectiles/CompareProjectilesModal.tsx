@@ -588,6 +588,7 @@ function DropChart({ rows, t }: DropChartProps) {
                   strokeWidth={1.75}
                   strokeLinejoin="round"
                   strokeLinecap="round"
+                  className="compare-path"
                 />
                 {/* Markers at comparison distances */}
                 {COMPARE_RANGES.map(r => {
@@ -602,6 +603,7 @@ function DropChart({ rows, t }: DropChartProps) {
                       fill={color}
                       stroke="hsl(var(--card))"
                       strokeWidth={1}
+                      className="compare-marker"
                       style={{ cursor: 'help' }}
                     >
                       <title>{`${p.brand} ${p.model} — ${pt.range} m · ${pt.drop.toFixed(1)} mm`}</title>

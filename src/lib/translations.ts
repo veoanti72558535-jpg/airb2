@@ -267,6 +267,7 @@ const fr = {
   'weather.citySearchPlaceholder': 'Ex : Paris, Lyon, Marseille…',
   'weather.errGeocode': 'Recherche indisponible — réessayez ou saisissez les coordonnées.',
   'weather.noCityFound': 'Aucune ville trouvée.',
+  'weather.or': 'ou',
 
   // Conversions
   'conv.title': 'Conversions d\'unités',

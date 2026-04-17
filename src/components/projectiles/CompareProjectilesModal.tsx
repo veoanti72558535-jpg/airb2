@@ -375,17 +375,34 @@ export function CompareProjectilesModal({
                   <td className="px-3 py-2 text-xs text-muted-foreground sticky left-0 bg-card z-10">
                     {t('projectiles.compareEnergyAt', { r })}
                   </td>
-                  {rows.map(({ p, vels, energies }) => (
-                    <td key={p.id} className="px-3 py-2 font-mono text-xs">
-                      {vels[r] !== undefined
-                        ? `${vels[r].toFixed(0)} m/s · ${energies[r].toFixed(1)} J`
-                        : '—'}
-                    </td>
-                  ))}
+                  {rows.map(({ p, vels, energies }) => {
+                    const j = energies[r];
+                    const overFac = j !== undefined && j > FAC_LIMIT_J;
+                    return (
+                      <td
+                        key={p.id}
+                        className={cn(
+                          'px-3 py-2 font-mono text-xs',
+                          overFac && 'text-destructive font-semibold bg-destructive/10'
+                        )}
+                        title={overFac ? t('projectiles.compareFacOver') : undefined}
+                      >
+                        {vels[r] !== undefined
+                          ? `${vels[r].toFixed(0)} m/s · ${j.toFixed(1)} J`
+                          : '—'}
+                      </td>
+                    );
+                  })}
                 </tr>
               ))}
             </tbody>
           </table>
+        </div>
+
+        {/* FAC threshold legend */}
+        <div className="px-4 py-2 border-t border-border bg-card/40 flex items-center gap-2 text-[10px] text-muted-foreground">
+          <span className="inline-block h-2 w-2 rounded-full bg-destructive shrink-0" aria-hidden />
+          <span>{t('projectiles.compareFacLegend')}</span>
         </div>
 
         {/* Footer */}

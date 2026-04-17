@@ -609,9 +609,6 @@ export function CompareProjectilesModal({
                 );
               })}
 
-              {/* Velocity section — residual speed at each distance */}
-              <tr className="bg-muted/20">
-                <td colSpan={rows.length + 1} className="px-3 py-1.5 text-[10px] uppercase tracking-wide text-muted-foreground font-semibold">
               {/* Velocity section — residual speed at each distance.
                   Header is a button so users can collapse the whole group
                   when they want to focus on energy (or vice-versa). */}

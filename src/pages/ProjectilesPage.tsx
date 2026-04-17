@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Zap, Plus, Trash2, Edit2 } from 'lucide-react';
+import { Zap, Plus, Trash2, Edit2, RotateCcw } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { projectileStore } from '@/lib/storage';
 import { useUnits } from '@/hooks/use-units';
@@ -14,19 +14,40 @@ export default function ProjectilesPage() {
   const { symbol } = useUnits();
   const [projectiles, setProjectiles] = useState<Projectile[]>(projectileStore.getAll());
   const [searchParam, setSearchParam] = useUrlFilter('q');
+  const [brandParam, setBrandParam] = useUrlFilter('brand');
   const searchQuery = searchParam ?? '';
   const setSearchQuery = (v: string) => setSearchParam(v);
+  const brandFilter = brandParam;
+  const setBrandFilter = (v: string | null) => setBrandParam(v);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Projectile | null>(null);
   const [form, setForm] = useState({ brand: '', model: '', weight: 18, bc: 0.025, shape: 'domed', caliber: '.177', length: 0, diameter: 0, material: 'lead', notes: '', dataSource: '' });
 
+  // Derive brand list + counts from actual data (case-insensitive, original casing kept).
+  const brandCounts = useMemo(() => {
+    const map = new Map<string, { display: string; count: number }>();
+    projectiles.forEach(p => {
+      const raw = (p.brand ?? '').trim();
+      if (!raw) return;
+      const key = raw.toLowerCase();
+      const existing = map.get(key);
+      if (existing) existing.count++;
+      else map.set(key, { display: raw, count: 1 });
+    });
+    return Array.from(map.values()).sort((a, b) => b.count - a.count || a.display.localeCompare(b.display));
+  }, [projectiles]);
+
   const filteredProjectiles = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    if (!q) return projectiles;
-    return projectiles.filter(p =>
-      `${p.brand} ${p.model} ${p.notes ?? ''}`.toLowerCase().includes(q)
-    );
-  }, [projectiles, searchQuery]);
+    const bf = brandFilter?.toLowerCase() ?? null;
+    return projectiles.filter(p => {
+      if (bf && (p.brand ?? '').toLowerCase() !== bf) return false;
+      if (q && !`${p.brand} ${p.model} ${p.notes ?? ''}`.toLowerCase().includes(q)) return false;
+      return true;
+    });
+  }, [projectiles, searchQuery, brandFilter]);
+
+  const hasAnyFilter = (brandFilter !== null && brandFilter !== '') || searchQuery.trim() !== '';
 
   const refresh = () => setProjectiles(projectileStore.getAll());
 

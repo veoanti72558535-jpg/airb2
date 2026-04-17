@@ -1628,8 +1628,11 @@ interface SortableProjectileHeaderProps {
  * click the close (X) button without triggering a drag.
  */
 function SortableProjectileHeader({ id, draggable, dragLabel, children }: SortableProjectileHeaderProps) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging, isOver, active } =
     useSortable({ id, disabled: !draggable });
+  // Highlight the drop target (the column being hovered by another dragged column)
+  // — but never the dragged column itself, which already has its own grabbing style.
+  const isDropTarget = isOver && active?.id !== id;
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -1641,8 +1644,9 @@ function SortableProjectileHeader({ id, draggable, dragLabel, children }: Sortab
       ref={setNodeRef}
       style={style}
       className={cn(
-        'text-left font-medium px-3 py-2 min-w-[160px] align-top',
-        isDragging && 'z-20 relative'
+        'text-left font-medium px-3 py-2 min-w-[160px] align-top transition-[background-color,box-shadow] duration-150',
+        isDragging && 'z-20 relative',
+        isDropTarget && 'bg-primary/10 ring-2 ring-inset ring-primary/60 rounded-sm animate-pulse'
       )}
     >
       <div className="flex items-start justify-between gap-2">

@@ -81,6 +81,7 @@ export function ResultsCard({
   advanced,
   weather,
   zeroWeather,
+  energyThresholdJ,
 }: Props) {
   const { t, locale } = useI18n();
   const { symbol } = useUnits();
@@ -88,6 +89,14 @@ export function ResultsCard({
   const lengthUnit = symbol('length');
   const velUnit = symbol('velocity');
   const energyUnit = symbol('energy');
+
+  // Initial (muzzle) energy is needed for the threshold check. The trajectory
+  // table starts at range 0 in QuickCalc, so the first row carries the muzzle
+  // value. When no rows are passed (single hero result) we fall back to the
+  // hero energy itself — the next-best approximation.
+  const initialEnergy = rows && rows.length > 0 ? rows[0].energy : result.energy;
+  const energyOverThreshold =
+    energyThresholdJ != null && energyThresholdJ > 0 && initialEnergy > energyThresholdJ;
 
   const elevDir = result.holdover >= 0 ? t('calc.up') : t('calc.down');
   const windDir = result.windDrift >= 0 ? t('calc.right') : t('calc.left');

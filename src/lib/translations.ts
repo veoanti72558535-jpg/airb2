@@ -173,6 +173,7 @@ const fr = {
   'optics.searchPreset': 'Rechercher (FX, Element, Discovery, MTC…)',
   'optics.filterAll': 'Tous',
   'optics.filterBrand': 'Marque',
+  'optics.search': 'Rechercher par nom ou notes…',
   'optics.noMatch': 'Aucune optique pour ces filtres.',
 
   // Sessions

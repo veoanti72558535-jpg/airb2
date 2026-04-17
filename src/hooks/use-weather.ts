@@ -111,6 +111,7 @@ export function useWeather(
       setWeather({ ...next, manualOverrides: [], source: 'manual' });
       setStatus('idle');
       setError(null);
+      setFromCache(false);
     },
     [setWeather],
   );
@@ -118,6 +119,7 @@ export function useWeather(
   return {
     status,
     error,
+    fromCache,
     fetchByLocation,
     fetchByCoords,
     patchManual,

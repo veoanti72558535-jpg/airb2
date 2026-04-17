@@ -255,6 +255,8 @@ const fr = {
   'projectiles.compareExporting': 'Export…',
   'projectiles.compareExportSuccess': 'Image exportée',
   'projectiles.compareExportError': 'Échec de l\'export',
+  'projectiles.compareFullscreen': 'Plein écran',
+  'projectiles.compareExitFullscreen': 'Quitter le plein écran',
   'projectiles.compareEnergySection': 'Vélocité & énergie',
   'projectiles.compareEnergyAt': '@ {r} m',
   'projectiles.compareDisclaimer': 'Valeurs indicatives — vélocité unifiée pour isoler l\'effet du BC. Les chutes réelles dépendent de votre arme et de votre tune.',

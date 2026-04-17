@@ -77,6 +77,8 @@ function defaultSettings(): AppSettings {
     unitSystem: 'metric',
     advancedMode: false,
     featureFlags: { ai: false, weather: true },
+    // UK FAC limit by default — most permissive common threshold; users can switch.
+    energyThresholdJ: 16.27,
   };
 }
 

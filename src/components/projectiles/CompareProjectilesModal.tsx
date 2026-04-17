@@ -769,6 +769,96 @@ export function CompareProjectilesModal({
                   </tr>
                 );
               })}
+
+              {/* Over-threshold section — only renders when a threshold is configured.
+                  Lists the explicit ranges where each projectile is still above the threshold.
+                  Default-collapsed because it's a focused/dense view. */}
+              {energyThresholdJ !== null && (
+                <>
+                  <tr className="bg-muted/20">
+                    <td colSpan={rows.length + 1} className="p-0">
+                      <button
+                        type="button"
+                        onClick={() => setCollapsed(c => ({ ...c, overThreshold: !c.overThreshold }))}
+                        aria-expanded={!collapsed.overThreshold}
+                        aria-controls="cmp-over-rows"
+                        title={collapsed.overThreshold ? t('projectiles.compareExpandSection') : t('projectiles.compareCollapseSection')}
+                        className="w-full flex items-center gap-1.5 px-3 py-1.5 text-[10px] uppercase tracking-wide text-muted-foreground font-semibold hover:text-foreground hover:bg-muted/30 transition-colors text-left"
+                      >
+                        {collapsed.overThreshold ? (
+                          <ChevronRight className="h-3 w-3 shrink-0" aria-hidden />
+                        ) : (
+                          <ChevronDown className="h-3 w-3 shrink-0" aria-hidden />
+                        )}
+                        {t('projectiles.compareOverThresholdSection', { j: energyThresholdJ.toFixed(2) })}
+                      </button>
+                    </td>
+                  </tr>
+                  {!collapsed.overThreshold && (() => {
+                    // Per-projectile: collect all sampled ranges where energy > threshold,
+                    // then derive the maximum useful range (last sample still above).
+                    const overByProjectile = rows.map(({ p, energyCurve }) => {
+                      const overRanges = energyCurve
+                        .filter(pt => pt.energy > energyThresholdJ)
+                        .map(pt => pt.range);
+                      const maxRange = overRanges.length ? Math.max(...overRanges) : null;
+                      return { id: p.id, overRanges, maxRange };
+                    });
+                    return (
+                      <>
+                        {/* Max useful range row */}
+                        <tr id="cmp-over-rows">
+                          <td className="px-3 py-2 text-xs text-muted-foreground sticky left-0 bg-card z-10">
+                            {t('projectiles.compareOverThresholdMax')}
+                          </td>
+                          {overByProjectile.map(({ id, maxRange }) => (
+                            <td
+                              key={id}
+                              className={cn(
+                                'px-3 py-2 font-mono text-xs',
+                                maxRange === null
+                                  ? 'text-muted-foreground italic'
+                                  : 'text-destructive font-semibold'
+                              )}
+                            >
+                              {maxRange === null
+                                ? t('projectiles.compareOverThresholdNone')
+                                : `${maxRange} m`}
+                            </td>
+                          ))}
+                        </tr>
+                        {/* Range list row — concise comma-separated list, capped for legibility */}
+                        <tr>
+                          <td className="px-3 py-2 text-xs text-muted-foreground sticky left-0 bg-card z-10 align-top">
+                            {t('projectiles.compareOverThresholdRanges')}
+                          </td>
+                          {overByProjectile.map(({ id, overRanges }) => {
+                            if (overRanges.length === 0) {
+                              return (
+                                <td key={id} className="px-3 py-2 font-mono text-xs text-muted-foreground italic">
+                                  —
+                                </td>
+                              );
+                            }
+                            // Cap to ~12 entries to avoid wall-of-text; show count if truncated.
+                            const MAX_SHOWN = 12;
+                            const shown = overRanges.slice(0, MAX_SHOWN);
+                            const truncated = overRanges.length > MAX_SHOWN;
+                            return (
+                              <td key={id} className="px-3 py-2 font-mono text-[11px] text-destructive leading-relaxed">
+                                {shown.map(r => `${r}m`).join(', ')}
+                                {truncated && (
+                                  <span className="text-muted-foreground"> +{overRanges.length - MAX_SHOWN}</span>
+                                )}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      </>
+                    );
+                  })()}
+                </>
+              )}
             </tbody>
           </table>
         </div>

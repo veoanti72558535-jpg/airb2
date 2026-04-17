@@ -54,7 +54,7 @@ export function useWeather(
   const [error, setError] = useState<string | null>(null);
 
   const fetchByCoords = useCallback(
-    async (lat: number, lon: number, opts?: { force?: boolean }) => {
+    async (lat: number, lon: number, opts?: { force?: boolean; locationLabel?: string }) => {
       setStatus('loading');
       setError(null);
       try {

@@ -151,6 +151,49 @@ export default function ProjectilesPage() {
         />
       )}
 
+      {projectiles.length > 0 && brandCounts.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-[11px] uppercase tracking-wide text-muted-foreground mr-1">
+            {t('optics.filterBrand')}
+          </span>
+          <button
+            onClick={() => setBrandFilter(null)}
+            className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+              brandFilter === null
+                ? 'bg-primary/10 text-primary border border-primary/40'
+                : 'bg-muted text-muted-foreground border border-border hover:bg-muted/70'
+            }`}
+          >
+            {t('optics.filterAll')} ({projectiles.length})
+          </button>
+          {brandCounts.map(({ display, count }) => {
+            const active = (brandFilter ?? '').toLowerCase() === display.toLowerCase();
+            return (
+              <button
+                key={display}
+                onClick={() => setBrandFilter(active ? null : display)}
+                className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+                  active
+                    ? 'bg-primary/10 text-primary border border-primary/40'
+                    : 'bg-muted text-muted-foreground border border-border hover:bg-muted/70'
+                }`}
+              >
+                {display} ({count})
+              </button>
+            );
+          })}
+          {hasAnyFilter && (
+            <button
+              onClick={() => { setBrandFilter(null); setSearchQuery(''); }}
+              className="ml-auto px-2.5 py-1 rounded text-xs font-medium transition-colors bg-destructive/10 text-destructive border border-destructive/30 hover:bg-destructive/20 inline-flex items-center gap-1"
+            >
+              <RotateCcw className="h-3 w-3" />
+              {t('optics.resetFilters')}
+            </button>
+          )}
+        </div>
+      )}
+
       {projectiles.length === 0 ? (
         <div className="surface-card p-8 text-center text-muted-foreground text-sm">{t('common.noData')}</div>
       ) : filteredProjectiles.length === 0 ? (

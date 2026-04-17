@@ -333,6 +333,21 @@ export function CompareProjectilesModal({
               <p className="text-[11px] text-muted-foreground">
                 {t('projectiles.compareHint', { v: velocity, z: zeroRange })}
               </p>
+              {(() => {
+                // Count visible sections (overThreshold only counted when the threshold is active).
+                const total = energyThresholdJ !== null ? 4 : 3;
+                const hidden =
+                  (collapsed.drop ? 1 : 0) +
+                  (collapsed.vel ? 1 : 0) +
+                  (collapsed.energy ? 1 : 0) +
+                  (energyThresholdJ !== null && collapsed.overThreshold ? 1 : 0);
+                if (hidden === 0) return null;
+                return (
+                  <p className="mt-0.5 text-[10px] text-tactical font-medium">
+                    {t('projectiles.compareHiddenCount', { hidden, total })}
+                  </p>
+                );
+              })()}
             </div>
           </div>
           <div className="flex items-center gap-1 shrink-0">

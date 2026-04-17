@@ -40,17 +40,35 @@ export default function ProjectilesPage() {
     return Array.from(map.values()).sort((a, b) => b.count - a.count || a.display.localeCompare(b.display));
   }, [projectiles]);
 
+  const calToken = (s: string) => {
+    const m = (s ?? '').match(/\.\d+/);
+    return m ? m[0] : '';
+  };
+  const CALIBERS = ['.177', '.22', '.25', '.30'];
+  const caliberCounts = useMemo(() => {
+    const map = new Map<string, number>();
+    projectiles.forEach(p => {
+      const c = calToken(p.caliber);
+      if (!c) return;
+      map.set(c, (map.get(c) ?? 0) + 1);
+    });
+    return CALIBERS.map(c => ({ value: c, count: map.get(c) ?? 0 })).filter(x => x.count > 0);
+  }, [projectiles]);
+
   const filteredProjectiles = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     const bf = brandFilter?.toLowerCase() ?? null;
+    const cf = caliberFilter ?? null;
     return projectiles.filter(p => {
       if (bf && (p.brand ?? '').toLowerCase() !== bf) return false;
+      if (cf && calToken(p.caliber) !== cf) return false;
       if (q && !`${p.brand} ${p.model} ${p.notes ?? ''}`.toLowerCase().includes(q)) return false;
       return true;
     });
-  }, [projectiles, searchQuery, brandFilter]);
+  }, [projectiles, searchQuery, brandFilter, caliberFilter]);
 
-  const hasAnyFilter = (brandFilter !== null && brandFilter !== '') || searchQuery.trim() !== '';
+  const hasAnyFilter = (brandFilter !== null && brandFilter !== '') || (caliberFilter !== null && caliberFilter !== '') || searchQuery.trim() !== '';
+  const resetAllFilters = () => { setBrandFilter(null); setCaliberFilter(null); setSearchQuery(''); };
 
   const refresh = () => setProjectiles(projectileStore.getAll());
 

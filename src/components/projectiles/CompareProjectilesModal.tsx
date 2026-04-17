@@ -652,7 +652,7 @@ function DropChart({ rows, t, tall = false }: DropChartProps) {
         <svg
           ref={svgRef}
           viewBox={`0 0 ${W} ${H}`}
-          className="w-full h-auto touch-none"
+          className={cn('w-full h-auto touch-none', tall && 'max-h-[60vh]')}
           role="img"
           aria-label={t('projectiles.compareChartTitle')}
           onPointerMove={handlePointer}

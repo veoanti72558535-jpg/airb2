@@ -139,6 +139,11 @@ export interface BallisticInput {
   projectileDiameter?: number;
   /** When set, used as the atmosphere during the zeroing pass instead of `weather`. */
   zeroWeather?: WeatherSnapshot;
+  /**
+   * Optional custom Cd vs Mach table. When present, overrides `dragModel` for
+   * the entire trajectory (linear interpolation between provided points).
+   */
+  customDragTable?: DragTablePoint[];
 }
 
 export interface BallisticResult {

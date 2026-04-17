@@ -729,6 +729,8 @@ const en: Record<keyof typeof fr, string> = {
   'projectiles.compareExporting': 'Exporting…',
   'projectiles.compareExportSuccess': 'Image exported',
   'projectiles.compareExportError': 'Export failed',
+  'projectiles.compareFullscreen': 'Fullscreen',
+  'projectiles.compareExitFullscreen': 'Exit fullscreen',
   'projectiles.compareEnergySection': 'Velocity & energy',
   'projectiles.compareEnergyAt': '@ {r} m',
   'projectiles.compareDisclaimer': 'Indicative values — velocity is unified to isolate BC effect. Real drops depend on your airgun and tune.',

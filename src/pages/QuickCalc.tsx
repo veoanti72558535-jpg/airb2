@@ -413,6 +413,7 @@ export default function QuickCalc() {
     sessionStore.create({
       name,
       airgunId: form.airgunId || undefined,
+      tuneId: form.tuneId || undefined,
       projectileId: form.projectileId || undefined,
       opticId: form.opticId || undefined,
       input: buildInput(),
@@ -502,6 +503,9 @@ export default function QuickCalc() {
           airguns={airguns}
           selectedAirgun={form.airgunId}
           onSelectAirgun={handleSelectAirgun}
+          tunes={tunes}
+          selectedTune={form.tuneId}
+          onSelectTune={handleSelectTune}
           barrelLength={form.barrelLength}
           twistRate={form.twistRate}
           onChange={update}

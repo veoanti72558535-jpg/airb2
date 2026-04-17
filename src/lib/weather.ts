@@ -20,6 +20,61 @@ export interface FetchWeatherResult {
 
 const OPEN_METEO_URL = 'https://api.open-meteo.com/v1/forecast';
 
+// ── localStorage cache ──────────────────────────────────────────────────────
+// Key format groups nearby coords (≈1.1 km grid via 2-decimal rounding) so
+// re-opening the calculator from the same spot reuses the snapshot instead of
+// hitting the network. TTL is short enough that conditions stay relevant.
+const CACHE_KEY = 'pcp-weather-cache';
+const CACHE_TTL_MS = 15 * 60_000; // 15 min
+const CACHE_MAX_ENTRIES = 16;
+
+interface CacheEntry {
+  key: string;
+  fetchedAt: number;
+  result: FetchWeatherResult;
+}
+
+function coordKey(lat: number, lon: number): string {
+  return `${lat.toFixed(2)},${lon.toFixed(2)}`;
+}
+
+function readCache(): CacheEntry[] {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    return raw ? (JSON.parse(raw) as CacheEntry[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeCache(entries: CacheEntry[]): void {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(entries.slice(-CACHE_MAX_ENTRIES)));
+  } catch {
+    /* quota / private mode — silently skip */
+  }
+}
+
+/** Returns a cached snapshot if fresh enough, else null. Exposed for tests/UI. */
+export function getCachedWeather(lat: number, lon: number): FetchWeatherResult | null {
+  const key = coordKey(lat, lon);
+  const hit = readCache().find(e => e.key === key);
+  if (!hit) return null;
+  if (Date.now() - hit.fetchedAt > CACHE_TTL_MS) return null;
+  return hit.result;
+}
+
+function putCachedWeather(lat: number, lon: number, result: FetchWeatherResult): void {
+  const key = coordKey(lat, lon);
+  const entries = readCache().filter(e => e.key !== key);
+  entries.push({ key, fetchedAt: Date.now(), result });
+  writeCache(entries);
+}
+
+export function clearWeatherCache(): void {
+  try { localStorage.removeItem(CACHE_KEY); } catch { /* noop */ }
+}
+
 /**
  * Hit Open-Meteo for current conditions at a coordinate.
  * Returns a fully populated WeatherSnapshot tagged as `auto`.

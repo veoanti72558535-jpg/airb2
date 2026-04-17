@@ -255,6 +255,19 @@ export default function OpticsPage() {
               {b} ({brandCounts[b]})
             </button>
           ))}
+          {(tubeFilter !== null || brandFilter !== null || searchQuery.trim() !== '') && (
+            <button
+              onClick={() => {
+                setTubeFilter(null);
+                setBrandFilter(null);
+                setSearchQuery('');
+              }}
+              className="ml-auto px-2.5 py-1 rounded text-xs font-medium transition-colors bg-destructive/10 text-destructive border border-destructive/30 hover:bg-destructive/20 inline-flex items-center gap-1"
+            >
+              <RotateCcw className="h-3 w-3" />
+              {t('optics.resetFilters')}
+            </button>
+          )}
         </div>
       )}
 

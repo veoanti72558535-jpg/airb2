@@ -10,6 +10,7 @@ import { toPng } from 'html-to-image';
 import { useI18n } from '@/lib/i18n';
 import { sessionStore } from '@/lib/storage';
 import { Session } from '@/lib/types';
+import { normalizeSession } from '@/lib/session-normalize';
 import {
   SessionDiffEntry,
   buildComparisonRows,
@@ -46,8 +47,16 @@ export default function ComparePage() {
   const aId = params.get('a') ?? '';
   const bId = params.get('b') ?? '';
 
-  const a = useMemo<Session | undefined>(() => (aId ? sessionStore.getById(aId) : undefined), [aId]);
-  const b = useMemo<Session | undefined>(() => (bId ? sessionStore.getById(bId) : undefined), [bId]);
+  // Normalise at the boundary — every downstream component receives a fully-
+  // shaped session even if it was saved by an earlier build.
+  const a = useMemo<Session | undefined>(() => {
+    const raw = aId ? sessionStore.getById(aId) : undefined;
+    return raw ? normalizeSession(raw) : undefined;
+  }, [aId]);
+  const b = useMemo<Session | undefined>(() => {
+    const raw = bId ? sessionStore.getById(bId) : undefined;
+    return raw ? normalizeSession(raw) : undefined;
+  }, [bId]);
 
   // Range controls — defaults based on the two sessions' max ranges.
   const initial = useMemo(() => (a && b ? defaultRange(a, b) : { start: 0, end: 50, step: 10 }), [a, b]);

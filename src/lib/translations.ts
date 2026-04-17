@@ -664,6 +664,8 @@ const en: Record<keyof typeof fr, string> = {
   'weather.errGeocode': 'Search unavailable — try again or enter coordinates.',
   'weather.noCityFound': 'No matching city.',
   'weather.or': 'or',
+  'weather.fromCache': 'from cache',
+  'weather.fromCacheHint': 'Reused from local cache (≤30 min). Click Refresh to force a new fetch.',
 
   'conv.title': 'Unit Conversions',
   'conv.subtitle': 'Deterministic conversions — no AI involved',

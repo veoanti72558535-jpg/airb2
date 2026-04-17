@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { X, GitCompare, Gauge, RotateCcw, Target } from 'lucide-react';
+import { X, GitCompare, Gauge, RotateCcw, Target, Download } from 'lucide-react';
+import { toPng } from 'html-to-image';
 import { Projectile, WeatherSnapshot } from '@/lib/types';
 import { calculateTrajectory } from '@/lib/ballistics';
 import { useI18n } from '@/lib/i18n';
 import { useUnits } from '@/hooks/use-units';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 const MIN_V = 200;
 const MAX_V = 380;

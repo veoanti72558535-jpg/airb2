@@ -370,6 +370,22 @@ export function CompareProjectilesModal({
       }
       return { p, drops, vels, energies, curve, energyCurve };
     });
+    // Manual mode short-circuits auto-sort: reorder strictly per `manualOrder`.
+    // Any projectile not present in the saved order falls back to its original index.
+    if (manualMode && manualOrder) {
+      const byId = new Map(computed.map(r => [r.p.id, r]));
+      const ordered: typeof computed = [];
+      for (const id of manualOrder) {
+        const r = byId.get(id);
+        if (r) {
+          ordered.push(r);
+          byId.delete(id);
+        }
+      }
+      // Append any remaining (newly-added) rows at the end in original order.
+      for (const r of computed) if (byId.has(r.p.id)) ordered.push(r);
+      return ordered;
+    }
     // Auto-sort columns: by max useful range (desc) when an energy threshold is set,
     // otherwise by ballistic coefficient (desc). Stable fallback on brand+model so the
     // order is deterministic when projectiles tie (e.g. two BCs equal).
@@ -394,7 +410,33 @@ export function CompareProjectilesModal({
       const diff = b.p.bc - a.p.bc;
       return diff !== 0 ? diff : tieBreak(a, b);
     });
-  }, [projectiles, open, velocity, zeroRange, energyThresholdJ, sortMode]);
+  }, [projectiles, open, velocity, zeroRange, energyThresholdJ, sortMode, manualMode, manualOrder]);
+
+  /** Stable color per projectile id — based on the original (props) order so colors
+   * don't shuffle when columns are reordered. */
+  const colorById = useMemo(() => {
+    const m = new Map<string, string>();
+    projectiles.forEach((p, i) => m.set(p.id, SERIES_COLORS[i % SERIES_COLORS.length]));
+    return m;
+  }, [projectiles]);
+
+  /** dnd-kit sensors — pointer (with small distance threshold to avoid stealing clicks
+   * from the X / drag handle buttons) + keyboard for accessibility. */
+  const dndSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const handleDragEnd = (e: DragEndEvent) => {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const currentIds = rows.map(r => r.p.id);
+    const oldIdx = currentIds.indexOf(String(active.id));
+    const newIdx = currentIds.indexOf(String(over.id));
+    if (oldIdx < 0 || newIdx < 0) return;
+    setManualOrder(arrayMove(currentIds, oldIdx, newIdx));
+    setManualMode(true);
+  };
 
   if (!open) return null;
 

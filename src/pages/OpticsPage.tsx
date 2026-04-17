@@ -13,6 +13,7 @@ export default function OpticsPage() {
   const { symbol } = useUnits();
   const [optics, setOptics] = useState<Optic[]>(opticStore.getAll());
   const [tubeFilter, setTubeFilter] = useState<25.4 | 30 | 34 | null>(null);
+  const [brandFilter, setBrandFilter] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [editing, setEditing] = useState<Optic | null>(null);
@@ -66,6 +67,13 @@ export default function OpticsPage() {
   const inputClass = "w-full bg-muted border border-border rounded-md px-3 py-1.5 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary";
 
   const tubeOptions: (25.4 | 30 | 34)[] = [25.4, 30, 34];
+  const brandOptions = ['FX', 'Element', 'Discovery', 'Pard', 'MTC'];
+
+  const detectBrand = (name: string): string | null => {
+    const lower = name.toLowerCase();
+    return brandOptions.find(b => lower.startsWith(b.toLowerCase())) ?? null;
+  };
+
   const tubeCounts = useMemo(() => {
     const counts: Record<string, number> = { '25.4': 0, '30': 0, '34': 0 };
     optics.forEach(o => {
@@ -76,9 +84,23 @@ export default function OpticsPage() {
     return counts;
   }, [optics]);
 
+  const brandCounts = useMemo(() => {
+    const counts: Record<string, number> = Object.fromEntries(brandOptions.map(b => [b, 0]));
+    optics.forEach(o => {
+      const b = detectBrand(o.name);
+      if (b) counts[b]++;
+    });
+    return counts;
+  }, [optics]);
+
   const filteredOptics = useMemo(
-    () => (tubeFilter ? optics.filter(o => o.tubeDiameter === tubeFilter) : optics),
-    [optics, tubeFilter]
+    () =>
+      optics.filter(o => {
+        if (tubeFilter && o.tubeDiameter !== tubeFilter) return false;
+        if (brandFilter && detectBrand(o.name) !== brandFilter) return false;
+        return true;
+      }),
+    [optics, tubeFilter, brandFilter]
   );
 
   return (
@@ -173,6 +195,38 @@ export default function OpticsPage() {
               }`}
             >
               ⌀ {d}mm ({tubeCounts[String(d)]})
+            </button>
+          ))}
+        </div>
+      )}
+
+      {optics.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-[11px] uppercase tracking-wide text-muted-foreground mr-1">
+            {t('optics.filterBrand')}
+          </span>
+          <button
+            onClick={() => setBrandFilter(null)}
+            className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+              brandFilter === null
+                ? 'bg-primary/10 text-primary border border-primary/40'
+                : 'bg-muted text-muted-foreground border border-border hover:bg-muted/70'
+            }`}
+          >
+            {t('optics.filterAll')} ({optics.length})
+          </button>
+          {brandOptions.map(b => (
+            <button
+              key={b}
+              onClick={() => setBrandFilter(brandFilter === b ? null : b)}
+              disabled={brandCounts[b] === 0}
+              className={`px-2.5 py-1 rounded text-xs font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+                brandFilter === b
+                  ? 'bg-primary/10 text-primary border border-primary/40'
+                  : 'bg-muted text-muted-foreground border border-border hover:bg-muted/70'
+              }`}
+            >
+              {b} ({brandCounts[b]})
             </button>
           ))}
         </div>

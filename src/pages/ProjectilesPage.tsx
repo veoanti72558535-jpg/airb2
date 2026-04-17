@@ -268,6 +268,13 @@ export default function ProjectilesPage() {
                 </select>
               </div>
             </div>
+
+            <div className="mt-4 pt-3 border-t border-border">
+              <DragTableEditor
+                value={form.customDragTable}
+                onChange={tbl => setForm(f => ({ ...f, customDragTable: tbl }))}
+              />
+            </div>
           </AdvancedDisclosure>
 
           <div><label className="text-xs text-muted-foreground">{t('airguns.notes')}</label><textarea className={inputClass} rows={2} value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} /></div>

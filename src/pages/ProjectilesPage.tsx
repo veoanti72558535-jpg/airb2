@@ -12,9 +12,18 @@ export default function ProjectilesPage() {
   const { t } = useI18n();
   const { symbol } = useUnits();
   const [projectiles, setProjectiles] = useState<Projectile[]>(projectileStore.getAll());
+  const [searchQuery, setSearchQuery] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Projectile | null>(null);
   const [form, setForm] = useState({ brand: '', model: '', weight: 18, bc: 0.025, shape: 'domed', caliber: '.177', length: 0, diameter: 0, material: 'lead', notes: '', dataSource: '' });
+
+  const filteredProjectiles = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return projectiles;
+    return projectiles.filter(p =>
+      `${p.brand} ${p.model} ${p.notes ?? ''}`.toLowerCase().includes(q)
+    );
+  }, [projectiles, searchQuery]);
 
   const refresh = () => setProjectiles(projectileStore.getAll());
 

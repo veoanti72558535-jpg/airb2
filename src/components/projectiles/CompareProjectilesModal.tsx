@@ -382,6 +382,9 @@ interface DropChartProps {
  * with negative values (below sight line) downward, matching shooter intuition.
  */
 function DropChart({ rows, t }: DropChartProps) {
+  const svgRef = useRef<SVGSVGElement | null>(null);
+  const [hoverX, setHoverX] = useState<number | null>(null); // distance in meters
+
   if (rows.length === 0 || rows.every(r => r.curve.length === 0)) return null;
 
   const W = 600;
@@ -410,6 +413,7 @@ function DropChart({ rows, t }: DropChartProps) {
   const xMax = CHART_MAX;
   const xToPx = (x: number) => PAD_L + (x / xMax) * innerW;
   const yToPx = (y: number) => PAD_T + ((yMax - y) / (yMax - yMin)) * innerH;
+  const pxToX = (px: number) => ((px - PAD_L) / innerW) * xMax;
 
   const xTicks = [0, 25, 50, 75, 100];
   const yTickCount = 4;
@@ -422,6 +426,43 @@ function DropChart({ rows, t }: DropChartProps) {
     curve
       .map((pt, i) => `${i === 0 ? 'M' : 'L'}${xToPx(pt.range).toFixed(1)},${yToPx(pt.drop).toFixed(1)}`)
       .join(' ');
+
+  /** Snap an SVG-local px coordinate to the nearest sample in the chart range. */
+  const handlePointer = (e: React.PointerEvent<SVGSVGElement>) => {
+    const svg = svgRef.current;
+    if (!svg) return;
+    const rect = svg.getBoundingClientRect();
+    const localX = ((e.clientX - rect.left) / rect.width) * W;
+    if (localX < PAD_L || localX > W - PAD_R) {
+      setHoverX(null);
+      return;
+    }
+    const rawX = pxToX(localX);
+    // snap to chart sampling step
+    const snapped = Math.max(0, Math.min(xMax, Math.round(rawX / CHART_STEP) * CHART_STEP));
+    setHoverX(snapped);
+  };
+
+  // Build tooltip rows for the hovered distance (interpolation not needed: chart uses CHART_STEP samples).
+  const tooltipPoints =
+    hoverX !== null
+      ? rows
+          .map(({ p, curve }, i) => {
+            const pt = curve.find(c => c.range === hoverX);
+            if (!pt) return null;
+            return {
+              id: p.id,
+              label: `${p.brand} ${p.model}`,
+              drop: pt.drop,
+              color: SERIES_COLORS[i % SERIES_COLORS.length],
+            };
+          })
+          .filter((x): x is NonNullable<typeof x> => x !== null)
+      : [];
+
+  // Position tooltip — flip to the left of the cursor when near the right edge
+  const tooltipPxX = hoverX !== null ? xToPx(hoverX) : 0;
+  const tooltipFlip = tooltipPxX > W * 0.6;
 
   return (
     <div className="px-4 py-3 border-b border-border bg-card/40">
@@ -443,112 +484,176 @@ function DropChart({ rows, t }: DropChartProps) {
           ))}
         </div>
       </div>
-      <svg
-        viewBox={`0 0 ${W} ${H}`}
-        className="w-full h-auto"
-        role="img"
-        aria-label={t('projectiles.compareChartTitle')}
-      >
-        {yTicks.map((y, i) => (
-          <g key={`y-${i}`}>
-            <line
-              x1={PAD_L}
-              x2={W - PAD_R}
-              y1={yToPx(y)}
-              y2={yToPx(y)}
-              stroke="hsl(var(--border))"
-              strokeWidth={0.5}
-              strokeDasharray={Math.abs(y) < 0.01 ? undefined : '2 3'}
-            />
-            <text
-              x={PAD_L - 4}
-              y={yToPx(y)}
-              textAnchor="end"
-              dominantBaseline="middle"
-              className="fill-muted-foreground"
-              fontSize={9}
-              fontFamily="ui-monospace, monospace"
-            >
-              {y.toFixed(0)}
-            </text>
-          </g>
-        ))}
-
-        {xTicks.map(x => (
-          <g key={`x-${x}`}>
-            <line
-              x1={xToPx(x)}
-              x2={xToPx(x)}
-              y1={PAD_T}
-              y2={H - PAD_B}
-              stroke="hsl(var(--border))"
-              strokeWidth={0.5}
-              strokeDasharray="2 3"
-            />
-            <text
-              x={xToPx(x)}
-              y={H - PAD_B + 12}
-              textAnchor="middle"
-              className="fill-muted-foreground"
-              fontSize={9}
-              fontFamily="ui-monospace, monospace"
-            >
-              {x}
-            </text>
-          </g>
-        ))}
-
-        <text
-          x={W - PAD_R}
-          y={H - 4}
-          textAnchor="end"
-          className="fill-muted-foreground"
-          fontSize={9}
+      <div className="relative">
+        <svg
+          ref={svgRef}
+          viewBox={`0 0 ${W} ${H}`}
+          className="w-full h-auto touch-none"
+          role="img"
+          aria-label={t('projectiles.compareChartTitle')}
+          onPointerMove={handlePointer}
+          onPointerDown={handlePointer}
+          onPointerLeave={() => setHoverX(null)}
         >
-          {t('projectiles.compareChartX')}
-        </text>
-        <text
-          x={4}
-          y={PAD_T + 4}
-          textAnchor="start"
-          className="fill-muted-foreground"
-          fontSize={9}
-        >
-          {t('projectiles.compareChartY')}
-        </text>
-
-        {rows.map(({ p, curve }, i) => {
-          const color = SERIES_COLORS[i % SERIES_COLORS.length];
-          return (
-            <g key={p.id}>
-              <path
-                d={buildPath(curve)}
-                fill="none"
-                stroke={color}
-                strokeWidth={1.75}
-                strokeLinejoin="round"
-                strokeLinecap="round"
+          {yTicks.map((y, i) => (
+            <g key={`y-${i}`}>
+              <line
+                x1={PAD_L}
+                x2={W - PAD_R}
+                y1={yToPx(y)}
+                y2={yToPx(y)}
+                stroke="hsl(var(--border))"
+                strokeWidth={0.5}
+                strokeDasharray={Math.abs(y) < 0.01 ? undefined : '2 3'}
               />
-              {/* Markers at comparison distances */}
-              {COMPARE_RANGES.map(r => {
-                const pt = curve.find(c => c.range === r);
-                if (!pt) return null;
-                return (
-                  <circle
-                    key={`${p.id}-${r}`}
-                    cx={xToPx(pt.range)}
-                    cy={yToPx(pt.drop)}
-                    r={3}
-                    fill={color}
-                    stroke="hsl(var(--card))"
-                    strokeWidth={1}
-                  />
-                );
-              })}
+              <text
+                x={PAD_L - 4}
+                y={yToPx(y)}
+                textAnchor="end"
+                dominantBaseline="middle"
+                className="fill-muted-foreground"
+                fontSize={9}
+                fontFamily="ui-monospace, monospace"
+              >
+                {y.toFixed(0)}
+              </text>
             </g>
-          );
-        })}
-      </svg>
+          ))}
+
+          {xTicks.map(x => (
+            <g key={`x-${x}`}>
+              <line
+                x1={xToPx(x)}
+                x2={xToPx(x)}
+                y1={PAD_T}
+                y2={H - PAD_B}
+                stroke="hsl(var(--border))"
+                strokeWidth={0.5}
+                strokeDasharray="2 3"
+              />
+              <text
+                x={xToPx(x)}
+                y={H - PAD_B + 12}
+                textAnchor="middle"
+                className="fill-muted-foreground"
+                fontSize={9}
+                fontFamily="ui-monospace, monospace"
+              >
+                {x}
+              </text>
+            </g>
+          ))}
+
+          <text
+            x={W - PAD_R}
+            y={H - 4}
+            textAnchor="end"
+            className="fill-muted-foreground"
+            fontSize={9}
+          >
+            {t('projectiles.compareChartX')}
+          </text>
+          <text
+            x={4}
+            y={PAD_T + 4}
+            textAnchor="start"
+            className="fill-muted-foreground"
+            fontSize={9}
+          >
+            {t('projectiles.compareChartY')}
+          </text>
+
+          {rows.map(({ p, curve }, i) => {
+            const color = SERIES_COLORS[i % SERIES_COLORS.length];
+            return (
+              <g key={p.id}>
+                <path
+                  d={buildPath(curve)}
+                  fill="none"
+                  stroke={color}
+                  strokeWidth={1.75}
+                  strokeLinejoin="round"
+                  strokeLinecap="round"
+                />
+                {/* Markers at comparison distances */}
+                {COMPARE_RANGES.map(r => {
+                  const pt = curve.find(c => c.range === r);
+                  if (!pt) return null;
+                  return (
+                    <circle
+                      key={`${p.id}-${r}`}
+                      cx={xToPx(pt.range)}
+                      cy={yToPx(pt.drop)}
+                      r={3}
+                      fill={color}
+                      stroke="hsl(var(--card))"
+                      strokeWidth={1}
+                    />
+                  );
+                })}
+              </g>
+            );
+          })}
+
+          {/* Hover crosshair + emphasized markers */}
+          {hoverX !== null && tooltipPoints.length > 0 && (
+            <g pointerEvents="none">
+              <line
+                x1={tooltipPxX}
+                x2={tooltipPxX}
+                y1={PAD_T}
+                y2={H - PAD_B}
+                stroke="hsl(var(--primary))"
+                strokeWidth={0.75}
+                strokeDasharray="3 2"
+                opacity={0.7}
+              />
+              {tooltipPoints.map(pt => (
+                <circle
+                  key={`hover-${pt.id}`}
+                  cx={tooltipPxX}
+                  cy={yToPx(pt.drop)}
+                  r={4}
+                  fill={pt.color}
+                  stroke="hsl(var(--background))"
+                  strokeWidth={1.5}
+                />
+              ))}
+            </g>
+          )}
+        </svg>
+
+        {/* HTML tooltip overlaid on the SVG — positioned in % so it scales with the responsive svg */}
+        {hoverX !== null && tooltipPoints.length > 0 && (
+          <div
+            className={cn(
+              'pointer-events-none absolute top-1 z-10 surface-elevated shadow-lg border border-border rounded-md px-2 py-1.5 min-w-[140px]',
+              tooltipFlip ? '-translate-x-full' : ''
+            )}
+            style={{
+              left: `calc(${(tooltipPxX / W) * 100}% ${tooltipFlip ? '- 8px' : '+ 8px'})`,
+            }}
+          >
+            <div className="text-[10px] font-mono text-muted-foreground mb-1 uppercase tracking-wide">
+              {t('projectiles.compareDropAt', { r: hoverX })}
+            </div>
+            <div className="space-y-0.5">
+              {tooltipPoints.map(pt => (
+                <div key={`tip-${pt.id}`} className="flex items-center gap-1.5 text-[11px]">
+                  <span
+                    className="inline-block h-2 w-2 rounded-full shrink-0"
+                    style={{ backgroundColor: pt.color }}
+                  />
+                  <span className="text-foreground truncate flex-1 min-w-0">{pt.label}</span>
+                  <span className="font-mono tabular-nums text-foreground shrink-0">
+                    {pt.drop.toFixed(1)} mm
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

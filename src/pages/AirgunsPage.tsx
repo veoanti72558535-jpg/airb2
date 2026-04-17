@@ -28,19 +28,7 @@ export default function AirgunsPage() {
   const [editing, setEditing] = useState<Airgun | null>(null);
   const [form, setForm] = useState({ brand: '', model: '', caliber: '.177', barrelLength: 600, regPressure: 110, fillPressure: 250, powerSetting: '', defaultSightHeight: 40, defaultZeroRange: 30, notes: '' });
 
-  // Derive brand list + counts from actual data (case-insensitive, original casing kept).
-  const brandCounts = useMemo(() => {
-    const map = new Map<string, { display: string; count: number }>();
-    airguns.forEach(a => {
-      const raw = (a.brand ?? '').trim();
-      if (!raw) return;
-      const key = raw.toLowerCase();
-      const existing = map.get(key);
-      if (existing) existing.count++;
-      else map.set(key, { display: raw, count: 1 });
-    });
-    return Array.from(map.values()).sort((a, b) => b.count - a.count || a.display.localeCompare(b.display));
-  }, [airguns]);
+  const brandCounts = useBrandCounts(airguns, a => a.brand);
 
   // Canonical caliber token (".177", ".22", ".25", ".30") extracted from stored value.
   const calToken = (s: string) => {

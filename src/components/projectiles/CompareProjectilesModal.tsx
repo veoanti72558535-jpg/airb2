@@ -588,6 +588,7 @@ function DropChart({ rows, t }: DropChartProps) {
                   strokeWidth={1.75}
                   strokeLinejoin="round"
                   strokeLinecap="round"
+                  className="compare-path"
                 />
                 {/* Markers at comparison distances */}
                 {COMPARE_RANGES.map(r => {

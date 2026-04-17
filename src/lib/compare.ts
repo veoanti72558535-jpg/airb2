@@ -82,7 +82,12 @@ function entry(
  * still returned (filter via `.same` in the UI) so the consumer can offer a
  * "show identical fields" toggle.
  */
-export function diffSessions(a: Session, b: Session): SessionDiffEntry[] {
+export function diffSessions(rawA: Session, rawB: Session): SessionDiffEntry[] {
+  // Normalise both sides so missing dragModel / focalPlane / weather don't
+  // produce false "different" rows just because one side has the legacy
+  // implicit default and the other has the explicit one.
+  const a = normalizeSession(rawA);
+  const b = normalizeSession(rawB);
   const ra = resolveSession(a);
   const rb = resolveSession(b);
   const ai = a.input;
@@ -163,9 +168,18 @@ export function buildComparisonRows(
   b: Session,
   opts: { start: number; end: number; step: number; tolerance?: number },
 ): ComparisonRow[] {
-  const tol = opts.tolerance ?? Math.max(2, opts.step / 2);
+  // Defensive guards: a 0/negative step would loop forever, an inverted
+  // start>end would silently produce 0 rows. We coerce both into something
+  // sensible so the table never breaks the page.
+  const step = opts.step > 0 ? opts.step : 10;
+  const start = Math.min(opts.start, opts.end);
+  const end = Math.max(opts.start, opts.end);
+  const tol = opts.tolerance ?? Math.max(2, step / 2);
   const rows: ComparisonRow[] = [];
-  for (let r = opts.start; r <= opts.end + 1e-6; r += opts.step) {
+  // Hard cap on row count so a misconfigured 0→10000 step=1 doesn't freeze
+  // the UI. 1000 rows is already an order of magnitude past anything useful.
+  const maxRows = 1000;
+  for (let r = start; r <= end + 1e-6 && rows.length < maxRows; r += step) {
     const range = Math.round(r);
     rows.push({
       range,

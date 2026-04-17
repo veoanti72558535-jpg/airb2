@@ -206,13 +206,47 @@ export default function AirgunsPage() {
           })}
           {hasAnyFilter && (
             <button
-              onClick={() => { setBrandFilter(null); setSearchQuery(''); }}
+              onClick={resetAllFilters}
               className="ml-auto px-2.5 py-1 rounded text-xs font-medium transition-colors bg-destructive/10 text-destructive border border-destructive/30 hover:bg-destructive/20 inline-flex items-center gap-1"
             >
               <RotateCcw className="h-3 w-3" />
               {t('optics.resetFilters')}
             </button>
           )}
+        </div>
+      )}
+
+      {airguns.length > 0 && caliberCounts.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-[11px] uppercase tracking-wide text-muted-foreground mr-1">
+            {t('optics.filterCaliber')}
+          </span>
+          <button
+            onClick={() => setCaliberFilter(null)}
+            className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+              caliberFilter === null
+                ? 'bg-primary/10 text-primary border border-primary/40'
+                : 'bg-muted text-muted-foreground border border-border hover:bg-muted/70'
+            }`}
+          >
+            {t('optics.filterAll')} ({airguns.length})
+          </button>
+          {caliberCounts.map(({ value, count }) => {
+            const active = caliberFilter === value;
+            return (
+              <button
+                key={value}
+                onClick={() => setCaliberFilter(active ? null : value)}
+                className={`px-2.5 py-1 rounded text-xs font-mono font-medium transition-colors ${
+                  active
+                    ? 'bg-primary/10 text-primary border border-primary/40'
+                    : 'bg-muted text-muted-foreground border border-border hover:bg-muted/70'
+                }`}
+              >
+                {value} ({count})
+              </button>
+            );
+          })}
         </div>
       )}
 

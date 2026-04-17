@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import { Eye, Plus, Trash2, Edit2, Download, Search, X, RotateCcw } from 'lucide-react';
+import { Eye, Plus, Trash2, Edit2, Download, RotateCcw } from 'lucide-react';
+import { SearchBar } from '@/components/SearchBar';
 import { useI18n } from '@/lib/i18n';
 import { opticStore } from '@/lib/storage';
 import { useUnits } from '@/hooks/use-units';

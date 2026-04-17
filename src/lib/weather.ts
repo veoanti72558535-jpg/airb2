@@ -19,6 +19,53 @@ export interface FetchWeatherResult {
 }
 
 const OPEN_METEO_URL = 'https://api.open-meteo.com/v1/forecast';
+const OPEN_METEO_GEOCODING_URL = 'https://geocoding-api.open-meteo.com/v1/search';
+
+// ── Geocoding (city name → coordinates) ─────────────────────────────────────
+export interface GeocodeResult {
+  name: string;
+  latitude: number;
+  longitude: number;
+  country?: string;
+  countryCode?: string;
+  admin1?: string;
+  /** Population for ranking — Open-Meteo returns it for major cities. */
+  population?: number;
+}
+
+/**
+ * Search cities by name via Open-Meteo Geocoding API (free, no key, multilingual).
+ * Returns up to `count` matches sorted by Open-Meteo's relevance ranking.
+ * Throws on HTTP failure — callers should catch and surface a friendly error.
+ */
+export async function geocodeCity(
+  query: string,
+  opts?: { count?: number; language?: 'fr' | 'en'; signal?: AbortSignal },
+): Promise<GeocodeResult[]> {
+  const trimmed = query.trim();
+  if (trimmed.length < 2) return [];
+  const params = new URLSearchParams({
+    name: trimmed,
+    count: String(opts?.count ?? 8),
+    language: opts?.language ?? 'en',
+    format: 'json',
+  });
+  const res = await fetch(`${OPEN_METEO_GEOCODING_URL}?${params.toString()}`, {
+    signal: opts?.signal,
+  });
+  if (!res.ok) throw new Error(`Geocoding HTTP ${res.status}`);
+  const data = await res.json();
+  const results = Array.isArray(data?.results) ? data.results : [];
+  return results.map((r: Record<string, unknown>) => ({
+    name: String(r.name ?? ''),
+    latitude: Number(r.latitude),
+    longitude: Number(r.longitude),
+    country: typeof r.country === 'string' ? r.country : undefined,
+    countryCode: typeof r.country_code === 'string' ? r.country_code : undefined,
+    admin1: typeof r.admin1 === 'string' ? r.admin1 : undefined,
+    population: typeof r.population === 'number' ? r.population : undefined,
+  }));
+}
 
 // ── localStorage cache ──────────────────────────────────────────────────────
 // Key format groups nearby coords (≈1.1 km grid via 2-decimal rounding) so
@@ -82,7 +129,7 @@ export function clearWeatherCache(): void {
  */
 export async function fetchOpenMeteo(
   point: GeoPoint,
-  options?: { force?: boolean },
+  options?: { force?: boolean; locationLabel?: string },
 ): Promise<FetchWeatherResult> {
   // Cache short-circuit: avoid refetch when the user re-opens the calculator
   // shortly after the last lookup. Caller can pass `force: true` to bypass
@@ -131,7 +178,7 @@ export async function fetchOpenMeteo(
     provider: 'open-meteo',
     latitude: point.latitude,
     longitude: point.longitude,
-    location: `${point.latitude.toFixed(2)}, ${point.longitude.toFixed(2)}`,
+    location: options?.locationLabel ?? `${point.latitude.toFixed(2)}, ${point.longitude.toFixed(2)}`,
     manualOverrides: [],
   };
 

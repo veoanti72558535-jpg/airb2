@@ -263,6 +263,11 @@ const fr = {
   'weather.lon': 'Longitude',
   'weather.fetchAtCoords': 'Récupérer ici',
   'weather.errInvalidCoords': 'Coordonnées invalides : latitude entre -90 et 90, longitude entre -180 et 180.',
+  'weather.citySearch': 'Rechercher une ville',
+  'weather.citySearchPlaceholder': 'Ex : Paris, Lyon, Marseille…',
+  'weather.errGeocode': 'Recherche indisponible — réessayez ou saisissez les coordonnées.',
+  'weather.noCityFound': 'Aucune ville trouvée.',
+  'weather.or': 'ou',
 
   // Conversions
   'conv.title': 'Conversions d\'unités',
@@ -652,6 +657,11 @@ const en: Record<keyof typeof fr, string> = {
   'weather.lon': 'Longitude',
   'weather.fetchAtCoords': 'Fetch here',
   'weather.errInvalidCoords': 'Invalid coordinates: latitude -90..90, longitude -180..180.',
+  'weather.citySearch': 'Search a city',
+  'weather.citySearchPlaceholder': 'e.g. Paris, London, New York…',
+  'weather.errGeocode': 'Search unavailable — try again or enter coordinates.',
+  'weather.noCityFound': 'No matching city.',
+  'weather.or': 'or',
 
   'conv.title': 'Unit Conversions',
   'conv.subtitle': 'Deterministic conversions — no AI involved',

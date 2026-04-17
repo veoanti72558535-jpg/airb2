@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { X, GitCompare, Gauge, RotateCcw, Target, Download, Maximize2, Minimize2, Copy, Check, FileText, ChevronDown, ChevronRight } from 'lucide-react';
+import { X, GitCompare, Gauge, RotateCcw, Target, Download, Maximize2, Minimize2, Copy, Check, FileText, ChevronDown, ChevronRight, EyeOff } from 'lucide-react';
 import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
 import { Projectile, WeatherSnapshot } from '@/lib/types';
@@ -352,7 +352,7 @@ export function CompareProjectilesModal({
                     title={t('projectiles.compareExpandAll')}
                     aria-label={t('projectiles.compareExpandAll')}
                   >
-                    <Maximize2 className="h-2.5 w-2.5" aria-hidden />
+                    <EyeOff className="h-2.5 w-2.5" aria-hidden />
                     {t('projectiles.compareHiddenCount', { hidden, total })}
                   </button>
                 );

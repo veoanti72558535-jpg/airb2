@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Zap, Plus, Trash2, Edit2, RotateCcw } from 'lucide-react';
+import { Zap, Plus, Trash2, Edit2 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { projectileStore } from '@/lib/storage';
 import { useUnits } from '@/hooks/use-units';
@@ -8,6 +8,7 @@ import { Projectile } from '@/lib/types';
 import { motion } from 'framer-motion';
 import { toast } from '@/hooks/use-toast';
 import { SearchBar } from '@/components/SearchBar';
+import { FilterChips } from '@/components/FilterChips';
 
 export default function ProjectilesPage() {
   const { t } = useI18n();
@@ -173,80 +174,26 @@ export default function ProjectilesPage() {
       )}
 
       {projectiles.length > 0 && brandCounts.length > 0 && (
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-[11px] uppercase tracking-wide text-muted-foreground mr-1">
-            {t('optics.filterBrand')}
-          </span>
-          <button
-            onClick={() => setBrandFilter(null)}
-            className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
-              brandFilter === null
-                ? 'bg-primary/10 text-primary border border-primary/40'
-                : 'bg-muted text-muted-foreground border border-border hover:bg-muted/70'
-            }`}
-          >
-            {t('optics.filterAll')} ({projectiles.length})
-          </button>
-          {brandCounts.map(({ display, count }) => {
-            const active = (brandFilter ?? '').toLowerCase() === display.toLowerCase();
-            return (
-              <button
-                key={display}
-                onClick={() => setBrandFilter(active ? null : display)}
-                className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
-                  active
-                    ? 'bg-primary/10 text-primary border border-primary/40'
-                    : 'bg-muted text-muted-foreground border border-border hover:bg-muted/70'
-                }`}
-              >
-                {display} ({count})
-              </button>
-            );
-          })}
-          {hasAnyFilter && (
-            <button
-              onClick={resetAllFilters}
-              className="ml-auto px-2.5 py-1 rounded text-xs font-medium transition-colors bg-destructive/10 text-destructive border border-destructive/30 hover:bg-destructive/20 inline-flex items-center gap-1"
-            >
-              <RotateCcw className="h-3 w-3" />
-              {t('optics.resetFilters')}
-            </button>
-          )}
-        </div>
+        <FilterChips
+          label={t('optics.filterBrand')}
+          value={brandFilter}
+          onChange={setBrandFilter}
+          totalCount={projectiles.length}
+          options={brandCounts.map(({ display, count }) => ({ value: display, count }))}
+        />
       )}
 
       {projectiles.length > 0 && caliberCounts.length > 0 && (
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-[11px] uppercase tracking-wide text-muted-foreground mr-1">
-            {t('optics.filterCaliber')}
-          </span>
-          <button
-            onClick={() => setCaliberFilter(null)}
-            className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
-              caliberFilter === null
-                ? 'bg-primary/10 text-primary border border-primary/40'
-                : 'bg-muted text-muted-foreground border border-border hover:bg-muted/70'
-            }`}
-          >
-            {t('optics.filterAll')} ({projectiles.length})
-          </button>
-          {caliberCounts.map(({ value, count }) => {
-            const active = caliberFilter === value;
-            return (
-              <button
-                key={value}
-                onClick={() => setCaliberFilter(active ? null : value)}
-                className={`px-2.5 py-1 rounded text-xs font-mono font-medium transition-colors ${
-                  active
-                    ? 'bg-primary/10 text-primary border border-primary/40'
-                    : 'bg-muted text-muted-foreground border border-border hover:bg-muted/70'
-                }`}
-              >
-                {value} ({count})
-              </button>
-            );
-          })}
-        </div>
+        <FilterChips
+          label={t('optics.filterCaliber')}
+          value={caliberFilter}
+          onChange={setCaliberFilter}
+          totalCount={projectiles.length}
+          monoLabels
+          options={caliberCounts.map(({ value, count }) => ({ value, count }))}
+          onReset={resetAllFilters}
+          showReset={hasAnyFilter}
+        />
       )}
 
       {projectiles.length === 0 ? (

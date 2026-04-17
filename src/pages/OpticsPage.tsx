@@ -94,15 +94,18 @@ export default function OpticsPage() {
     return counts;
   }, [optics]);
 
-  const filteredOptics = useMemo(
-    () =>
-      optics.filter(o => {
-        if (tubeFilter && o.tubeDiameter !== tubeFilter) return false;
-        if (brandFilter && detectBrand(o.name) !== brandFilter) return false;
-        return true;
-      }),
-    [optics, tubeFilter, brandFilter]
-  );
+  const filteredOptics = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return optics.filter(o => {
+      if (tubeFilter && o.tubeDiameter !== tubeFilter) return false;
+      if (brandFilter && detectBrand(o.name) !== brandFilter) return false;
+      if (q) {
+        const hay = `${o.name} ${o.notes ?? ''}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }, [optics, tubeFilter, brandFilter, searchQuery]);
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">

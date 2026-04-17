@@ -65,6 +65,8 @@ export default function ProjectilesPage() {
   const [showImport, setShowImport] = useState(false);
   const [editing, setEditing] = useState<Projectile | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
+  const [typeFilter, setTypeFilter] = useState<'all' | ProjectileType>('all');
+  const [sortKey, setSortKey] = useState<'name' | 'weight' | 'bc'>('name');
 
   const existingKeys = useMemo(
     () => new Set(projectiles.map(p => seedProjectileKey({ brand: p.brand, model: p.model, weight: p.weight, caliber: p.caliber }))),
@@ -76,18 +78,28 @@ export default function ProjectilesPage() {
 
   const filteredProjectiles = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
+    const tokens = q ? q.split(/\s+/).filter(Boolean) : [];
     const bf = brandFilter?.toLowerCase() ?? null;
     const cf = caliberFilter ?? null;
-    return projectiles.filter(p => {
+    const list = projectiles.filter(p => {
       if (bf && (p.brand ?? '').toLowerCase() !== bf) return false;
       if (cf && calToken(p.caliber) !== cf) return false;
-      if (q && !`${p.brand} ${p.model} ${p.notes ?? ''}`.toLowerCase().includes(q)) return false;
+      if (typeFilter !== 'all' && (p.projectileType ?? 'pellet') !== typeFilter) return false;
+      if (tokens.length) {
+        const hay = `${p.brand} ${p.model} ${p.notes ?? ''} ${p.caliber} ${p.weight} ${p.bc}`.toLowerCase();
+        if (!tokens.every(tok => hay.includes(tok))) return false;
+      }
       return true;
     });
-  }, [projectiles, searchQuery, brandFilter, caliberFilter]);
+    const sorted = [...list];
+    if (sortKey === 'weight') sorted.sort((a, b) => a.weight - b.weight);
+    else if (sortKey === 'bc') sorted.sort((a, b) => b.bc - a.bc);
+    else sorted.sort((a, b) => `${a.brand} ${a.model}`.localeCompare(`${b.brand} ${b.model}`));
+    return sorted;
+  }, [projectiles, searchQuery, brandFilter, caliberFilter, typeFilter, sortKey]);
 
-  const hasAnyFilter = (brandFilter !== null && brandFilter !== '') || (caliberFilter !== null && caliberFilter !== '') || searchQuery.trim() !== '';
-  const resetAllFilters = () => { setBrandFilter(null); setCaliberFilter(null); setSearchQuery(''); };
+  const hasAnyFilter = (brandFilter !== null && brandFilter !== '') || (caliberFilter !== null && caliberFilter !== '') || typeFilter !== 'all' || searchQuery.trim() !== '';
+  const resetAllFilters = () => { setBrandFilter(null); setCaliberFilter(null); setSearchQuery(''); setTypeFilter('all'); };
 
   const refresh = () => setProjectiles(projectileStore.getAll());
 
@@ -272,7 +284,35 @@ export default function ProjectilesPage() {
         />
       )}
 
-      {projectiles.length === 0 ? (
+      {projectiles.length > 0 && (
+        <div className="flex items-center gap-2 flex-wrap text-xs">
+          <span className="uppercase tracking-wide text-muted-foreground font-medium">{t('projectiles.filterType')}</span>
+          {(['all', 'pellet', 'slug', 'other'] as const).map(tf => (
+            <button
+              key={tf}
+              onClick={() => setTypeFilter(tf)}
+              className={`px-2.5 py-1 rounded font-medium ${typeFilter === tf ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted'}`}
+            >
+              {tf === 'all' ? t('optics.filterAll')
+                : tf === 'pellet' ? t('projectiles.typePellet')
+                : tf === 'slug' ? t('projectiles.typeSlug')
+                : t('projectiles.typeOther')}
+            </button>
+          ))}
+          <span className="mx-2 h-4 w-px bg-border" />
+          <span className="uppercase tracking-wide text-muted-foreground font-medium">{t('common.sortBy')}</span>
+          {(['name', 'weight', 'bc'] as const).map(sk => (
+            <button
+              key={sk}
+              onClick={() => setSortKey(sk)}
+              className={`px-2.5 py-1 rounded font-medium ${sortKey === sk ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted'}`}
+            >
+              {sk === 'name' ? t('common.sortName') : sk === 'weight' ? t('common.sortWeight') : t('common.sortBc')}
+            </button>
+          ))}
+        </div>
+      )}
+
         <div className="surface-card p-8 text-center text-muted-foreground text-sm">{t('common.noData')}</div>
       ) : filteredProjectiles.length === 0 ? (
         <div className="surface-card p-8 text-center text-muted-foreground text-sm">{t('projectiles.noMatch')}</div>

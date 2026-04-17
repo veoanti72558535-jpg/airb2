@@ -216,6 +216,7 @@ const fr = {
   'projectiles.filterType': 'Type',
   'projectiles.typePellet': 'Pellet',
   'projectiles.typeSlug': 'Slug',
+  'projectiles.typeOther': 'Autre',
 
   // Optics
   'optics.title': 'Bibliothèque d\'optiques',
@@ -406,6 +407,13 @@ const fr = {
   'common.copyLink': 'Copier le lien filtré',
   'common.linkCopied': 'Lien copié dans le presse-papiers',
   'common.copyFailed': 'Impossible de copier le lien',
+  'common.clear': 'Effacer',
+  'common.noResults': 'Aucun résultat',
+  'common.searchHint': 'Tapez pour filtrer…',
+  'common.sortBy': 'Trier par',
+  'common.sortName': 'Nom',
+  'common.sortWeight': 'Poids',
+  'common.sortBc': 'BC',
 
   // Detail pages
   'detail.back': 'Retour à la bibliothèque',
@@ -632,6 +640,7 @@ const en: Record<keyof typeof fr, string> = {
   'projectiles.filterType': 'Type',
   'projectiles.typePellet': 'Pellet',
   'projectiles.typeSlug': 'Slug',
+  'projectiles.typeOther': 'Other',
 
   'optics.title': 'Optics Library',
   'optics.add': 'Add Optic',
@@ -812,6 +821,13 @@ const en: Record<keyof typeof fr, string> = {
   'common.copyLink': 'Copy filtered link',
   'common.linkCopied': 'Link copied to clipboard',
   'common.copyFailed': 'Failed to copy link',
+  'common.clear': 'Clear',
+  'common.noResults': 'No results',
+  'common.searchHint': 'Type to filter…',
+  'common.sortBy': 'Sort by',
+  'common.sortName': 'Name',
+  'common.sortWeight': 'Weight',
+  'common.sortBc': 'BC',
 
   'detail.back': 'Back to library',
   'detail.useInCalc': 'Use in calculator',

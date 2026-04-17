@@ -134,6 +134,25 @@ export function ResultsCard({
   const energyOverThreshold =
     energyThresholdJ != null && energyThresholdJ > 0 && initialEnergy > energyThresholdJ;
 
+  // ── Useful range estimation ─────────────────────────────────────────────
+  // Last range step where the projectile still carries ≥ threshold energy.
+  // - undefined   → no threshold configured / no rows to scan
+  // - 'none'      → energy already below threshold at muzzle (warning case)
+  // - 'beyond'    → still above threshold at the last computed range
+  // - number (m)  → last qualifying range from the table
+  type UsefulRange = number | 'none' | 'beyond' | undefined;
+  const usefulRange: UsefulRange = (() => {
+    if (energyThresholdJ == null || energyThresholdJ <= 0) return undefined;
+    if (!rows || rows.length === 0) return undefined;
+    if (rows[0].energy < energyThresholdJ) return 'none';
+    let last = rows[0].range;
+    for (const r of rows) {
+      if (r.energy >= energyThresholdJ) last = r.range;
+      else break;
+    }
+    return last === rows[rows.length - 1].range ? 'beyond' : last;
+  })();
+
   const elevDir = result.holdover >= 0 ? t('calc.up') : t('calc.down');
   const windDir = result.windDrift >= 0 ? t('calc.right') : t('calc.left');
 

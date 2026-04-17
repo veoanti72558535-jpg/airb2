@@ -552,7 +552,7 @@ function DropChart({ rows, t, tall = false }: DropChartProps) {
   if (rows.length === 0 || rows.every(r => r.curve.length === 0)) return null;
 
   const W = 600;
-  const H = 180;
+  const H = tall ? 360 : 180;
   const PAD_L = 36;
   const PAD_R = 12;
   const PAD_T = 12;

@@ -702,6 +702,8 @@ const en: Record<keyof typeof fr, string> = {
   'projectiles.dragTableApplied': 'Table applied ({count} points)',
   'projectiles.dragTableActive': 'Active table: {count} points',
   'projectiles.dragTableBadge': 'Custom drag · {count} pts',
+  'projectiles.dragTablePreview': 'Cd vs Mach preview',
+  'projectiles.dragTableImported': 'Imported',
   'projectiles.compare': 'Compare',
   'projectiles.compareSelected': 'Compare ({count})',
   'projectiles.compareTitle': 'Projectile comparison',

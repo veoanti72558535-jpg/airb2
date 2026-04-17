@@ -1,12 +1,16 @@
-import { TrendingDown, Wind, Zap, Clock, Crosshair } from 'lucide-react';
+import { TrendingDown, Wind, Zap, Clock, Crosshair, Compass } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
-import { BallisticResult } from '@/lib/types';
+import { BallisticResult, OpticFocalPlane } from '@/lib/types';
 import { useUnits } from '@/hooks/use-units';
 
 interface Props {
   result: BallisticResult;
   rows?: BallisticResult[];
   clickUnit: 'MOA' | 'MRAD';
+  focalPlane?: OpticFocalPlane;
+  currentMag?: number;
+  magCalibration?: number;
+  advanced?: boolean;
 }
 
 function Stat({
@@ -15,12 +19,14 @@ function Stat({
   value,
   unit,
   emphasis,
+  sub,
 }: {
   icon: React.ElementType;
   label: string;
   value: string;
   unit?: string;
   emphasis?: boolean;
+  sub?: string;
 }) {
   return (
     <div
@@ -36,11 +42,20 @@ function Stat({
         <span className="font-mono font-semibold text-base text-foreground">{value}</span>
         {unit && <span className="text-[10px] text-muted-foreground font-mono">{unit}</span>}
       </div>
+      {sub && <div className="text-[10px] text-muted-foreground/80 font-mono mt-0.5">{sub}</div>}
     </div>
   );
 }
 
-export function ResultsCard({ result, rows, clickUnit }: Props) {
+export function ResultsCard({
+  result,
+  rows,
+  clickUnit,
+  focalPlane = 'FFP',
+  currentMag,
+  magCalibration,
+  advanced,
+}: Props) {
   const { t } = useI18n();
   const { symbol } = useUnits();
   const distUnit = symbol('distance');
@@ -51,6 +66,20 @@ export function ResultsCard({ result, rows, clickUnit }: Props) {
   const elevDir = result.holdover >= 0 ? t('calc.up') : t('calc.down');
   const windDir = result.windDrift >= 0 ? t('calc.right') : t('calc.left');
 
+  const trueElev = clickUnit === 'MOA' ? result.holdover : result.holdoverMRAD;
+  const trueWind = clickUnit === 'MOA' ? result.windDriftMOA : result.windDriftMRAD;
+  const reticleElev =
+    clickUnit === 'MOA' ? result.reticleHoldoverMOA : result.reticleHoldoverMRAD;
+  const reticleWind =
+    clickUnit === 'MOA' ? result.reticleWindMOA : result.reticleWindMRAD;
+
+  const sfpActive =
+    focalPlane === 'SFP' &&
+    magCalibration != null &&
+    currentMag != null &&
+    currentMag > 0 &&
+    Math.abs(currentMag - magCalibration) > 0.01;
+
   return (
     <section className="rounded-xl border border-primary/30 bg-gradient-to-br from-card via-card/80 to-primary/5 p-4 space-y-4 shadow-lg">
       <header className="flex items-center justify-between">
@@ -60,6 +89,11 @@ export function ResultsCard({ result, rows, clickUnit }: Props) {
           </h2>
           <p className="text-xs text-muted-foreground font-mono mt-0.5">
             {t('calc.atDistance', { dist: result.range, unit: distUnit })}
+            {sfpActive && currentMag && (
+              <span className="ml-2 text-warning">
+                · {t('calc.atSfpMag', { mag: currentMag })}
+              </span>
+            )}
           </p>
         </div>
       </header>
@@ -75,9 +109,14 @@ export function ResultsCard({ result, rows, clickUnit }: Props) {
         <Stat
           icon={Crosshair}
           label={t('calc.holdover')}
-          value={`${Math.abs(clickUnit === 'MOA' ? result.holdover : result.holdoverMRAD).toFixed(2)} ${elevDir}`}
+          value={`${Math.abs(trueElev).toFixed(2)} ${elevDir}`}
           unit={clickUnit}
           emphasis
+          sub={
+            sfpActive && reticleElev != null
+              ? `${t('calc.reticleHold')}: ${Math.abs(reticleElev).toFixed(2)} ${clickUnit}`
+              : undefined
+          }
         />
         <Stat
           icon={Wind}
@@ -116,6 +155,33 @@ export function ResultsCard({ result, rows, clickUnit }: Props) {
           unit="clicks"
         />
       </div>
+
+      {advanced && (result.spinDrift != null || sfpActive) && (
+        <div className="rounded-lg border border-border/40 bg-background/20 p-3 space-y-2">
+          <h4 className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+            {t('calc.advancedResults')}
+          </h4>
+          <div className="grid grid-cols-2 gap-2">
+            {result.spinDrift != null && Math.abs(result.spinDrift) > 0.05 && (
+              <Stat
+                icon={Compass}
+                label={t('calc.spinDrift')}
+                value={result.spinDrift.toFixed(1)}
+                unit={lengthUnit}
+              />
+            )}
+            {sfpActive && reticleWind != null && (
+              <Stat
+                icon={Wind}
+                label={t('calc.reticleHold')}
+                value={Math.abs(reticleWind).toFixed(2)}
+                unit={clickUnit}
+                sub={`${t('calc.angularTrue')}: ${Math.abs(trueWind).toFixed(2)}`}
+              />
+            )}
+          </div>
+        </div>
+      )}
 
       {rows && rows.length > 1 && (
         <div className="pt-2 border-t border-border/40">

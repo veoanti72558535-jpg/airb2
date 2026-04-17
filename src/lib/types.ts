@@ -1,9 +1,16 @@
+export type DragModel = 'G1' | 'G7';
+export type ProjectileType = 'pellet' | 'slug' | 'other';
+export type OpticFocalPlane = 'FFP' | 'SFP';
+/** Twist rate as "1:N" inches per turn, stored as N (e.g. 16, 18, 24). */
+export type TwistRate = number;
+
 export interface Airgun {
   id: string;
   brand: string;
   model: string;
   caliber: string;
   barrelLength?: number; // mm
+  twistRate?: TwistRate; // 1:N inches
   regPressure?: number; // bar
   fillPressure?: number; // bar
   powerSetting?: string;
@@ -32,6 +39,8 @@ export interface Projectile {
   model: string;
   weight: number; // grains
   bc: number;
+  bcModel?: DragModel; // drag model BC is referenced against (default G1)
+  projectileType?: ProjectileType;
   shape?: string;
   caliber: string;
   length?: number; // mm
@@ -47,6 +56,7 @@ export interface Optic {
   id: string;
   name: string;
   type?: string;
+  focalPlane?: OpticFocalPlane; // FFP or SFP
   clickUnit: 'MOA' | 'MRAD' | 'mil';
   clickValue: number;
   mountHeight?: number; // mm
@@ -80,19 +90,47 @@ export interface BallisticInput {
   weather: WeatherSnapshot;
   clickValue?: number; // MOA or MRAD per click
   clickUnit?: 'MOA' | 'MRAD';
+  /** Drag model the BC is referenced against. Defaults to G1. */
+  dragModel?: DragModel;
+  /** Optic focal plane — affects how reticle holdover is rendered. */
+  focalPlane?: OpticFocalPlane;
+  /** Magnification used while shooting (SFP only). */
+  currentMag?: number;
+  /** Magnification at which the SFP reticle is calibrated. */
+  magCalibration?: number;
+  /** Twist rate 1:N inches — used for spin drift estimation. */
+  twistRate?: TwistRate;
+  /** Projectile length in mm — used for spin drift estimation. */
+  projectileLength?: number;
+  /** Projectile diameter in mm — used for spin drift estimation. */
+  projectileDiameter?: number;
+  /** When set, used as the atmosphere during the zeroing pass instead of `weather`. */
+  zeroWeather?: WeatherSnapshot;
 }
 
 export interface BallisticResult {
   range: number; // m
   drop: number; // mm
-  holdover: number; // MOA
-  holdoverMRAD: number; // MRAD
+  /** Holdover in MOA, true angular (FFP-correct). */
+  holdover: number;
+  /** Holdover in MRAD, true angular (FFP-correct). */
+  holdoverMRAD: number;
+  /** Apparent reticle holdover in MOA when SFP at currentMag (= angular × magCal/currentMag). */
+  reticleHoldoverMOA?: number;
+  /** Apparent reticle holdover in MRAD when SFP at currentMag. */
+  reticleHoldoverMRAD?: number;
+  /** Apparent reticle wind drift in MOA when SFP at currentMag. */
+  reticleWindMOA?: number;
+  /** Apparent reticle wind drift in MRAD when SFP at currentMag. */
+  reticleWindMRAD?: number;
   velocity: number; // m/s
   energy: number; // J
   tof: number; // s
   windDrift: number; // mm
   windDriftMOA: number;
   windDriftMRAD: number;
+  /** Estimated spin drift in mm (right-handed twist → positive = right). */
+  spinDrift?: number;
   clicksElevation?: number;
   clicksWindage?: number;
 }

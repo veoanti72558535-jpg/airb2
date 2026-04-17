@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Crosshair, RotateCcw, Save, Sparkles } from 'lucide-react';
+import { Crosshair, RotateCcw, Save, Sparkles, Settings2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useI18n } from '@/lib/i18n';
 import { calculateTrajectory } from '@/lib/ballistics';
@@ -8,8 +8,11 @@ import {
   Airgun,
   BallisticInput,
   BallisticResult,
+  DragModel,
   Optic,
+  OpticFocalPlane,
   Projectile,
+  ProjectileType,
   WeatherSnapshot,
 } from '@/lib/types';
 import {
@@ -24,8 +27,10 @@ import { Switch } from '@/components/ui/switch';
 import { ProjectileSection } from '@/components/calc/ProjectileSection';
 import { VelocitySection } from '@/components/calc/VelocitySection';
 import { WeaponSection } from '@/components/calc/WeaponSection';
+import { OpticSection } from '@/components/calc/OpticSection';
 import { EnvironmentSection } from '@/components/calc/EnvironmentSection';
 import { DistanceSection } from '@/components/calc/DistanceSection';
+import { ZeroingSection } from '@/components/calc/ZeroingSection';
 import { ResultsCard } from '@/components/calc/ResultsCard';
 
 interface FormState {
@@ -33,16 +38,25 @@ interface FormState {
   projectileId: string;
   bc: number;
   projectileWeight: number;
+  dragModel: DragModel;
+  projectileType: ProjectileType;
+  projectileLength?: number;
+  projectileDiameter?: number;
   // Velocity
   muzzleVelocity: number;
-  // Weapon / Optic
+  // Weapon
   airgunId: string;
+  barrelLength?: number;
+  twistRate?: number;
+  // Optic
   opticId: string;
+  focalPlane: OpticFocalPlane;
   sightHeight: number;
   zeroRange: number;
   clickValue: number;
   clickUnit: 'MOA' | 'MRAD';
   currentMag?: number;
+  magCalibration?: number;
   // Distance
   targetDistance: number;
   useRange: boolean;
@@ -51,6 +65,9 @@ interface FormState {
   rangeStep: number;
   // Weather
   weather: WeatherSnapshot;
+  // Zeroing weather
+  useZeroWeather: boolean;
+  zeroWeather: WeatherSnapshot;
 }
 
 function defaultWeather(): WeatherSnapshot {
@@ -71,19 +88,30 @@ function defaultForm(): FormState {
     projectileId: '',
     bc: 0.025,
     projectileWeight: 18,
+    dragModel: 'G1',
+    projectileType: 'pellet',
+    projectileLength: 7.5,
+    projectileDiameter: 5.5,
     muzzleVelocity: 280,
     airgunId: '',
+    barrelLength: 600,
+    twistRate: 16,
     opticId: '',
+    focalPlane: 'FFP',
     sightHeight: 40,
     zeroRange: 30,
-    clickValue: 0.25,
-    clickUnit: 'MOA',
+    clickValue: 0.1,
+    clickUnit: 'MRAD',
+    currentMag: undefined,
+    magCalibration: undefined,
     targetDistance: 50,
     useRange: false,
     minRange: 10,
     maxRange: 100,
     rangeStep: 10,
     weather: defaultWeather(),
+    useZeroWeather: false,
+    zeroWeather: defaultWeather(),
   };
 }
 
@@ -100,36 +128,40 @@ export default function QuickCalc() {
   const airguns = useMemo<Airgun[]>(() => airgunStore.getAll(), []);
   const optics = useMemo<Optic[]>(() => opticStore.getAll(), []);
 
-  // Persist mode preference
   useEffect(() => {
     saveSettings({ ...getSettings(), advancedMode: advanced });
   }, [advanced]);
 
-  const update = (patch: Partial<FormState>) => {
+  const update = (patch: Partial<FormState>) =>
     setForm(prev => ({ ...prev, ...patch }));
-  };
 
-  const updateWeather = (patch: Partial<WeatherSnapshot>) => {
+  const updateWeather = (patch: Partial<WeatherSnapshot>) =>
     setForm(prev => ({ ...prev, weather: { ...prev.weather, ...patch } }));
-  };
+
+  const updateZeroWeather = (patch: Partial<WeatherSnapshot>) =>
+    setForm(prev => ({ ...prev, zeroWeather: { ...prev.zeroWeather, ...patch } }));
 
   const handleSelectProjectile = (id: string) => {
     const p = projectiles.find(x => x.id === id);
-    if (!p) {
-      update({ projectileId: '' });
-      return;
-    }
-    update({ projectileId: id, bc: p.bc, projectileWeight: p.weight });
+    if (!p) return update({ projectileId: '' });
+    update({
+      projectileId: id,
+      bc: p.bc,
+      projectileWeight: p.weight,
+      projectileLength: p.length ?? form.projectileLength,
+      projectileDiameter: p.diameter ?? form.projectileDiameter,
+      dragModel: p.bcModel ?? form.dragModel,
+      projectileType: p.projectileType ?? form.projectileType,
+    });
   };
 
   const handleSelectAirgun = (id: string) => {
     const a = airguns.find(x => x.id === id);
-    if (!a) {
-      update({ airgunId: '' });
-      return;
-    }
+    if (!a) return update({ airgunId: '' });
     update({
       airgunId: id,
+      barrelLength: a.barrelLength ?? form.barrelLength,
+      twistRate: a.twistRate ?? form.twistRate,
       sightHeight: a.defaultSightHeight ?? form.sightHeight,
       zeroRange: a.defaultZeroRange ?? form.zeroRange,
     });
@@ -137,43 +169,39 @@ export default function QuickCalc() {
 
   const handleSelectOptic = (id: string) => {
     const o = optics.find(x => x.id === id);
-    if (!o) {
-      update({ opticId: '', currentMag: undefined });
-      return;
-    }
+    if (!o) return update({ opticId: '' });
     update({
       opticId: id,
       sightHeight: o.mountHeight ?? form.sightHeight,
       clickValue: o.clickValue,
       clickUnit: o.clickUnit === 'mil' ? 'MRAD' : o.clickUnit,
-      currentMag: o.magCalibration,
+      focalPlane: o.focalPlane ?? form.focalPlane,
+      magCalibration: o.magCalibration ?? form.magCalibration,
+      currentMag: o.magCalibration ?? form.currentMag,
     });
   };
 
   const validate = (): string | null => {
-    if (form.muzzleVelocity <= 0) return t('calc.muzzleVelocity') + ' — ' + t('calc.invalidValue');
+    if (form.muzzleVelocity <= 0)
+      return t('calc.muzzleVelocity') + ' — ' + t('calc.invalidValue');
     if (form.bc <= 0) return 'BC — ' + t('calc.invalidValue');
-    if (form.projectileWeight <= 0) return t('calc.projectileWeight') + ' — ' + t('calc.invalidValue');
-    if (form.zeroRange <= 0) return t('calc.zeroRange') + ' — ' + t('calc.invalidValue');
-    if (form.targetDistance <= 0) return t('calc.targetDistance') + ' — ' + t('calc.invalidValue');
+    if (form.projectileWeight <= 0)
+      return t('calc.projectileWeight') + ' — ' + t('calc.invalidValue');
+    if (form.zeroRange <= 0)
+      return t('calc.zeroRange') + ' — ' + t('calc.invalidValue');
+    if (form.targetDistance <= 0)
+      return t('calc.targetDistance') + ' — ' + t('calc.invalidValue');
     return null;
   };
 
-  const handleCalculate = () => {
-    const err = validate();
-    if (err) {
-      setError(err);
-      toast.error(t('calc.errorTitle'), { description: err });
-      return;
-    }
-    setError(null);
-
+  const buildInput = (): BallisticInput => {
     const maxRange = form.useRange
       ? Math.max(form.maxRange, form.targetDistance)
       : form.targetDistance;
-    const rangeStep = form.useRange ? form.rangeStep : Math.max(5, form.targetDistance);
-
-    const input: BallisticInput = {
+    const rangeStep = form.useRange
+      ? form.rangeStep
+      : Math.max(5, form.targetDistance);
+    return {
       muzzleVelocity: form.muzzleVelocity,
       bc: form.bc,
       projectileWeight: form.projectileWeight,
@@ -184,10 +212,26 @@ export default function QuickCalc() {
       weather: form.weather,
       clickValue: form.clickValue,
       clickUnit: form.clickUnit,
+      dragModel: form.dragModel,
+      focalPlane: form.focalPlane,
+      currentMag: form.currentMag,
+      magCalibration: form.magCalibration,
+      twistRate: form.twistRate,
+      projectileLength: form.projectileLength,
+      projectileDiameter: form.projectileDiameter,
+      zeroWeather: form.useZeroWeather ? form.zeroWeather : undefined,
     };
+  };
 
-    const r = calculateTrajectory(input);
-    setResults(r);
+  const handleCalculate = () => {
+    const err = validate();
+    if (err) {
+      setError(err);
+      toast.error(t('calc.errorTitle'), { description: err });
+      return;
+    }
+    setError(null);
+    setResults(calculateTrajectory(buildInput()));
   };
 
   const handleReset = () => {
@@ -200,24 +244,12 @@ export default function QuickCalc() {
   const handleSave = () => {
     if (!results) return;
     const name = sessionName.trim() || `Session ${new Date().toLocaleString()}`;
-    const input: BallisticInput = {
-      muzzleVelocity: form.muzzleVelocity,
-      bc: form.bc,
-      projectileWeight: form.projectileWeight,
-      sightHeight: form.sightHeight,
-      zeroRange: form.zeroRange,
-      maxRange: form.useRange ? form.maxRange : form.targetDistance,
-      rangeStep: form.useRange ? form.rangeStep : form.targetDistance,
-      weather: form.weather,
-      clickValue: form.clickValue,
-      clickUnit: form.clickUnit,
-    };
     sessionStore.create({
       name,
       airgunId: form.airgunId || undefined,
       projectileId: form.projectileId || undefined,
       opticId: form.opticId || undefined,
-      input,
+      input: buildInput(),
       results,
       tags: [],
       favorite: false,
@@ -226,14 +258,15 @@ export default function QuickCalc() {
     setSessionName('');
   };
 
-  // Find row at target distance for hero card
   const heroResult = useMemo(() => {
     if (!results) return null;
     return (
       results.find(r => r.range === form.targetDistance) ??
       results.reduce<BallisticResult | null>(
         (best, r) =>
-          best == null || Math.abs(r.range - form.targetDistance) < Math.abs(best.range - form.targetDistance)
+          best == null ||
+          Math.abs(r.range - form.targetDistance) <
+            Math.abs(best.range - form.targetDistance)
             ? r
             : best,
         null,
@@ -243,22 +276,28 @@ export default function QuickCalc() {
 
   const tableRows = useMemo(() => {
     if (!results || !form.useRange) return undefined;
-    return results.filter(r => r.range >= (advanced ? form.minRange : 0) && r.range > 0);
+    return results.filter(
+      r => r.range >= (advanced ? form.minRange : 0) && r.range > 0,
+    );
   }, [results, form.useRange, form.minRange, advanced]);
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-5 pb-8">
-      {/* Header */}
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="space-y-5 pb-8"
+    >
       <header className="space-y-3">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <Crosshair className="h-5 w-5 text-primary" />
             <h1 className="text-xl font-heading font-bold">{t('calc.title')}</h1>
           </div>
-          <p className="text-xs text-muted-foreground font-mono">{t('calc.subtitle')}</p>
+          <p className="text-xs text-muted-foreground font-mono">
+            {t('calc.subtitle')}
+          </p>
         </div>
 
-        {/* Mode toggle */}
         <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-card/40 px-3 py-2.5">
           <div className="flex items-center gap-2 min-w-0">
             <Sparkles className="h-4 w-4 text-primary shrink-0" />
@@ -266,14 +305,15 @@ export default function QuickCalc() {
               <div className="text-xs font-semibold">
                 {advanced ? t('calc.advancedMode') : t('calc.simpleMode')}
               </div>
-              <div className="text-[10px] text-muted-foreground truncate">{t('calc.modeHint')}</div>
+              <div className="text-[10px] text-muted-foreground truncate">
+                {t('calc.modeHint')}
+              </div>
             </div>
           </div>
           <Switch checked={advanced} onCheckedChange={setAdvanced} />
         </div>
       </header>
 
-      {/* Form sections */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <ProjectileSection
           projectiles={projectiles}
@@ -281,7 +321,12 @@ export default function QuickCalc() {
           onSelect={handleSelectProjectile}
           bc={form.bc}
           weight={form.projectileWeight}
+          dragModel={form.dragModel}
+          projectileType={form.projectileType}
+          length={form.projectileLength}
+          diameter={form.projectileDiameter}
           onChange={update}
+          advanced={advanced}
         />
         <VelocitySection
           velocity={form.muzzleVelocity}
@@ -289,17 +334,32 @@ export default function QuickCalc() {
         />
         <WeaponSection
           airguns={airguns}
-          optics={optics}
           selectedAirgun={form.airgunId}
-          selectedOptic={form.opticId}
           onSelectAirgun={handleSelectAirgun}
+          barrelLength={form.barrelLength}
+          twistRate={form.twistRate}
+          onChange={update}
+          advanced={advanced}
+        />
+        <OpticSection
+          optics={optics}
+          selectedOptic={form.opticId}
           onSelectOptic={handleSelectOptic}
-          sightHeight={form.sightHeight}
-          zeroRange={form.zeroRange}
+          focalPlane={form.focalPlane}
           clickValue={form.clickValue}
           clickUnit={form.clickUnit}
           currentMag={form.currentMag}
+          magCalibration={form.magCalibration}
           onChange={update}
+          advanced={advanced}
+        />
+        <ZeroingSection
+          zeroRange={form.zeroRange}
+          sightHeight={form.sightHeight}
+          useZeroWeather={form.useZeroWeather}
+          zeroWeather={form.zeroWeather}
+          onChange={update}
+          onZeroWeatherChange={updateZeroWeather}
           advanced={advanced}
         />
         <DistanceSection
@@ -320,7 +380,13 @@ export default function QuickCalc() {
         </div>
       </div>
 
-      {/* Action bar */}
+      {advanced && (
+        <div className="rounded-lg border border-dashed border-primary/30 bg-primary/5 px-3 py-2 flex items-center gap-2 text-[11px] text-muted-foreground">
+          <Settings2 className="h-3.5 w-3.5 text-primary shrink-0" />
+          <span>{t('calc.sectionAdvanced')} — {t('calc.modeHint')}</span>
+        </div>
+      )}
+
       <div className="sticky bottom-0 z-10 -mx-4 px-4 py-3 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/70 border-t border-border md:static md:mx-0 md:px-0 md:py-0 md:bg-transparent md:border-0">
         <div className="flex flex-col sm:flex-row gap-2">
           <button
@@ -343,16 +409,22 @@ export default function QuickCalc() {
         )}
       </div>
 
-      {/* Results */}
       {results && heroResult ? (
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           className="space-y-4"
         >
-          <ResultsCard result={heroResult} rows={tableRows} clickUnit={form.clickUnit} />
+          <ResultsCard
+            result={heroResult}
+            rows={tableRows}
+            clickUnit={form.clickUnit}
+            focalPlane={form.focalPlane}
+            currentMag={form.currentMag}
+            magCalibration={form.magCalibration}
+            advanced={advanced}
+          />
 
-          {/* Save session */}
           <div className="rounded-xl border border-border bg-card/60 p-3 space-y-2">
             <label className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium">
               {t('calc.saveSession')}

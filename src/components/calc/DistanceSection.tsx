@@ -1,9 +1,8 @@
 import { Ruler } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { Section } from './Section';
-import { Field } from './Field';
+import { UnitField } from './UnitField';
 import { Switch } from '@/components/ui/switch';
-import { useUnits } from '@/hooks/use-units';
 
 interface Props {
   targetDistance: number;
@@ -31,8 +30,6 @@ export function DistanceSection({
   advanced,
 }: Props) {
   const { t } = useI18n();
-  const { symbol } = useUnits();
-  const dist = symbol('distance');
 
   return (
     <Section
@@ -47,9 +44,9 @@ export function DistanceSection({
         </div>
       }
     >
-      <Field
+      <UnitField
         label={t('calc.targetDistance')}
-        unit={dist}
+        category="distance"
         value={targetDistance}
         step={5}
         onChange={v => onChange({ targetDistance: v })}
@@ -57,24 +54,24 @@ export function DistanceSection({
       {useRange && (
         <div className={advanced ? 'grid grid-cols-3 gap-2.5' : 'grid grid-cols-2 gap-2.5'}>
           {advanced && (
-            <Field
+            <UnitField
               label={t('calc.minRange')}
-              unit={dist}
+              category="distance"
               value={minRange}
               step={5}
               onChange={v => onChange({ minRange: v })}
             />
           )}
-          <Field
+          <UnitField
             label={t('calc.maxRange')}
-            unit={dist}
+            category="distance"
             value={maxRange}
             step={10}
             onChange={v => onChange({ maxRange: v })}
           />
-          <Field
+          <UnitField
             label={t('calc.rangeStep')}
-            unit={dist}
+            category="distance"
             value={rangeStep}
             step={5}
             onChange={v => onChange({ rangeStep: v })}

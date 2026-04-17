@@ -429,6 +429,7 @@ const fr = {
   'common.name': 'Nom',
   'common.all': 'Tout',
   'common.close': 'Fermer',
+  'common.reset': 'Réinitialiser',
   'common.add': 'Ajouter',
   'common.viewAll': 'Voir tout',
   'common.copyLink': 'Copier le lien filtré',

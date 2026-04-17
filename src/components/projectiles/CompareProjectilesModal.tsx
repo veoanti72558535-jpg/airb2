@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { X, GitCompare, Gauge, RotateCcw } from 'lucide-react';
+import { X, GitCompare, Gauge, RotateCcw, Target } from 'lucide-react';
 import { Projectile, WeatherSnapshot } from '@/lib/types';
 import { calculateTrajectory } from '@/lib/ballistics';
 import { useI18n } from '@/lib/i18n';
@@ -9,6 +9,9 @@ import { cn } from '@/lib/utils';
 const MIN_V = 200;
 const MAX_V = 380;
 const DEFAULT_V = 280;
+const MIN_Z = 10;
+const MAX_Z = 50;
+const DEFAULT_Z = 30;
 
 interface Props {
   projectiles: Projectile[];
@@ -61,10 +64,14 @@ export function CompareProjectilesModal({
   const { t } = useI18n();
   const { symbol } = useUnits();
   const [velocity, setVelocity] = useState<number>(initialVelocity);
+  const [zeroRange, setZeroRange] = useState<number>(DEFAULT_Z);
 
-  // Reset slider when modal re-opens with a new initial velocity.
+  // Reset sliders when modal re-opens with a new initial velocity.
   useEffect(() => {
-    if (open) setVelocity(initialVelocity);
+    if (open) {
+      setVelocity(initialVelocity);
+      setZeroRange(DEFAULT_Z);
+    }
   }, [open, initialVelocity]);
 
   const rows = useMemo(() => {
@@ -76,7 +83,7 @@ export function CompareProjectilesModal({
         bc: p.bc,
         projectileWeight: p.weight,
         sightHeight: 50,
-        zeroRange: 30,
+        zeroRange,
         maxRange: CHART_MAX,
         rangeStep: CHART_STEP,
         weather,
@@ -97,7 +104,7 @@ export function CompareProjectilesModal({
       }
       return { p, drops, vels, energies, curve };
     });
-  }, [projectiles, open, velocity]);
+  }, [projectiles, open, velocity, zeroRange]);
 
   if (!open) return null;
 
@@ -115,7 +122,7 @@ export function CompareProjectilesModal({
             <div className="min-w-0">
               <h2 className="text-sm font-heading font-semibold">{t('projectiles.compareTitle')}</h2>
               <p className="text-[11px] text-muted-foreground">
-                {t('projectiles.compareHint', { v: velocity })}
+                {t('projectiles.compareHint', { v: velocity, z: zeroRange })}
               </p>
             </div>
           </div>
@@ -128,46 +135,90 @@ export function CompareProjectilesModal({
           </button>
         </div>
 
-        {/* Velocity slider */}
-        <div className="px-4 py-3 border-b border-border bg-muted/20 space-y-2">
-          <div className="flex items-center justify-between gap-2">
-            <label
-              htmlFor="compare-velocity"
-              className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground"
-            >
-              <Gauge className="h-3.5 w-3.5" />
-              {t('projectiles.compareVelocity')}
-            </label>
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-xs text-foreground tabular-nums">
-                {velocity} m/s
-              </span>
-              {velocity !== DEFAULT_V && (
-                <button
-                  type="button"
-                  onClick={() => setVelocity(DEFAULT_V)}
-                  className="inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground"
-                  aria-label={t('common.reset')}
-                >
-                  <RotateCcw className="h-3 w-3" />
-                </button>
-              )}
+        {/* Sliders: velocity + zero range */}
+        <div className="px-4 py-3 border-b border-border bg-muted/20 grid gap-4 sm:grid-cols-2">
+          {/* Velocity */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <label
+                htmlFor="compare-velocity"
+                className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground"
+              >
+                <Gauge className="h-3.5 w-3.5" />
+                {t('projectiles.compareVelocity')}
+              </label>
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-xs text-foreground tabular-nums">
+                  {velocity} m/s
+                </span>
+                {velocity !== DEFAULT_V && (
+                  <button
+                    type="button"
+                    onClick={() => setVelocity(DEFAULT_V)}
+                    className="inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground"
+                    aria-label={t('common.reset')}
+                  >
+                    <RotateCcw className="h-3 w-3" />
+                  </button>
+                )}
+              </div>
+            </div>
+            <input
+              id="compare-velocity"
+              type="range"
+              min={MIN_V}
+              max={MAX_V}
+              step={5}
+              value={velocity}
+              onChange={e => setVelocity(Number(e.target.value))}
+              className="w-full accent-primary cursor-pointer"
+            />
+            <div className="flex justify-between text-[10px] text-muted-foreground font-mono">
+              <span>{MIN_V}</span>
+              <span>{MAX_V}</span>
             </div>
           </div>
-          <input
-            id="compare-velocity"
-            type="range"
-            min={MIN_V}
-            max={MAX_V}
-            step={5}
-            value={velocity}
-            onChange={e => setVelocity(Number(e.target.value))}
-            className="w-full accent-primary cursor-pointer"
-          />
-          <div className="flex justify-between text-[10px] text-muted-foreground font-mono">
-            <span>{MIN_V}</span>
-            <span className="text-muted-foreground/60">{t('projectiles.compareVelocityHint')}</span>
-            <span>{MAX_V}</span>
+
+          {/* Zero range */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <label
+                htmlFor="compare-zero"
+                className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground"
+              >
+                <Target className="h-3.5 w-3.5" />
+                {t('projectiles.compareZero')}
+              </label>
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-xs text-foreground tabular-nums">
+                  {zeroRange} m
+                </span>
+                {zeroRange !== DEFAULT_Z && (
+                  <button
+                    type="button"
+                    onClick={() => setZeroRange(DEFAULT_Z)}
+                    className="inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground"
+                    aria-label={t('common.reset')}
+                  >
+                    <RotateCcw className="h-3 w-3" />
+                  </button>
+                )}
+              </div>
+            </div>
+            <input
+              id="compare-zero"
+              type="range"
+              min={MIN_Z}
+              max={MAX_Z}
+              step={1}
+              value={zeroRange}
+              onChange={e => setZeroRange(Number(e.target.value))}
+              className="w-full accent-primary cursor-pointer"
+            />
+            <div className="flex justify-between text-[10px] text-muted-foreground font-mono">
+              <span>{MIN_Z}</span>
+              <span>{MAX_Z}</span>
+            </div>
           </div>
         </div>
 

@@ -746,6 +746,18 @@ const en: Record<keyof typeof fr, string> = {
   'common.copyLink': 'Copy filtered link',
   'common.linkCopied': 'Link copied to clipboard',
   'common.copyFailed': 'Failed to copy link',
+
+  'detail.back': 'Back to library',
+  'detail.useInCalc': 'Use in calculator',
+  'detail.linkedSessions': 'Linked sessions',
+  'detail.noLinkedSessions': 'No session is linked to this item.',
+  'detail.essentials': 'Essentials',
+  'detail.advanced': 'Advanced',
+  'detail.metadata': 'Metadata',
+  'detail.createdAt': 'Created',
+  'detail.updatedAt': 'Updated',
+  'detail.notFound': 'Item not found',
+  'detail.notFoundHint': 'This item may have been deleted.',
 };
 
 export const translations = { fr, en } as const;

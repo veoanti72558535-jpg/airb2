@@ -661,6 +661,7 @@ const en: Record<keyof typeof fr, string> = {
   'weather.citySearchPlaceholder': 'e.g. Paris, London, New York…',
   'weather.errGeocode': 'Search unavailable — try again or enter coordinates.',
   'weather.noCityFound': 'No matching city.',
+  'weather.or': 'or',
 
   'conv.title': 'Unit Conversions',
   'conv.subtitle': 'Deterministic conversions — no AI involved',

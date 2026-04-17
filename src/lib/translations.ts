@@ -175,6 +175,7 @@ const fr = {
   'optics.filterBrand': 'Marque',
   'optics.search': 'Rechercher par nom ou notes…',
   'optics.noMatch': 'Aucune optique pour ces filtres.',
+  'optics.resetFilters': 'Réinitialiser les filtres',
 
   // Sessions
   'sessions.title': 'Sessions',

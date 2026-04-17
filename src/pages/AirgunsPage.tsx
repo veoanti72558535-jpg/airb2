@@ -144,7 +144,7 @@ export default function AirgunsPage() {
       </div>
 
       {showForm && (
-        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="surface-elevated p-4 space-y-3">
+        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="surface-elevated p-4 pb-20 md:pb-4 space-y-3">
           {/* Essential */}
           <div className="grid grid-cols-2 gap-3">
             <div>

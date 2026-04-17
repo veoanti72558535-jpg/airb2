@@ -602,6 +602,7 @@ function DropChart({ rows, t }: DropChartProps) {
                       fill={color}
                       stroke="hsl(var(--card))"
                       strokeWidth={1}
+                      className="compare-marker"
                       style={{ cursor: 'help' }}
                     >
                       <title>{`${p.brand} ${p.model} — ${pt.range} m · ${pt.drop.toFixed(1)} mm`}</title>

@@ -224,6 +224,12 @@ export function CompareProjectilesModal({
       setExportingPdf(false);
     }
   };
+
+  useEffect(() => {
+    if (open) {
+      setVelocity(initialVelocity);
+      setZeroRange(DEFAULT_Z);
+    } else {
       setFullscreen(false);
     }
   }, [open, initialVelocity]);

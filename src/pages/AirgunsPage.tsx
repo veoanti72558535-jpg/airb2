@@ -10,6 +10,7 @@ import { toast } from '@/hooks/use-toast';
 import { SearchBar } from '@/components/SearchBar';
 import { FilterChips } from '@/components/FilterChips';
 import { useBrandCounts } from '@/hooks/use-brand-counts';
+import { calToken, buildCaliberCounts } from '@/lib/caliber';
 
 export default function AirgunsPage() {
   const { t } = useI18n();

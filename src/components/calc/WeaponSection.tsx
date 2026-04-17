@@ -3,7 +3,7 @@ import { useI18n } from '@/lib/i18n';
 import { Section } from './Section';
 import { UnitField } from './UnitField';
 import { EntitySelect } from './EntitySelect';
-import { Airgun } from '@/lib/types';
+import { Airgun, Tune } from '@/lib/types';
 
 const TWIST_OPTIONS = [12, 14, 16, 18, 20, 22, 24, 28, 32];
 
@@ -11,6 +11,10 @@ interface Props {
   airguns: Airgun[];
   selectedAirgun: string;
   onSelectAirgun: (id: string) => void;
+  /** All tunes — filtered to the selected airgun internally. */
+  tunes: Tune[];
+  selectedTune: string;
+  onSelectTune: (id: string) => void;
   barrelLength?: number;
   twistRate?: number;
   onChange: (patch: { barrelLength?: number; twistRate?: number }) => void;
@@ -21,12 +25,21 @@ export function WeaponSection({
   airguns,
   selectedAirgun,
   onSelectAirgun,
+  tunes,
+  selectedTune,
+  onSelectTune,
   barrelLength,
   twistRate,
   onChange,
   advanced,
 }: Props) {
   const { t } = useI18n();
+
+  // Tunes are airgun-scoped: only offer tunes belonging to the picked airgun.
+  const airgunTunes = selectedAirgun
+    ? tunes.filter(tn => tn.airgunId === selectedAirgun)
+    : [];
+
   return (
     <Section icon={Target} title={t('calc.sectionWeapon')}>
       <EntitySelect
@@ -42,6 +55,22 @@ export function WeaponSection({
         emptyText={t('calc.noAirguns')}
         addHref="/library"
       />
+
+      {selectedAirgun && (
+        <EntitySelect
+          label={t('calc.selectTune')}
+          value={selectedTune}
+          onChange={onSelectTune}
+          options={airgunTunes.map(tn => ({
+            id: tn.id,
+            label: tn.name,
+            sub: tn.nominalVelocity ? `${tn.nominalVelocity} m/s` : tn.usage,
+          }))}
+          placeholder={t('calc.noTune')}
+          emptyText={t('calc.noTunesForAirgun')}
+          addHref="/tunes"
+        />
+      )}
 
       {advanced && (
         <div className="grid grid-cols-2 gap-2.5">
@@ -74,3 +103,4 @@ export function WeaponSection({
     </Section>
   );
 }
+

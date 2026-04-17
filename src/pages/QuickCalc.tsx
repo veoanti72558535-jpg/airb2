@@ -14,6 +14,7 @@ import {
   OpticFocalPlane,
   Projectile,
   ProjectileType,
+  Tune,
   WeatherSnapshot,
 } from '@/lib/types';
 import {
@@ -21,6 +22,7 @@ import {
   opticStore,
   projectileStore,
   sessionStore,
+  tuneStore,
   getSettings,
   saveSettings,
 } from '@/lib/storage';
@@ -47,6 +49,7 @@ interface FormState {
   muzzleVelocity: number;
   // Weapon
   airgunId: string;
+  tuneId: string;
   barrelLength?: number;
   twistRate?: number;
   // Optic
@@ -95,6 +98,7 @@ function defaultForm(): FormState {
     projectileDiameter: 5.5,
     muzzleVelocity: 280,
     airgunId: '',
+    tuneId: '',
     barrelLength: 600,
     twistRate: 16,
     opticId: '',
@@ -129,6 +133,7 @@ export default function QuickCalc() {
   const projectiles = useMemo<Projectile[]>(() => projectileStore.getAll(), []);
   const airguns = useMemo<Airgun[]>(() => airgunStore.getAll(), []);
   const optics = useMemo<Optic[]>(() => opticStore.getAll(), []);
+  const tunes = useMemo<Tune[]>(() => tuneStore.getAll(), []);
 
   useEffect(() => {
     saveSettings({ ...getSettings(), advancedMode: advanced });
@@ -158,6 +163,7 @@ export default function QuickCalc() {
       projectileDiameter: i.projectileDiameter ?? proj?.diameter,
       muzzleVelocity: i.muzzleVelocity,
       airgunId: session.airgunId ?? '',
+      tuneId: session.tuneId ?? '',
       twistRate: i.twistRate,
       opticId: session.opticId ?? '',
       focalPlane: i.focalPlane ?? 'FFP',
@@ -305,13 +311,25 @@ export default function QuickCalc() {
 
   const handleSelectAirgun = (id: string) => {
     const a = airguns.find(x => x.id === id);
-    if (!a) return update({ airgunId: '' });
+    // Clearing or switching airgun invalidates the linked tune.
+    if (!a) return update({ airgunId: '', tuneId: '' });
     update({
       airgunId: id,
+      tuneId: '',
       barrelLength: a.barrelLength ?? form.barrelLength,
       twistRate: a.twistRate ?? form.twistRate,
       sightHeight: a.defaultSightHeight ?? form.sightHeight,
       zeroRange: a.defaultZeroRange ?? form.zeroRange,
+    });
+  };
+
+  const handleSelectTune = (id: string) => {
+    const tn = tunes.find(x => x.id === id);
+    if (!tn) return update({ tuneId: '' });
+    // Auto-fill muzzle velocity from the tune's nominal value when present.
+    update({
+      tuneId: id,
+      muzzleVelocity: tn.nominalVelocity ?? form.muzzleVelocity,
     });
   };
 
@@ -395,6 +413,7 @@ export default function QuickCalc() {
     sessionStore.create({
       name,
       airgunId: form.airgunId || undefined,
+      tuneId: form.tuneId || undefined,
       projectileId: form.projectileId || undefined,
       opticId: form.opticId || undefined,
       input: buildInput(),
@@ -484,6 +503,9 @@ export default function QuickCalc() {
           airguns={airguns}
           selectedAirgun={form.airgunId}
           onSelectAirgun={handleSelectAirgun}
+          tunes={tunes}
+          selectedTune={form.tuneId}
+          onSelectTune={handleSelectTune}
           barrelLength={form.barrelLength}
           twistRate={form.twistRate}
           onChange={update}

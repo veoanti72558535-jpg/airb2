@@ -71,6 +71,7 @@ export default function SessionsPage() {
             if (s.input.focalPlane) advBadges.push(s.input.focalPlane);
             if (s.input.zeroWeather) advBadges.push(t('sessions.badgeZeroWeather'));
             if (s.input.twistRate) advBadges.push(`1:${s.input.twistRate}″`);
+            if (s.tuneId) advBadges.push(t('calc.selectTune'));
             const wsrc = s.input.weather?.source;
             if (wsrc === 'auto') advBadges.push(t('sessions.badgeAuto'));
             else if (wsrc === 'mixed') advBadges.push(t('sessions.badgeMixed'));

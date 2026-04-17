@@ -241,6 +241,8 @@ const fr = {
   'projectiles.compareDropSection': 'Chute (sight-line)',
   'projectiles.compareDropAt': 'Chute @ {r} m',
   'projectiles.compareFlattest': 'Trajectoire la plus tendue à cette distance',
+  'projectiles.compareFacOver': 'Au-dessus du seuil FAC (16.27 J / 12 fpe)',
+  'projectiles.compareFacLegend': 'Surlignage rouge — énergie au-dessus du seuil légal FAC UK (16.27 J / 12 fpe). Les régulations varient selon le pays.',
   'projectiles.compareEnergySection': 'Vélocité & énergie',
   'projectiles.compareEnergyAt': '@ {r} m',
   'projectiles.compareDisclaimer': 'Valeurs indicatives — vélocité unifiée pour isoler l\'effet du BC. Les chutes réelles dépendent de votre arme et de votre tune.',

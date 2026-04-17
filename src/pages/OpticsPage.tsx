@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Eye, Plus, Trash2, Edit2, Download } from 'lucide-react';
 import { SearchBar } from '@/components/SearchBar';
 import { FilterChips } from '@/components/FilterChips';
@@ -293,7 +294,11 @@ export default function OpticsPage() {
           {filteredOptics.map(o => {
             const fp = o.focalPlane ?? (o.magCalibration ? 'SFP' : null);
             return (
-              <div key={o.id} className="surface-elevated p-4">
+              <Link
+                key={o.id}
+                to={`/library/optic/${o.id}`}
+                className="surface-elevated p-4 block hover:border-primary/40 transition-colors"
+              >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <div className="font-semibold text-sm">{o.name}</div>
@@ -314,11 +319,11 @@ export default function OpticsPage() {
                     {o.notes && <div className="text-[11px] text-muted-foreground mt-1 line-clamp-2">{o.notes}</div>}
                   </div>
                   <div className="flex gap-1 shrink-0">
-                    <button onClick={() => handleEdit(o)} className="p-1.5 rounded hover:bg-muted text-muted-foreground"><Edit2 className="h-3.5 w-3.5" /></button>
-                    <button onClick={() => handleDelete(o.id)} className="p-1.5 rounded hover:bg-destructive/10 text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
+                    <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleEdit(o); }} className="p-1.5 rounded hover:bg-muted text-muted-foreground"><Edit2 className="h-3.5 w-3.5" /></button>
+                    <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDelete(o.id); }} className="p-1.5 rounded hover:bg-destructive/10 text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
                   </div>
                 </div>
-              </div>
+              </Link>
             );
           })}
         </div>

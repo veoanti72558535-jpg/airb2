@@ -821,7 +821,11 @@ export function CompareProjectilesModal({
                                 title={
                                   energyThresholdJ !== null && e.joules > energyThresholdJ
                                     ? t('projectiles.compareFacOver')
-                                    : t('projectiles.compareMuzzleEnergy')
+                                    : isMax
+                                      ? (energyGapJ !== null
+                                          ? t('projectiles.compareBestEnergyDiff', { gap: energyGapJ.toFixed(1) })
+                                          : t('projectiles.compareBestEnergy'))
+                                      : t('projectiles.compareMuzzleEnergy')
                                 }
                               >
                                 {energyThresholdJ !== null && e.joules > energyThresholdJ ? (

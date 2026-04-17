@@ -100,7 +100,12 @@ function cdGS(mach: number): number {
   return Math.max(0.4, 0.92 - (mach - 1.2) * 0.2);
 }
 
-function cdFor(model: DragModel, mach: number): number {
+/**
+ * Returns the Cd for the given Mach under one of the built-in standard drag
+ * models. Exported so non-engine consumers (e.g. the drag-table preview UI)
+ * can sample reference curves without duplicating the piecewise approximations.
+ */
+export function cdFor(model: DragModel, mach: number): number {
   switch (model) {
     case 'G7': return cdG7(mach);
     case 'GA': return cdGA(mach);

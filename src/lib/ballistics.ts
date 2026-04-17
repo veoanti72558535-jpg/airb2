@@ -118,8 +118,10 @@ export function cdFor(model: DragModel, mach: number): number {
  * Linear interpolation of Cd against a custom Mach/Cd table.
  * Assumes the table is sorted ascending by Mach. Outside the table range,
  * the nearest endpoint value is returned (no extrapolation).
+ *
+ * Exported for unit tests and any future tooling (e.g. Cd preview tooltip).
  */
-function cdFromTable(table: DragTablePoint[], mach: number): number {
+export function cdFromTable(table: DragTablePoint[], mach: number): number {
   if (table.length === 0) return 0;
   if (mach <= table[0].mach) return table[0].cd;
   if (mach >= table[table.length - 1].mach) return table[table.length - 1].cd;

@@ -1012,6 +1012,9 @@ interface DropChartProps {
   t: (key: string, vars?: Record<string, string | number>) => string;
   /** Render a taller chart for fullscreen mode. */
   tall?: boolean;
+  /** Controlled hover distance (m) — kept in the parent so sparklines can sync. */
+  hoverRange: number | null;
+  onHoverRange: (r: number | null) => void;
 }
 
 /**
@@ -1019,9 +1022,10 @@ interface DropChartProps {
  * Uses a shared Y scale so curves are directly comparable. Drop is plotted
  * with negative values (below sight line) downward, matching shooter intuition.
  */
-function DropChart({ rows, t, tall = false }: DropChartProps) {
+function DropChart({ rows, t, tall = false, hoverRange, onHoverRange }: DropChartProps) {
   const svgRef = useRef<SVGSVGElement | null>(null);
-  const [hoverX, setHoverX] = useState<number | null>(null); // distance in meters
+  const hoverX = hoverRange;
+  const setHoverX = onHoverRange;
 
   if (rows.length === 0 || rows.every(r => r.curve.length === 0)) return null;
 

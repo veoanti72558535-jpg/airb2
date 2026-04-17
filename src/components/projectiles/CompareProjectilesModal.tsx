@@ -728,7 +728,7 @@ export function CompareProjectilesModal({
         <div className={cn('overflow-auto', fullscreen ? 'flex-1' : '')}>
           <div ref={exportRef} className="bg-card">
             {/* Drop chart */}
-            <DropChart rows={rows} t={t} tall={fullscreen} hoverRange={hoverRange} onHoverRange={setHoverRange} />
+            <DropChart rows={rows} t={t} tall={fullscreen} hoverRange={hoverRange} onHoverRange={setHoverRange} colorById={colorById} />
 
         {/* Table toolbar with expand/collapse all */}
         <div className="px-4 py-2 border-b border-border bg-muted/20 flex items-center justify-end gap-2">
@@ -1259,6 +1259,8 @@ interface DropChartProps {
   /** Controlled hover distance (m) — kept in the parent so sparklines can sync. */
   hoverRange: number | null;
   onHoverRange: (r: number | null) => void;
+  /** Stable color per projectile id — colors stay attached to the projectile when columns reorder. */
+  colorById: Map<string, string>;
 }
 
 /**
@@ -1266,7 +1268,7 @@ interface DropChartProps {
  * Uses a shared Y scale so curves are directly comparable. Drop is plotted
  * with negative values (below sight line) downward, matching shooter intuition.
  */
-function DropChart({ rows, t, tall = false, hoverRange, onHoverRange }: DropChartProps) {
+function DropChart({ rows, t, tall = false, hoverRange, onHoverRange, colorById }: DropChartProps) {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const hoverX = hoverRange;
   const setHoverX = onHoverRange;
@@ -1333,14 +1335,14 @@ function DropChart({ rows, t, tall = false, hoverRange, onHoverRange }: DropChar
   const tooltipPoints =
     hoverX !== null
       ? rows
-          .map(({ p, curve }, i) => {
+          .map(({ p, curve }) => {
             const pt = curve.find(c => c.range === hoverX);
             if (!pt) return null;
             return {
               id: p.id,
               label: `${p.brand} ${p.model}`,
               drop: pt.drop,
-              color: SERIES_COLORS[i % SERIES_COLORS.length],
+              color: colorById.get(p.id) ?? SERIES_COLORS[0],
             };
           })
           .filter((x): x is NonNullable<typeof x> => x !== null)
@@ -1357,11 +1359,11 @@ function DropChart({ rows, t, tall = false, hoverRange, onHoverRange }: DropChar
           {t('projectiles.compareChartTitle')}
         </h3>
         <div className="flex flex-wrap gap-x-3 gap-y-1 justify-end">
-          {rows.map(({ p }, i) => (
+          {rows.map(({ p }) => (
             <div key={p.id} className="flex items-center gap-1.5 text-[10px]">
               <span
                 className="inline-block h-0.5 w-3 rounded"
-                style={{ backgroundColor: SERIES_COLORS[i % SERIES_COLORS.length] }}
+                style={{ backgroundColor: colorById.get(p.id) ?? SERIES_COLORS[0] }}
               />
               <span className="text-foreground truncate max-w-[140px]">
                 {p.brand} {p.model}
@@ -1450,7 +1452,7 @@ function DropChart({ rows, t, tall = false, hoverRange, onHoverRange }: DropChar
           </text>
 
           {rows.map(({ p, curve }, i) => {
-            const color = SERIES_COLORS[i % SERIES_COLORS.length];
+            const color = colorById.get(p.id) ?? SERIES_COLORS[0];
             // Stagger draw-in slightly per series so they read as distinct strokes.
             const delay = i * 0.08;
             return (

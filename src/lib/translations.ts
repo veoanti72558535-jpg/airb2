@@ -525,6 +525,7 @@ const en: Record<keyof typeof fr, string> = {
   'airguns.notes': 'Notes',
   'airguns.search': 'Search by brand, model or notes…',
   'airguns.noMatch': 'No airgun matches your search.',
+  'airguns.advancedHint': 'Twist rate, sight height, default zero',
 
   'tunes.title': 'Tunes',
   'tunes.add': 'Add Tune',
@@ -546,6 +547,9 @@ const en: Record<keyof typeof fr, string> = {
   'projectiles.material': 'Material',
   'projectiles.search': 'Search by brand, model or notes…',
   'projectiles.noMatch': 'No projectile matches your search.',
+  'projectiles.type': 'Type',
+  'projectiles.dragModel': 'Drag model (BC)',
+  'projectiles.advancedHint': 'Drag model, dimensions, shape, material',
 
   'optics.title': 'Optics Library',
   'optics.add': 'Add Optic',
@@ -583,6 +587,9 @@ const en: Record<keyof typeof fr, string> = {
   'sessions.view': 'View',
   'sessions.createFromCalc': 'Create from a calculation',
   'sessions.searchPlaceholder': 'Search sessions…',
+  'sessions.openInCalc': 'Reload in calculator',
+  'sessions.badgeZeroWeather': 'Zero weather',
+  'sessions.loaded': 'Session reloaded',
 
   'conv.title': 'Unit Conversions',
   'conv.subtitle': 'Deterministic conversions — no AI involved',

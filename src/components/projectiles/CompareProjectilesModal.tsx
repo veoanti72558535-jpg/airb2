@@ -1,5 +1,22 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { X, GitCompare, Gauge, RotateCcw, Target, Download, Maximize2, Minimize2, Copy, Check, FileText, ChevronDown, ChevronRight, EyeOff } from 'lucide-react';
+import { X, GitCompare, Gauge, RotateCcw, Target, Download, Maximize2, Minimize2, Copy, Check, FileText, ChevronDown, ChevronRight, EyeOff, GripVertical, ListOrdered } from 'lucide-react';
+import {
+  DndContext,
+  PointerSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+  closestCenter,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  horizontalListSortingStrategy,
+  arrayMove,
+  useSortable,
+  sortableKeyboardCoordinates,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
 import { Projectile, WeatherSnapshot } from '@/lib/types';
@@ -89,6 +106,54 @@ export function CompareProjectilesModal({
   const [hoverRange, setHoverRange] = useState<number | null>(null);
   /** Sort mode override — `null` = auto (useful range when threshold set, BC otherwise). */
   const [sortMode, setSortMode] = useState<'usefulRange' | 'bc' | null>(null);
+  /** When true, columns are reorderable via drag-and-drop and `manualOrder` overrides auto-sort. */
+  const [manualMode, setManualMode] = useState(false);
+  /**
+   * User-defined column order, as an array of projectile ids. Persisted in localStorage
+   * keyed by the sorted set of currently-selected projectile ids — so the order only
+   * applies when comparing the exact same set of projectiles again.
+   */
+  const [manualOrder, setManualOrder] = useState<string[] | null>(null);
+  /** Stable storage key for the current selection (sorted ids). */
+  const selectionKey = useMemo(
+    () => projectiles.map(p => p.id).sort().join('|'),
+    [projectiles]
+  );
+  // Load persisted manual order whenever the selection set changes (or modal reopens).
+  useEffect(() => {
+    if (!open) return;
+    try {
+      const raw = localStorage.getItem(`compare-manual-order:${selectionKey}`);
+      if (raw) {
+        const parsed = JSON.parse(raw) as string[];
+        // Validate: must contain exactly the same ids as the current selection.
+        const currentIds = new Set(projectiles.map(p => p.id));
+        if (
+          Array.isArray(parsed) &&
+          parsed.length === currentIds.size &&
+          parsed.every(id => currentIds.has(id))
+        ) {
+          setManualOrder(parsed);
+          setManualMode(true);
+          return;
+        }
+      }
+    } catch { /* ignore */ }
+    setManualOrder(null);
+    setManualMode(false);
+  }, [open, selectionKey, projectiles]);
+  // Persist manual order whenever it changes.
+  useEffect(() => {
+    if (!open) return;
+    try {
+      const key = `compare-manual-order:${selectionKey}`;
+      if (manualOrder && manualMode) {
+        localStorage.setItem(key, JSON.stringify(manualOrder));
+      } else {
+        localStorage.removeItem(key);
+      }
+    } catch { /* ignore */ }
+  }, [open, selectionKey, manualOrder, manualMode]);
   /** Per-section collapsed state — persisted in localStorage so it survives modal re-opens. */
   const [collapsed, setCollapsed] = useState<{ drop: boolean; vel: boolean; energy: boolean; overThreshold: boolean }>(() => {
     try {
@@ -305,6 +370,22 @@ export function CompareProjectilesModal({
       }
       return { p, drops, vels, energies, curve, energyCurve };
     });
+    // Manual mode short-circuits auto-sort: reorder strictly per `manualOrder`.
+    // Any projectile not present in the saved order falls back to its original index.
+    if (manualMode && manualOrder) {
+      const byId = new Map(computed.map(r => [r.p.id, r]));
+      const ordered: typeof computed = [];
+      for (const id of manualOrder) {
+        const r = byId.get(id);
+        if (r) {
+          ordered.push(r);
+          byId.delete(id);
+        }
+      }
+      // Append any remaining (newly-added) rows at the end in original order.
+      for (const r of computed) if (byId.has(r.p.id)) ordered.push(r);
+      return ordered;
+    }
     // Auto-sort columns: by max useful range (desc) when an energy threshold is set,
     // otherwise by ballistic coefficient (desc). Stable fallback on brand+model so the
     // order is deterministic when projectiles tie (e.g. two BCs equal).
@@ -329,7 +410,33 @@ export function CompareProjectilesModal({
       const diff = b.p.bc - a.p.bc;
       return diff !== 0 ? diff : tieBreak(a, b);
     });
-  }, [projectiles, open, velocity, zeroRange, energyThresholdJ, sortMode]);
+  }, [projectiles, open, velocity, zeroRange, energyThresholdJ, sortMode, manualMode, manualOrder]);
+
+  /** Stable color per projectile id — based on the original (props) order so colors
+   * don't shuffle when columns are reordered. */
+  const colorById = useMemo(() => {
+    const m = new Map<string, string>();
+    projectiles.forEach((p, i) => m.set(p.id, SERIES_COLORS[i % SERIES_COLORS.length]));
+    return m;
+  }, [projectiles]);
+
+  /** dnd-kit sensors — pointer (with small distance threshold to avoid stealing clicks
+   * from the X / drag handle buttons) + keyboard for accessibility. */
+  const dndSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const handleDragEnd = (e: DragEndEvent) => {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const currentIds = rows.map(r => r.p.id);
+    const oldIdx = currentIds.indexOf(String(active.id));
+    const newIdx = currentIds.indexOf(String(over.id));
+    if (oldIdx < 0 || newIdx < 0) return;
+    setManualOrder(arrayMove(currentIds, oldIdx, newIdx));
+    setManualMode(true);
+  };
 
   if (!open) return null;
 
@@ -360,6 +467,30 @@ export function CompareProjectilesModal({
               <div className="flex items-center gap-1.5 flex-wrap">
                 <h2 className="text-sm font-heading font-semibold">{t('projectiles.compareTitle')}</h2>
                 {rows.length >= 2 && (() => {
+                  // When manual mode is active, the badge shows "manuel" with a reset button.
+                  if (manualMode) {
+                    return (
+                      <span className="inline-flex items-center gap-1">
+                        <span
+                          className="inline-flex items-center gap-0.5 rounded bg-primary/15 text-primary px-1.5 py-0.5 text-[10px] font-mono font-medium"
+                          title={t('projectiles.compareSortManualHint')}
+                        >
+                          <ListOrdered className="h-2.5 w-2.5" aria-hidden />
+                          {t('projectiles.compareSortManual')}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => { setManualMode(false); setManualOrder(null); }}
+                          className="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted focus:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+                          title={t('projectiles.compareSortResetHint')}
+                          aria-label={t('projectiles.compareSortResetHint')}
+                        >
+                          <RotateCcw className="h-2.5 w-2.5" aria-hidden />
+                          {t('projectiles.compareSortReset')}
+                        </button>
+                      </span>
+                    );
+                  }
                   const effectiveSort: 'usefulRange' | 'bc' =
                     sortMode ?? (energyThresholdJ !== null ? 'usefulRange' : 'bc');
                   const usefulRangeAvailable = energyThresholdJ !== null;
@@ -379,21 +510,37 @@ export function CompareProjectilesModal({
                       ? t('projectiles.compareSortByUsefulRangeHint', { j: (energyThresholdJ ?? 0).toFixed(2) })
                       : t('projectiles.compareSortByBcHint');
                   return (
-                    <button
-                      type="button"
-                      onClick={canToggle ? () => setSortMode(nextMode) : undefined}
-                      disabled={!canToggle}
-                      className={cn(
-                        'inline-flex items-center gap-0.5 rounded bg-muted px-1.5 py-0.5 text-[10px] font-mono font-medium text-muted-foreground',
-                        canToggle && 'hover:bg-muted/70 hover:text-foreground cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-primary',
-                        !canToggle && 'cursor-default'
-                      )}
-                      title={hint}
-                      aria-label={hint}
-                    >
-                      <span aria-hidden>↓</span>
-                      {label}
-                    </button>
+                    <span className="inline-flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={canToggle ? () => setSortMode(nextMode) : undefined}
+                        disabled={!canToggle}
+                        className={cn(
+                          'inline-flex items-center gap-0.5 rounded bg-muted px-1.5 py-0.5 text-[10px] font-mono font-medium text-muted-foreground',
+                          canToggle && 'hover:bg-muted/70 hover:text-foreground cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-primary',
+                          !canToggle && 'cursor-default'
+                        )}
+                        title={hint}
+                        aria-label={hint}
+                      >
+                        <span aria-hidden>↓</span>
+                        {label}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          // Initialise manualOrder from the current row order so dragging starts from "what you see now".
+                          setManualOrder(rows.map(r => r.p.id));
+                          setManualMode(true);
+                        }}
+                        className="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted focus:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+                        title={t('projectiles.compareSortManualEnableHint')}
+                        aria-label={t('projectiles.compareSortManualEnable')}
+                      >
+                        <GripVertical className="h-2.5 w-2.5" aria-hidden />
+                        {t('projectiles.compareSortManualEnable')}
+                      </button>
+                    </span>
                   );
                 })()}
               </div>
@@ -581,7 +728,7 @@ export function CompareProjectilesModal({
         <div className={cn('overflow-auto', fullscreen ? 'flex-1' : '')}>
           <div ref={exportRef} className="bg-card">
             {/* Drop chart */}
-            <DropChart rows={rows} t={t} tall={fullscreen} hoverRange={hoverRange} onHoverRange={setHoverRange} />
+            <DropChart rows={rows} t={t} tall={fullscreen} hoverRange={hoverRange} onHoverRange={setHoverRange} colorById={colorById} />
 
         {/* Table toolbar with expand/collapse all */}
         <div className="px-4 py-2 border-b border-border bg-muted/20 flex items-center justify-end gap-2">
@@ -617,87 +764,93 @@ export function CompareProjectilesModal({
         <div className="overflow-auto">
           <table className="w-full text-sm">
             <thead className="bg-muted/40 text-[11px] uppercase tracking-wide text-muted-foreground">
-              <tr>
-                <th className="text-left font-medium px-3 py-2 sticky left-0 bg-muted/40 z-10">
-                  {t('projectiles.compareMetric')}
-                </th>
-                {(() => {
-                  // Pre-compute FPE for all rows so we can highlight the maximum.
-                  const velocityFps = velocity * 3.28084;
-                  const energies = rows.map(({ p }) => {
-                    const fpe = (p.weight * velocityFps * velocityFps) / 450240;
-                    const joules = 0.5 * (p.weight * 0.0000647989) * velocity * velocity;
-                    return { id: p.id, fpe, joules };
-                  });
-                  const maxFpe = energies.reduce((m, e) => (e.fpe > m ? e.fpe : m), 0);
-                  // Shared Y scale across all sparklines so curves are visually comparable.
-                  const globalMaxJ = rows.reduce((m, r) => {
-                    const local = r.energyCurve.reduce((mm, pt) => (pt.energy > mm ? pt.energy : mm), 0);
-                    return local > m ? local : m;
-                  }, 0);
-                  return rows.map(({ p, energyCurve }, idx) => {
-                    const e = energies.find(x => x.id === p.id)!;
-                    // Highlight only when there's >1 row and this row is (uniquely or jointly) the max.
-                    const isMax =
-                      rows.length > 1 && Math.abs(e.fpe - maxFpe) < 0.05;
-                    const seriesColor = SERIES_COLORS[idx % SERIES_COLORS.length];
-                    return (
-                      <th key={p.id} className="text-left font-medium px-3 py-2 min-w-[160px]">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0">
-                            <div className="text-xs font-semibold text-foreground normal-case truncate">
-                              {p.brand} {p.model}
-                            </div>
-                            <div className="text-[10px] text-muted-foreground font-mono">
-                              {p.caliber} · {p.bcModel ?? 'G1'}
-                            </div>
-                            <div
-                              className={cn(
-                                'mt-1 text-[10px] font-mono normal-case inline-flex items-center gap-1 rounded px-1 -mx-1',
-                                energyThresholdJ !== null && e.joules > energyThresholdJ
-                                  ? 'text-destructive font-semibold bg-destructive/10'
-                                  : isMax
-                                    ? 'text-tactical font-semibold bg-tactical/10'
-                                    : 'text-muted-foreground'
-                              )}
-                              title={
-                                energyThresholdJ !== null && e.joules > energyThresholdJ
-                                  ? t('projectiles.compareFacOver')
-                                  : t('projectiles.compareMuzzleEnergy')
-                              }
-                            >
-                              {energyThresholdJ !== null && e.joules > energyThresholdJ ? (
-                                <span aria-hidden>⚠</span>
-                              ) : isMax ? (
-                                <span aria-hidden>★</span>
-                              ) : null}
-                              {e.fpe.toFixed(1)} fpe · {e.joules.toFixed(1)} J
-                            </div>
-                            <EnergySparkline
-                              curve={energyCurve}
-                              color={seriesColor}
-                              globalMaxJ={globalMaxJ}
-                              thresholdJ={energyThresholdJ}
-                              hoverRange={hoverRange}
-                              label={t('projectiles.compareEnergySparklineTitle', {
-                                start: energyCurve[0]?.energy.toFixed(1) ?? '—',
-                                end: energyCurve[energyCurve.length - 1]?.energy.toFixed(1) ?? '—',
-                              })}
-                            />
-                          </div>
-                          <button
-                            onClick={() => onRemove(p.id)}
-                            className="p-0.5 rounded hover:bg-muted text-muted-foreground shrink-0"
-                            aria-label={t('common.delete')}
+              <DndContext sensors={dndSensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <SortableContext items={rows.map(r => r.p.id)} strategy={horizontalListSortingStrategy}>
+                  <tr>
+                    <th className="text-left font-medium px-3 py-2 sticky left-0 bg-muted/40 z-10">
+                      {t('projectiles.compareMetric')}
+                    </th>
+                    {(() => {
+                      // Pre-compute FPE for all rows so we can highlight the maximum.
+                      const velocityFps = velocity * 3.28084;
+                      const energies = rows.map(({ p }) => {
+                        const fpe = (p.weight * velocityFps * velocityFps) / 450240;
+                        const joules = 0.5 * (p.weight * 0.0000647989) * velocity * velocity;
+                        return { id: p.id, fpe, joules };
+                      });
+                      const maxFpe = energies.reduce((m, e) => (e.fpe > m ? e.fpe : m), 0);
+                      // Shared Y scale across all sparklines so curves are visually comparable.
+                      const globalMaxJ = rows.reduce((m, r) => {
+                        const local = r.energyCurve.reduce((mm, pt) => (pt.energy > mm ? pt.energy : mm), 0);
+                        return local > m ? local : m;
+                      }, 0);
+                      return rows.map(({ p, energyCurve }) => {
+                        const e = energies.find(x => x.id === p.id)!;
+                        const isMax =
+                          rows.length > 1 && Math.abs(e.fpe - maxFpe) < 0.05;
+                        const seriesColor = colorById.get(p.id) ?? SERIES_COLORS[0];
+                        return (
+                          <SortableProjectileHeader
+                            key={p.id}
+                            id={p.id}
+                            draggable={manualMode}
+                            dragLabel={t('projectiles.compareDragHandle')}
                           >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </div>
-                      </th>
-                    );
-                  });
-                })()}
-              </tr>
+                            <div className="min-w-0">
+                              <div className="text-xs font-semibold text-foreground normal-case truncate">
+                                {p.brand} {p.model}
+                              </div>
+                              <div className="text-[10px] text-muted-foreground font-mono">
+                                {p.caliber} · {p.bcModel ?? 'G1'}
+                              </div>
+                              <div
+                                className={cn(
+                                  'mt-1 text-[10px] font-mono normal-case inline-flex items-center gap-1 rounded px-1 -mx-1',
+                                  energyThresholdJ !== null && e.joules > energyThresholdJ
+                                    ? 'text-destructive font-semibold bg-destructive/10'
+                                    : isMax
+                                      ? 'text-tactical font-semibold bg-tactical/10'
+                                      : 'text-muted-foreground'
+                                )}
+                                title={
+                                  energyThresholdJ !== null && e.joules > energyThresholdJ
+                                    ? t('projectiles.compareFacOver')
+                                    : t('projectiles.compareMuzzleEnergy')
+                                }
+                              >
+                                {energyThresholdJ !== null && e.joules > energyThresholdJ ? (
+                                  <span aria-hidden>⚠</span>
+                                ) : isMax ? (
+                                  <span aria-hidden>★</span>
+                                ) : null}
+                                {e.fpe.toFixed(1)} fpe · {e.joules.toFixed(1)} J
+                              </div>
+                              <EnergySparkline
+                                curve={energyCurve}
+                                color={seriesColor}
+                                globalMaxJ={globalMaxJ}
+                                thresholdJ={energyThresholdJ}
+                                hoverRange={hoverRange}
+                                label={t('projectiles.compareEnergySparklineTitle', {
+                                  start: energyCurve[0]?.energy.toFixed(1) ?? '—',
+                                  end: energyCurve[energyCurve.length - 1]?.energy.toFixed(1) ?? '—',
+                                })}
+                              />
+                            </div>
+                            <button
+                              onClick={() => onRemove(p.id)}
+                              className="p-0.5 rounded hover:bg-muted text-muted-foreground shrink-0"
+                              aria-label={t('common.delete')}
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </SortableProjectileHeader>
+                        );
+                      });
+                    })()}
+                  </tr>
+                </SortableContext>
+              </DndContext>
             </thead>
             <tbody className="divide-y divide-border">
               {/* Static specs */}
@@ -1106,6 +1259,8 @@ interface DropChartProps {
   /** Controlled hover distance (m) — kept in the parent so sparklines can sync. */
   hoverRange: number | null;
   onHoverRange: (r: number | null) => void;
+  /** Stable color per projectile id — colors stay attached to the projectile when columns reorder. */
+  colorById: Map<string, string>;
 }
 
 /**
@@ -1113,7 +1268,7 @@ interface DropChartProps {
  * Uses a shared Y scale so curves are directly comparable. Drop is plotted
  * with negative values (below sight line) downward, matching shooter intuition.
  */
-function DropChart({ rows, t, tall = false, hoverRange, onHoverRange }: DropChartProps) {
+function DropChart({ rows, t, tall = false, hoverRange, onHoverRange, colorById }: DropChartProps) {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const hoverX = hoverRange;
   const setHoverX = onHoverRange;
@@ -1180,14 +1335,14 @@ function DropChart({ rows, t, tall = false, hoverRange, onHoverRange }: DropChar
   const tooltipPoints =
     hoverX !== null
       ? rows
-          .map(({ p, curve }, i) => {
+          .map(({ p, curve }) => {
             const pt = curve.find(c => c.range === hoverX);
             if (!pt) return null;
             return {
               id: p.id,
               label: `${p.brand} ${p.model}`,
               drop: pt.drop,
-              color: SERIES_COLORS[i % SERIES_COLORS.length],
+              color: colorById.get(p.id) ?? SERIES_COLORS[0],
             };
           })
           .filter((x): x is NonNullable<typeof x> => x !== null)
@@ -1204,11 +1359,11 @@ function DropChart({ rows, t, tall = false, hoverRange, onHoverRange }: DropChar
           {t('projectiles.compareChartTitle')}
         </h3>
         <div className="flex flex-wrap gap-x-3 gap-y-1 justify-end">
-          {rows.map(({ p }, i) => (
+          {rows.map(({ p }) => (
             <div key={p.id} className="flex items-center gap-1.5 text-[10px]">
               <span
                 className="inline-block h-0.5 w-3 rounded"
-                style={{ backgroundColor: SERIES_COLORS[i % SERIES_COLORS.length] }}
+                style={{ backgroundColor: colorById.get(p.id) ?? SERIES_COLORS[0] }}
               />
               <span className="text-foreground truncate max-w-[140px]">
                 {p.brand} {p.model}
@@ -1297,7 +1452,7 @@ function DropChart({ rows, t, tall = false, hoverRange, onHoverRange }: DropChar
           </text>
 
           {rows.map(({ p, curve }, i) => {
-            const color = SERIES_COLORS[i % SERIES_COLORS.length];
+            const color = colorById.get(p.id) ?? SERIES_COLORS[0];
             // Stagger draw-in slightly per series so they read as distinct strokes.
             const delay = i * 0.08;
             return (
@@ -1399,5 +1554,57 @@ function DropChart({ rows, t, tall = false, hoverRange, onHoverRange }: DropChar
         )}
       </div>
     </div>
+  );
+}
+
+interface SortableProjectileHeaderProps {
+  id: string;
+  draggable: boolean;
+  dragLabel: string;
+  children: React.ReactNode;
+}
+
+/**
+ * Sortable `<th>` wrapper for projectile columns. When `draggable` is false the
+ * header renders identically to a static `<th>`; when true, a small drag handle
+ * appears and pointer/keyboard interactions on the whole header reorder the column.
+ *
+ * The drag handle is a separate element with its own listeners so users can still
+ * click the close (X) button without triggering a drag.
+ */
+function SortableProjectileHeader({ id, draggable, dragLabel, children }: SortableProjectileHeaderProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id, disabled: !draggable });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.6 : 1,
+    cursor: isDragging ? 'grabbing' : undefined,
+  };
+  return (
+    <th
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        'text-left font-medium px-3 py-2 min-w-[160px] align-top',
+        isDragging && 'z-20 relative'
+      )}
+    >
+      <div className="flex items-start justify-between gap-2">
+        {draggable && (
+          <button
+            type="button"
+            {...attributes}
+            {...listeners}
+            className="p-0.5 rounded hover:bg-muted text-muted-foreground shrink-0 cursor-grab active:cursor-grabbing focus:outline-none focus-visible:ring-1 focus-visible:ring-primary touch-none"
+            title={dragLabel}
+            aria-label={dragLabel}
+          >
+            <GripVertical className="h-3.5 w-3.5" />
+          </button>
+        )}
+        {children}
+      </div>
+    </th>
   );
 }

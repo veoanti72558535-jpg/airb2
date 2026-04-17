@@ -975,6 +975,10 @@ export function CompareProjectilesModal({
                     {rows.map(({ p, drops }) => {
                       const d = drops[r];
                       const isBest = d !== undefined && Math.abs(d) === best && rows.length > 1;
+                      // Symmetric tooltip on non-best cells: how much more drop vs the winner.
+                      const vsBestGap = d !== undefined && !isBest && best !== Infinity && rows.length > 1
+                        ? Math.abs(d) - best
+                        : null;
                       return (
                         <td
                           key={p.id}
@@ -986,7 +990,9 @@ export function CompareProjectilesModal({
                             ? (dropGap !== null
                                 ? t('projectiles.compareFlattestDiff', { gap: dropGap.toFixed(1) })
                                 : t('projectiles.compareFlattestOnly'))
-                            : undefined}
+                            : vsBestGap !== null
+                              ? t('projectiles.compareDropVsBest', { gap: vsBestGap.toFixed(1) })
+                              : undefined}
                         >
                           {isBest && <span aria-hidden className="mr-1">★</span>}
                           {d !== undefined ? `${d.toFixed(1)} mm` : '—'}
@@ -1033,6 +1039,10 @@ export function CompareProjectilesModal({
                     {rows.map(({ p, vels }) => {
                       const v = vels[r];
                       const isFastest = v !== undefined && v === bestVel && rows.length > 1;
+                      // Symmetric tooltip: m/s less than the fastest.
+                      const vsBestGap = v !== undefined && !isFastest && bestVel !== -Infinity && rows.length > 1
+                        ? bestVel - v
+                        : null;
                       return (
                         <td
                           key={p.id}
@@ -1044,7 +1054,9 @@ export function CompareProjectilesModal({
                             ? (velGap !== null
                                 ? t('projectiles.compareFastestDiff', { gap: velGap.toFixed(0) })
                                 : t('projectiles.compareFastestOnly'))
-                            : undefined}
+                            : vsBestGap !== null
+                              ? t('projectiles.compareVelocityVsBest', { gap: vsBestGap.toFixed(0) })
+                              : undefined}
                         >
                           {isFastest && <span aria-hidden className="mr-1">★</span>}
                           {v !== undefined ? `${v.toFixed(0)} m/s` : '—'}

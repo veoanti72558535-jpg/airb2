@@ -498,24 +498,30 @@ export function CompareProjectilesModal({
                       </span>
                     );
                   }
-                  const effectiveSort: 'usefulRange' | 'bc' =
+                  const effectiveSort: 'usefulRange' | 'bc' | 'weight' =
                     sortMode ?? (energyThresholdJ !== null ? 'usefulRange' : 'bc');
                   const usefulRangeAvailable = energyThresholdJ !== null;
-                  const nextMode: 'usefulRange' | 'bc' =
-                    effectiveSort === 'usefulRange' ? 'bc' : 'usefulRange';
-                  const canToggle = usefulRangeAvailable; // only meaningful when threshold exists
-                  const label = effectiveSort === 'usefulRange'
-                    ? t('projectiles.compareSortByUsefulRange')
-                    : t('projectiles.compareSortByBc');
+                  // Cycle: usefulRange → bc → weight → usefulRange (skip usefulRange when no threshold).
+                  const cycle: ('usefulRange' | 'bc' | 'weight')[] = usefulRangeAvailable
+                    ? ['usefulRange', 'bc', 'weight']
+                    : ['bc', 'weight'];
+                  const idx = cycle.indexOf(effectiveSort);
+                  const nextMode = cycle[(idx + 1) % cycle.length];
+                  const canToggle = cycle.length > 1;
+                  const labelFor = (m: 'usefulRange' | 'bc' | 'weight') =>
+                    m === 'usefulRange'
+                      ? t('projectiles.compareSortByUsefulRange')
+                      : m === 'bc'
+                        ? t('projectiles.compareSortByBc')
+                        : t('projectiles.compareSortByWeight');
+                  const label = labelFor(effectiveSort);
                   const hint = canToggle
-                    ? t('projectiles.compareSortToggleHint', {
-                        next: nextMode === 'usefulRange'
-                          ? t('projectiles.compareSortByUsefulRange')
-                          : t('projectiles.compareSortByBc'),
-                      })
+                    ? t('projectiles.compareSortToggleHint', { next: labelFor(nextMode) })
                     : effectiveSort === 'usefulRange'
                       ? t('projectiles.compareSortByUsefulRangeHint', { j: (energyThresholdJ ?? 0).toFixed(2) })
-                      : t('projectiles.compareSortByBcHint');
+                      : effectiveSort === 'bc'
+                        ? t('projectiles.compareSortByBcHint')
+                        : t('projectiles.compareSortByWeightHint');
                   return (
                     <span className="inline-flex items-center gap-1">
                       <button

@@ -428,7 +428,8 @@ function DragTablePreview({ table, t }: PreviewProps) {
         role="img"
         aria-label={t('projectiles.dragTablePreview')}
         onPointerMove={handlePointerMove}
-        onPointerLeave={() => setHover(null)}
+        onPointerDown={handlePointerDown}
+        onPointerLeave={handlePointerLeave}
       >
         {/* grid + axis labels */}
         {yTicks.map((y, i) => (

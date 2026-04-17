@@ -835,6 +835,12 @@ export function CompareProjectilesModal({
                       const maxRange = overRanges.length ? Math.max(...overRanges) : null;
                       return { id: p.id, overRanges, maxRange };
                     });
+                    // Highest "max useful range" across rows — used to highlight the winner
+                    // (only meaningful when comparing >1 projectile and at least one is above the threshold).
+                    const bestMaxRange = overByProjectile.reduce<number | null>(
+                      (m, x) => (x.maxRange !== null && (m === null || x.maxRange > m) ? x.maxRange : m),
+                      null,
+                    );
                     return (
                       <>
                         {/* Max useful range row */}
@@ -842,21 +848,32 @@ export function CompareProjectilesModal({
                           <td className="px-3 py-2 text-xs text-muted-foreground sticky left-0 bg-card z-10">
                             {t('projectiles.compareOverThresholdMax')}
                           </td>
-                          {overByProjectile.map(({ id, maxRange }) => (
-                            <td
-                              key={id}
-                              className={cn(
-                                'px-3 py-2 font-mono text-xs',
-                                maxRange === null
-                                  ? 'text-muted-foreground italic'
-                                  : 'text-destructive font-semibold'
-                              )}
-                            >
-                              {maxRange === null
-                                ? t('projectiles.compareOverThresholdNone')
-                                : `${maxRange} m`}
-                            </td>
-                          ))}
+                          {overByProjectile.map(({ id, maxRange }) => {
+                            const isWinner =
+                              rows.length > 1 &&
+                              maxRange !== null &&
+                              bestMaxRange !== null &&
+                              maxRange === bestMaxRange;
+                            return (
+                              <td
+                                key={id}
+                                className={cn(
+                                  'px-3 py-2 font-mono text-xs',
+                                  maxRange === null
+                                    ? 'text-muted-foreground italic'
+                                    : isWinner
+                                      ? 'text-tactical font-semibold bg-tactical/10'
+                                      : 'text-destructive font-semibold',
+                                )}
+                                title={isWinner ? t('projectiles.compareOverThresholdBest') : undefined}
+                              >
+                                {isWinner && <span aria-hidden className="mr-1">★</span>}
+                                {maxRange === null
+                                  ? t('projectiles.compareOverThresholdNone')
+                                  : `${maxRange} m`}
+                              </td>
+                            );
+                          })}
                         </tr>
                         {/* Range list row — concise comma-separated list, capped for legibility */}
                         <tr>

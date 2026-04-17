@@ -233,6 +233,8 @@ export default function ProjectilesPage() {
                 <select className={inputClass} value={form.bcModel} onChange={e => setForm(f => ({ ...f, bcModel: e.target.value as DragModel }))}>
                   <option value="G1">G1 — {t('calc.dragG1Hint')}</option>
                   <option value="G7">G7 — {t('calc.dragG7Hint')}</option>
+                  <option value="GA">GA — {t('calc.dragGAHint')}</option>
+                  <option value="GS">GS — {t('calc.dragGSHint')}</option>
                 </select>
               </div>
               <div>

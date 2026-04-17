@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Crosshair, RotateCcw, Save, Sparkles, Settings2 } from 'lucide-react';
 import { toast } from 'sonner';

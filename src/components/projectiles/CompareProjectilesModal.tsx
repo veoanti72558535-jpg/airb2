@@ -517,10 +517,10 @@ export function CompareProjectilesModal({
                 );
               })}
 
-              {/* Velocity / energy section */}
+              {/* Velocity section — residual speed at each distance */}
               <tr className="bg-muted/20">
                 <td colSpan={rows.length + 1} className="px-3 py-1.5 text-[10px] uppercase tracking-wide text-muted-foreground font-semibold">
-                  {t('projectiles.compareEnergySection')}
+                  {t('projectiles.compareVelocitySection')}
                 </td>
               </tr>
               {COMPARE_RANGES.map(r => {
@@ -529,34 +529,55 @@ export function CompareProjectilesModal({
                 return (
                   <tr key={`v-${r}`}>
                     <td className="px-3 py-2 text-xs text-muted-foreground sticky left-0 bg-card z-10">
-                      {t('projectiles.compareEnergyAt', { r })}
+                      {t('projectiles.compareVelocityAt', { r })}
                     </td>
-                    {rows.map(({ p, vels, energies }) => {
-                      const j = energies[r];
+                    {rows.map(({ p, vels }) => {
                       const v = vels[r];
-                      const overFac = energyThresholdJ !== null && j !== undefined && j > energyThresholdJ;
-                      // FAC red wins over "best velocity" green when both apply.
-                      const isFastest = !overFac && v !== undefined && v === bestVel && rows.length > 1;
+                      const isFastest = v !== undefined && v === bestVel && rows.length > 1;
                       return (
                         <td
                           key={p.id}
                           className={cn(
                             'px-3 py-2 font-mono text-xs',
-                            overFac && 'text-destructive font-semibold bg-destructive/10',
                             isFastest && 'text-tactical font-semibold bg-tactical/10'
                           )}
-                          title={
-                            overFac
-                              ? t('projectiles.compareFacOver')
-                              : isFastest
-                                ? t('projectiles.compareFastest')
-                                : undefined
-                          }
+                          title={isFastest ? t('projectiles.compareFastest') : undefined}
                         >
                           {isFastest && <span aria-hidden className="mr-1">★</span>}
-                          {v !== undefined
-                            ? `${v.toFixed(0)} m/s · ${j.toFixed(1)} J`
-                            : '—'}
+                          {v !== undefined ? `${v.toFixed(0)} m/s` : '—'}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                );
+              })}
+
+              {/* Energy section — residual energy at each distance, highlights over-threshold rows */}
+              <tr className="bg-muted/20">
+                <td colSpan={rows.length + 1} className="px-3 py-1.5 text-[10px] uppercase tracking-wide text-muted-foreground font-semibold">
+                  {t('projectiles.compareEnergyOnlySection')}
+                </td>
+              </tr>
+              {COMPARE_RANGES.map(r => {
+                return (
+                  <tr key={`e-${r}`}>
+                    <td className="px-3 py-2 text-xs text-muted-foreground sticky left-0 bg-card z-10">
+                      {t('projectiles.compareEnergyOnlyAt', { r })}
+                    </td>
+                    {rows.map(({ p, energies }) => {
+                      const j = energies[r];
+                      const overFac = energyThresholdJ !== null && j !== undefined && j > energyThresholdJ;
+                      return (
+                        <td
+                          key={p.id}
+                          className={cn(
+                            'px-3 py-2 font-mono text-xs',
+                            overFac && 'text-destructive font-semibold bg-destructive/10'
+                          )}
+                          title={overFac ? t('projectiles.compareFacOver') : undefined}
+                        >
+                          {overFac && <span aria-hidden className="mr-1">⚠</span>}
+                          {j !== undefined ? `${j.toFixed(1)} J` : '—'}
                         </td>
                       );
                     })}

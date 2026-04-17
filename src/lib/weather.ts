@@ -178,7 +178,7 @@ export async function fetchOpenMeteo(
     provider: 'open-meteo',
     latitude: point.latitude,
     longitude: point.longitude,
-    location: `${point.latitude.toFixed(2)}, ${point.longitude.toFixed(2)}`,
+    location: options?.locationLabel ?? `${point.latitude.toFixed(2)}, ${point.longitude.toFixed(2)}`,
     manualOverrides: [],
   };
 

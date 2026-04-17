@@ -39,11 +39,16 @@ export function WeaponSection({
   zeroRange,
   clickValue,
   clickUnit,
+  currentMag,
   onChange,
   advanced,
 }: Props) {
   const { t } = useI18n();
   const { symbol } = useUnits();
+  const selectedOpticObj = optics.find(x => x.id === selectedOptic);
+  const magCal = selectedOpticObj?.magCalibration;
+  const magMismatch =
+    magCal != null && currentMag != null && currentMag > 0 && Math.abs(currentMag - magCal) > 0.01;
   return (
     <Section icon={Target} title={t('calc.sectionWeapon')}>
       <EntitySelect

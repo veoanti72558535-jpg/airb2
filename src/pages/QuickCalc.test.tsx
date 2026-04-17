@@ -42,9 +42,11 @@ vi.mock('@/components/calc/ZeroingSection', () => ({
   ZeroingSection: () => <div data-testid="zeroing-section" />,
 }));
 vi.mock('@/components/calc/ResultsCard', () => ({
-  ResultsCard: ({ results }: { results: unknown }) => (
-    <div data-testid="results-card">{results ? 'has-results' : 'no-results'}</div>
-  ),
+  // The real component receives `result` (singular) + `rows`. The card itself
+  // is only mounted by QuickCalc when `results && heroResult` are truthy, so
+  // simply asserting on the testid presence is enough to prove rehydration
+  // restored the trajectory.
+  ResultsCard: () => <div data-testid="results-card" />,
 }));
 vi.mock('@/components/compare/SessionPickerDialog', () => ({
   SessionPickerDialog: () => null,
@@ -144,8 +146,9 @@ describe('QuickCalc — rehydration from ?session=', () => {
     const [, payload] = toastSuccess.mock.calls[0];
     expect(payload).toMatchObject({ description: 'Legacy Session' });
 
-    // Saved results were restored — the card shows 'has-results'.
-    expect(screen.getByTestId('results-card').textContent).toBe('has-results');
+    // Saved results were restored — the ResultsCard is mounted only when
+    // `results && heroResult` are both truthy in QuickCalc.
+    expect(screen.getByTestId('results-card')).toBeInTheDocument();
   });
 
   it('shows an error toast and does not crash when ?session= points to a missing id', async () => {

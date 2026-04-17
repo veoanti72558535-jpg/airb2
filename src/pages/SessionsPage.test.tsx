@@ -1,7 +1,7 @@
 import React from 'react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent, within } from '@testing-library/react';
-import { MemoryRouter, Routes, Route } from 'react-router-dom';
+import { MemoryRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { I18nProvider } from '@/lib/i18n';
 import { ThemeProvider } from '@/lib/theme';
 import SessionsPage from '@/pages/SessionsPage';
@@ -52,7 +52,10 @@ function makeSession(id: string, name: string, mv: number): Session {
 
 function ComparePathProbe() {
   // Renders the search string so tests can assert on a/b ids.
-  return <div data-testid="compare-probe">{location.search}</div>;
+  // useLocation reflects MemoryRouter's internal history — window.location
+  // is NOT updated by MemoryRouter, so we must read from the hook.
+  const loc = useLocation();
+  return <div data-testid="compare-probe">{loc.search}</div>;
 }
 
 function renderApp() {

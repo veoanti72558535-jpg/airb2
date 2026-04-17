@@ -85,6 +85,11 @@ export function CompareProjectilesModal({
   const [copying, setCopying] = useState(false);
   const [copied, setCopied] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
+  /** Per-section collapsed state — lets users focus on a single metric. Defaults expanded. */
+  const [collapsed, setCollapsed] = useState<{ vel: boolean; energy: boolean }>({
+    vel: false,
+    energy: false,
+  });
   /** Wraps the chart + table — that's what gets snapshotted to PNG. */
   const exportRef = useRef<HTMLDivElement | null>(null);
 

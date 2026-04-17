@@ -5,7 +5,7 @@ import { useI18n } from '@/lib/i18n';
 import { projectileStore } from '@/lib/storage';
 import { useUnits } from '@/hooks/use-units';
 import { useUrlFilter } from '@/hooks/use-url-filter';
-import { DragModel, Projectile, ProjectileType } from '@/lib/types';
+import { DragModel, DragTablePoint, Projectile, ProjectileType } from '@/lib/types';
 import { motion } from 'framer-motion';
 import { toast } from '@/hooks/use-toast';
 import { SearchBar } from '@/components/SearchBar';
@@ -15,6 +15,7 @@ import { calToken, buildCaliberCounts } from '@/lib/caliber';
 import { AdvancedDisclosure } from '@/components/AdvancedDisclosure';
 import { ImportPresetProjectilesModal } from '@/components/projectiles/ImportPresetProjectilesModal';
 import { CompareProjectilesModal } from '@/components/projectiles/CompareProjectilesModal';
+import { DragTableEditor } from '@/components/projectiles/DragTableEditor';
 import { seedProjectileKey } from '@/lib/seed-projectiles';
 
 const MAX_COMPARE = 4;
@@ -33,6 +34,7 @@ interface FormState {
   material: string;
   notes: string;
   dataSource: string;
+  customDragTable?: DragTablePoint[];
 }
 
 const emptyForm: FormState = {

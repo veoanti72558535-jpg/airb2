@@ -126,6 +126,7 @@ export default function ProjectilesPage() {
           placeholder={t('projectiles.search')}
           count={filteredProjectiles.length}
           total={projectiles.length}
+          showCopyLink
         />
       )}
 

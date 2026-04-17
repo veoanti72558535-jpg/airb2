@@ -308,6 +308,9 @@ const fr = {
   'common.close': 'Fermer',
   'common.add': 'Ajouter',
   'common.viewAll': 'Voir tout',
+  'common.copyLink': 'Copier le lien filtré',
+  'common.linkCopied': 'Lien copié dans le presse-papiers',
+  'common.copyFailed': 'Impossible de copier le lien',
 } as const;
 
 const en: Record<keyof typeof fr, string> = {
@@ -605,6 +608,9 @@ const en: Record<keyof typeof fr, string> = {
   'common.close': 'Close',
   'common.add': 'Add',
   'common.viewAll': 'View All',
+  'common.copyLink': 'Copy filtered link',
+  'common.linkCopied': 'Link copied to clipboard',
+  'common.copyFailed': 'Failed to copy link',
 };
 
 export const translations = { fr, en } as const;

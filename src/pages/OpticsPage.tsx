@@ -193,6 +193,7 @@ export default function OpticsPage() {
           placeholder={t('optics.search')}
           count={filteredOptics.length}
           total={optics.length}
+          showCopyLink
         />
       )}
 

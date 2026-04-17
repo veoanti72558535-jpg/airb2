@@ -127,6 +127,7 @@ export default function AirgunsPage() {
           placeholder={t('airguns.search')}
           count={filteredAirguns.length}
           total={airguns.length}
+          showCopyLink
         />
       )}
 

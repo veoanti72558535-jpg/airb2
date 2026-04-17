@@ -14,6 +14,7 @@ import {
   OpticFocalPlane,
   Projectile,
   ProjectileType,
+  Tune,
   WeatherSnapshot,
 } from '@/lib/types';
 import {
@@ -21,6 +22,7 @@ import {
   opticStore,
   projectileStore,
   sessionStore,
+  tuneStore,
   getSettings,
   saveSettings,
 } from '@/lib/storage';

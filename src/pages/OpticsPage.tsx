@@ -191,6 +191,8 @@ export default function OpticsPage() {
           value={searchQuery}
           onChange={setSearchQuery}
           placeholder={t('optics.search')}
+          count={filteredOptics.length}
+          total={optics.length}
         />
       )}
 

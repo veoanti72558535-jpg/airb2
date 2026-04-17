@@ -125,6 +125,8 @@ export default function AirgunsPage() {
           value={searchQuery}
           onChange={setSearchQuery}
           placeholder={t('airguns.search')}
+          count={filteredAirguns.length}
+          total={airguns.length}
         />
       )}
 

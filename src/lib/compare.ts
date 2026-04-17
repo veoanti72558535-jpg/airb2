@@ -22,6 +22,7 @@ import {
   WeatherSnapshot,
 } from './types';
 import { airgunStore, opticStore, projectileStore, tuneStore } from './storage';
+import { normalizeSession } from './session-normalize';
 
 // ── Diff model ──────────────────────────────────────────────────────────────
 
@@ -47,7 +48,10 @@ interface ResolvedSession {
   tuneName?: string;
 }
 
-export function resolveSession(s: Session): ResolvedSession {
+export function resolveSession(rawSession: Session): ResolvedSession {
+  // Normalise legacy sessions at the boundary so every downstream consumer
+  // (diff, summary card, exports) reads a fully-shaped session.
+  const s = normalizeSession(rawSession);
   return {
     session: s,
     airgun: s.airgunId ? airgunStore.getById(s.airgunId) : undefined,

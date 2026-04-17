@@ -169,6 +169,7 @@ const fr = {
   'airguns.notes': 'Notes',
   'airguns.search': 'Rechercher par marque, modèle ou notes…',
   'airguns.noMatch': 'Aucune arme ne correspond à la recherche.',
+  'airguns.advancedHint': 'Pas de rayure, hauteur de lunette, zéro par défaut',
 
   // Tunes
   'tunes.title': 'Tunes',
@@ -192,6 +193,9 @@ const fr = {
   'projectiles.material': 'Matériau',
   'projectiles.search': 'Rechercher par marque, modèle ou notes…',
   'projectiles.noMatch': 'Aucun projectile ne correspond à la recherche.',
+  'projectiles.type': 'Type',
+  'projectiles.dragModel': 'Modèle de traînée (BC)',
+  'projectiles.advancedHint': 'Drag model, dimensions, forme, matériau',
 
   // Optics
   'optics.title': 'Bibliothèque d\'optiques',
@@ -231,6 +235,9 @@ const fr = {
   'sessions.view': 'Voir',
   'sessions.createFromCalc': 'Créer à partir d\'un calcul',
   'sessions.searchPlaceholder': 'Rechercher une session…',
+  'sessions.openInCalc': 'Recharger dans le calculateur',
+  'sessions.badgeZeroWeather': 'Météo zéro',
+  'sessions.loaded': 'Session rechargée',
 
   // Conversions
   'conv.title': 'Conversions d\'unités',
@@ -518,6 +525,7 @@ const en: Record<keyof typeof fr, string> = {
   'airguns.notes': 'Notes',
   'airguns.search': 'Search by brand, model or notes…',
   'airguns.noMatch': 'No airgun matches your search.',
+  'airguns.advancedHint': 'Twist rate, sight height, default zero',
 
   'tunes.title': 'Tunes',
   'tunes.add': 'Add Tune',
@@ -539,6 +547,9 @@ const en: Record<keyof typeof fr, string> = {
   'projectiles.material': 'Material',
   'projectiles.search': 'Search by brand, model or notes…',
   'projectiles.noMatch': 'No projectile matches your search.',
+  'projectiles.type': 'Type',
+  'projectiles.dragModel': 'Drag model (BC)',
+  'projectiles.advancedHint': 'Drag model, dimensions, shape, material',
 
   'optics.title': 'Optics Library',
   'optics.add': 'Add Optic',
@@ -576,6 +587,9 @@ const en: Record<keyof typeof fr, string> = {
   'sessions.view': 'View',
   'sessions.createFromCalc': 'Create from a calculation',
   'sessions.searchPlaceholder': 'Search sessions…',
+  'sessions.openInCalc': 'Reload in calculator',
+  'sessions.badgeZeroWeather': 'Zero weather',
+  'sessions.loaded': 'Session reloaded',
 
   'conv.title': 'Unit Conversions',
   'conv.subtitle': 'Deterministic conversions — no AI involved',

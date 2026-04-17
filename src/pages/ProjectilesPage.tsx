@@ -4,13 +4,46 @@ import { useI18n } from '@/lib/i18n';
 import { projectileStore } from '@/lib/storage';
 import { useUnits } from '@/hooks/use-units';
 import { useUrlFilter } from '@/hooks/use-url-filter';
-import { Projectile } from '@/lib/types';
+import { DragModel, Projectile, ProjectileType } from '@/lib/types';
 import { motion } from 'framer-motion';
 import { toast } from '@/hooks/use-toast';
 import { SearchBar } from '@/components/SearchBar';
 import { FilterChips } from '@/components/FilterChips';
 import { useBrandCounts } from '@/hooks/use-brand-counts';
 import { calToken, buildCaliberCounts } from '@/lib/caliber';
+import { AdvancedDisclosure } from '@/components/AdvancedDisclosure';
+
+interface FormState {
+  brand: string;
+  model: string;
+  weight: number;
+  bc: number;
+  bcModel: DragModel;
+  projectileType: ProjectileType;
+  shape: string;
+  caliber: string;
+  length: number;
+  diameter: number;
+  material: string;
+  notes: string;
+  dataSource: string;
+}
+
+const emptyForm: FormState = {
+  brand: '',
+  model: '',
+  weight: 18,
+  bc: 0.025,
+  bcModel: 'G1',
+  projectileType: 'pellet',
+  shape: 'domed',
+  caliber: '.177',
+  length: 0,
+  diameter: 0,
+  material: 'lead',
+  notes: '',
+  dataSource: '',
+};
 
 export default function ProjectilesPage() {
   const { t } = useI18n();
@@ -27,10 +60,9 @@ export default function ProjectilesPage() {
   const setCaliberFilter = (v: string | null) => setCaliberParam(v);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Projectile | null>(null);
-  const [form, setForm] = useState({ brand: '', model: '', weight: 18, bc: 0.025, shape: 'domed', caliber: '.177', length: 0, diameter: 0, material: 'lead', notes: '', dataSource: '' });
+  const [form, setForm] = useState<FormState>(emptyForm);
 
   const brandCounts = useBrandCounts(projectiles, p => p.brand);
-
   const caliberCounts = useMemo(() => buildCaliberCounts(projectiles, p => p.caliber), [projectiles]);
 
   const filteredProjectiles = useMemo(() => {
@@ -52,14 +84,20 @@ export default function ProjectilesPage() {
 
   const handleSave = () => {
     if (!form.brand || !form.model) return;
+    const payload = {
+      ...form,
+      length: form.length || undefined,
+      diameter: form.diameter || undefined,
+    };
     if (editing) {
-      projectileStore.update(editing.id, form);
+      projectileStore.update(editing.id, payload);
     } else {
-      projectileStore.create(form as any);
+      projectileStore.create(payload as any);
     }
     refresh();
     setShowForm(false);
     setEditing(null);
+    setForm(emptyForm);
     toast({ title: t('common.save') });
   };
 
@@ -70,7 +108,21 @@ export default function ProjectilesPage() {
 
   const handleEdit = (p: Projectile) => {
     setEditing(p);
-    setForm({ brand: p.brand, model: p.model, weight: p.weight, bc: p.bc, shape: p.shape ?? 'domed', caliber: p.caliber, length: p.length ?? 0, diameter: p.diameter ?? 0, material: p.material ?? 'lead', notes: p.notes ?? '', dataSource: p.dataSource ?? '' });
+    setForm({
+      brand: p.brand,
+      model: p.model,
+      weight: p.weight,
+      bc: p.bc,
+      bcModel: p.bcModel ?? 'G1',
+      projectileType: p.projectileType ?? 'pellet',
+      shape: p.shape ?? 'domed',
+      caliber: p.caliber,
+      length: p.length ?? 0,
+      diameter: p.diameter ?? 0,
+      material: p.material ?? 'lead',
+      notes: p.notes ?? '',
+      dataSource: p.dataSource ?? '',
+    });
     setShowForm(true);
   };
 
@@ -85,28 +137,19 @@ export default function ProjectilesPage() {
           <Zap className="h-5 w-5 text-primary" />
           <h1 className="text-xl font-heading font-bold">{t('projectiles.title')}</h1>
         </div>
-        <button onClick={() => { setShowForm(!showForm); setEditing(null); }} className="px-3 py-1.5 bg-primary text-primary-foreground rounded-md text-sm font-medium flex items-center gap-1 hover:opacity-90">
+        <button onClick={() => { setShowForm(!showForm); setEditing(null); setForm(emptyForm); }} className="px-3 py-1.5 bg-primary text-primary-foreground rounded-md text-sm font-medium flex items-center gap-1 hover:opacity-90">
           <Plus className="h-4 w-4" />{t('projectiles.add')}
         </button>
       </div>
 
       {showForm && (
         <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="surface-elevated p-4 space-y-3">
+          {/* Essential fields */}
           <div className="grid grid-cols-2 gap-3">
             <div><label className="text-xs text-muted-foreground">{t('projectiles.brand')}</label><input className={inputClass} value={form.brand} onChange={e => setForm(f => ({ ...f, brand: e.target.value }))} /></div>
             <div><label className="text-xs text-muted-foreground">{t('projectiles.model')}</label><input className={inputClass} value={form.model} onChange={e => setForm(f => ({ ...f, model: e.target.value }))} /></div>
             <div><label className="text-xs text-muted-foreground">{t('projectiles.weight')} ({weightSym})</label><input type="number" step="0.5" className={inputClass} value={form.weight} onChange={e => setForm(f => ({ ...f, weight: +e.target.value }))} /></div>
             <div><label className="text-xs text-muted-foreground">{t('projectiles.bc')}</label><input type="number" step="0.001" className={inputClass} value={form.bc} onChange={e => setForm(f => ({ ...f, bc: +e.target.value }))} /></div>
-            <div>
-              <label className="text-xs text-muted-foreground">{t('projectiles.shape')}</label>
-              <select className={inputClass} value={form.shape} onChange={e => setForm(f => ({ ...f, shape: e.target.value }))}>
-                <option value="domed">Domed</option>
-                <option value="pointed">Pointed</option>
-                <option value="flat">Flat / Wadcutter</option>
-                <option value="hollow">Hollow Point</option>
-                <option value="slug">Slug</option>
-              </select>
-            </div>
             <div>
               <label className="text-xs text-muted-foreground">{t('projectiles.caliber')}</label>
               <select className={inputClass} value={form.caliber} onChange={e => setForm(f => ({ ...f, caliber: e.target.value }))}>
@@ -114,27 +157,62 @@ export default function ProjectilesPage() {
               </select>
             </div>
             <div>
-              <label className="text-xs text-muted-foreground">{t('projectiles.length')} ({lengthSym})</label>
-              <input type="number" step="0.1" className={inputClass} value={form.length} onChange={e => setForm(f => ({ ...f, length: +e.target.value }))} />
-            </div>
-            <div>
-              <label className="text-xs text-muted-foreground">{t('projectiles.diameter')} ({lengthSym})</label>
-              <input type="number" step="0.01" className={inputClass} value={form.diameter} onChange={e => setForm(f => ({ ...f, diameter: +e.target.value }))} />
-            </div>
-            <div>
-              <label className="text-xs text-muted-foreground">{t('projectiles.material')}</label>
-              <select className={inputClass} value={form.material} onChange={e => setForm(f => ({ ...f, material: e.target.value }))}>
-                <option value="lead">Lead</option>
-                <option value="alloy">Alloy</option>
-                <option value="copper">Copper</option>
-                <option value="tin">Tin</option>
+              <label className="text-xs text-muted-foreground">{t('projectiles.type')}</label>
+              <select className={inputClass} value={form.projectileType} onChange={e => setForm(f => ({ ...f, projectileType: e.target.value as ProjectileType }))}>
+                <option value="pellet">{t('calc.typePellet')}</option>
+                <option value="slug">{t('calc.typeSlug')}</option>
+                <option value="other">{t('calc.typeOther')}</option>
               </select>
             </div>
           </div>
+
+          {/* Advanced fields */}
+          <AdvancedDisclosure
+            title={t('common.advancedMode')}
+            description={t('projectiles.advancedHint')}
+          >
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs text-muted-foreground">{t('projectiles.dragModel')}</label>
+                <select className={inputClass} value={form.bcModel} onChange={e => setForm(f => ({ ...f, bcModel: e.target.value as DragModel }))}>
+                  <option value="G1">G1 — {t('calc.dragG1Hint')}</option>
+                  <option value="G7">G7 — {t('calc.dragG7Hint')}</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground">{t('projectiles.shape')}</label>
+                <select className={inputClass} value={form.shape} onChange={e => setForm(f => ({ ...f, shape: e.target.value }))}>
+                  <option value="domed">Domed</option>
+                  <option value="pointed">Pointed</option>
+                  <option value="flat">Flat / Wadcutter</option>
+                  <option value="hollow">Hollow Point</option>
+                  <option value="slug">Slug</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground">{t('projectiles.length')} ({lengthSym})</label>
+                <input type="number" step="0.1" className={inputClass} value={form.length} onChange={e => setForm(f => ({ ...f, length: +e.target.value }))} />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground">{t('projectiles.diameter')} ({lengthSym})</label>
+                <input type="number" step="0.01" className={inputClass} value={form.diameter} onChange={e => setForm(f => ({ ...f, diameter: +e.target.value }))} />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground">{t('projectiles.material')}</label>
+                <select className={inputClass} value={form.material} onChange={e => setForm(f => ({ ...f, material: e.target.value }))}>
+                  <option value="lead">Lead</option>
+                  <option value="alloy">Alloy</option>
+                  <option value="copper">Copper</option>
+                  <option value="tin">Tin</option>
+                </select>
+              </div>
+            </div>
+          </AdvancedDisclosure>
+
           <div><label className="text-xs text-muted-foreground">{t('airguns.notes')}</label><textarea className={inputClass} rows={2} value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} /></div>
           <div className="flex gap-2">
             <button onClick={handleSave} className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium">{t('common.save')}</button>
-            <button onClick={() => { setShowForm(false); setEditing(null); }} className="px-4 py-2 bg-muted text-muted-foreground rounded-md text-sm">{t('common.cancel')}</button>
+            <button onClick={() => { setShowForm(false); setEditing(null); setForm(emptyForm); }} className="px-4 py-2 bg-muted text-muted-foreground rounded-md text-sm">{t('common.cancel')}</button>
           </div>
         </motion.div>
       )}
@@ -182,20 +260,31 @@ export default function ProjectilesPage() {
           {filteredProjectiles.map(p => (
             <div key={p.id} className="surface-elevated p-4">
               <div className="flex items-start justify-between mb-2">
-                <div>
+                <div className="min-w-0 flex-1">
                   <div className="font-semibold text-sm">{p.brand} {p.model}</div>
-                  <div className="flex gap-2 mt-0.5">
+                  <div className="flex flex-wrap gap-1.5 mt-1">
                     <span className="tactical-badge">{p.caliber}</span>
                     <span className="tactical-badge">{p.weight} {weightSym}</span>
-                    <span className="tactical-badge">BC {p.bc}</span>
+                    <span className="tactical-badge">BC {p.bc}{p.bcModel ? ` ${p.bcModel}` : ''}</span>
+                    {p.projectileType && p.projectileType !== 'pellet' && (
+                      <span className="tactical-badge">{p.projectileType}</span>
+                    )}
                   </div>
+                  {(p.length || p.diameter || p.shape || p.material) && (
+                    <div className="text-[11px] text-muted-foreground font-mono mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5">
+                      {p.length ? <span>L {p.length}{lengthSym}</span> : null}
+                      {p.diameter ? <span>⌀ {p.diameter}{lengthSym}</span> : null}
+                      {p.shape ? <span>{p.shape}</span> : null}
+                      {p.material ? <span>{p.material}</span> : null}
+                    </div>
+                  )}
+                  {p.notes && <p className="text-[11px] text-muted-foreground mt-1 italic line-clamp-2">{p.notes}</p>}
                 </div>
-                <div className="flex gap-1">
+                <div className="flex gap-1 shrink-0">
                   <button onClick={() => handleEdit(p)} className="p-1.5 rounded hover:bg-muted text-muted-foreground"><Edit2 className="h-3.5 w-3.5" /></button>
                   <button onClick={() => handleDelete(p.id)} className="p-1.5 rounded hover:bg-destructive/10 text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
                 </div>
               </div>
-              {p.shape && <span className="text-xs text-muted-foreground">{p.shape} • {p.material}</span>}
             </div>
           ))}
         </div>

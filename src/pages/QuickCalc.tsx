@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Crosshair, RotateCcw, Save, Sparkles, Settings2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -118,6 +119,7 @@ function defaultForm(): FormState {
 export default function QuickCalc() {
   const { t } = useI18n();
   const settings = getSettings();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [advanced, setAdvanced] = useState(settings.advancedMode);
   const [form, setForm] = useState<FormState>(defaultForm);
   const [results, setResults] = useState<BallisticResult[] | null>(null);
@@ -131,6 +133,57 @@ export default function QuickCalc() {
   useEffect(() => {
     saveSettings({ ...getSettings(), advancedMode: advanced });
   }, [advanced]);
+
+  // Rehydrate from ?session=<id> with safe defaults for legacy sessions.
+  useEffect(() => {
+    const sid = searchParams.get('session');
+    if (!sid) return;
+    const session = sessionStore.getById(sid);
+    if (!session) {
+      toast.error(t('common.noData'));
+      setSearchParams(prev => { const p = new URLSearchParams(prev); p.delete('session'); return p; });
+      return;
+    }
+    const i = session.input;
+    const baseWeather = i.weather ?? defaultWeather();
+    const proj = session.projectileId ? projectiles.find(p => p.id === session.projectileId) : undefined;
+    const hydrated: FormState = {
+      ...defaultForm(),
+      projectileId: session.projectileId ?? '',
+      bc: i.bc,
+      projectileWeight: i.projectileWeight,
+      dragModel: i.dragModel ?? proj?.bcModel ?? 'G1',
+      projectileType: proj?.projectileType ?? 'pellet',
+      projectileLength: i.projectileLength ?? proj?.length,
+      projectileDiameter: i.projectileDiameter ?? proj?.diameter,
+      muzzleVelocity: i.muzzleVelocity,
+      airgunId: session.airgunId ?? '',
+      twistRate: i.twistRate,
+      opticId: session.opticId ?? '',
+      focalPlane: i.focalPlane ?? 'FFP',
+      sightHeight: i.sightHeight,
+      zeroRange: i.zeroRange,
+      clickValue: i.clickValue ?? 0.1,
+      clickUnit: i.clickUnit ?? 'MRAD',
+      currentMag: i.currentMag,
+      magCalibration: i.magCalibration,
+      targetDistance: Math.min(i.maxRange, 50) || 50,
+      useRange: i.maxRange > (i.rangeStep ?? 10),
+      minRange: 10,
+      maxRange: i.maxRange,
+      rangeStep: i.rangeStep,
+      weather: baseWeather,
+      useZeroWeather: !!i.zeroWeather,
+      zeroWeather: i.zeroWeather ?? defaultWeather(),
+    };
+    setForm(hydrated);
+    setResults(session.results ?? null);
+    setSessionName(session.name);
+    if (i.dragModel === 'G7' || i.zeroWeather || i.focalPlane === 'SFP' || i.twistRate) setAdvanced(true);
+    toast.success(t('sessions.loaded'), { description: session.name });
+    setSearchParams(prev => { const p = new URLSearchParams(prev); p.delete('session'); return p; });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const update = (patch: Partial<FormState>) =>
     setForm(prev => ({ ...prev, ...patch }));

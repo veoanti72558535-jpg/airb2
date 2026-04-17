@@ -87,6 +87,8 @@ export function CompareProjectilesModal({
   const [fullscreen, setFullscreen] = useState(false);
   /** Distance currently hovered in the DropChart (in meters) — synchronises sparklines. */
   const [hoverRange, setHoverRange] = useState<number | null>(null);
+  /** Sort mode override — `null` = auto (useful range when threshold set, BC otherwise). */
+  const [sortMode, setSortMode] = useState<'usefulRange' | 'bc' | null>(null);
   /** Per-section collapsed state — persisted in localStorage so it survives modal re-opens. */
   const [collapsed, setCollapsed] = useState<{ drop: boolean; vel: boolean; energy: boolean; overThreshold: boolean }>(() => {
     try {

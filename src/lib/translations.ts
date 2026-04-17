@@ -373,6 +373,19 @@ const fr = {
   'common.copyLink': 'Copier le lien filtré',
   'common.linkCopied': 'Lien copié dans le presse-papiers',
   'common.copyFailed': 'Impossible de copier le lien',
+
+  // Detail pages
+  'detail.back': 'Retour à la bibliothèque',
+  'detail.useInCalc': 'Utiliser dans le calcul',
+  'detail.linkedSessions': 'Sessions liées',
+  'detail.noLinkedSessions': 'Aucune session liée à cet élément.',
+  'detail.essentials': 'Essentiel',
+  'detail.advanced': 'Avancé',
+  'detail.metadata': 'Métadonnées',
+  'detail.createdAt': 'Créé le',
+  'detail.updatedAt': 'Modifié le',
+  'detail.notFound': 'Élément introuvable',
+  'detail.notFoundHint': 'Cet élément a peut-être été supprimé.',
 } as const;
 
 const en: Record<keyof typeof fr, string> = {

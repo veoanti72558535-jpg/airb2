@@ -226,6 +226,8 @@ const fr = {
   'projectiles.dragTableApplied': 'Table appliquée ({count} points)',
   'projectiles.dragTableActive': 'Table active : {count} points',
   'projectiles.dragTableBadge': 'Drag custom · {count} pts',
+  'projectiles.dragTablePreview': 'Aperçu Cd vs Mach',
+  'projectiles.dragTableImported': 'Importé',
   'projectiles.compare': 'Comparer',
   'projectiles.compareSelected': 'Comparer ({count})',
   'projectiles.compareTitle': 'Comparaison de projectiles',

@@ -171,6 +171,9 @@ export function CompareProjectilesModal({
           </div>
         </div>
 
+        {/* Drop chart */}
+        <DropChart rows={rows} t={t} />
+
         {/* Table */}
         <div className="overflow-auto">
           <table className="w-full text-sm">

@@ -129,7 +129,7 @@ export function ZeroingSection({
                       type="button"
                       onClick={() =>
                         zeroWeather.latitude != null && zeroWeather.longitude != null
-                          ? api.fetchByCoords(zeroWeather.latitude, zeroWeather.longitude)
+                          ? api.fetchByCoords(zeroWeather.latitude, zeroWeather.longitude, { force: true })
                           : api.fetchByLocation()
                       }
                       disabled={api.status === 'loading'}

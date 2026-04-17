@@ -181,6 +181,50 @@ export default function SettingsPage() {
           </div>
         </div>
 
+        {/* Energy threshold (FAC / FR / custom / off) */}
+        <div className="surface-elevated p-4 space-y-3">
+          <div className="flex items-start gap-3">
+            <Zap className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+            <div className="min-w-0 flex-1">
+              <div className="text-sm font-medium">{t('settings.energyThreshold')}</div>
+              <div className="text-[11px] text-muted-foreground">{t('settings.energyThresholdDesc')}</div>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-1">
+            {ENERGY_PRESETS.map(preset => (
+              <button
+                key={preset.key}
+                onClick={() => applyEnergyPreset(preset.key)}
+                className={cn(
+                  'px-2.5 py-1 rounded-md text-xs font-medium transition-colors',
+                  presetKey === preset.key
+                    ? 'bg-primary/10 text-primary'
+                    : 'text-muted-foreground hover:bg-muted'
+                )}
+              >
+                {t(preset.labelKey as any)}
+              </button>
+            ))}
+          </div>
+          {presetKey === 'custom' && (
+            <div className="flex items-center gap-2 pt-1">
+              <label htmlFor="custom-threshold" className="text-[11px] text-muted-foreground">
+                {t('settings.energyThresholdCustomLabel')}
+              </label>
+              <input
+                id="custom-threshold"
+                type="number"
+                min={0.1}
+                step={0.1}
+                value={customJ}
+                onChange={e => applyCustomValue(e.target.value)}
+                className="w-24 px-2 py-1 rounded-md bg-muted/40 border border-border text-xs font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+              <span className="text-[11px] text-muted-foreground">J</span>
+            </div>
+          )}
+        </div>
+
         {/* AI - disabled placeholder */}
         <div className="surface-elevated p-4 opacity-50">
           <div className="flex items-center justify-between">

@@ -70,6 +70,36 @@ export function CompareProjectilesModal({
   const { symbol } = useUnits();
   const [velocity, setVelocity] = useState<number>(initialVelocity);
   const [zeroRange, setZeroRange] = useState<number>(DEFAULT_Z);
+  const [exporting, setExporting] = useState(false);
+  /** Wraps the chart + table — that's what gets snapshotted to PNG. */
+  const exportRef = useRef<HTMLDivElement | null>(null);
+
+  /** Render the chart+table as a PNG and trigger a download. */
+  const handleExport = async () => {
+    if (!exportRef.current || rows.length === 0) return;
+    setExporting(true);
+    try {
+      const dataUrl = await toPng(exportRef.current, {
+        // Use the actual rendered card background so the snapshot matches the theme.
+        backgroundColor: getComputedStyle(document.body).getPropertyValue('background-color') || '#111827',
+        pixelRatio: 2,
+        cacheBust: true,
+        // Inline current font-family so JetBrains Mono / Inter survive the snapshot.
+        style: { fontFamily: getComputedStyle(document.body).fontFamily },
+      });
+      const a = document.createElement('a');
+      const stamp = new Date().toISOString().slice(0, 10);
+      a.download = `airballistik-compare-${stamp}.png`;
+      a.href = dataUrl;
+      a.click();
+      toast.success(t('projectiles.compareExportSuccess'));
+    } catch (err) {
+      console.error('Export PNG failed', err);
+      toast.error(t('projectiles.compareExportError'));
+    } finally {
+      setExporting(false);
+    }
+  };
 
   // Reset sliders when modal re-opens with a new initial velocity.
   useEffect(() => {

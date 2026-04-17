@@ -2,6 +2,7 @@ import { Crosshair, MapPin, Loader2, AlertCircle, Cloud, RotateCw } from 'lucide
 import { useI18n } from '@/lib/i18n';
 import { Section } from './Section';
 import { UnitField } from './UnitField';
+import { Field } from './Field';
 import { Switch } from '@/components/ui/switch';
 import { WeatherSnapshot } from '@/lib/types';
 import { useWeather } from '@/hooks/use-weather';
@@ -171,18 +172,16 @@ export function ZeroingSection({
                   step={1}
                   onChange={v => onZeroWeatherChange({ temperature: v })}
                 />
-                <UnitField
+                <Field
                   label={t('calc.zeroPressure')}
-                  category="pressure"
+                  unit="hPa"
                   value={zeroWeather.pressure}
                   step={1}
                   onChange={v => onZeroWeatherChange({ pressure: v })}
                 />
-                <UnitField
+                <Field
                   label={t('calc.zeroHumidity')}
-                  category="correction"
-                  allowedUnits={[]}
-                  lockUnit
+                  unit="%"
                   value={zeroWeather.humidity}
                   step={5}
                   onChange={v => onZeroWeatherChange({ humidity: v })}

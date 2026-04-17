@@ -157,8 +157,10 @@ export function WeatherLocationPicker({ weather, api, autoEnabled }: Props) {
               setLatInput(String(city.latitude));
               setLonInput(String(city.longitude));
               setCoordsError(null);
+              // Don't force — if the same city was looked up <30 min ago,
+              // the local cache will short-circuit the network call and the
+              // "from cache" badge will surface that fact.
               void api.fetchByCoords(city.latitude, city.longitude, {
-                force: true,
                 locationLabel: label,
               });
             }}

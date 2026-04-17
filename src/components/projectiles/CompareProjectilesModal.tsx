@@ -788,32 +788,33 @@ export function CompareProjectilesModal({
 
         {/* Table toolbar with expand/collapse all */}
         <div className="px-4 py-2 border-b border-border bg-muted/20 flex items-center justify-end gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              const allExpanded = !collapsed.drop && !collapsed.vel && !collapsed.energy && !collapsed.overThreshold;
-              setCollapsed({
-                drop: allExpanded,
-                vel: allExpanded,
-                energy: allExpanded,
-                overThreshold: allExpanded,
-              });
-            }}
-            className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-[11px] font-medium hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-            title={(!collapsed.drop && !collapsed.vel && !collapsed.energy && !collapsed.overThreshold) ? t('projectiles.compareCollapseAll') : t('projectiles.compareExpandAll')}
-          >
-            {(!collapsed.drop && !collapsed.vel && !collapsed.energy && !collapsed.overThreshold) ? (
-              <>
-                <Minimize2 className="h-3 w-3" />
-                <span>{t('projectiles.compareCollapseAll')}</span>
-              </>
-            ) : (
-              <>
-                <Maximize2 className="h-3 w-3" />
-                <span>{t('projectiles.compareExpandAll')}</span>
-              </>
-            )}
-          </button>
+          <HoverHint label={(!collapsed.drop && !collapsed.vel && !collapsed.energy && !collapsed.overThreshold) ? t('projectiles.compareCollapseAll') : t('projectiles.compareExpandAll')}>
+            <button
+              type="button"
+              onClick={() => {
+                const allExpanded = !collapsed.drop && !collapsed.vel && !collapsed.energy && !collapsed.overThreshold;
+                setCollapsed({
+                  drop: allExpanded,
+                  vel: allExpanded,
+                  energy: allExpanded,
+                  overThreshold: allExpanded,
+                });
+              }}
+              className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-[11px] font-medium hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {(!collapsed.drop && !collapsed.vel && !collapsed.energy && !collapsed.overThreshold) ? (
+                <>
+                  <Minimize2 className="h-3 w-3" />
+                  <span>{t('projectiles.compareCollapseAll')}</span>
+                </>
+              ) : (
+                <>
+                  <Maximize2 className="h-3 w-3" />
+                  <span>{t('projectiles.compareExpandAll')}</span>
+                </>
+              )}
+            </button>
+          </HoverHint>
         </div>
 
         {/* Table */}

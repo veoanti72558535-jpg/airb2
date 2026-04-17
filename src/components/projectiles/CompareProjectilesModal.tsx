@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { X, GitCompare, Gauge, RotateCcw, Target, Download, Maximize2, Minimize2, Copy, Check } from 'lucide-react';
+import { X, GitCompare, Gauge, RotateCcw, Target, Download, Maximize2, Minimize2, Copy, Check, FileText } from 'lucide-react';
 import { toPng } from 'html-to-image';
+import { jsPDF } from 'jspdf';
 import { Projectile, WeatherSnapshot } from '@/lib/types';
 import { getSettings } from '@/lib/storage';
 import { calculateTrajectory } from '@/lib/ballistics';

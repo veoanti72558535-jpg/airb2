@@ -476,6 +476,7 @@ const en: Record<keyof typeof fr, string> = {
   'optics.filterBrand': 'Brand',
   'optics.search': 'Search by name or notes…',
   'optics.noMatch': 'No optic for these filters.',
+  'optics.resetFilters': 'Reset filters',
 
   'sessions.title': 'Sessions',
   'sessions.add': 'New Session',

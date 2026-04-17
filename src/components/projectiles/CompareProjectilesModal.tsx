@@ -779,6 +779,12 @@ export function CompareProjectilesModal({
                         return { id: p.id, fpe, joules };
                       });
                       const maxFpe = energies.reduce((m, e) => (e.fpe > m ? e.fpe : m), 0);
+                      const maxJoules = energies.reduce((m, e) => (e.joules > m ? e.joules : m), 0);
+                      // Second-best joules — used to show the gap to the runner-up in the tooltip.
+                      const secondJoules = energies
+                        .filter(e => e.joules < maxJoules)
+                        .reduce((m, e) => (e.joules > m ? e.joules : m), 0);
+                      const energyGapJ = secondJoules > 0 ? maxJoules - secondJoules : null;
                       // Shared Y scale across all sparklines so curves are visually comparable.
                       const globalMaxJ = rows.reduce((m, r) => {
                         const local = r.energyCurve.reduce((mm, pt) => (pt.energy > mm ? pt.energy : mm), 0);

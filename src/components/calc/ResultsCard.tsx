@@ -315,6 +315,52 @@ export function ResultsCard({
         />
       </div>
 
+      {usefulRange !== undefined && (
+        <div
+          className={cn(
+            'rounded-lg border p-2.5 flex items-start gap-2',
+            usefulRange === 'none'
+              ? 'border-destructive/40 bg-destructive/10 text-destructive'
+              : 'border-primary/30 bg-primary/5 text-foreground',
+          )}
+        >
+          <Zap
+            className={cn(
+              'h-4 w-4 shrink-0 mt-0.5',
+              usefulRange === 'none' ? 'text-destructive' : 'text-primary',
+            )}
+          />
+          <div className="flex-1 min-w-0">
+            <div
+              className={cn(
+                'text-[10px] uppercase tracking-wide',
+                usefulRange === 'none' ? 'text-destructive' : 'text-muted-foreground',
+              )}
+            >
+              {t('calc.usefulRange')}
+            </div>
+            <div className="font-mono font-semibold text-base mt-0.5">
+              {usefulRange === 'none'
+                ? t('calc.usefulRangeNone')
+                : usefulRange === 'beyond'
+                  ? t('calc.usefulRangeBeyond', {
+                      dist: rows![rows!.length - 1].range,
+                      unit: distUnit,
+                    })
+                  : t('calc.usefulRangeValue', { dist: usefulRange, unit: distUnit })}
+            </div>
+            <div
+              className={cn(
+                'text-[10px] font-mono mt-0.5',
+                usefulRange === 'none' ? 'text-destructive/80' : 'text-muted-foreground',
+              )}
+            >
+              {t('calc.usefulRangeHint', { threshold: energyThresholdJ!.toFixed(2) })}
+            </div>
+          </div>
+        </div>
+      )}
+
       {advanced && (result.spinDrift != null || sfpActive) && (
         <div className="rounded-lg border border-border/40 bg-background/20 p-3 space-y-2">
           <h4 className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">

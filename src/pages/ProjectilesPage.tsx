@@ -312,7 +312,7 @@ export default function ProjectilesPage() {
           ))}
         </div>
       )}
-
+      {projectiles.length === 0 ? (
         <div className="surface-card p-8 text-center text-muted-foreground text-sm">{t('common.noData')}</div>
       ) : filteredProjectiles.length === 0 ? (
         <div className="surface-card p-8 text-center text-muted-foreground text-sm">{t('projectiles.noMatch')}</div>

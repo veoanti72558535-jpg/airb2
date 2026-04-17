@@ -437,6 +437,8 @@ const en: Record<keyof typeof fr, string> = {
   'airguns.defaultSightHeight': 'Default Sight Height',
   'airguns.defaultZeroRange': 'Default Zero Range',
   'airguns.notes': 'Notes',
+  'airguns.search': 'Search by brand, model or notes…',
+  'airguns.noMatch': 'No airgun matches your search.',
 
   'tunes.title': 'Tunes',
   'tunes.add': 'Add Tune',

@@ -215,6 +215,7 @@ export default function QuickCalc() {
     setForm(hydrated);
     setResults(session.results ?? null);
     setSessionName(session.name);
+    setCurrentSessionId(session.id);
     if (i.dragModel === 'G7' || i.zeroWeather || i.focalPlane === 'SFP' || i.twistRate) setAdvanced(true);
     toast.success(t('sessions.loaded'), { description: session.name });
     setSearchParams(prev => { const p = new URLSearchParams(prev); p.delete('session'); return p; });

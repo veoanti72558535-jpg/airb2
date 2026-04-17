@@ -49,6 +49,7 @@ interface FormState {
   muzzleVelocity: number;
   // Weapon
   airgunId: string;
+  tuneId: string;
   barrelLength?: number;
   twistRate?: number;
   // Optic

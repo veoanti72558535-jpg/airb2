@@ -136,7 +136,7 @@ export function DragTableEditor({ value, onChange }: Props) {
       )}
 
       {value && value.length > 0 && (
-        <div className="surface-card p-2 space-y-1">
+        <div className="surface-card p-2 space-y-2">
           <div className="flex items-center gap-1.5 text-[11px] text-tactical font-medium">
             <Check className="h-3 w-3" />
             {t('projectiles.dragTableActive', { count: value.length })}
@@ -145,6 +145,7 @@ export function DragTableEditor({ value, onChange }: Props) {
             Mach {value[0].mach}–{value[value.length - 1].mach} ·
             Cd {Math.min(...value.map(p => p.cd)).toFixed(3)}–{Math.max(...value.map(p => p.cd)).toFixed(3)}
           </div>
+          <DragTablePreview table={value} t={t} />
         </div>
       )}
 
@@ -159,6 +160,192 @@ export function DragTableEditor({ value, onChange }: Props) {
           {t('projectiles.dragTableApply')}
         </button>
       </div>
+    </div>
+  );
+}
+
+/** Reference G1 Cd(Mach) — must mirror cdG1 in src/lib/ballistics.ts. */
+function g1Cd(mach: number): number {
+  if (mach < 0.7) return 0.235;
+  if (mach < 0.9) return 0.235 + (mach - 0.7) * 1.5;
+  if (mach < 1.1) return 0.535 + (mach - 0.9) * 2.0;
+  return Math.max(0.2, 0.935 - (mach - 1.1) * 0.3);
+}
+
+interface PreviewProps {
+  table: DragTablePoint[];
+  t: (key: string, vars?: Record<string, string | number>) => string;
+}
+
+/**
+ * Small SVG plot of imported Cd vs Mach (solid primary) overlaid with the
+ * G1 reference curve (dashed muted) for at-a-glance validation.
+ * Auto-scales the X axis to the imported range and Y to the combined extents.
+ */
+function DragTablePreview({ table, t }: PreviewProps) {
+  const W = 320;
+  const H = 120;
+  const PAD_L = 28;
+  const PAD_R = 8;
+  const PAD_T = 8;
+  const PAD_B = 18;
+  const innerW = W - PAD_L - PAD_R;
+  const innerH = H - PAD_T - PAD_B;
+
+  const xMin = Math.min(table[0].mach, 0.5);
+  const xMax = Math.max(table[table.length - 1].mach, 1.3);
+
+  // Sample G1 across the same X range for direct comparison
+  const STEPS = 60;
+  const g1Pts: { mach: number; cd: number }[] = [];
+  for (let i = 0; i <= STEPS; i++) {
+    const mach = xMin + ((xMax - xMin) * i) / STEPS;
+    g1Pts.push({ mach, cd: g1Cd(mach) });
+  }
+
+  const allCd = [...table.map(p => p.cd), ...g1Pts.map(p => p.cd)];
+  const yMin = Math.max(0, Math.min(...allCd) - 0.05);
+  const yMax = Math.max(...allCd) + 0.05;
+
+  const xToPx = (x: number) => PAD_L + ((x - xMin) / (xMax - xMin)) * innerW;
+  const yToPx = (y: number) => PAD_T + ((yMax - y) / (yMax - yMin)) * innerH;
+
+  const buildPath = (pts: { mach: number; cd: number }[]) =>
+    pts
+      .map((p, i) => `${i === 0 ? 'M' : 'L'}${xToPx(p.mach).toFixed(1)},${yToPx(p.cd).toFixed(1)}`)
+      .join(' ');
+
+  // 3 ticks on each axis
+  const xTicks = [xMin, (xMin + xMax) / 2, xMax];
+  const yTicks = [yMin, (yMin + yMax) / 2, yMax];
+
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center justify-between gap-2 text-[10px]">
+        <span className="text-muted-foreground uppercase tracking-wide">
+          {t('projectiles.dragTablePreview')}
+        </span>
+        <div className="flex items-center gap-3">
+          <span className="inline-flex items-center gap-1">
+            <span className="inline-block h-0.5 w-3 rounded bg-primary" aria-hidden />
+            <span className="text-foreground">{t('projectiles.dragTableImported')}</span>
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <span
+              className="inline-block h-0.5 w-3 rounded"
+              style={{
+                background:
+                  'repeating-linear-gradient(to right, hsl(var(--muted-foreground)) 0 3px, transparent 3px 6px)',
+              }}
+              aria-hidden
+            />
+            <span className="text-muted-foreground">G1</span>
+          </span>
+        </div>
+      </div>
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        className="w-full h-auto"
+        role="img"
+        aria-label={t('projectiles.dragTablePreview')}
+      >
+        {/* grid + axis labels */}
+        {yTicks.map((y, i) => (
+          <g key={`y-${i}`}>
+            <line
+              x1={PAD_L}
+              x2={W - PAD_R}
+              y1={yToPx(y)}
+              y2={yToPx(y)}
+              stroke="hsl(var(--border))"
+              strokeWidth={0.5}
+              strokeDasharray="2 3"
+            />
+            <text
+              x={PAD_L - 3}
+              y={yToPx(y)}
+              textAnchor="end"
+              dominantBaseline="middle"
+              className="fill-muted-foreground"
+              fontSize={8}
+              fontFamily="ui-monospace, monospace"
+            >
+              {y.toFixed(2)}
+            </text>
+          </g>
+        ))}
+        {xTicks.map((x, i) => (
+          <g key={`x-${i}`}>
+            <line
+              x1={xToPx(x)}
+              x2={xToPx(x)}
+              y1={PAD_T}
+              y2={H - PAD_B}
+              stroke="hsl(var(--border))"
+              strokeWidth={0.5}
+              strokeDasharray="2 3"
+            />
+            <text
+              x={xToPx(x)}
+              y={H - PAD_B + 10}
+              textAnchor="middle"
+              className="fill-muted-foreground"
+              fontSize={8}
+              fontFamily="ui-monospace, monospace"
+            >
+              {x.toFixed(1)}
+            </text>
+          </g>
+        ))}
+        {/* axis titles */}
+        <text
+          x={W - PAD_R}
+          y={H - 3}
+          textAnchor="end"
+          className="fill-muted-foreground"
+          fontSize={8}
+        >
+          Mach
+        </text>
+        <text x={3} y={PAD_T + 4} textAnchor="start" className="fill-muted-foreground" fontSize={8}>
+          Cd
+        </text>
+
+        {/* G1 reference (dashed) */}
+        <path
+          d={buildPath(g1Pts)}
+          fill="none"
+          stroke="hsl(var(--muted-foreground))"
+          strokeWidth={1.25}
+          strokeDasharray="3 3"
+          strokeLinejoin="round"
+          strokeLinecap="round"
+          opacity={0.7}
+        />
+
+        {/* Imported table (solid + markers) */}
+        <path
+          d={buildPath(table)}
+          fill="none"
+          stroke="hsl(var(--primary))"
+          strokeWidth={1.75}
+          strokeLinejoin="round"
+          strokeLinecap="round"
+        />
+        {table.map((p, i) => (
+          <circle
+            key={i}
+            cx={xToPx(p.mach)}
+            cy={yToPx(p.cd)}
+            r={2}
+            fill="hsl(var(--primary))"
+            stroke="hsl(var(--card))"
+            strokeWidth={0.75}
+          >
+            <title>{`Mach ${p.mach} · Cd ${p.cd.toFixed(3)}`}</title>
+          </circle>
+        ))}
+      </svg>
     </div>
   );
 }

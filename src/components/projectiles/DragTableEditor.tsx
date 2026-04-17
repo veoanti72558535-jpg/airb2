@@ -461,6 +461,68 @@ function DragTablePreview({ table, t }: PreviewProps) {
             <title>{`Mach ${p.mach} · Cd ${p.cd.toFixed(3)}`}</title>
           </circle>
         ))}
+
+        {/* Hover overlay: vertical guide, per-curve dots, and tooltip box.
+            Renders last so it sits above all curves. pointer-events: none on
+            children so they never steal the pointer from the svg listeners. */}
+        {hover !== null && hoverRows.length > 0 && (
+          <g pointerEvents="none">
+            <line
+              x1={xToPx(hover)}
+              x2={xToPx(hover)}
+              y1={PAD_T}
+              y2={H - PAD_B}
+              stroke="hsl(var(--foreground))"
+              strokeWidth={0.5}
+              strokeDasharray="2 2"
+              opacity={0.5}
+            />
+            {hoverRows.map((row, i) => (
+              <circle
+                key={i}
+                cx={xToPx(hover)}
+                cy={yToPx(row.cd)}
+                r={2.5}
+                fill={row.color}
+                stroke="hsl(var(--card))"
+                strokeWidth={0.75}
+              />
+            ))}
+            <rect
+              x={tooltipX}
+              y={PAD_T}
+              width={TT_W}
+              height={TT_H}
+              rx={3}
+              fill="hsl(var(--popover))"
+              stroke="hsl(var(--border))"
+              strokeWidth={0.5}
+            />
+            <text
+              x={tooltipX + 4}
+              y={PAD_T + 9}
+              className="fill-muted-foreground"
+              fontSize={7}
+              fontFamily="ui-monospace, monospace"
+            >
+              {`Mach ${hover.toFixed(3)}`}
+            </text>
+            {hoverRows.map((row, i) => (
+              <g key={i} transform={`translate(${tooltipX + 4}, ${PAD_T + 14 + i * TT_LINE_H})`}>
+                <rect x={0} y={2} width={5} height={2} fill={row.color} rx={0.5} />
+                <text
+                  x={8}
+                  y={7}
+                  className="fill-popover-foreground"
+                  fontSize={7.5}
+                  fontFamily="ui-monospace, monospace"
+                >
+                  {`${row.label}: ${row.cd.toFixed(3)}`}
+                </text>
+              </g>
+            ))}
+          </g>
+        )}
       </svg>
     </div>
   );

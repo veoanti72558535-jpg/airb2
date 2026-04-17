@@ -391,7 +391,7 @@ export function CompareProjectilesModal({
     // order is deterministic when projectiles tie (e.g. two BCs equal).
     const tieBreak = (a: typeof computed[number], b: typeof computed[number]) =>
       `${a.p.brand} ${a.p.model}`.localeCompare(`${b.p.brand} ${b.p.model}`);
-    const effectiveSort: 'usefulRange' | 'bc' =
+    const effectiveSort: 'usefulRange' | 'bc' | 'weight' =
       sortMode ?? (energyThresholdJ !== null ? 'usefulRange' : 'bc');
     if (effectiveSort === 'usefulRange' && energyThresholdJ !== null) {
       const maxUsefulRange = (row: typeof computed[number]) => {
@@ -403,6 +403,13 @@ export function CompareProjectilesModal({
       };
       return [...computed].sort((a, b) => {
         const diff = maxUsefulRange(b) - maxUsefulRange(a);
+        return diff !== 0 ? diff : tieBreak(a, b);
+      });
+    }
+    if (effectiveSort === 'weight') {
+      // Heaviest first — useful for spotting heavy slugs/pellets at a glance.
+      return [...computed].sort((a, b) => {
+        const diff = b.p.weight - a.p.weight;
         return diff !== 0 ? diff : tieBreak(a, b);
       });
     }

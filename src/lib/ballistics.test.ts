@@ -13,15 +13,15 @@ const stdWeather: WeatherSnapshot = {
   timestamp: '',
 };
 
-// Short maxRange (50m) keeps each integration ~2× faster than the previous 100m suite
-// while still exercising zero crossing, drop, drift and click conversions.
+// 100m maxRange preserves zero-solver convergence behaviour identical to production.
+// Speed gain comes from collapsing 16 tests into 8 representative scenarios.
 const baseInput = (overrides: Partial<BallisticInput> = {}): BallisticInput => ({
   muzzleVelocity: 280,
   bc: 0.025,
   projectileWeight: 18,
   sightHeight: 40,
   zeroRange: 30,
-  maxRange: 50,
+  maxRange: 100,
   rangeStep: 10,
   weather: stdWeather,
   ...overrides,

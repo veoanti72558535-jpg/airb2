@@ -871,6 +871,7 @@ const en: Record<keyof typeof fr, string> = {
   'common.name': 'Name',
   'common.all': 'All',
   'common.close': 'Close',
+  'common.reset': 'Reset',
   'common.add': 'Add',
   'common.viewAll': 'View All',
   'common.copyLink': 'Copy filtered link',

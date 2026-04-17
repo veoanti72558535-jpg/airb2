@@ -25,6 +25,7 @@ import { calculateTrajectory } from '@/lib/ballistics';
 import { useI18n } from '@/lib/i18n';
 import { useUnits } from '@/hooks/use-units';
 import { cn } from '@/lib/utils';
+import { HoverHint } from '@/components/ui/hover-hint';
 import { toast } from 'sonner';
 
 const MIN_V = 200;
@@ -489,33 +490,36 @@ export function CompareProjectilesModal({
                   if (manualMode) {
                     return (
                       <span className="inline-flex items-center gap-1">
-                        <span
-                          className="inline-flex items-center gap-0.5 rounded bg-primary/15 text-primary px-1.5 py-0.5 text-[10px] font-mono font-medium"
-                          title={t('projectiles.compareSortManualHint')}
-                        >
-                          <ListOrdered className="h-2.5 w-2.5" aria-hidden />
-                          {t('projectiles.compareSortManual')}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={reverseOrder}
-                          className="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted focus:outline-none focus-visible:ring-1 focus-visible:ring-primary"
-                          title={t('projectiles.compareSortReverseHint')}
-                          aria-label={t('projectiles.compareSortReverse')}
-                        >
-                          <ArrowLeftRight className="h-2.5 w-2.5" aria-hidden />
-                          {t('projectiles.compareSortReverse')}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => { setManualMode(false); setManualOrder(null); }}
-                          className="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted focus:outline-none focus-visible:ring-1 focus-visible:ring-primary"
-                          title={t('projectiles.compareSortResetHint')}
-                          aria-label={t('projectiles.compareSortResetHint')}
-                        >
-                          <RotateCcw className="h-2.5 w-2.5" aria-hidden />
-                          {t('projectiles.compareSortReset')}
-                        </button>
+                        <HoverHint label={t('projectiles.compareSortManualHint')}>
+                          <span
+                            className="inline-flex items-center gap-0.5 rounded bg-primary/15 text-primary px-1.5 py-0.5 text-[10px] font-mono font-medium"
+                          >
+                            <ListOrdered className="h-2.5 w-2.5" aria-hidden />
+                            {t('projectiles.compareSortManual')}
+                          </span>
+                        </HoverHint>
+                        <HoverHint label={t('projectiles.compareSortReverseHint')}>
+                          <button
+                            type="button"
+                            onClick={reverseOrder}
+                            className="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted focus:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+                            aria-label={t('projectiles.compareSortReverse')}
+                          >
+                            <ArrowLeftRight className="h-2.5 w-2.5" aria-hidden />
+                            {t('projectiles.compareSortReverse')}
+                          </button>
+                        </HoverHint>
+                        <HoverHint label={t('projectiles.compareSortResetHint')}>
+                          <button
+                            type="button"
+                            onClick={() => { setManualMode(false); setManualOrder(null); }}
+                            className="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted focus:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+                            aria-label={t('projectiles.compareSortResetHint')}
+                          >
+                            <RotateCcw className="h-2.5 w-2.5" aria-hidden />
+                            {t('projectiles.compareSortReset')}
+                          </button>
+                        </HoverHint>
                       </span>
                     );
                   }
@@ -545,45 +549,48 @@ export function CompareProjectilesModal({
                         : t('projectiles.compareSortByWeightHint');
                   return (
                     <span className="inline-flex items-center gap-1">
-                      <button
-                        type="button"
-                        onClick={canToggle ? () => setSortMode(nextMode) : undefined}
-                        disabled={!canToggle}
-                        className={cn(
-                          'inline-flex items-center gap-0.5 rounded bg-muted px-1.5 py-0.5 text-[10px] font-mono font-medium text-muted-foreground',
-                          canToggle && 'hover:bg-muted/70 hover:text-foreground cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-primary',
-                          !canToggle && 'cursor-default'
-                        )}
-                        title={hint}
-                        aria-label={hint}
-                      >
-                        <span aria-hidden>↓</span>
-                        {label}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          // Initialise manualOrder from the current row order so dragging starts from "what you see now".
-                          setManualOrder(rows.map(r => r.p.id));
-                          setManualMode(true);
-                        }}
-                        className="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted focus:outline-none focus-visible:ring-1 focus-visible:ring-primary"
-                        title={t('projectiles.compareSortManualEnableHint')}
-                        aria-label={t('projectiles.compareSortManualEnable')}
-                      >
-                        <GripVertical className="h-2.5 w-2.5" aria-hidden />
-                        {t('projectiles.compareSortManualEnable')}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={reverseOrder}
-                        className="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted focus:outline-none focus-visible:ring-1 focus-visible:ring-primary"
-                        title={t('projectiles.compareSortReverseHint')}
-                        aria-label={t('projectiles.compareSortReverse')}
-                      >
-                        <ArrowLeftRight className="h-2.5 w-2.5" aria-hidden />
-                        {t('projectiles.compareSortReverse')}
-                      </button>
+                      <HoverHint label={hint}>
+                        <button
+                          type="button"
+                          onClick={canToggle ? () => setSortMode(nextMode) : undefined}
+                          disabled={!canToggle}
+                          className={cn(
+                            'inline-flex items-center gap-0.5 rounded bg-muted px-1.5 py-0.5 text-[10px] font-mono font-medium text-muted-foreground',
+                            canToggle && 'hover:bg-muted/70 hover:text-foreground cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-primary',
+                            !canToggle && 'cursor-default'
+                          )}
+                          aria-label={hint}
+                        >
+                          <span aria-hidden>↓</span>
+                          {label}
+                        </button>
+                      </HoverHint>
+                      <HoverHint label={t('projectiles.compareSortManualEnableHint')}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            // Initialise manualOrder from the current row order so dragging starts from "what you see now".
+                            setManualOrder(rows.map(r => r.p.id));
+                            setManualMode(true);
+                          }}
+                          className="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted focus:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+                          aria-label={t('projectiles.compareSortManualEnable')}
+                        >
+                          <GripVertical className="h-2.5 w-2.5" aria-hidden />
+                          {t('projectiles.compareSortManualEnable')}
+                        </button>
+                      </HoverHint>
+                      <HoverHint label={t('projectiles.compareSortReverseHint')}>
+                        <button
+                          type="button"
+                          onClick={reverseOrder}
+                          className="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted focus:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+                          aria-label={t('projectiles.compareSortReverse')}
+                        >
+                          <ArrowLeftRight className="h-2.5 w-2.5" aria-hidden />
+                          {t('projectiles.compareSortReverse')}
+                        </button>
+                      </HoverHint>
                     </span>
                   );
                 })()}

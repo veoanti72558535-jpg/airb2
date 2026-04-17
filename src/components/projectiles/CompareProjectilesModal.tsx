@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { X, GitCompare, Gauge, RotateCcw, Target, Download } from 'lucide-react';
+import { X, GitCompare, Gauge, RotateCcw, Target, Download, Maximize2, Minimize2 } from 'lucide-react';
 import { toPng } from 'html-to-image';
 import { Projectile, WeatherSnapshot } from '@/lib/types';
 import { getSettings } from '@/lib/storage';

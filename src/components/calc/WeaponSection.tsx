@@ -17,11 +17,13 @@ interface Props {
   zeroRange: number;
   clickValue: number;
   clickUnit: 'MOA' | 'MRAD';
+  currentMag?: number;
   onChange: (patch: {
     sightHeight?: number;
     zeroRange?: number;
     clickValue?: number;
     clickUnit?: 'MOA' | 'MRAD';
+    currentMag?: number;
   }) => void;
   advanced?: boolean;
 }

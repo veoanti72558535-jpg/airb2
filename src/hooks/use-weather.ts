@@ -16,8 +16,8 @@ export interface UseWeatherApi {
   error: string | null;
   /** Fetch by browser geolocation. Resolves silently on failure. */
   fetchByLocation: () => Promise<void>;
-  /** Fetch using explicit coordinates. */
-  fetchByCoords: (lat: number, lon: number) => Promise<void>;
+  /** Fetch using explicit coordinates. Pass `force` to bypass the local cache. */
+  fetchByCoords: (lat: number, lon: number, opts?: { force?: boolean }) => Promise<void>;
   /** Patch one or more fields manually; tagged as overrides over an auto base. */
   patchManual: (patch: Partial<WeatherSnapshot>) => void;
   /** Reset everything to a manual snapshot using the given values. */
@@ -54,11 +54,11 @@ export function useWeather(
   const [error, setError] = useState<string | null>(null);
 
   const fetchByCoords = useCallback(
-    async (lat: number, lon: number) => {
+    async (lat: number, lon: number, opts?: { force?: boolean }) => {
       setStatus('loading');
       setError(null);
       try {
-        const { snapshot } = await fetchWeather({ latitude: lat, longitude: lon });
+        const { snapshot } = await fetchWeather({ latitude: lat, longitude: lon }, opts);
         setWeather(snapshot);
         setStatus('idle');
       } catch (e) {

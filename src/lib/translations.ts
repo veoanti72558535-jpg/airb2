@@ -169,6 +169,7 @@ const fr = {
   'airguns.notes': 'Notes',
   'airguns.search': 'Rechercher par marque, modèle ou notes…',
   'airguns.noMatch': 'Aucune arme ne correspond à la recherche.',
+  'airguns.advancedHint': 'Pas de rayure, hauteur de lunette, zéro par défaut',
 
   // Tunes
   'tunes.title': 'Tunes',
@@ -192,6 +193,9 @@ const fr = {
   'projectiles.material': 'Matériau',
   'projectiles.search': 'Rechercher par marque, modèle ou notes…',
   'projectiles.noMatch': 'Aucun projectile ne correspond à la recherche.',
+  'projectiles.type': 'Type',
+  'projectiles.dragModel': 'Modèle de traînée (BC)',
+  'projectiles.advancedHint': 'Drag model, dimensions, forme, matériau',
 
   // Optics
   'optics.title': 'Bibliothèque d\'optiques',
@@ -231,6 +235,9 @@ const fr = {
   'sessions.view': 'Voir',
   'sessions.createFromCalc': 'Créer à partir d\'un calcul',
   'sessions.searchPlaceholder': 'Rechercher une session…',
+  'sessions.openInCalc': 'Recharger dans le calculateur',
+  'sessions.badgeZeroWeather': 'Météo zéro',
+  'sessions.loaded': 'Session rechargée',
 
   // Conversions
   'conv.title': 'Conversions d\'unités',

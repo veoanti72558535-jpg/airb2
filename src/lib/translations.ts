@@ -257,6 +257,12 @@ const fr = {
   'weather.errFetch': 'Échec de la récupération météo — saisie manuelle conservée.',
   'weather.autoSuggest': 'Suggérer la météo automatique',
   'weather.autoSuggestDesc': 'Affiche un bouton de récupération depuis Open-Meteo dans le calculateur.',
+  'weather.manualCoords': 'Coordonnées manuelles',
+  'weather.manualCoordsHint': 'Saisissez latitude et longitude pour récupérer la météo sans géolocalisation.',
+  'weather.lat': 'Latitude',
+  'weather.lon': 'Longitude',
+  'weather.fetchAtCoords': 'Récupérer ici',
+  'weather.errInvalidCoords': 'Coordonnées invalides : latitude entre -90 et 90, longitude entre -180 et 180.',
 
   // Conversions
   'conv.title': 'Conversions d\'unités',
@@ -640,6 +646,12 @@ const en: Record<keyof typeof fr, string> = {
   'weather.errFetch': 'Weather fetch failed — keeping manual values.',
   'weather.autoSuggest': 'Suggest automatic weather',
   'weather.autoSuggestDesc': 'Shows an Open-Meteo fetch button inside the calculator.',
+  'weather.manualCoords': 'Manual coordinates',
+  'weather.manualCoordsHint': 'Enter latitude and longitude to fetch weather without geolocation.',
+  'weather.lat': 'Latitude',
+  'weather.lon': 'Longitude',
+  'weather.fetchAtCoords': 'Fetch here',
+  'weather.errInvalidCoords': 'Invalid coordinates: latitude -90..90, longitude -180..180.',
 
   'conv.title': 'Unit Conversions',
   'conv.subtitle': 'Deterministic conversions — no AI involved',

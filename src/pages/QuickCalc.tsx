@@ -436,6 +436,7 @@ export default function QuickCalc() {
           zeroWeather={form.zeroWeather}
           onChange={update}
           onZeroWeatherChange={updateZeroWeather}
+          onZeroWeatherReplace={next => update({ zeroWeather: next })}
           advanced={advanced}
         />
         <DistanceSection

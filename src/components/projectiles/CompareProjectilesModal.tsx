@@ -310,7 +310,9 @@ export function CompareProjectilesModal({
     // order is deterministic when projectiles tie (e.g. two BCs equal).
     const tieBreak = (a: typeof computed[number], b: typeof computed[number]) =>
       `${a.p.brand} ${a.p.model}`.localeCompare(`${b.p.brand} ${b.p.model}`);
-    if (energyThresholdJ !== null) {
+    const effectiveSort: 'usefulRange' | 'bc' =
+      sortMode ?? (energyThresholdJ !== null ? 'usefulRange' : 'bc');
+    if (effectiveSort === 'usefulRange' && energyThresholdJ !== null) {
       const maxUsefulRange = (row: typeof computed[number]) => {
         let max = -Infinity;
         for (const pt of row.energyCurve) {
@@ -327,7 +329,7 @@ export function CompareProjectilesModal({
       const diff = b.p.bc - a.p.bc;
       return diff !== 0 ? diff : tieBreak(a, b);
     });
-  }, [projectiles, open, velocity, zeroRange, energyThresholdJ]);
+  }, [projectiles, open, velocity, zeroRange, energyThresholdJ, sortMode]);
 
   if (!open) return null;
 

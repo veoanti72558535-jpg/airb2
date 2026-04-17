@@ -1,4 +1,4 @@
-export type DragModel = 'G1' | 'G7';
+export type DragModel = 'G1' | 'G7' | 'GA' | 'GS';
 export type ProjectileType = 'pellet' | 'slug' | 'other';
 export type OpticFocalPlane = 'FFP' | 'SFP';
 /** Twist rate as "1:N" inches per turn, stored as N (e.g. 16, 18, 24). */

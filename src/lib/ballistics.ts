@@ -75,19 +75,53 @@ function cdG7(mach: number): number {
   return Math.max(0.15, 0.49 - (mach - 1.2) * 0.25);
 }
 
+/**
+ * GA — round-nose pellet (domed diabolo). Slightly higher subsonic Cd than G1
+ * because the rounded head displaces more air than a pointed/flat nose.
+ * Published BCs against GA are rare; treat as a slight derate of G1.
+ */
+function cdGA(mach: number): number {
+  if (mach < 0.7) return 0.27;
+  if (mach < 0.9) return 0.27 + (mach - 0.7) * 1.6; // ramp to ~0.59
+  if (mach < 1.1) return 0.59 + (mach - 0.9) * 1.8; // peak ~0.95
+  return Math.max(0.22, 0.95 - (mach - 1.1) * 0.3);
+}
+
+/**
+ * GS — perfect sphere (BB / round shot). Cd ~0.47 in subsonic flow,
+ * climbing sharply through the transonic region to ~0.92.
+ * Reference: hydrodynamics tables for smooth spheres at Re > 1e5.
+ */
+function cdGS(mach: number): number {
+  if (mach < 0.6) return 0.47;
+  if (mach < 0.9) return 0.47 + (mach - 0.6) * 0.6; // ramp to ~0.65
+  if (mach < 1.2) return 0.65 + (mach - 0.9) * 0.9; // peak ~0.92
+  return Math.max(0.4, 0.92 - (mach - 1.2) * 0.2);
+}
+
 function cdFor(model: DragModel, mach: number): number {
-  return model === 'G7' ? cdG7(mach) : cdG1(mach);
+  switch (model) {
+    case 'G7': return cdG7(mach);
+    case 'GA': return cdGA(mach);
+    case 'GS': return cdGS(mach);
+    default: return cdG1(mach);
+  }
 }
 
 /**
  * Retardation coefficient: deceleration per unit distance.
- * Standardised so that BC behaves consistently for both G1 and G7.
+ * Standardised so that BC behaves consistently across drag models — `k` is
+ * tuned per model so a given BC produces comparable trajectories.
  */
 function dragDecel(velocity: number, bc: number, atmoFactor: number, model: DragModel): number {
   const mach = velocity / 343;
   const cd = cdFor(model, mach);
   // Empirical scale aligns the engine output across drag models for a given BC.
-  const k = model === 'G7' ? 0.0085 : 0.0042;
+  const k =
+    model === 'G7' ? 0.0085 :
+    model === 'GA' ? 0.0042 :
+    model === 'GS' ? 0.0050 :
+    0.0042; // G1
   return (cd * atmoFactor * velocity * velocity * k) / bc;
 }
 

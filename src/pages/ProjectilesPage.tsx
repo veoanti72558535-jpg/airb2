@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Zap, Plus, Trash2, Edit2, Download } from 'lucide-react';
+import { Zap, Plus, Trash2, Edit2, Download, GitCompare, X } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { projectileStore } from '@/lib/storage';
 import { useUnits } from '@/hooks/use-units';
@@ -14,7 +14,10 @@ import { useBrandCounts } from '@/hooks/use-brand-counts';
 import { calToken, buildCaliberCounts } from '@/lib/caliber';
 import { AdvancedDisclosure } from '@/components/AdvancedDisclosure';
 import { ImportPresetProjectilesModal } from '@/components/projectiles/ImportPresetProjectilesModal';
+import { CompareProjectilesModal } from '@/components/projectiles/CompareProjectilesModal';
 import { seedProjectileKey } from '@/lib/seed-projectiles';
+
+const MAX_COMPARE = 4;
 
 interface FormState {
   brand: string;

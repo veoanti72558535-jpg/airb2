@@ -40,15 +40,33 @@ export default function AirgunsPage() {
     return Array.from(map.values()).sort((a, b) => b.count - a.count || a.display.localeCompare(b.display));
   }, [airguns]);
 
+  // Canonical caliber token (".177", ".22", ".25", ".30") extracted from stored value.
+  const calToken = (s: string) => {
+    const m = (s ?? '').match(/\.\d+/);
+    return m ? m[0] : '';
+  };
+  const CALIBERS = ['.177', '.22', '.25', '.30'];
+  const caliberCounts = useMemo(() => {
+    const map = new Map<string, number>();
+    airguns.forEach(a => {
+      const c = calToken(a.caliber);
+      if (!c) return;
+      map.set(c, (map.get(c) ?? 0) + 1);
+    });
+    return CALIBERS.map(c => ({ value: c, count: map.get(c) ?? 0 })).filter(x => x.count > 0);
+  }, [airguns]);
+
   const filteredAirguns = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     const bf = brandFilter?.toLowerCase() ?? null;
+    const cf = caliberFilter ?? null;
     return airguns.filter(a => {
       if (bf && (a.brand ?? '').toLowerCase() !== bf) return false;
+      if (cf && calToken(a.caliber) !== cf) return false;
       if (q && !`${a.brand} ${a.model} ${a.notes ?? ''}`.toLowerCase().includes(q)) return false;
       return true;
     });
-  }, [airguns, searchQuery, brandFilter]);
+  }, [airguns, searchQuery, brandFilter, caliberFilter]);
 
   const refresh = () => setAirguns(airgunStore.getAll());
 

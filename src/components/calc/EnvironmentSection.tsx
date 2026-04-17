@@ -1,4 +1,6 @@
-import { Wind, MapPin, Cloud, Loader2, AlertCircle, RotateCw } from 'lucide-react';
+import { useState } from 'react';
+import { Wind, MapPin, Cloud, Loader2, AlertCircle, RotateCw, Crosshair } from 'lucide-react';
+import { z } from 'zod';
 import { useI18n } from '@/lib/i18n';
 import { Section } from './Section';
 import { UnitField } from './UnitField';
@@ -7,6 +9,13 @@ import { WeatherSnapshot } from '@/lib/types';
 import { useWeather } from '@/hooks/use-weather';
 import { getSettings } from '@/lib/storage';
 import { cn } from '@/lib/utils';
+
+// Strict bounds — Open-Meteo rejects out-of-range, but failing fast in the UI
+// gives a clearer error than a generic "HTTP 400".
+const coordsSchema = z.object({
+  lat: z.number().finite().min(-90).max(90),
+  lon: z.number().finite().min(-180).max(180),
+});
 
 interface Props {
   weather: WeatherSnapshot;

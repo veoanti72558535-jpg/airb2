@@ -60,6 +60,29 @@ export function ZeroingSection({
   const api = useWeather(zeroWeather, onZeroWeatherReplace);
   const source = api.effectiveSource(zeroWeather);
 
+  // Manual coords UI — collapsed by default
+  const [showManualCoords, setShowManualCoords] = useState(false);
+  const [latInput, setLatInput] = useState<string>(
+    zeroWeather.latitude != null ? String(zeroWeather.latitude) : '',
+  );
+  const [lonInput, setLonInput] = useState<string>(
+    zeroWeather.longitude != null ? String(zeroWeather.longitude) : '',
+  );
+  const [coordsError, setCoordsError] = useState<string | null>(null);
+
+  const submitManualCoords = () => {
+    const parsed = coordsSchema.safeParse({
+      lat: Number(latInput.replace(',', '.')),
+      lon: Number(lonInput.replace(',', '.')),
+    });
+    if (!parsed.success) {
+      setCoordsError(t('weather.errInvalidCoords'));
+      return;
+    }
+    setCoordsError(null);
+    void api.fetchByCoords(parsed.data.lat, parsed.data.lon, { force: true });
+  };
+
   const sourceLabel =
     source === 'auto' ? t('weather.sourceAuto') :
     source === 'mixed' ? t('weather.sourceMixed') :

@@ -152,6 +152,8 @@ const fr = {
   'projectiles.length': 'Longueur',
   'projectiles.diameter': 'Diamètre',
   'projectiles.material': 'Matériau',
+  'projectiles.search': 'Rechercher par marque, modèle ou notes…',
+  'projectiles.noMatch': 'Aucun projectile ne correspond à la recherche.',
 
   // Optics
   'optics.title': 'Bibliothèque d\'optiques',

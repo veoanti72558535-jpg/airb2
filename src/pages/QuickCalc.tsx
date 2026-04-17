@@ -218,8 +218,9 @@ export default function QuickCalc() {
             projectileDiameter: p.diameter ?? next.projectileDiameter,
             dragModel: p.bcModel ?? next.dragModel,
             projectileType: p.projectileType ?? next.projectileType,
+            customDragTable: p.customDragTable,
           };
-          if (p.bcModel === 'G7') advancedHint = true;
+          if (p.bcModel === 'G7' || p.customDragTable) advancedHint = true;
         }
       }
       if (airgunId) {
@@ -300,7 +301,7 @@ export default function QuickCalc() {
 
   const handleSelectProjectile = (id: string) => {
     const p = projectiles.find(x => x.id === id);
-    if (!p) return update({ projectileId: '' });
+    if (!p) return update({ projectileId: '', customDragTable: undefined });
     update({
       projectileId: id,
       bc: p.bc,
@@ -309,6 +310,7 @@ export default function QuickCalc() {
       projectileDiameter: p.diameter ?? form.projectileDiameter,
       dragModel: p.bcModel ?? form.dragModel,
       projectileType: p.projectileType ?? form.projectileType,
+      customDragTable: p.customDragTable,
     });
   };
 
@@ -389,6 +391,7 @@ export default function QuickCalc() {
       projectileLength: form.projectileLength,
       projectileDiameter: form.projectileDiameter,
       zeroWeather: form.useZeroWeather ? form.zeroWeather : undefined,
+      customDragTable: form.customDragTable,
     };
   };
 

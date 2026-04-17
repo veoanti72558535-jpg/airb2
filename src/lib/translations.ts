@@ -172,7 +172,8 @@ const fr = {
   'optics.deselectAll': 'Tout désélectionner',
   'optics.searchPreset': 'Rechercher (FX, Element, Discovery, MTC…)',
   'optics.filterAll': 'Tous',
-  'optics.noMatch': 'Aucune optique pour ce diamètre.',
+  'optics.filterBrand': 'Marque',
+  'optics.noMatch': 'Aucune optique pour ces filtres.',
 
   // Sessions
   'sessions.title': 'Sessions',

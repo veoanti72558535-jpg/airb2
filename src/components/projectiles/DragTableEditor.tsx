@@ -1,8 +1,10 @@
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Upload, X, Check, AlertTriangle, FileText, Trash2 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
-import { DragTablePoint } from '@/lib/types';
+import { DragModel, DragTablePoint } from '@/lib/types';
 import { parseDragTable, dragTableToCsv, DragTableParseError } from '@/lib/drag-table';
+import { cdFor } from '@/lib/ballistics';
+import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
 
 interface Props {
@@ -164,13 +166,17 @@ export function DragTableEditor({ value, onChange }: Props) {
   );
 }
 
-/** Reference G1 Cd(Mach) — must mirror cdG1 in src/lib/ballistics.ts. */
-function g1Cd(mach: number): number {
-  if (mach < 0.7) return 0.235;
-  if (mach < 0.9) return 0.235 + (mach - 0.7) * 1.5;
-  if (mach < 1.1) return 0.535 + (mach - 0.9) * 2.0;
-  return Math.max(0.2, 0.935 - (mach - 1.1) * 0.3);
-}
+/**
+ * Toggleable reference curves: each row uses the engine's `cdFor` so the
+ * preview always matches the actual ballistic computation. Distinct hues
+ * keep up to 4 overlays readable on dark + light themes.
+ */
+const REF_MODELS: { model: DragModel; color: string; dash: string }[] = [
+  { model: 'G1', color: 'hsl(var(--muted-foreground))', dash: '3 3' },
+  { model: 'G7', color: 'hsl(199 89% 60%)', dash: '4 2' },
+  { model: 'GA', color: 'hsl(280 70% 65%)', dash: '5 2 1 2' },
+  { model: 'GS', color: 'hsl(160 65% 50%)', dash: '2 2' },
+];
 
 interface PreviewProps {
   table: DragTablePoint[];
@@ -178,11 +184,22 @@ interface PreviewProps {
 }
 
 /**
- * Small SVG plot of imported Cd vs Mach (solid primary) overlaid with the
- * G1 reference curve (dashed muted) for at-a-glance validation.
- * Auto-scales the X axis to the imported range and Y to the combined extents.
+ * Small SVG plot of imported Cd vs Mach (solid primary) overlaid with one or
+ * more standard reference curves (dashed). Users toggle G1/G7/GA/GS chips to
+ * compare the imported set against multiple drag models at once.
+ *
+ * G1 is enabled by default since it's the most common reference for pellets.
+ * Auto-scales the X axis to the imported range and Y to the combined extents
+ * of every visible curve.
  */
 function DragTablePreview({ table, t }: PreviewProps) {
+  const [enabled, setEnabled] = useState<Record<DragModel, boolean>>({
+    G1: true,
+    G7: false,
+    GA: false,
+    GS: false,
+  });
+
   const W = 320;
   const H = 120;
   const PAD_L = 28;
@@ -195,15 +212,25 @@ function DragTablePreview({ table, t }: PreviewProps) {
   const xMin = Math.min(table[0].mach, 0.5);
   const xMax = Math.max(table[table.length - 1].mach, 1.3);
 
-  // Sample G1 across the same X range for direct comparison
+  // Sample every enabled reference curve across the same X range.
   const STEPS = 60;
-  const g1Pts: { mach: number; cd: number }[] = [];
-  for (let i = 0; i <= STEPS; i++) {
-    const mach = xMin + ((xMax - xMin) * i) / STEPS;
-    g1Pts.push({ mach, cd: g1Cd(mach) });
-  }
+  const refCurves = useMemo(() => {
+    return REF_MODELS.filter(r => enabled[r.model]).map(r => {
+      const pts: { mach: number; cd: number }[] = [];
+      for (let i = 0; i <= STEPS; i++) {
+        const mach = xMin + ((xMax - xMin) * i) / STEPS;
+        pts.push({ mach, cd: cdFor(r.model, mach) });
+      }
+      return { ...r, pts };
+    });
+  }, [enabled, xMin, xMax]);
 
-  const allCd = [...table.map(p => p.cd), ...g1Pts.map(p => p.cd)];
+  // Y range spans the imported table + every visible reference (so toggling
+  // GS, which peaks at ~0.92, doesn't clip the curve).
+  const allCd = [
+    ...table.map(p => p.cd),
+    ...refCurves.flatMap(c => c.pts.map(p => p.cd)),
+  ];
   const yMin = Math.max(0, Math.min(...allCd) - 0.05);
   const yMax = Math.max(...allCd) + 0.05;
 
@@ -220,29 +247,53 @@ function DragTablePreview({ table, t }: PreviewProps) {
   const yTicks = [yMin, (yMin + yMax) / 2, yMax];
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-1.5">
       <div className="flex items-center justify-between gap-2 text-[10px]">
         <span className="text-muted-foreground uppercase tracking-wide">
           {t('projectiles.dragTablePreview')}
         </span>
-        <div className="flex items-center gap-3">
-          <span className="inline-flex items-center gap-1">
-            <span className="inline-block h-0.5 w-3 rounded bg-primary" aria-hidden />
-            <span className="text-foreground">{t('projectiles.dragTableImported')}</span>
-          </span>
-          <span className="inline-flex items-center gap-1">
-            <span
-              className="inline-block h-0.5 w-3 rounded"
-              style={{
-                background:
-                  'repeating-linear-gradient(to right, hsl(var(--muted-foreground)) 0 3px, transparent 3px 6px)',
-              }}
-              aria-hidden
-            />
-            <span className="text-muted-foreground">G1</span>
-          </span>
-        </div>
+        <span className="inline-flex items-center gap-1">
+          <span className="inline-block h-0.5 w-3 rounded bg-primary" aria-hidden />
+          <span className="text-foreground">{t('projectiles.dragTableImported')}</span>
+        </span>
       </div>
+
+      {/* Reference toggle chips — each chip shows its own dash style preview. */}
+      <div className="flex items-center gap-1.5 flex-wrap text-[10px]">
+        <span className="text-muted-foreground uppercase tracking-wide mr-0.5">
+          {t('projectiles.dragTableReferences')}:
+        </span>
+        {REF_MODELS.map(r => {
+          const on = enabled[r.model];
+          return (
+            <button
+              key={r.model}
+              type="button"
+              onClick={() => setEnabled(prev => ({ ...prev, [r.model]: !prev[r.model] }))}
+              aria-pressed={on}
+              title={t('projectiles.dragTableToggleRef', { model: r.model })}
+              className={cn(
+                'inline-flex items-center gap-1 px-1.5 py-0.5 rounded border font-mono transition-colors',
+                on
+                  ? 'border-border bg-muted text-foreground'
+                  : 'border-border/50 text-muted-foreground hover:bg-muted/40'
+              )}
+            >
+              <span
+                className="inline-block h-0.5 w-3 rounded shrink-0"
+                style={{
+                  background: on
+                    ? `repeating-linear-gradient(to right, ${r.color} 0 4px, transparent 4px 7px)`
+                    : 'hsl(var(--border))',
+                }}
+                aria-hidden
+              />
+              {r.model}
+            </button>
+          );
+        })}
+      </div>
+
       <svg
         viewBox={`0 0 ${W} ${H}`}
         className="w-full h-auto"
@@ -311,17 +362,22 @@ function DragTablePreview({ table, t }: PreviewProps) {
           Cd
         </text>
 
-        {/* G1 reference (dashed) */}
-        <path
-          d={buildPath(g1Pts)}
-          fill="none"
-          stroke="hsl(var(--muted-foreground))"
-          strokeWidth={1.25}
-          strokeDasharray="3 3"
-          strokeLinejoin="round"
-          strokeLinecap="round"
-          opacity={0.7}
-        />
+        {/* Reference curves (dashed, one per enabled model) */}
+        {refCurves.map(r => (
+          <path
+            key={r.model}
+            d={buildPath(r.pts)}
+            fill="none"
+            stroke={r.color}
+            strokeWidth={1.25}
+            strokeDasharray={r.dash}
+            strokeLinejoin="round"
+            strokeLinecap="round"
+            opacity={0.75}
+          >
+            <title>{r.model}</title>
+          </path>
+        ))}
 
         {/* Imported table (solid + markers) */}
         <path

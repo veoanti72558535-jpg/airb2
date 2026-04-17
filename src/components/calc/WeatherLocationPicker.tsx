@@ -62,7 +62,8 @@ export function WeatherLocationPicker({ weather, api, autoEnabled }: Props) {
       return;
     }
     setCoordsError(null);
-    void api.fetchByCoords(parsed.data.lat, parsed.data.lon, { force: true });
+    // Cache-aware: a recent lookup at the same coords surfaces "from cache".
+    void api.fetchByCoords(parsed.data.lat, parsed.data.lon);
   };
 
   const sourceLabel =
@@ -157,8 +158,10 @@ export function WeatherLocationPicker({ weather, api, autoEnabled }: Props) {
               setLatInput(String(city.latitude));
               setLonInput(String(city.longitude));
               setCoordsError(null);
+              // Don't force — if the same city was looked up <30 min ago,
+              // the local cache will short-circuit the network call and the
+              // "from cache" badge will surface that fact.
               void api.fetchByCoords(city.latitude, city.longitude, {
-                force: true,
                 locationLabel: label,
               });
             }}

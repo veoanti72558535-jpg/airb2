@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MapPin, Loader2, AlertCircle, Cloud, RotateCw, Crosshair } from 'lucide-react';
+import { MapPin, Loader2, AlertCircle, Cloud, RotateCw, Crosshair, Database } from 'lucide-react';
 import { z } from 'zod';
 import { useI18n } from '@/lib/i18n';
 import { WeatherSnapshot } from '@/lib/types';

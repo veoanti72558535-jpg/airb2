@@ -260,6 +260,8 @@ const fr = {
   'projectiles.compareSortByUsefulRangeHint': 'Colonnes triées par portée utile maximale décroissante (seuil {j} J)',
   'projectiles.compareSortByBc': 'BC',
   'projectiles.compareSortByBcHint': 'Colonnes triées par coefficient balistique décroissant (aucun seuil d\'énergie configuré)',
+  'projectiles.compareSortByWeight': 'poids',
+  'projectiles.compareSortByWeightHint': 'Colonnes triées par poids (gr) décroissant',
   'projectiles.compareSortToggleHint': 'Cliquer pour trier par {next}',
   'projectiles.compareSortManualEnable': 'Réorganiser',
   'projectiles.compareSortManualEnableHint': 'Activer le mode manuel : glisser-déposer les colonnes pour les réordonner',

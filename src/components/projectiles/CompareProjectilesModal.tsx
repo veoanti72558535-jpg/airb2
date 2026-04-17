@@ -171,8 +171,20 @@ export function CompareProjectilesModal({
   const weightSym = symbol('weight');
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-2 sm:p-4">
-      <div className="surface-elevated w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+    <div
+      className={cn(
+        'fixed inset-0 z-50 flex justify-center bg-black/60 backdrop-blur-sm',
+        fullscreen
+          ? 'items-stretch p-0'
+          : 'items-end sm:items-center p-2 sm:p-4'
+      )}
+    >
+      <div
+        className={cn(
+          'surface-elevated w-full overflow-hidden flex flex-col',
+          fullscreen ? 'max-w-none h-full max-h-none rounded-none border-0' : 'max-w-4xl max-h-[90vh]'
+        )}
+      >
         {/* Header */}
         <div className="flex items-start justify-between gap-3 p-4 border-b border-border">
           <div className="flex items-center gap-2 min-w-0">

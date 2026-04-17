@@ -136,7 +136,7 @@ export function DragTableEditor({ value, onChange }: Props) {
       )}
 
       {value && value.length > 0 && (
-        <div className="surface-card p-2 space-y-1">
+        <div className="surface-card p-2 space-y-2">
           <div className="flex items-center gap-1.5 text-[11px] text-tactical font-medium">
             <Check className="h-3 w-3" />
             {t('projectiles.dragTableActive', { count: value.length })}
@@ -145,6 +145,7 @@ export function DragTableEditor({ value, onChange }: Props) {
             Mach {value[0].mach}–{value[value.length - 1].mach} ·
             Cd {Math.min(...value.map(p => p.cd)).toFixed(3)}–{Math.max(...value.map(p => p.cd)).toFixed(3)}
           </div>
+          <DragTablePreview table={value} t={t} />
         </div>
       )}
 

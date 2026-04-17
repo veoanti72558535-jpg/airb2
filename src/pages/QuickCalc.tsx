@@ -448,12 +448,13 @@ export default function QuickCalc() {
     setResults(null);
     setError(null);
     setSessionName('');
+    setCurrentSessionId(null);
   };
 
   const handleSave = () => {
     if (!results) return;
     const name = sessionName.trim() || `Session ${new Date().toLocaleString()}`;
-    sessionStore.create({
+    const created = sessionStore.create({
       name,
       airgunId: form.airgunId || undefined,
       tuneId: form.tuneId || undefined,
@@ -464,6 +465,7 @@ export default function QuickCalc() {
       tags: [],
       favorite: false,
     });
+    setCurrentSessionId(created.id);
     toast.success(t('calc.sessionSaved'), { description: name });
     setSessionName('');
   };

@@ -138,7 +138,7 @@ export async function fetchOpenMeteo(
   // (e.g. an explicit "Refresh" button).
   if (!options?.force) {
     const cached = getCachedWeather(point.latitude, point.longitude);
-    if (cached) return cached;
+    if (cached) return { ...cached, fromCache: true };
   }
 
   const params = new URLSearchParams({

@@ -46,17 +46,23 @@ export function CompareProjectilesModal({
   open,
   onClose,
   onRemove,
-  muzzleVelocity = 280,
+  muzzleVelocity: initialVelocity = DEFAULT_V,
 }: Props) {
   const { t } = useI18n();
   const { symbol } = useUnits();
+  const [velocity, setVelocity] = useState<number>(initialVelocity);
+
+  // Reset slider when modal re-opens with a new initial velocity.
+  useEffect(() => {
+    if (open) setVelocity(initialVelocity);
+  }, [open, initialVelocity]);
 
   const rows = useMemo(() => {
     if (!open || projectiles.length === 0) return [];
     const weather = neutralWeather();
     return projectiles.map(p => {
       const traj = calculateTrajectory({
-        muzzleVelocity,
+        muzzleVelocity: velocity,
         bc: p.bc,
         projectileWeight: p.weight,
         sightHeight: 50,
@@ -65,6 +71,7 @@ export function CompareProjectilesModal({
         rangeStep: 25,
         weather,
         dragModel: p.bcModel ?? 'G1',
+        customDragTable: p.customDragTable,
       });
       const drops: Record<number, number> = {};
       const vels: Record<number, number> = {};
@@ -78,7 +85,7 @@ export function CompareProjectilesModal({
       }
       return { p, drops, vels, energies };
     });
-  }, [projectiles, open, muzzleVelocity]);
+  }, [projectiles, open, velocity]);
 
   if (!open) return null;
 

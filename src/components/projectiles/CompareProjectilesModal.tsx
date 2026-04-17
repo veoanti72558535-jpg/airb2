@@ -764,87 +764,93 @@ export function CompareProjectilesModal({
         <div className="overflow-auto">
           <table className="w-full text-sm">
             <thead className="bg-muted/40 text-[11px] uppercase tracking-wide text-muted-foreground">
-              <tr>
-                <th className="text-left font-medium px-3 py-2 sticky left-0 bg-muted/40 z-10">
-                  {t('projectiles.compareMetric')}
-                </th>
-                {(() => {
-                  // Pre-compute FPE for all rows so we can highlight the maximum.
-                  const velocityFps = velocity * 3.28084;
-                  const energies = rows.map(({ p }) => {
-                    const fpe = (p.weight * velocityFps * velocityFps) / 450240;
-                    const joules = 0.5 * (p.weight * 0.0000647989) * velocity * velocity;
-                    return { id: p.id, fpe, joules };
-                  });
-                  const maxFpe = energies.reduce((m, e) => (e.fpe > m ? e.fpe : m), 0);
-                  // Shared Y scale across all sparklines so curves are visually comparable.
-                  const globalMaxJ = rows.reduce((m, r) => {
-                    const local = r.energyCurve.reduce((mm, pt) => (pt.energy > mm ? pt.energy : mm), 0);
-                    return local > m ? local : m;
-                  }, 0);
-                  return rows.map(({ p, energyCurve }, idx) => {
-                    const e = energies.find(x => x.id === p.id)!;
-                    // Highlight only when there's >1 row and this row is (uniquely or jointly) the max.
-                    const isMax =
-                      rows.length > 1 && Math.abs(e.fpe - maxFpe) < 0.05;
-                    const seriesColor = SERIES_COLORS[idx % SERIES_COLORS.length];
-                    return (
-                      <th key={p.id} className="text-left font-medium px-3 py-2 min-w-[160px]">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0">
-                            <div className="text-xs font-semibold text-foreground normal-case truncate">
-                              {p.brand} {p.model}
-                            </div>
-                            <div className="text-[10px] text-muted-foreground font-mono">
-                              {p.caliber} · {p.bcModel ?? 'G1'}
-                            </div>
-                            <div
-                              className={cn(
-                                'mt-1 text-[10px] font-mono normal-case inline-flex items-center gap-1 rounded px-1 -mx-1',
-                                energyThresholdJ !== null && e.joules > energyThresholdJ
-                                  ? 'text-destructive font-semibold bg-destructive/10'
-                                  : isMax
-                                    ? 'text-tactical font-semibold bg-tactical/10'
-                                    : 'text-muted-foreground'
-                              )}
-                              title={
-                                energyThresholdJ !== null && e.joules > energyThresholdJ
-                                  ? t('projectiles.compareFacOver')
-                                  : t('projectiles.compareMuzzleEnergy')
-                              }
-                            >
-                              {energyThresholdJ !== null && e.joules > energyThresholdJ ? (
-                                <span aria-hidden>⚠</span>
-                              ) : isMax ? (
-                                <span aria-hidden>★</span>
-                              ) : null}
-                              {e.fpe.toFixed(1)} fpe · {e.joules.toFixed(1)} J
-                            </div>
-                            <EnergySparkline
-                              curve={energyCurve}
-                              color={seriesColor}
-                              globalMaxJ={globalMaxJ}
-                              thresholdJ={energyThresholdJ}
-                              hoverRange={hoverRange}
-                              label={t('projectiles.compareEnergySparklineTitle', {
-                                start: energyCurve[0]?.energy.toFixed(1) ?? '—',
-                                end: energyCurve[energyCurve.length - 1]?.energy.toFixed(1) ?? '—',
-                              })}
-                            />
-                          </div>
-                          <button
-                            onClick={() => onRemove(p.id)}
-                            className="p-0.5 rounded hover:bg-muted text-muted-foreground shrink-0"
-                            aria-label={t('common.delete')}
+              <DndContext sensors={dndSensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <SortableContext items={rows.map(r => r.p.id)} strategy={horizontalListSortingStrategy}>
+                  <tr>
+                    <th className="text-left font-medium px-3 py-2 sticky left-0 bg-muted/40 z-10">
+                      {t('projectiles.compareMetric')}
+                    </th>
+                    {(() => {
+                      // Pre-compute FPE for all rows so we can highlight the maximum.
+                      const velocityFps = velocity * 3.28084;
+                      const energies = rows.map(({ p }) => {
+                        const fpe = (p.weight * velocityFps * velocityFps) / 450240;
+                        const joules = 0.5 * (p.weight * 0.0000647989) * velocity * velocity;
+                        return { id: p.id, fpe, joules };
+                      });
+                      const maxFpe = energies.reduce((m, e) => (e.fpe > m ? e.fpe : m), 0);
+                      // Shared Y scale across all sparklines so curves are visually comparable.
+                      const globalMaxJ = rows.reduce((m, r) => {
+                        const local = r.energyCurve.reduce((mm, pt) => (pt.energy > mm ? pt.energy : mm), 0);
+                        return local > m ? local : m;
+                      }, 0);
+                      return rows.map(({ p, energyCurve }) => {
+                        const e = energies.find(x => x.id === p.id)!;
+                        const isMax =
+                          rows.length > 1 && Math.abs(e.fpe - maxFpe) < 0.05;
+                        const seriesColor = colorById.get(p.id) ?? SERIES_COLORS[0];
+                        return (
+                          <SortableProjectileHeader
+                            key={p.id}
+                            id={p.id}
+                            draggable={manualMode}
+                            dragLabel={t('projectiles.compareDragHandle')}
                           >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </div>
-                      </th>
-                    );
-                  });
-                })()}
-              </tr>
+                            <div className="min-w-0">
+                              <div className="text-xs font-semibold text-foreground normal-case truncate">
+                                {p.brand} {p.model}
+                              </div>
+                              <div className="text-[10px] text-muted-foreground font-mono">
+                                {p.caliber} · {p.bcModel ?? 'G1'}
+                              </div>
+                              <div
+                                className={cn(
+                                  'mt-1 text-[10px] font-mono normal-case inline-flex items-center gap-1 rounded px-1 -mx-1',
+                                  energyThresholdJ !== null && e.joules > energyThresholdJ
+                                    ? 'text-destructive font-semibold bg-destructive/10'
+                                    : isMax
+                                      ? 'text-tactical font-semibold bg-tactical/10'
+                                      : 'text-muted-foreground'
+                                )}
+                                title={
+                                  energyThresholdJ !== null && e.joules > energyThresholdJ
+                                    ? t('projectiles.compareFacOver')
+                                    : t('projectiles.compareMuzzleEnergy')
+                                }
+                              >
+                                {energyThresholdJ !== null && e.joules > energyThresholdJ ? (
+                                  <span aria-hidden>⚠</span>
+                                ) : isMax ? (
+                                  <span aria-hidden>★</span>
+                                ) : null}
+                                {e.fpe.toFixed(1)} fpe · {e.joules.toFixed(1)} J
+                              </div>
+                              <EnergySparkline
+                                curve={energyCurve}
+                                color={seriesColor}
+                                globalMaxJ={globalMaxJ}
+                                thresholdJ={energyThresholdJ}
+                                hoverRange={hoverRange}
+                                label={t('projectiles.compareEnergySparklineTitle', {
+                                  start: energyCurve[0]?.energy.toFixed(1) ?? '—',
+                                  end: energyCurve[energyCurve.length - 1]?.energy.toFixed(1) ?? '—',
+                                })}
+                              />
+                            </div>
+                            <button
+                              onClick={() => onRemove(p.id)}
+                              className="p-0.5 rounded hover:bg-muted text-muted-foreground shrink-0"
+                              aria-label={t('common.delete')}
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </SortableProjectileHeader>
+                        );
+                      });
+                    })()}
+                  </tr>
+                </SortableContext>
+              </DndContext>
             </thead>
             <tbody className="divide-y divide-border">
               {/* Static specs */}

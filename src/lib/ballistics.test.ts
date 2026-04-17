@@ -180,4 +180,32 @@ describe('calculateTrajectory — customDragTable override', () => {
     // only that the override doesn't catastrophically diverge.
     expect(Math.abs(viaTable - native)).toBeLessThan(50);
   });
+
+  it('removing customDragTable from a previously-overridden input restores exact G1 trajectory (no leftover state)', () => {
+    // Regression guard: the engine must not carry over any cached drag table
+    // or model state between successive calls. Computing first WITH a custom
+    // table, then a fresh input WITHOUT it, must yield bit-exact equality
+    // with the canonical G1 baseline.
+    const baseline = calculateTrajectory(baseInput({ dragModel: 'G1' }));
+
+    // First, run a trajectory using the high-drag override — this is what
+    // would dirty any module-level cache if one existed.
+    calculateTrajectory(
+      baseInput({ dragModel: 'G1', customDragTable: HIGH_DRAG_TABLE }),
+    );
+
+    // Now compute again WITHOUT customDragTable. Build the input fresh from
+    // the same `baseInput` factory — no spread of the previous one.
+    const restored = calculateTrajectory(baseInput({ dragModel: 'G1' }));
+
+    expect(restored.length).toBe(baseline.length);
+    for (let i = 0; i < baseline.length; i++) {
+      expect(restored[i].range).toBe(baseline[i].range);
+      expect(restored[i].drop).toBe(baseline[i].drop);
+      expect(restored[i].velocity).toBe(baseline[i].velocity);
+      expect(restored[i].energy).toBe(baseline[i].energy);
+      expect(restored[i].tof).toBe(baseline[i].tof);
+      expect(restored[i].windDrift).toBe(baseline[i].windDrift);
+    }
+  });
 });

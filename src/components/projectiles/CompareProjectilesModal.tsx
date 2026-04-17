@@ -64,10 +64,14 @@ export function CompareProjectilesModal({
   const { t } = useI18n();
   const { symbol } = useUnits();
   const [velocity, setVelocity] = useState<number>(initialVelocity);
+  const [zeroRange, setZeroRange] = useState<number>(DEFAULT_Z);
 
-  // Reset slider when modal re-opens with a new initial velocity.
+  // Reset sliders when modal re-opens with a new initial velocity.
   useEffect(() => {
-    if (open) setVelocity(initialVelocity);
+    if (open) {
+      setVelocity(initialVelocity);
+      setZeroRange(DEFAULT_Z);
+    }
   }, [open, initialVelocity]);
 
   const rows = useMemo(() => {
@@ -79,7 +83,7 @@ export function CompareProjectilesModal({
         bc: p.bc,
         projectileWeight: p.weight,
         sightHeight: 50,
-        zeroRange: 30,
+        zeroRange,
         maxRange: CHART_MAX,
         rangeStep: CHART_STEP,
         weather,
@@ -100,7 +104,7 @@ export function CompareProjectilesModal({
       }
       return { p, drops, vels, energies, curve };
     });
-  }, [projectiles, open, velocity]);
+  }, [projectiles, open, velocity, zeroRange]);
 
   if (!open) return null;
 

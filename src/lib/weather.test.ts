@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { geocodeCity } from './weather';
+import { geocodeCity, fetchOpenMeteo, clearWeatherCache } from './weather';
 
 describe('geocodeCity', () => {
   const realFetch = global.fetch;

@@ -67,6 +67,13 @@ export default function OpticsPage() {
   const inputClass = "w-full bg-muted border border-border rounded-md px-3 py-1.5 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary";
 
   const tubeOptions: (25.4 | 30 | 34)[] = [25.4, 30, 34];
+  const brandOptions = ['FX', 'Element', 'Discovery', 'Pard', 'MTC'];
+
+  const detectBrand = (name: string): string | null => {
+    const lower = name.toLowerCase();
+    return brandOptions.find(b => lower.startsWith(b.toLowerCase())) ?? null;
+  };
+
   const tubeCounts = useMemo(() => {
     const counts: Record<string, number> = { '25.4': 0, '30': 0, '34': 0 };
     optics.forEach(o => {
@@ -77,9 +84,23 @@ export default function OpticsPage() {
     return counts;
   }, [optics]);
 
+  const brandCounts = useMemo(() => {
+    const counts: Record<string, number> = Object.fromEntries(brandOptions.map(b => [b, 0]));
+    optics.forEach(o => {
+      const b = detectBrand(o.name);
+      if (b) counts[b]++;
+    });
+    return counts;
+  }, [optics]);
+
   const filteredOptics = useMemo(
-    () => (tubeFilter ? optics.filter(o => o.tubeDiameter === tubeFilter) : optics),
-    [optics, tubeFilter]
+    () =>
+      optics.filter(o => {
+        if (tubeFilter && o.tubeDiameter !== tubeFilter) return false;
+        if (brandFilter && detectBrand(o.name) !== brandFilter) return false;
+        return true;
+      }),
+    [optics, tubeFilter, brandFilter]
   );
 
   return (

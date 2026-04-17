@@ -206,10 +206,23 @@ export const SEED_PROJECTILES: SeedProjectile[] = [
   { brand: 'ZAN', model: 'Slug 47gr', weight: 47.0, bc: 0.119, bcModel: 'G1', caliber: '.25', projectileType: 'slug', shape: 'slug', diameter: 6.35, material: 'lead', dataSource: 'ZAN Projectiles', notes: 'Slug usiné lourd' },
 
   // ============================================================
-  // .30 (7.62 mm) — PELLETS
+  // .30 — JSB PELLETS & SLUGS
   // ============================================================
   { brand: 'JSB', model: 'Exact .30 44.75gr', weight: 44.75, bc: 0.056, bcModel: 'G1', caliber: '.30', projectileType: 'pellet', shape: 'domed', diameter: 7.62, material: 'lead', dataSource: JSB, notes: 'Pellet lourd .30' },
   { brand: 'JSB', model: 'Exact .30 50.15gr', weight: 50.15, bc: 0.061, bcModel: 'G1', caliber: '.30', projectileType: 'pellet', shape: 'domed', diameter: 7.62, material: 'lead', dataSource: JSB, notes: 'Pellet très lourd .30' },
+  { brand: 'JSB', model: 'Exact King .30 50.15gr', weight: 50.15, bc: 0.062, bcModel: 'G1', caliber: '.30', projectileType: 'pellet', shape: 'domed', diameter: 7.62, material: 'lead', dataSource: JSB, notes: 'Domed long range .30' },
+  { brand: 'JSB', model: 'Hades .30 44.75gr', weight: 44.75, bc: 0.045, bcModel: 'G1', caliber: '.30', projectileType: 'pellet', shape: 'hollow', diameter: 7.62, material: 'lead', dataSource: JSB, notes: 'Hollow hunting .30' },
+  { brand: 'JSB', model: 'Knock Out Slug 44.75gr', weight: 44.75, bc: 0.115, bcModel: 'G1', caliber: '.30', projectileType: 'slug', shape: 'slug', diameter: 7.62, material: 'lead', dataSource: JSB, notes: 'Slug léger JSB .30' },
+  { brand: 'JSB', model: 'Knock Out Slug 54.50gr', weight: 54.50, bc: 0.140, bcModel: 'G1', caliber: '.30', projectileType: 'slug', shape: 'slug', diameter: 7.62, material: 'lead', dataSource: JSB, notes: 'Slug standard JSB .30' },
+
+  // ============================================================
+  // .30 — H&N PELLETS & SLUGS
+  // ============================================================
+  { brand: 'H&N', model: 'Baracuda Hunter Extreme .30 44.13gr', weight: 44.13, bc: 0.045, bcModel: 'G1', caliber: '.30', projectileType: 'pellet', shape: 'hollow', diameter: 7.62, material: 'lead', dataSource: HN, notes: 'Hollow expansion .30' },
+  { brand: 'H&N', model: 'Piledriver .30 50.15gr', weight: 50.15, bc: 0.061, bcModel: 'G1', caliber: '.30', projectileType: 'pellet', shape: 'domed', diameter: 7.62, material: 'lead', dataSource: HN, notes: 'Pellet très lourd .30' },
+  { brand: 'H&N', model: 'Slug HP II 44gr', weight: 44.0, bc: 0.118, bcModel: 'G1', caliber: '.30', projectileType: 'slug', shape: 'slug', diameter: 7.62, material: 'lead', dataSource: HN, notes: 'Slug .30 HP léger' },
+  { brand: 'H&N', model: 'Slug HP II 50gr', weight: 50.0, bc: 0.130, bcModel: 'G1', caliber: '.30', projectileType: 'slug', shape: 'slug', diameter: 7.62, material: 'lead', dataSource: HN, notes: 'Slug .30 HP standard' },
+  { brand: 'H&N', model: 'Slug HP II 56gr', weight: 56.0, bc: 0.143, bcModel: 'G1', caliber: '.30', projectileType: 'slug', shape: 'slug', diameter: 7.62, material: 'lead', dataSource: HN, notes: 'Slug .30 HP lourd' },
 
   // ============================================================
   // .30 (7.62 mm) — SLUGS

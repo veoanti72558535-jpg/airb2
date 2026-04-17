@@ -3,16 +3,19 @@ import { Projectile } from './types';
 /**
  * Seed dataset for popular PCP airgun projectiles (pellets + slugs).
  *
- * Sources:
+ * Sources :
  * - HardAir Magazine (https://hardairmagazine.com/ballistic-coefficients/)
- * - JSB / Predator (Polymag) manufacturer specs
- * - H&N Sport (https://www.h-n-sport.de/)
- * - FX Airguns / Air Venturi / NSA / Patriot Javelin / ZAN slug specs
- * - Air Arms Diabolo Field
+ *   ⚠️ HAM utilise le drag model GA pour les pellets et G1 pour les slugs.
+ *   Les BC GA ont été convertis vers G1 ici (×1.20–1.25 selon le profil).
+ * - JSB Match Diabolo / Schulz Diabolo : G1 publié fabricant
+ * - H&N Sport (https://www.h-n-sport.de/) : G1 fabricant
+ * - FX Airguns / NSA / Patriot Javelin / ZAN / Air Venturi : slugs G1 fabricant
+ * - Predator International (Polymag) : G1 fabricant
  *
- * All BC values are referenced against the G1 drag model (most common in
- * airgun publications). Verify against your own chrony + group testing.
+ * Tous les BC sont stockés en référentiel G1 (`bcModel: 'G1'`). Les valeurs
+ * sont des moyennes — vérifier toujours via chrony + tirs réels sur votre arme.
  */
+
 export type SeedProjectile = Omit<Projectile, 'id' | 'createdAt' | 'updatedAt'>;
 
 const HAM = 'HardAir Magazine';

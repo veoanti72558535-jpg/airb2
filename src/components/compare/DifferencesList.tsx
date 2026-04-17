@@ -78,7 +78,7 @@ export function DifferencesList({ diff }: Props) {
                     key={`${group}-${item.labelKey}`}
                     className={cn(
                       'grid grid-cols-[1fr,auto,auto] gap-2 px-3 py-1.5 text-xs items-baseline',
-                      !item.same && 'bg-amber-500/5',
+                      !item.same && 'bg-warning/5',
                     )}
                   >
                     <span className="text-muted-foreground truncate">

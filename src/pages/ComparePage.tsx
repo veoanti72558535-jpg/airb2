@@ -62,6 +62,9 @@ export default function ComparePage() {
     setStep(initial.step);
   }, [initial.start, initial.end, initial.step]);
 
+  // PNG capture ref must be declared before any early return so hook order stays stable.
+  const captureRef = useRef<HTMLDivElement>(null);
+
   const swap = () => {
     if (!a || !b) return;
     const next = new URLSearchParams(params);
@@ -95,8 +98,6 @@ export default function ComparePage() {
   // Click unit fallback: prefer A's, then B's, then MRAD.
   const clickUnit: 'MOA' | 'MRAD' = a.input.clickUnit ?? b.input.clickUnit ?? 'MRAD';
 
-  // PNG export captures the entire content area; ref lives on the wrapper.
-  const captureRef = useRef<HTMLDivElement>(null);
   const handlePng = async () => {
     if (!captureRef.current) return;
     try {

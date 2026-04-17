@@ -595,6 +595,8 @@ export default function QuickCalc() {
             currentMag={form.currentMag}
             magCalibration={form.magCalibration}
             advanced={advanced}
+            weather={form.weather}
+            zeroWeather={form.useZeroWeather ? form.zeroWeather : undefined}
           />
 
           <div className="rounded-xl border border-border bg-card/60 p-3 space-y-2">

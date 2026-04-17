@@ -129,7 +129,7 @@ export function clearWeatherCache(): void {
  */
 export async function fetchOpenMeteo(
   point: GeoPoint,
-  options?: { force?: boolean },
+  options?: { force?: boolean; locationLabel?: string },
 ): Promise<FetchWeatherResult> {
   // Cache short-circuit: avoid refetch when the user re-opens the calculator
   // shortly after the last lookup. Caller can pass `force: true` to bypass

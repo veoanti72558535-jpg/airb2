@@ -778,6 +778,8 @@ const en: Record<keyof typeof fr, string> = {
   'projectiles.compareEnergyOnlySection': 'Residual energy',
   'projectiles.compareEnergyAt': '@ {r} m',
   'projectiles.compareVelocityAt': 'V @ {r} m',
+  'projectiles.compareCollapseSection': 'Collapse section',
+  'projectiles.compareExpandSection': 'Expand section',
   'projectiles.compareEnergyOnlyAt': 'E @ {r} m',
   'projectiles.compareDisclaimer': 'Indicative values — velocity is unified to isolate BC effect. Real drops depend on your airgun and tune.',
   'projectiles.compareMax': 'Maximum 4 projectiles',

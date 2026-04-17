@@ -3,6 +3,7 @@ import { Zap, Plus, Trash2, Edit2 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { projectileStore } from '@/lib/storage';
 import { useUnits } from '@/hooks/use-units';
+import { useUrlFilter } from '@/hooks/use-url-filter';
 import { Projectile } from '@/lib/types';
 import { motion } from 'framer-motion';
 import { toast } from '@/hooks/use-toast';
@@ -12,7 +13,9 @@ export default function ProjectilesPage() {
   const { t } = useI18n();
   const { symbol } = useUnits();
   const [projectiles, setProjectiles] = useState<Projectile[]>(projectileStore.getAll());
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchParam, setSearchParam] = useUrlFilter('q');
+  const searchQuery = searchParam ?? '';
+  const setSearchQuery = (v: string) => setSearchParam(v);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Projectile | null>(null);
   const [form, setForm] = useState({ brand: '', model: '', weight: 18, bc: 0.025, shape: 'domed', caliber: '.177', length: 0, diameter: 0, material: 'lead', notes: '', dataSource: '' });

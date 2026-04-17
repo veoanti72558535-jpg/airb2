@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Plus, ChevronDown, X, Check, Search } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 export interface EntityOption {
   id: string;
@@ -23,6 +24,9 @@ interface EntitySelectProps {
 /**
  * Combobox: type to filter, click to pick. Tokenized substring match across
  * label + sub (e.g. typing "jumbo 18" narrows to JSB Exact Jumbo Heavy 18.13gr).
+ *
+ * Uses a Radix Popover so the dropdown renders in a portal — it never gets
+ * clipped or hidden by sibling sections that have their own stacking context.
  */
 export function EntitySelect({
   label,
@@ -39,9 +43,9 @@ export function EntitySelect({
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [highlight, setHighlight] = useState(0);
-  const wrapperRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   const selected = useMemo(() => options.find(o => o.id === value), [options, value]);
 
@@ -55,21 +59,10 @@ export function EntitySelect({
     });
   }, [options, query]);
 
-  // Close on outside click.
-  useEffect(() => {
-    if (!open) return;
-    const onDoc = (e: MouseEvent) => {
-      if (!wrapperRef.current?.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener('mousedown', onDoc);
-    return () => document.removeEventListener('mousedown', onDoc);
-  }, [open]);
-
-  // Focus input when opening.
+  // Reset query + highlight on open/close.
   useEffect(() => {
     if (open) {
       setHighlight(0);
-      // Defer to allow render of input.
       requestAnimationFrame(() => inputRef.current?.focus());
     } else {
       setQuery('');
@@ -105,7 +98,7 @@ export function EntitySelect({
   };
 
   return (
-    <div className={cn('space-y-1', open && 'relative z-50')} ref={wrapperRef}>
+    <div className="space-y-1">
       <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
         {label}
       </label>
@@ -124,12 +117,11 @@ export function EntitySelect({
           )}
         </div>
       ) : (
-        <div className="relative">
-          {/* Trigger button (closed state) */}
-          {!open && (
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
             <button
+              ref={triggerRef}
               type="button"
-              onClick={() => setOpen(true)}
               className="w-full flex items-center justify-between gap-2 bg-muted/40 border border-border rounded-md px-3 py-2 text-sm text-left focus:outline-none focus:ring-1 focus:ring-primary hover:bg-muted/60"
             >
               <span className={cn('truncate', !selected && 'text-muted-foreground')}>
@@ -169,92 +161,88 @@ export function EntitySelect({
                 <ChevronDown className="h-4 w-4 text-muted-foreground" />
               </div>
             </button>
-          )}
+          </PopoverTrigger>
 
-          {/* Open state: search input + dropdown list */}
-          {open && (
-            <>
-              <div className="relative">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                <input
-                  ref={inputRef}
-                  value={query}
-                  onChange={e => {
-                    setQuery(e.target.value);
-                    setHighlight(0);
-                  }}
-                  onKeyDown={onKeyDown}
-                  placeholder={t('common.searchHint')}
-                  className="w-full bg-muted/40 border border-border rounded-md pl-8 pr-8 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                />
-                <button
-                  type="button"
-                  onClick={() => setOpen(false)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-muted text-muted-foreground"
-                  aria-label={t('common.cancel')}
-                >
-                  <X className="h-3.5 w-3.5" />
-                </button>
+          <PopoverContent
+            align="start"
+            sideOffset={4}
+            className="p-0 w-[--radix-popover-trigger-width] surface-elevated overflow-hidden"
+            onOpenAutoFocus={e => {
+              e.preventDefault();
+              inputRef.current?.focus();
+            }}
+          >
+            {/* Search input */}
+            <div className="relative border-b border-border">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+              <input
+                ref={inputRef}
+                value={query}
+                onChange={e => {
+                  setQuery(e.target.value);
+                  setHighlight(0);
+                }}
+                onKeyDown={onKeyDown}
+                placeholder={t('common.searchHint')}
+                className="w-full bg-transparent pl-8 pr-3 py-2 text-sm focus:outline-none"
+              />
+            </div>
+
+            {/* Manual-entry / clear option */}
+            <button
+              type="button"
+              onClick={() => pick('')}
+              className={cn(
+                'w-full text-left px-3 py-2 text-xs italic text-muted-foreground border-b border-border hover:bg-muted/40',
+                !value && 'bg-primary/5 text-primary'
+              )}
+            >
+              — {placeholder} —
+            </button>
+
+            {filtered.length === 0 ? (
+              <div className="p-4 text-center text-xs text-muted-foreground">
+                {t('common.noResults')}
               </div>
-
-              <div className="absolute left-0 right-0 mt-1 z-30 surface-elevated rounded-md border border-border shadow-lg overflow-hidden">
-                {/* Manual-entry / clear option */}
-                <button
-                  type="button"
-                  onClick={() => pick('')}
-                  className={cn(
-                    'w-full text-left px-3 py-2 text-xs italic text-muted-foreground border-b border-border hover:bg-muted/40',
-                    !value && 'bg-primary/5 text-primary'
-                  )}
-                >
-                  — {placeholder} —
-                </button>
-
-                {filtered.length === 0 ? (
-                  <div className="p-4 text-center text-xs text-muted-foreground">
-                    {t('common.noResults')}
-                  </div>
-                ) : (
-                  <ul ref={listRef} className="max-h-64 overflow-y-auto">
-                    {filtered.map((o, idx) => {
-                      const isSel = o.id === value;
-                      const isHi = idx === highlight;
-                      return (
-                        <li key={o.id}>
-                          <button
-                            type="button"
-                            onClick={() => pick(o.id)}
-                            onMouseEnter={() => setHighlight(idx)}
-                            className={cn(
-                              'w-full text-left px-3 py-2 text-sm flex items-start gap-2 transition-colors',
-                              isHi ? 'bg-primary/10' : 'hover:bg-muted/40',
-                              isSel && 'text-primary font-medium'
-                            )}
-                          >
-                            <Check
-                              className={cn(
-                                'h-3.5 w-3.5 mt-0.5 shrink-0',
-                                isSel ? 'text-primary' : 'opacity-0'
-                              )}
-                            />
-                            <span className="flex-1 min-w-0">
-                              <span className="block truncate">{o.label}</span>
-                              {o.sub && (
-                                <span className="block text-[11px] text-muted-foreground font-mono truncate">
-                                  {o.sub}
-                                </span>
-                              )}
+            ) : (
+              <ul ref={listRef} className="max-h-64 overflow-y-auto">
+                {filtered.map((o, idx) => {
+                  const isSel = o.id === value;
+                  const isHi = idx === highlight;
+                  return (
+                    <li key={o.id}>
+                      <button
+                        type="button"
+                        onClick={() => pick(o.id)}
+                        onMouseEnter={() => setHighlight(idx)}
+                        className={cn(
+                          'w-full text-left px-3 py-2 text-sm flex items-start gap-2 transition-colors',
+                          isHi ? 'bg-primary/10' : 'hover:bg-muted/40',
+                          isSel && 'text-primary font-medium'
+                        )}
+                      >
+                        <Check
+                          className={cn(
+                            'h-3.5 w-3.5 mt-0.5 shrink-0',
+                            isSel ? 'text-primary' : 'opacity-0'
+                          )}
+                        />
+                        <span className="flex-1 min-w-0">
+                          <span className="block truncate">{o.label}</span>
+                          {o.sub && (
+                            <span className="block text-[11px] text-muted-foreground font-mono truncate">
+                              {o.sub}
                             </span>
-                          </button>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-              </div>
-            </>
-          )}
-        </div>
+                          )}
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </PopoverContent>
+        </Popover>
       )}
     </div>
   );

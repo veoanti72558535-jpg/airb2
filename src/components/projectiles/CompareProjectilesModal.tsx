@@ -866,16 +866,8 @@ export function CompareProjectilesModal({
                               <div className="text-[10px] text-muted-foreground font-mono">
                                 {p.caliber} · {p.bcModel ?? 'G1'}
                               </div>
-                              <div
-                                className={cn(
-                                  'mt-1 text-[10px] font-mono normal-case inline-flex items-center gap-1 rounded px-1 -mx-1',
-                                  energyThresholdJ !== null && e.joules > energyThresholdJ
-                                    ? 'text-destructive font-semibold bg-destructive/10'
-                                    : isMax
-                                      ? 'text-tactical font-semibold bg-tactical/10'
-                                      : 'text-muted-foreground'
-                                )}
-                                title={
+                              <HoverHint
+                                label={
                                   energyThresholdJ !== null && e.joules > energyThresholdJ
                                     ? t('projectiles.compareFacOver')
                                     : isMax
@@ -885,13 +877,24 @@ export function CompareProjectilesModal({
                                       : t('projectiles.compareMuzzleEnergy')
                                 }
                               >
-                                {energyThresholdJ !== null && e.joules > energyThresholdJ ? (
-                                  <span aria-hidden>⚠</span>
-                                ) : isMax ? (
-                                  <span aria-hidden>★</span>
-                                ) : null}
-                                {e.fpe.toFixed(1)} fpe · {e.joules.toFixed(1)} J
-                              </div>
+                                <div
+                                  className={cn(
+                                    'mt-1 text-[10px] font-mono normal-case inline-flex items-center gap-1 rounded px-1 -mx-1',
+                                    energyThresholdJ !== null && e.joules > energyThresholdJ
+                                      ? 'text-destructive font-semibold bg-destructive/10'
+                                      : isMax
+                                        ? 'text-tactical font-semibold bg-tactical/10'
+                                        : 'text-muted-foreground'
+                                  )}
+                                >
+                                  {energyThresholdJ !== null && e.joules > energyThresholdJ ? (
+                                    <span aria-hidden>⚠</span>
+                                  ) : isMax ? (
+                                    <span aria-hidden>★</span>
+                                  ) : null}
+                                  {e.fpe.toFixed(1)} fpe · {e.joules.toFixed(1)} J
+                                </div>
+                              </HoverHint>
                               <EnergySparkline
                                 curve={energyCurve}
                                 color={seriesColor}
@@ -955,21 +958,22 @@ export function CompareProjectilesModal({
               {/* Drop section — collapsible header for consistency with Velocity / Energy. */}
               <tr className="bg-muted/20">
                 <td colSpan={rows.length + 1} className="p-0">
-                  <button
-                    type="button"
-                    onClick={() => setCollapsed(c => ({ ...c, drop: !c.drop }))}
-                    aria-expanded={!collapsed.drop}
-                    aria-controls="cmp-drop-rows"
-                    title={collapsed.drop ? t('projectiles.compareExpandSection') : t('projectiles.compareCollapseSection')}
-                    className="w-full flex items-center gap-1.5 px-3 py-1.5 text-[10px] uppercase tracking-wide text-muted-foreground font-semibold hover:text-foreground hover:bg-muted/30 transition-colors text-left"
-                  >
-                    {collapsed.drop ? (
-                      <ChevronRight className="h-3 w-3 shrink-0" aria-hidden />
-                    ) : (
-                      <ChevronDown className="h-3 w-3 shrink-0" aria-hidden />
-                    )}
-                    {t('projectiles.compareDropSection')}
-                  </button>
+                  <HoverHint label={collapsed.drop ? t('projectiles.compareExpandSection') : t('projectiles.compareCollapseSection')}>
+                    <button
+                      type="button"
+                      onClick={() => setCollapsed(c => ({ ...c, drop: !c.drop }))}
+                      aria-expanded={!collapsed.drop}
+                      aria-controls="cmp-drop-rows"
+                      className="w-full flex items-center gap-1.5 px-3 py-1.5 text-[10px] uppercase tracking-wide text-muted-foreground font-semibold hover:text-foreground hover:bg-muted/30 transition-colors text-left"
+                    >
+                      {collapsed.drop ? (
+                        <ChevronRight className="h-3 w-3 shrink-0" aria-hidden />
+                      ) : (
+                        <ChevronDown className="h-3 w-3 shrink-0" aria-hidden />
+                      )}
+                      {t('projectiles.compareDropSection')}
+                    </button>
+                  </HoverHint>
                 </td>
               </tr>
               {!collapsed.drop && COMPARE_RANGES.map(r => {
@@ -999,16 +1003,21 @@ export function CompareProjectilesModal({
                             'px-3 py-2 font-mono text-xs',
                             isBest && 'text-tactical font-semibold bg-tactical/10'
                           )}
-                          title={isBest
-                            ? (dropGap !== null
-                                ? t('projectiles.compareFlattestDiff', { gap: dropGap.toFixed(1) })
-                                : t('projectiles.compareFlattestOnly'))
-                            : vsBestGap !== null
-                              ? t('projectiles.compareDropVsBest', { gap: vsBestGap.toFixed(1) })
-                              : undefined}
                         >
-                          {isBest && <span aria-hidden className="mr-1">★</span>}
-                          {d !== undefined ? `${d.toFixed(1)} mm` : '—'}
+                          <HoverHint
+                            label={isBest
+                              ? (dropGap !== null
+                                  ? t('projectiles.compareFlattestDiff', { gap: dropGap.toFixed(1) })
+                                  : t('projectiles.compareFlattestOnly'))
+                              : vsBestGap !== null
+                                ? t('projectiles.compareDropVsBest', { gap: vsBestGap.toFixed(1) })
+                                : undefined}
+                          >
+                            <span>
+                              {isBest && <span aria-hidden className="mr-1">★</span>}
+                              {d !== undefined ? `${d.toFixed(1)} mm` : '—'}
+                            </span>
+                          </HoverHint>
                         </td>
                       );
                     })}
@@ -1021,21 +1030,22 @@ export function CompareProjectilesModal({
                   when they want to focus on energy (or vice-versa). */}
               <tr className="bg-muted/20">
                 <td colSpan={rows.length + 1} className="p-0">
-                  <button
-                    type="button"
-                    onClick={() => setCollapsed(c => ({ ...c, vel: !c.vel }))}
-                    aria-expanded={!collapsed.vel}
-                    aria-controls="cmp-vel-rows"
-                    title={collapsed.vel ? t('projectiles.compareExpandSection') : t('projectiles.compareCollapseSection')}
-                    className="w-full flex items-center gap-1.5 px-3 py-1.5 text-[10px] uppercase tracking-wide text-muted-foreground font-semibold hover:text-foreground hover:bg-muted/30 transition-colors text-left"
-                  >
-                    {collapsed.vel ? (
-                      <ChevronRight className="h-3 w-3 shrink-0" aria-hidden />
-                    ) : (
-                      <ChevronDown className="h-3 w-3 shrink-0" aria-hidden />
-                    )}
-                    {t('projectiles.compareVelocitySection')}
-                  </button>
+                  <HoverHint label={collapsed.vel ? t('projectiles.compareExpandSection') : t('projectiles.compareCollapseSection')}>
+                    <button
+                      type="button"
+                      onClick={() => setCollapsed(c => ({ ...c, vel: !c.vel }))}
+                      aria-expanded={!collapsed.vel}
+                      aria-controls="cmp-vel-rows"
+                      className="w-full flex items-center gap-1.5 px-3 py-1.5 text-[10px] uppercase tracking-wide text-muted-foreground font-semibold hover:text-foreground hover:bg-muted/30 transition-colors text-left"
+                    >
+                      {collapsed.vel ? (
+                        <ChevronRight className="h-3 w-3 shrink-0" aria-hidden />
+                      ) : (
+                        <ChevronDown className="h-3 w-3 shrink-0" aria-hidden />
+                      )}
+                      {t('projectiles.compareVelocitySection')}
+                    </button>
+                  </HoverHint>
                 </td>
               </tr>
               {!collapsed.vel && COMPARE_RANGES.map(r => {
@@ -1063,16 +1073,21 @@ export function CompareProjectilesModal({
                             'px-3 py-2 font-mono text-xs',
                             isFastest && 'text-tactical font-semibold bg-tactical/10'
                           )}
-                          title={isFastest
-                            ? (velGap !== null
-                                ? t('projectiles.compareFastestDiff', { gap: velGap.toFixed(0) })
-                                : t('projectiles.compareFastestOnly'))
-                            : vsBestGap !== null
-                              ? t('projectiles.compareVelocityVsBest', { gap: vsBestGap.toFixed(0) })
-                              : undefined}
                         >
-                          {isFastest && <span aria-hidden className="mr-1">★</span>}
-                          {v !== undefined ? `${v.toFixed(0)} m/s` : '—'}
+                          <HoverHint
+                            label={isFastest
+                              ? (velGap !== null
+                                  ? t('projectiles.compareFastestDiff', { gap: velGap.toFixed(0) })
+                                  : t('projectiles.compareFastestOnly'))
+                              : vsBestGap !== null
+                                ? t('projectiles.compareVelocityVsBest', { gap: vsBestGap.toFixed(0) })
+                                : undefined}
+                          >
+                            <span>
+                              {isFastest && <span aria-hidden className="mr-1">★</span>}
+                              {v !== undefined ? `${v.toFixed(0)} m/s` : '—'}
+                            </span>
+                          </HoverHint>
                         </td>
                       );
                     })}
@@ -1083,21 +1098,22 @@ export function CompareProjectilesModal({
               {/* Energy section — residual energy at each distance, highlights over-threshold rows */}
               <tr className="bg-muted/20">
                 <td colSpan={rows.length + 1} className="p-0">
-                  <button
-                    type="button"
-                    onClick={() => setCollapsed(c => ({ ...c, energy: !c.energy }))}
-                    aria-expanded={!collapsed.energy}
-                    aria-controls="cmp-energy-rows"
-                    title={collapsed.energy ? t('projectiles.compareExpandSection') : t('projectiles.compareCollapseSection')}
-                    className="w-full flex items-center gap-1.5 px-3 py-1.5 text-[10px] uppercase tracking-wide text-muted-foreground font-semibold hover:text-foreground hover:bg-muted/30 transition-colors text-left"
-                  >
-                    {collapsed.energy ? (
-                      <ChevronRight className="h-3 w-3 shrink-0" aria-hidden />
-                    ) : (
-                      <ChevronDown className="h-3 w-3 shrink-0" aria-hidden />
-                    )}
-                    {t('projectiles.compareEnergyOnlySection')}
-                  </button>
+                  <HoverHint label={collapsed.energy ? t('projectiles.compareExpandSection') : t('projectiles.compareCollapseSection')}>
+                    <button
+                      type="button"
+                      onClick={() => setCollapsed(c => ({ ...c, energy: !c.energy }))}
+                      aria-expanded={!collapsed.energy}
+                      aria-controls="cmp-energy-rows"
+                      className="w-full flex items-center gap-1.5 px-3 py-1.5 text-[10px] uppercase tracking-wide text-muted-foreground font-semibold hover:text-foreground hover:bg-muted/30 transition-colors text-left"
+                    >
+                      {collapsed.energy ? (
+                        <ChevronRight className="h-3 w-3 shrink-0" aria-hidden />
+                      ) : (
+                        <ChevronDown className="h-3 w-3 shrink-0" aria-hidden />
+                      )}
+                      {t('projectiles.compareEnergyOnlySection')}
+                    </button>
+                  </HoverHint>
                 </td>
               </tr>
               {!collapsed.energy && COMPARE_RANGES.map(r => {
@@ -1128,10 +1144,13 @@ export function CompareProjectilesModal({
                             'px-3 py-2 font-mono text-xs',
                             overFac && 'text-destructive font-semibold bg-destructive/10'
                           )}
-                          title={title}
                         >
-                          {overFac && <span aria-hidden className="mr-1">⚠</span>}
-                          {j !== undefined ? `${j.toFixed(1)} J` : '—'}
+                          <HoverHint label={title}>
+                            <span>
+                              {overFac && <span aria-hidden className="mr-1">⚠</span>}
+                              {j !== undefined ? `${j.toFixed(1)} J` : '—'}
+                            </span>
+                          </HoverHint>
                         </td>
                       );
                     })}
@@ -1146,21 +1165,22 @@ export function CompareProjectilesModal({
                 <>
                   <tr className="bg-muted/20">
                     <td colSpan={rows.length + 1} className="p-0">
-                      <button
-                        type="button"
-                        onClick={() => setCollapsed(c => ({ ...c, overThreshold: !c.overThreshold }))}
-                        aria-expanded={!collapsed.overThreshold}
-                        aria-controls="cmp-over-rows"
-                        title={collapsed.overThreshold ? t('projectiles.compareExpandSection') : t('projectiles.compareCollapseSection')}
-                        className="w-full flex items-center gap-1.5 px-3 py-1.5 text-[10px] uppercase tracking-wide text-muted-foreground font-semibold hover:text-foreground hover:bg-muted/30 transition-colors text-left"
-                      >
-                        {collapsed.overThreshold ? (
-                          <ChevronRight className="h-3 w-3 shrink-0" aria-hidden />
-                        ) : (
-                          <ChevronDown className="h-3 w-3 shrink-0" aria-hidden />
-                        )}
-                        {t('projectiles.compareOverThresholdSection', { j: energyThresholdJ.toFixed(2) })}
-                      </button>
+                      <HoverHint label={collapsed.overThreshold ? t('projectiles.compareExpandSection') : t('projectiles.compareCollapseSection')}>
+                        <button
+                          type="button"
+                          onClick={() => setCollapsed(c => ({ ...c, overThreshold: !c.overThreshold }))}
+                          aria-expanded={!collapsed.overThreshold}
+                          aria-controls="cmp-over-rows"
+                          className="w-full flex items-center gap-1.5 px-3 py-1.5 text-[10px] uppercase tracking-wide text-muted-foreground font-semibold hover:text-foreground hover:bg-muted/30 transition-colors text-left"
+                        >
+                          {collapsed.overThreshold ? (
+                            <ChevronRight className="h-3 w-3 shrink-0" aria-hidden />
+                          ) : (
+                            <ChevronDown className="h-3 w-3 shrink-0" aria-hidden />
+                          )}
+                          {t('projectiles.compareOverThresholdSection', { j: energyThresholdJ.toFixed(2) })}
+                        </button>
+                      </HoverHint>
                     </td>
                   </tr>
                   {!collapsed.overThreshold && (() => {
@@ -1219,18 +1239,23 @@ export function CompareProjectilesModal({
                                       ? 'text-tactical font-semibold bg-tactical/10'
                                       : 'text-destructive font-semibold',
                                 )}
-                                title={isWinner
-                                  ? (rangeGap !== null
-                                      ? t('projectiles.compareBestRangeDiff', { gap: rangeGap.toString() })
-                                      : t('projectiles.compareBestRangeOnly'))
-                                  : vsBestGap !== null
-                                    ? t('projectiles.compareRangeVsBest', { gap: vsBestGap.toString() })
-                                    : undefined}
                               >
-                                {isWinner && <span aria-hidden className="mr-1">★</span>}
-                                {maxRange === null
-                                  ? t('projectiles.compareOverThresholdNone')
-                                  : `${maxRange} m`}
+                                <HoverHint
+                                  label={isWinner
+                                    ? (rangeGap !== null
+                                        ? t('projectiles.compareBestRangeDiff', { gap: rangeGap.toString() })
+                                        : t('projectiles.compareBestRangeOnly'))
+                                    : vsBestGap !== null
+                                      ? t('projectiles.compareRangeVsBest', { gap: vsBestGap.toString() })
+                                      : undefined}
+                                >
+                                  <span>
+                                    {isWinner && <span aria-hidden className="mr-1">★</span>}
+                                    {maxRange === null
+                                      ? t('projectiles.compareOverThresholdNone')
+                                      : `${maxRange} m`}
+                                  </span>
+                                </HoverHint>
                               </td>
                             );
                           })}
@@ -1726,16 +1751,17 @@ function SortableProjectileHeader({ id, draggable, dragLabel, children }: Sortab
     >
       <div className="flex items-start justify-between gap-2">
         {draggable && (
-          <button
-            type="button"
-            {...attributes}
-            {...listeners}
-            className="p-0.5 rounded hover:bg-muted text-muted-foreground shrink-0 cursor-grab active:cursor-grabbing focus:outline-none focus-visible:ring-1 focus-visible:ring-primary touch-none"
-            title={dragLabel}
-            aria-label={dragLabel}
-          >
-            <GripVertical className="h-3.5 w-3.5" />
-          </button>
+          <HoverHint label={dragLabel}>
+            <button
+              type="button"
+              {...attributes}
+              {...listeners}
+              className="p-0.5 rounded hover:bg-muted text-muted-foreground shrink-0 cursor-grab active:cursor-grabbing focus:outline-none focus-visible:ring-1 focus-visible:ring-primary touch-none"
+              aria-label={dragLabel}
+            >
+              <GripVertical className="h-3.5 w-3.5" />
+            </button>
+          </HoverHint>
         )}
         {children}
       </div>

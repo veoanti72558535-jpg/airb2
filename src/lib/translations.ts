@@ -797,6 +797,7 @@ const en: Record<keyof typeof fr, string> = {
   'projectiles.compareSortByBcHint': 'Columns sorted by ballistic coefficient descending (no energy threshold configured)',
   'projectiles.compareSortByWeight': 'weight',
   'projectiles.compareSortByWeightHint': 'Columns sorted by weight (gr) descending',
+  'projectiles.compareManualOrderSaved': 'Manual order saved',
   'projectiles.compareSortToggleHint': 'Click to sort by {next}',
   'projectiles.compareSortManualEnable': 'Reorder',
   'projectiles.compareSortManualEnableHint': 'Enable manual mode: drag-and-drop columns to reorder them',

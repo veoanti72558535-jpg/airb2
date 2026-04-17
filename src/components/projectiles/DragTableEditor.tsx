@@ -192,13 +192,43 @@ interface PreviewProps {
  * Auto-scales the X axis to the imported range and Y to the combined extents
  * of every visible curve.
  */
+/** localStorage key for the user's preferred reference-curve toggles.
+ *  Persisting this means a user who always compares against G7 doesn't have
+ *  to re-tick it every time they edit a different projectile. */
+const REF_TOGGLES_KEY = 'airballistik.dragTable.refToggles.v1';
+const DEFAULT_REF_TOGGLES: Record<DragModel, boolean> = {
+  G1: true,
+  G7: false,
+  GA: false,
+  GS: false,
+};
+
+function loadRefToggles(): Record<DragModel, boolean> {
+  if (typeof window === 'undefined') return DEFAULT_REF_TOGGLES;
+  try {
+    const raw = window.localStorage.getItem(REF_TOGGLES_KEY);
+    if (!raw) return DEFAULT_REF_TOGGLES;
+    const parsed = JSON.parse(raw) as Partial<Record<DragModel, boolean>>;
+    // Merge with defaults so a future new model gets a sensible default
+    // even if the stored shape is older.
+    return { ...DEFAULT_REF_TOGGLES, ...parsed };
+  } catch {
+    return DEFAULT_REF_TOGGLES;
+  }
+}
+
 function DragTablePreview({ table, t }: PreviewProps) {
-  const [enabled, setEnabled] = useState<Record<DragModel, boolean>>({
-    G1: true,
-    G7: false,
-    GA: false,
-    GS: false,
-  });
+  const [enabled, setEnabled] = useState<Record<DragModel, boolean>>(loadRefToggles);
+
+  // Persist on every change. Wrapped in try/catch because localStorage can
+  // throw in private mode or when the quota is full — UX should never break.
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(REF_TOGGLES_KEY, JSON.stringify(enabled));
+    } catch {
+      /* ignore — non-critical preference */
+    }
+  }, [enabled]);
 
   const W = 320;
   const H = 120;

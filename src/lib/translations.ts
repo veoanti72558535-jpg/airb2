@@ -258,6 +258,8 @@ const fr = {
   'calc.energyThresholdBadge': 'Seuil énergie : {j} J',
   'calc.energyThresholdOff': 'Seuil énergie : désactivé',
   'calc.energyThresholdHint': 'Configurer dans Réglages',
+  'calc.energyOverWarning': 'Énergie initiale {j} J — au-dessus du seuil de {threshold} J',
+  'calc.energyOverWarningHint': 'Vérifiez la réglementation locale avant tir.',
   'projectiles.compareExport': 'Exporter PNG',
   'projectiles.compareExporting': 'Export…',
   'projectiles.compareExportSuccess': 'Image exportée',

@@ -977,7 +977,10 @@ export function CompareProjectilesModal({
               </tr>
               {!collapsed.vel && COMPARE_RANGES.map(r => {
                 // Highest residual velocity at this distance — projectile that retains speed best.
-                const bestVel = Math.max(...rows.map(x => x.vels[r] ?? -Infinity));
+                const velsAt = rows.map(x => x.vels[r] ?? -Infinity).filter(v => v !== -Infinity);
+                const bestVel = velsAt.length ? Math.max(...velsAt) : -Infinity;
+                const secondVel = velsAt.filter(v => v < bestVel).reduce((m, v) => (m === null || v > m ? v : m), null as number | null);
+                const velGap = secondVel !== null ? bestVel - secondVel : null;
                 return (
                   <tr key={`v-${r}`} id="cmp-vel-rows">
                     <td className="px-3 py-2 text-xs text-muted-foreground sticky left-0 bg-card z-10">
@@ -993,7 +996,11 @@ export function CompareProjectilesModal({
                             'px-3 py-2 font-mono text-xs',
                             isFastest && 'text-tactical font-semibold bg-tactical/10'
                           )}
-                          title={isFastest ? t('projectiles.compareFastest') : undefined}
+                          title={isFastest
+                            ? (velGap !== null
+                                ? t('projectiles.compareFastestDiff', { gap: velGap.toFixed(0) })
+                                : t('projectiles.compareFastestOnly'))
+                            : undefined}
                         >
                           {isFastest && <span aria-hidden className="mr-1">★</span>}
                           {v !== undefined ? `${v.toFixed(0)} m/s` : '—'}

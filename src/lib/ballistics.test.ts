@@ -30,7 +30,7 @@ const baseInput = (overrides: Partial<BallisticInput> = {}): BallisticInput => (
 describe('calculateTrajectory — core invariants', () => {
   it('produces the expected range grid, muzzle drop = -sightHeight, zero ≈ 0 at zeroRange', () => {
     const out = calculateTrajectory(baseInput());
-    expect(out.map(r => r.range)).toEqual([0, 10, 20, 30, 40, 50]);
+    expect(out.map(r => r.range)).toEqual([0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]);
     expect(out[0].drop).toBeCloseTo(-40, 0);
     expect(Math.abs(out.find(r => r.range === 30)!.drop)).toBeLessThan(2);
   });

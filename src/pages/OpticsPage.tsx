@@ -6,10 +6,34 @@ import { useI18n } from '@/lib/i18n';
 import { opticStore } from '@/lib/storage';
 import { useUnits } from '@/hooks/use-units';
 import { useUrlFilter } from '@/hooks/use-url-filter';
-import { Optic } from '@/lib/types';
+import { Optic, OpticFocalPlane } from '@/lib/types';
 import { motion } from 'framer-motion';
 import { toast } from '@/hooks/use-toast';
 import { ImportPresetOpticsModal } from '@/components/optics/ImportPresetOpticsModal';
+
+interface FormState {
+  name: string;
+  type: string;
+  focalPlane: OpticFocalPlane;
+  clickUnit: 'MOA' | 'MRAD' | 'mil';
+  clickValue: number;
+  mountHeight: number;
+  tubeDiameter: 25.4 | 30 | 34;
+  magCalibration: number | '';
+  notes: string;
+}
+
+const emptyForm: FormState = {
+  name: '',
+  type: 'scope',
+  focalPlane: 'FFP',
+  clickUnit: 'MOA',
+  clickValue: 0.25,
+  mountHeight: 0,
+  tubeDiameter: 30,
+  magCalibration: '',
+  notes: '',
+};
 
 export default function OpticsPage() {
   const { t } = useI18n();
@@ -33,7 +57,7 @@ export default function OpticsPage() {
   const [showForm, setShowForm] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [editing, setEditing] = useState<Optic | null>(null);
-  const [form, setForm] = useState<{ name: string; type: string; clickUnit: 'MOA' | 'MRAD' | 'mil'; clickValue: number; mountHeight: number; tubeDiameter: 25.4 | 30 | 34; magCalibration: number | ''; notes: string }>({ name: '', type: 'scope', clickUnit: 'MOA', clickValue: 0.25, mountHeight: 0, tubeDiameter: 30, magCalibration: '', notes: '' });
+  const [form, setForm] = useState<FormState>(emptyForm);
 
   const existingNames = useMemo(() => new Set(optics.map(o => o.name)), [optics]);
 
@@ -44,11 +68,16 @@ export default function OpticsPage() {
     const payload = {
       name: form.name,
       type: form.type,
+      focalPlane: form.focalPlane,
       clickUnit: form.clickUnit,
       clickValue: form.clickValue,
       mountHeight: form.mountHeight || undefined,
       tubeDiameter: form.tubeDiameter,
-      magCalibration: form.magCalibration === '' ? undefined : Number(form.magCalibration),
+      // magCalibration only applies to SFP. Drop on FFP.
+      magCalibration:
+        form.focalPlane === 'SFP' && form.magCalibration !== ''
+          ? Number(form.magCalibration)
+          : undefined,
       notes: form.notes,
     };
     if (editing) {
@@ -59,6 +88,7 @@ export default function OpticsPage() {
     refresh();
     setShowForm(false);
     setEditing(null);
+    setForm(emptyForm);
     toast({ title: t('common.save') });
   };
 
@@ -68,6 +98,7 @@ export default function OpticsPage() {
     setForm({
       name: o.name,
       type: o.type ?? 'scope',
+      focalPlane: o.focalPlane ?? (o.magCalibration ? 'SFP' : 'FFP'),
       clickUnit: o.clickUnit,
       clickValue: o.clickValue,
       mountHeight: o.mountHeight ?? 0,
@@ -122,6 +153,8 @@ export default function OpticsPage() {
     });
   }, [optics, tubeFilter, brandFilter, searchQuery]);
 
+  const isSFP = form.focalPlane === 'SFP';
+
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
       <div className="flex items-center justify-between">
@@ -133,7 +166,7 @@ export default function OpticsPage() {
           <button onClick={() => setShowImport(true)} className="px-3 py-1.5 bg-muted text-foreground rounded-md text-sm font-medium flex items-center gap-1 hover:bg-muted/70 border border-border">
             <Download className="h-4 w-4" />{t('optics.importPreset')}
           </button>
-          <button onClick={() => { setShowForm(!showForm); setEditing(null); }} className="px-3 py-1.5 bg-primary text-primary-foreground rounded-md text-sm font-medium flex items-center gap-1 hover:opacity-90">
+          <button onClick={() => { setShowForm(!showForm); setEditing(null); setForm(emptyForm); }} className="px-3 py-1.5 bg-primary text-primary-foreground rounded-md text-sm font-medium flex items-center gap-1 hover:opacity-90">
             <Plus className="h-4 w-4" />{t('optics.add')}
           </button>
         </div>
@@ -142,47 +175,70 @@ export default function OpticsPage() {
       {showForm && (
         <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="surface-elevated p-4 space-y-3">
           <div className="grid grid-cols-2 gap-3">
-            <div><label className="text-xs text-muted-foreground">{t('optics.name')}</label><input className={inputClass} value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} /></div>
-            <div><label className="text-xs text-muted-foreground">{t('optics.type')}</label>
+            <div className="col-span-2">
+              <label className="text-xs text-muted-foreground">{t('optics.name')}</label>
+              <input className={inputClass} value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground">{t('optics.type')}</label>
               <select className={inputClass} value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value }))}>
                 <option value="scope">Scope</option><option value="red-dot">Red Dot</option><option value="iron">Iron Sights</option>
               </select>
             </div>
-            <div><label className="text-xs text-muted-foreground">{t('optics.clickUnit')}</label>
+            <div>
+              <label className="text-xs text-muted-foreground">{t('calc.focalPlane')}</label>
+              <select className={inputClass} value={form.focalPlane} onChange={e => setForm(f => ({ ...f, focalPlane: e.target.value as OpticFocalPlane }))}>
+                <option value="FFP">FFP</option>
+                <option value="SFP">SFP</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground">{t('optics.clickUnit')}</label>
               <select className={inputClass} value={form.clickUnit} onChange={e => setForm(f => ({ ...f, clickUnit: e.target.value as any }))}>
                 <option>MOA</option><option>MRAD</option>
               </select>
             </div>
-            <div><label className="text-xs text-muted-foreground">{t('optics.clickValue')} ({corrSym}/click)</label>
+            <div>
+              <label className="text-xs text-muted-foreground">{t('optics.clickValue')} ({corrSym}/click)</label>
               <input type="number" step="0.01" className={inputClass} value={form.clickValue} onChange={e => setForm(f => ({ ...f, clickValue: +e.target.value }))} />
             </div>
-            <div><label className="text-xs text-muted-foreground">{t('optics.mountHeight')} ({lengthSym})</label>
+            <div>
+              <label className="text-xs text-muted-foreground">{t('optics.mountHeight')} ({lengthSym})</label>
               <input type="number" step="1" className={inputClass} value={form.mountHeight} onChange={e => setForm(f => ({ ...f, mountHeight: +e.target.value }))} />
             </div>
-            <div><label className="text-xs text-muted-foreground">{t('optics.tubeDiameter')}</label>
+            <div>
+              <label className="text-xs text-muted-foreground">{t('optics.tubeDiameter')}</label>
               <select className={inputClass} value={form.tubeDiameter} onChange={e => setForm(f => ({ ...f, tubeDiameter: Number(e.target.value) as 25.4 | 30 | 34 }))}>
                 <option value={25.4}>25.4 mm (1")</option>
                 <option value={30}>30 mm</option>
                 <option value={34}>34 mm</option>
               </select>
             </div>
-            <div>
-              <label className="text-xs text-muted-foreground">{t('optics.magCalibration')}</label>
-              <input
-                type="number"
-                step="1"
-                placeholder="ex: 10, 12, 24 (FFP: vide)"
-                className={inputClass}
-                value={form.magCalibration}
-                onChange={e => setForm(f => ({ ...f, magCalibration: e.target.value === '' ? '' : +e.target.value }))}
-              />
-              <span className="text-[10px] text-muted-foreground">{t('optics.magCalibrationHint')}</span>
-            </div>
+
+            {/* SFP-only field */}
+            {isSFP ? (
+              <div className="col-span-2">
+                <label className="text-xs text-muted-foreground">{t('optics.magCalibration')}</label>
+                <input
+                  type="number"
+                  step="1"
+                  placeholder="ex: 10, 12, 24"
+                  className={inputClass}
+                  value={form.magCalibration}
+                  onChange={e => setForm(f => ({ ...f, magCalibration: e.target.value === '' ? '' : +e.target.value }))}
+                />
+                <span className="text-[10px] text-muted-foreground">{t('optics.magCalibrationHint')}</span>
+              </div>
+            ) : (
+              <div className="col-span-2 text-[11px] text-muted-foreground italic px-1">
+                {t('calc.ffpHint')}
+              </div>
+            )}
           </div>
           <div><label className="text-xs text-muted-foreground">{t('airguns.notes')}</label><textarea className={inputClass} rows={2} value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} /></div>
           <div className="flex gap-2">
             <button onClick={handleSave} className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium">{t('common.save')}</button>
-            <button onClick={() => { setShowForm(false); setEditing(null); }} className="px-4 py-2 bg-muted text-muted-foreground rounded-md text-sm">{t('common.cancel')}</button>
+            <button onClick={() => { setShowForm(false); setEditing(null); setForm(emptyForm); }} className="px-4 py-2 bg-muted text-muted-foreground rounded-md text-sm">{t('common.cancel')}</button>
           </div>
         </motion.div>
       )}
@@ -234,32 +290,37 @@ export default function OpticsPage() {
         <div className="surface-card p-8 text-center text-muted-foreground text-sm">{t('optics.noMatch')}</div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {filteredOptics.map(o => (
-            <div key={o.id} className="surface-elevated p-4">
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0 flex-1">
-                  <div className="font-semibold text-sm">{o.name}</div>
-                  <div className="flex flex-wrap gap-1.5 mt-1.5">
-                    <span className="tactical-badge">{o.clickUnit}</span>
-                    <span className="tactical-badge">{o.clickValue} {o.clickUnit}/click</span>
-                    {o.tubeDiameter && <span className="tactical-badge">⌀ {o.tubeDiameter}mm</span>}
-                    {o.magCalibration && <span className="tactical-badge">cal {o.magCalibration}×</span>}
-                    {o.type && <span className="text-[10px] text-muted-foreground self-center">{o.type}</span>}
-                  </div>
-                  {o.mountHeight ? (
-                    <div className="text-[11px] text-muted-foreground font-mono mt-1.5">
-                      {t('optics.mountHeight')}: {o.mountHeight} {lengthSym}
+          {filteredOptics.map(o => {
+            const fp = o.focalPlane ?? (o.magCalibration ? 'SFP' : null);
+            return (
+              <div key={o.id} className="surface-elevated p-4">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="font-semibold text-sm">{o.name}</div>
+                    <div className="flex flex-wrap gap-1.5 mt-1.5">
+                      {fp && <span className="tactical-badge">{fp}</span>}
+                      <span className="tactical-badge">{o.clickValue} {o.clickUnit}/click</span>
+                      {o.tubeDiameter && <span className="tactical-badge">⌀ {o.tubeDiameter}mm</span>}
+                      {fp === 'SFP' && o.magCalibration && (
+                        <span className="tactical-badge">cal {o.magCalibration}×</span>
+                      )}
+                      {o.type && <span className="text-[10px] text-muted-foreground self-center">{o.type}</span>}
                     </div>
-                  ) : null}
-                  {o.notes && <div className="text-[11px] text-muted-foreground mt-1 line-clamp-2">{o.notes}</div>}
-                </div>
-                <div className="flex gap-1 shrink-0">
-                  <button onClick={() => handleEdit(o)} className="p-1.5 rounded hover:bg-muted text-muted-foreground"><Edit2 className="h-3.5 w-3.5" /></button>
-                  <button onClick={() => handleDelete(o.id)} className="p-1.5 rounded hover:bg-destructive/10 text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
+                    {o.mountHeight ? (
+                      <div className="text-[11px] text-muted-foreground font-mono mt-1.5">
+                        {t('optics.mountHeight')}: {o.mountHeight} {lengthSym}
+                      </div>
+                    ) : null}
+                    {o.notes && <div className="text-[11px] text-muted-foreground mt-1 line-clamp-2">{o.notes}</div>}
+                  </div>
+                  <div className="flex gap-1 shrink-0">
+                    <button onClick={() => handleEdit(o)} className="p-1.5 rounded hover:bg-muted text-muted-foreground"><Edit2 className="h-3.5 w-3.5" /></button>
+                    <button onClick={() => handleDelete(o.id)} className="p-1.5 rounded hover:bg-destructive/10 text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

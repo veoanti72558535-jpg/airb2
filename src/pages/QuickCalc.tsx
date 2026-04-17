@@ -481,14 +481,35 @@ export default function QuickCalc() {
       className="space-y-5 pb-8"
     >
       <header className="space-y-3">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <Crosshair className="h-5 w-5 text-primary" />
-            <h1 className="text-xl font-heading font-bold">{t('calc.title')}</h1>
+        <div className="flex items-start justify-between gap-3 flex-wrap">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <Crosshair className="h-5 w-5 text-primary" />
+              <h1 className="text-xl font-heading font-bold">{t('calc.title')}</h1>
+            </div>
+            <p className="text-xs text-muted-foreground font-mono">
+              {t('calc.subtitle')}
+            </p>
           </div>
-          <p className="text-xs text-muted-foreground font-mono">
-            {t('calc.subtitle')}
-          </p>
+
+          {/* Energy threshold reminder — links to Settings */}
+          <Link
+            to="/settings"
+            title={t('calc.energyThresholdHint')}
+            aria-label={t('calc.energyThresholdHint')}
+            className={
+              energyThresholdJ === null
+                ? 'shrink-0 inline-flex items-center gap-1.5 rounded-md border border-border bg-muted/30 px-2 py-1 text-[11px] font-mono text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors'
+                : 'shrink-0 inline-flex items-center gap-1.5 rounded-md border border-warning/30 bg-warning/10 px-2 py-1 text-[11px] font-mono text-warning hover:bg-warning/20 transition-colors'
+            }
+          >
+            <Zap className="h-3.5 w-3.5 shrink-0" />
+            <span>
+              {energyThresholdJ === null
+                ? t('calc.energyThresholdOff')
+                : t('calc.energyThresholdBadge', { j: energyThresholdJ.toFixed(2) })}
+            </span>
+          </Link>
         </div>
 
         <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-card/40 px-3 py-2.5">

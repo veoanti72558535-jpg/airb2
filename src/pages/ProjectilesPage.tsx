@@ -70,6 +70,26 @@ export default function ProjectilesPage() {
   const [form, setForm] = useState<FormState>(emptyForm);
   const [typeFilter, setTypeFilter] = useState<'all' | ProjectileType>('all');
   const [sortKey, setSortKey] = useState<'name' | 'weight' | 'bc'>('name');
+  const [compareIds, setCompareIds] = useState<string[]>([]);
+  const [showCompare, setShowCompare] = useState(false);
+
+  const compareSelected = useMemo(
+    () => compareIds
+      .map(id => projectiles.find(p => p.id === id))
+      .filter((p): p is Projectile => Boolean(p)),
+    [compareIds, projectiles]
+  );
+
+  const toggleCompare = (id: string) => {
+    setCompareIds(prev => {
+      if (prev.includes(id)) return prev.filter(x => x !== id);
+      if (prev.length >= MAX_COMPARE) {
+        toast({ title: t('projectiles.compareMax') });
+        return prev;
+      }
+      return [...prev, id];
+    });
+  };
 
   const existingKeys = useMemo(
     () => new Set(projectiles.map(p => seedProjectileKey({ brand: p.brand, model: p.model, weight: p.weight, caliber: p.caliber }))),

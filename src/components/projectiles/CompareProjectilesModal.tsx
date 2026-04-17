@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { X, GitCompare, Gauge, RotateCcw } from 'lucide-react';
+import { X, GitCompare, Gauge, RotateCcw, Target } from 'lucide-react';
 import { Projectile, WeatherSnapshot } from '@/lib/types';
 import { calculateTrajectory } from '@/lib/ballistics';
 import { useI18n } from '@/lib/i18n';

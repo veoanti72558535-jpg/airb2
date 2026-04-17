@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Target, Plus, Trash2, Edit2 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { airgunStore } from '@/lib/storage';
@@ -6,14 +6,24 @@ import { useUnits } from '@/hooks/use-units';
 import { Airgun } from '@/lib/types';
 import { motion } from 'framer-motion';
 import { toast } from '@/hooks/use-toast';
+import { SearchBar } from '@/components/SearchBar';
 
 export default function AirgunsPage() {
   const { t } = useI18n();
   const { symbol } = useUnits();
   const [airguns, setAirguns] = useState<Airgun[]>(airgunStore.getAll());
+  const [searchQuery, setSearchQuery] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Airgun | null>(null);
   const [form, setForm] = useState({ brand: '', model: '', caliber: '.177', barrelLength: 600, regPressure: 110, fillPressure: 250, powerSetting: '', defaultSightHeight: 40, defaultZeroRange: 30, notes: '' });
+
+  const filteredAirguns = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return airguns;
+    return airguns.filter(a =>
+      `${a.brand} ${a.model} ${a.notes ?? ''}`.toLowerCase().includes(q)
+    );
+  }, [airguns, searchQuery]);
 
   const refresh = () => setAirguns(airgunStore.getAll());
 
@@ -107,11 +117,21 @@ export default function AirgunsPage() {
         </motion.div>
       )}
 
+      {airguns.length > 0 && (
+        <SearchBar
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder={t('airguns.search')}
+        />
+      )}
+
       {airguns.length === 0 ? (
         <div className="surface-card p-8 text-center text-muted-foreground text-sm">{t('common.noData')}</div>
+      ) : filteredAirguns.length === 0 ? (
+        <div className="surface-card p-8 text-center text-muted-foreground text-sm">{t('airguns.noMatch')}</div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {airguns.map(a => (
+          {filteredAirguns.map(a => (
             <div key={a.id} className="surface-elevated p-4">
               <div className="flex items-start justify-between mb-2">
                 <div>

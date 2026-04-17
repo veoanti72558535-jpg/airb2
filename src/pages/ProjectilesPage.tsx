@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Zap, Plus, Trash2, Edit2 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { projectileStore } from '@/lib/storage';
@@ -6,14 +6,24 @@ import { useUnits } from '@/hooks/use-units';
 import { Projectile } from '@/lib/types';
 import { motion } from 'framer-motion';
 import { toast } from '@/hooks/use-toast';
+import { SearchBar } from '@/components/SearchBar';
 
 export default function ProjectilesPage() {
   const { t } = useI18n();
   const { symbol } = useUnits();
   const [projectiles, setProjectiles] = useState<Projectile[]>(projectileStore.getAll());
+  const [searchQuery, setSearchQuery] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Projectile | null>(null);
   const [form, setForm] = useState({ brand: '', model: '', weight: 18, bc: 0.025, shape: 'domed', caliber: '.177', length: 0, diameter: 0, material: 'lead', notes: '', dataSource: '' });
+
+  const filteredProjectiles = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return projectiles;
+    return projectiles.filter(p =>
+      `${p.brand} ${p.model} ${p.notes ?? ''}`.toLowerCase().includes(q)
+    );
+  }, [projectiles, searchQuery]);
 
   const refresh = () => setProjectiles(projectileStore.getAll());
 
@@ -106,11 +116,21 @@ export default function ProjectilesPage() {
         </motion.div>
       )}
 
+      {projectiles.length > 0 && (
+        <SearchBar
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder={t('projectiles.search')}
+        />
+      )}
+
       {projectiles.length === 0 ? (
         <div className="surface-card p-8 text-center text-muted-foreground text-sm">{t('common.noData')}</div>
+      ) : filteredProjectiles.length === 0 ? (
+        <div className="surface-card p-8 text-center text-muted-foreground text-sm">{t('projectiles.noMatch')}</div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {projectiles.map(p => (
+          {filteredProjectiles.map(p => (
             <div key={p.id} className="surface-elevated p-4">
               <div className="flex items-start justify-between mb-2">
                 <div>

@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import { Eye, Plus, Trash2, Edit2, Download, Search, X, RotateCcw } from 'lucide-react';
+import { Eye, Plus, Trash2, Edit2, Download, RotateCcw } from 'lucide-react';
+import { SearchBar } from '@/components/SearchBar';
 import { useI18n } from '@/lib/i18n';
 import { opticStore } from '@/lib/storage';
 import { useUnits } from '@/hooks/use-units';
@@ -173,25 +174,11 @@ export default function OpticsPage() {
       )}
 
       {optics.length > 0 && (
-        <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            placeholder={t('optics.search')}
-            className="w-full bg-muted border border-border rounded-md pl-8 pr-8 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery('')}
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-muted-foreground/10 text-muted-foreground"
-              aria-label="Clear search"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          )}
-        </div>
+        <SearchBar
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder={t('optics.search')}
+        />
       )}
 
       {optics.length > 0 && (

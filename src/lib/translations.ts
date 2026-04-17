@@ -129,6 +129,8 @@ const fr = {
   'airguns.defaultSightHeight': 'Hauteur lunette par défaut',
   'airguns.defaultZeroRange': 'Distance zéro par défaut',
   'airguns.notes': 'Notes',
+  'airguns.search': 'Rechercher par marque, modèle ou notes…',
+  'airguns.noMatch': 'Aucune arme ne correspond à la recherche.',
 
   // Tunes
   'tunes.title': 'Tunes',
@@ -150,6 +152,8 @@ const fr = {
   'projectiles.length': 'Longueur',
   'projectiles.diameter': 'Diamètre',
   'projectiles.material': 'Matériau',
+  'projectiles.search': 'Rechercher par marque, modèle ou notes…',
+  'projectiles.noMatch': 'Aucun projectile ne correspond à la recherche.',
 
   // Optics
   'optics.title': 'Bibliothèque d\'optiques',
@@ -433,6 +437,8 @@ const en: Record<keyof typeof fr, string> = {
   'airguns.defaultSightHeight': 'Default Sight Height',
   'airguns.defaultZeroRange': 'Default Zero Range',
   'airguns.notes': 'Notes',
+  'airguns.search': 'Search by brand, model or notes…',
+  'airguns.noMatch': 'No airgun matches your search.',
 
   'tunes.title': 'Tunes',
   'tunes.add': 'Add Tune',
@@ -452,6 +458,8 @@ const en: Record<keyof typeof fr, string> = {
   'projectiles.length': 'Length',
   'projectiles.diameter': 'Diameter',
   'projectiles.material': 'Material',
+  'projectiles.search': 'Search by brand, model or notes…',
+  'projectiles.noMatch': 'No projectile matches your search.',
 
   'optics.title': 'Optics Library',
   'optics.add': 'Add Optic',

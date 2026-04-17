@@ -1,4 +1,4 @@
-import { TrendingDown, Wind, Zap, Clock, Crosshair, Compass, Cloud } from 'lucide-react';
+import { TrendingDown, Wind, Zap, Clock, Crosshair, Compass, Cloud, AlertTriangle } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { BallisticResult, OpticFocalPlane, WeatherSnapshot } from '@/lib/types';
 import { useUnits } from '@/hooks/use-units';
@@ -16,6 +16,12 @@ interface Props {
   weather?: WeatherSnapshot;
   /** Optional separate zeroing weather snapshot — flagged when present. */
   zeroWeather?: WeatherSnapshot;
+  /**
+   * Configured energy alert threshold in Joules. When the muzzle (range = 0)
+   * energy exceeds this, a destructive banner is shown. `null` disables the
+   * warning entirely. `undefined` falls back to a sensible default.
+   */
+  energyThresholdJ?: number | null;
 }
 
 function Stat({
@@ -75,6 +81,7 @@ export function ResultsCard({
   advanced,
   weather,
   zeroWeather,
+  energyThresholdJ,
 }: Props) {
   const { t, locale } = useI18n();
   const { symbol } = useUnits();
@@ -82,6 +89,14 @@ export function ResultsCard({
   const lengthUnit = symbol('length');
   const velUnit = symbol('velocity');
   const energyUnit = symbol('energy');
+
+  // Initial (muzzle) energy is needed for the threshold check. The trajectory
+  // table starts at range 0 in QuickCalc, so the first row carries the muzzle
+  // value. When no rows are passed (single hero result) we fall back to the
+  // hero energy itself — the next-best approximation.
+  const initialEnergy = rows && rows.length > 0 ? rows[0].energy : result.energy;
+  const energyOverThreshold =
+    energyThresholdJ != null && energyThresholdJ > 0 && initialEnergy > energyThresholdJ;
 
   const elevDir = result.holdover >= 0 ? t('calc.up') : t('calc.down');
   const windDir = result.windDrift >= 0 ? t('calc.right') : t('calc.left');
@@ -133,6 +148,29 @@ export function ResultsCard({
           </p>
         </div>
       </header>
+
+      {/* Energy threshold warning — surfaced prominently right under the
+          header so users notice it before reading the numbers. Uses the
+          destructive token (red) to match the comparison-modal convention. */}
+      {energyOverThreshold && (
+        <div
+          role="alert"
+          className="flex items-start gap-2 rounded-lg border border-destructive/40 bg-destructive/10 p-2.5 text-destructive"
+        >
+          <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-semibold font-mono">
+              {t('calc.energyOverWarning', {
+                j: initialEnergy.toFixed(1),
+                threshold: energyThresholdJ!.toFixed(2),
+              })}
+            </p>
+            <p className="text-[10px] text-destructive/80 mt-0.5">
+              {t('calc.energyOverWarningHint')}
+            </p>
+          </div>
+        </div>
+      )}
 
       {weather && (
         <div className="flex flex-wrap items-center gap-1.5 text-[10px] font-mono">

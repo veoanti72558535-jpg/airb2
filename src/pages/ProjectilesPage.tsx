@@ -124,6 +124,8 @@ export default function ProjectilesPage() {
           value={searchQuery}
           onChange={setSearchQuery}
           placeholder={t('projectiles.search')}
+          count={filteredProjectiles.length}
+          total={projectiles.length}
         />
       )}
 

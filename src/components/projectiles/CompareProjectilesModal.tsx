@@ -127,7 +127,7 @@ export function CompareProjectilesModal({
                       <button
                         onClick={() => onRemove(p.id)}
                         className="p-0.5 rounded hover:bg-muted text-muted-foreground shrink-0"
-                        aria-label={t('common.remove')}
+                        aria-label={t('common.delete')}
                       >
                         <X className="h-3 w-3" />
                       </button>

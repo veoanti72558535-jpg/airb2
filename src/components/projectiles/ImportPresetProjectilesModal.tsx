@@ -16,7 +16,7 @@ interface Props {
 }
 
 const BRANDS = ['JSB', 'H&N', 'Air Arms', 'Crosman', 'Predator', 'NSA', 'FX', 'Air Venturi', 'Patriot', 'ZAN'] as const;
-const CALIBERS = ['.177', '.22', '.25', '.30'] as const;
+const CALIBERS = ['.177', '.20', '.22', '.25', '.30', '.35'] as const;
 type TypeFilter = 'all' | 'pellet' | 'slug';
 
 export function ImportPresetProjectilesModal({ open, onClose, onImported, existingKeys }: Props) {

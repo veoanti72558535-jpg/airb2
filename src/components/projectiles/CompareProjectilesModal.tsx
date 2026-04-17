@@ -20,6 +20,16 @@ interface Props {
 }
 
 const COMPARE_RANGES = [25, 50, 75, 100] as const;
+const CHART_STEP = 5; // m — fine sampling for the SVG drop chart
+const CHART_MAX = 100; // m
+
+/** Distinct hues for up to 4 projectiles. Tuned for dark + light themes. */
+const SERIES_COLORS = [
+  'hsl(var(--primary))',
+  'hsl(var(--tactical))',
+  'hsl(199 89% 60%)', // sky
+  'hsl(280 70% 65%)', // violet
+] as const;
 
 function neutralWeather(): WeatherSnapshot {
   return {

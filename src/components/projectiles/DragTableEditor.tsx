@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState, useCallback } from 'react';
 import { Upload, X, Check, AlertTriangle, FileText, Trash2 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { DragModel, DragTablePoint } from '@/lib/types';
@@ -236,15 +236,72 @@ function DragTablePreview({ table, t }: PreviewProps) {
 
   const xToPx = (x: number) => PAD_L + ((x - xMin) / (xMax - xMin)) * innerW;
   const yToPx = (y: number) => PAD_T + ((yMax - y) / (yMax - yMin)) * innerH;
+  const pxToX = (px: number) => xMin + ((px - PAD_L) / innerW) * (xMax - xMin);
 
   const buildPath = (pts: { mach: number; cd: number }[]) =>
     pts
       .map((p, i) => `${i === 0 ? 'M' : 'L'}${xToPx(p.mach).toFixed(1)},${yToPx(p.cd).toFixed(1)}`)
       .join(' ');
 
+  // Linear interpolation of the imported table at an arbitrary Mach (clamped
+  // to the table extents — outside the imported range we'd be extrapolating
+  // which has no physical meaning for a measured Cd curve).
+  const interpImported = (mach: number): number | null => {
+    if (mach < table[0].mach || mach > table[table.length - 1].mach) return null;
+    for (let i = 1; i < table.length; i++) {
+      const a = table[i - 1];
+      const b = table[i];
+      if (mach <= b.mach) {
+        const t = (mach - a.mach) / (b.mach - a.mach);
+        return a.cd + (b.cd - a.cd) * t;
+      }
+    }
+    return table[table.length - 1].cd;
+  };
+
+  // Hover state — `null` = not hovering. `mach` is in data units.
+  const [hover, setHover] = useState<number | null>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
+
+  const handlePointerMove = useCallback((e: React.PointerEvent<SVGSVGElement>) => {
+    const svg = svgRef.current;
+    if (!svg) return;
+    // Convert client coords → SVG viewBox coords so the math stays correct
+    // regardless of CSS scaling (the SVG is width:100%).
+    const rect = svg.getBoundingClientRect();
+    const vbX = ((e.clientX - rect.left) / rect.width) * W;
+    if (vbX < PAD_L || vbX > W - PAD_R) {
+      setHover(null);
+      return;
+    }
+    setHover(pxToX(vbX));
+  }, [pxToX]);
+
   // 3 ticks on each axis
   const xTicks = [xMin, (xMin + xMax) / 2, xMax];
   const yTicks = [yMin, (yMin + yMax) / 2, yMax];
+
+  // Build tooltip rows for the hovered Mach: imported value (if in range) plus
+  // every currently-enabled reference curve, in the same colour as the line.
+  const hoverRows = hover === null
+    ? []
+    : [
+        ...(interpImported(hover) !== null
+          ? [{ label: t('projectiles.dragTableImported'), color: 'hsl(var(--primary))', cd: interpImported(hover)! }]
+          : []),
+        ...refCurves.map(r => ({ label: r.model, color: r.color, cd: cdFor(r.model, hover) })),
+      ];
+
+  // Tooltip box dimensions (sized to fit ~5 rows). Positioned to flip sides
+  // when near the right edge so it never clips out of the viewBox.
+  const TT_W = 78;
+  const TT_LINE_H = 10;
+  const TT_H = 14 + hoverRows.length * TT_LINE_H;
+  const tooltipX = hover !== null && xToPx(hover) + TT_W + 8 > W - PAD_R
+    ? xToPx(hover) - TT_W - 6
+    : hover !== null
+      ? xToPx(hover) + 6
+      : 0;
 
   return (
     <div className="space-y-1.5">
@@ -295,10 +352,13 @@ function DragTablePreview({ table, t }: PreviewProps) {
       </div>
 
       <svg
+        ref={svgRef}
         viewBox={`0 0 ${W} ${H}`}
-        className="w-full h-auto"
+        className="w-full h-auto touch-none"
         role="img"
         aria-label={t('projectiles.dragTablePreview')}
+        onPointerMove={handlePointerMove}
+        onPointerLeave={() => setHover(null)}
       >
         {/* grid + axis labels */}
         {yTicks.map((y, i) => (
@@ -401,6 +461,68 @@ function DragTablePreview({ table, t }: PreviewProps) {
             <title>{`Mach ${p.mach} · Cd ${p.cd.toFixed(3)}`}</title>
           </circle>
         ))}
+
+        {/* Hover overlay: vertical guide, per-curve dots, and tooltip box.
+            Renders last so it sits above all curves. pointer-events: none on
+            children so they never steal the pointer from the svg listeners. */}
+        {hover !== null && hoverRows.length > 0 && (
+          <g pointerEvents="none">
+            <line
+              x1={xToPx(hover)}
+              x2={xToPx(hover)}
+              y1={PAD_T}
+              y2={H - PAD_B}
+              stroke="hsl(var(--foreground))"
+              strokeWidth={0.5}
+              strokeDasharray="2 2"
+              opacity={0.5}
+            />
+            {hoverRows.map((row, i) => (
+              <circle
+                key={i}
+                cx={xToPx(hover)}
+                cy={yToPx(row.cd)}
+                r={2.5}
+                fill={row.color}
+                stroke="hsl(var(--card))"
+                strokeWidth={0.75}
+              />
+            ))}
+            <rect
+              x={tooltipX}
+              y={PAD_T}
+              width={TT_W}
+              height={TT_H}
+              rx={3}
+              fill="hsl(var(--popover))"
+              stroke="hsl(var(--border))"
+              strokeWidth={0.5}
+            />
+            <text
+              x={tooltipX + 4}
+              y={PAD_T + 9}
+              className="fill-muted-foreground"
+              fontSize={7}
+              fontFamily="ui-monospace, monospace"
+            >
+              {`Mach ${hover.toFixed(3)}`}
+            </text>
+            {hoverRows.map((row, i) => (
+              <g key={i} transform={`translate(${tooltipX + 4}, ${PAD_T + 14 + i * TT_LINE_H})`}>
+                <rect x={0} y={2} width={5} height={2} fill={row.color} rx={0.5} />
+                <text
+                  x={8}
+                  y={7}
+                  className="fill-popover-foreground"
+                  fontSize={7.5}
+                  fontFamily="ui-monospace, monospace"
+                >
+                  {`${row.label}: ${row.cd.toFixed(3)}`}
+                </text>
+              </g>
+            ))}
+          </g>
+        )}
       </svg>
     </div>
   );

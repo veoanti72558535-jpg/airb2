@@ -518,7 +518,8 @@ export function CompareProjectilesModal({
               <span>{t('projectiles.compareFacLegend', { j: energyThresholdJ.toFixed(2) })}</span>
             </div>
           )}
-        </div>{/* /exportRef */}
+          </div>{/* /exportRef */}
+        </div>{/* /scroll wrapper */}
 
         {/* Footer */}
         <div className="p-3 border-t border-border text-[10px] text-muted-foreground">

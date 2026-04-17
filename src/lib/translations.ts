@@ -458,6 +458,8 @@ const en: Record<keyof typeof fr, string> = {
   'projectiles.length': 'Length',
   'projectiles.diameter': 'Diameter',
   'projectiles.material': 'Material',
+  'projectiles.search': 'Search by brand, model or notes…',
+  'projectiles.noMatch': 'No projectile matches your search.',
 
   'optics.title': 'Optics Library',
   'optics.add': 'Add Optic',

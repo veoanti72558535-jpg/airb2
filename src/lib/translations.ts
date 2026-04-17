@@ -268,6 +268,8 @@ const fr = {
   'weather.errGeocode': 'Recherche indisponible — réessayez ou saisissez les coordonnées.',
   'weather.noCityFound': 'Aucune ville trouvée.',
   'weather.or': 'ou',
+  'weather.fromCache': 'depuis cache',
+  'weather.fromCacheHint': 'Données réutilisées depuis le cache local (≤30 min). Cliquez sur Actualiser pour forcer un nouveau fetch.',
 
   // Conversions
   'conv.title': 'Conversions d\'unités',

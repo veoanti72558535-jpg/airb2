@@ -439,7 +439,7 @@ export function CompareProjectilesModal({
                     {rows.map(({ p, vels, energies }) => {
                       const j = energies[r];
                       const v = vels[r];
-                      const overFac = j !== undefined && j > FAC_LIMIT_J;
+                      const overFac = energyThresholdJ !== null && j !== undefined && j > energyThresholdJ;
                       // FAC red wins over "best velocity" green when both apply.
                       const isFastest = !overFac && v !== undefined && v === bestVel && rows.length > 1;
                       return (

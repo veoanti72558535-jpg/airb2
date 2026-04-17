@@ -56,13 +56,13 @@ describe('calculateTrajectory — core invariants', () => {
 
 describe('calculateTrajectory — atmosphere', () => {
   it('denser air → more drop; thinner air → less drop (vs ICAO standard)', () => {
-    const std = calculateTrajectory(baseInput()).find(r => r.range === 50)!.drop;
+    const std = calculateTrajectory(baseInput()).find(r => r.range === 100)!.drop;
     const dense = calculateTrajectory(
       baseInput({ weather: { ...stdWeather, temperature: -10, pressure: 1050 } }),
-    ).find(r => r.range === 50)!.drop;
+    ).find(r => r.range === 100)!.drop;
     const thin = calculateTrajectory(
       baseInput({ weather: { ...stdWeather, temperature: 35, pressure: 950, altitude: 1500 } }),
-    ).find(r => r.range === 50)!.drop;
+    ).find(r => r.range === 100)!.drop;
     expect(dense).toBeLessThan(std);
     expect(thin).toBeGreaterThan(std);
   });
@@ -80,10 +80,10 @@ describe('calculateTrajectory — wind drift', () => {
   it('right (90°) and left (270°) crosswinds produce symmetric, opposite drift', () => {
     const right = calculateTrajectory(
       baseInput({ weather: { ...stdWeather, windSpeed: 5, windAngle: 90 } }),
-    ).find(r => r.range === 50)!;
+    ).find(r => r.range === 100)!;
     const left = calculateTrajectory(
       baseInput({ weather: { ...stdWeather, windSpeed: 5, windAngle: 270 } }),
-    ).find(r => r.range === 50)!;
+    ).find(r => r.range === 100)!;
     expect(right.windDrift).toBeGreaterThan(0);
     expect(left.windDrift).toBeLessThan(0);
     expect(Math.abs(right.windDrift + left.windDrift)).toBeLessThan(0.5);
@@ -103,7 +103,7 @@ describe('calculateTrajectory — click conversions', () => {
         clickUnit: 'MRAD',
         weather: { ...stdWeather, windSpeed: 5, windAngle: 90 },
       }),
-    ).find(r => r.range === 50)!;
+    ).find(r => r.range === 100)!;
     expect(Number.isInteger(withClicks.clicksElevation!)).toBe(true);
     expect(Number.isInteger(withClicks.clicksWindage!)).toBe(true);
     expect(withClicks.clicksElevation!).toBeLessThanOrEqual(0);
@@ -112,9 +112,9 @@ describe('calculateTrajectory — click conversions', () => {
 
   it('finer click value (0.05 MRAD) yields more clicks than coarser (0.25 MRAD)', () => {
     const fine = calculateTrajectory(baseInput({ clickValue: 0.05, clickUnit: 'MRAD' }))
-      .find(r => r.range === 50)!.clicksElevation!;
+      .find(r => r.range === 100)!.clicksElevation!;
     const coarse = calculateTrajectory(baseInput({ clickValue: 0.25, clickUnit: 'MRAD' }))
-      .find(r => r.range === 50)!.clicksElevation!;
+      .find(r => r.range === 100)!.clicksElevation!;
     expect(Math.abs(fine)).toBeGreaterThan(Math.abs(coarse));
   });
 });

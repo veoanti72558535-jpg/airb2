@@ -86,12 +86,15 @@ export function CompareProjectilesModal({
   const [copied, setCopied] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
   /** Per-section collapsed state — persisted in localStorage so it survives modal re-opens. */
-  const [collapsed, setCollapsed] = useState<{ vel: boolean; energy: boolean }>(() => {
+  const [collapsed, setCollapsed] = useState<{ drop: boolean; vel: boolean; energy: boolean }>(() => {
     try {
       const raw = localStorage.getItem('compare-sections-collapsed');
-      if (raw) return JSON.parse(raw) as { vel: boolean; energy: boolean };
+      if (raw) {
+        const parsed = JSON.parse(raw) as Partial<{ drop: boolean; vel: boolean; energy: boolean }>;
+        return { drop: !!parsed.drop, vel: !!parsed.vel, energy: !!parsed.energy };
+      }
     } catch { /* ignore */ }
-    return { vel: false, energy: false };
+    return { drop: false, vel: false, energy: false };
   });
 
   // Persist whenever collapsed state changes.

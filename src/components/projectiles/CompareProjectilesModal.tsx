@@ -122,7 +122,7 @@ export function CompareProjectilesModal({
             <div className="min-w-0">
               <h2 className="text-sm font-heading font-semibold">{t('projectiles.compareTitle')}</h2>
               <p className="text-[11px] text-muted-foreground">
-                {t('projectiles.compareHint', { v: velocity })}
+                {t('projectiles.compareHint', { v: velocity, z: zeroRange })}
               </p>
             </div>
           </div>

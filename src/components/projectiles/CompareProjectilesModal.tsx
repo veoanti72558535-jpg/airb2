@@ -87,6 +87,8 @@ export function CompareProjectilesModal({
   const [fullscreen, setFullscreen] = useState(false);
   /** Distance currently hovered in the DropChart (in meters) — synchronises sparklines. */
   const [hoverRange, setHoverRange] = useState<number | null>(null);
+  /** Sort mode override — `null` = auto (useful range when threshold set, BC otherwise). */
+  const [sortMode, setSortMode] = useState<'usefulRange' | 'bc' | null>(null);
   /** Per-section collapsed state — persisted in localStorage so it survives modal re-opens. */
   const [collapsed, setCollapsed] = useState<{ drop: boolean; vel: boolean; energy: boolean; overThreshold: boolean }>(() => {
     try {
@@ -308,7 +310,9 @@ export function CompareProjectilesModal({
     // order is deterministic when projectiles tie (e.g. two BCs equal).
     const tieBreak = (a: typeof computed[number], b: typeof computed[number]) =>
       `${a.p.brand} ${a.p.model}`.localeCompare(`${b.p.brand} ${b.p.model}`);
-    if (energyThresholdJ !== null) {
+    const effectiveSort: 'usefulRange' | 'bc' =
+      sortMode ?? (energyThresholdJ !== null ? 'usefulRange' : 'bc');
+    if (effectiveSort === 'usefulRange' && energyThresholdJ !== null) {
       const maxUsefulRange = (row: typeof computed[number]) => {
         let max = -Infinity;
         for (const pt of row.energyCurve) {
@@ -325,7 +329,7 @@ export function CompareProjectilesModal({
       const diff = b.p.bc - a.p.bc;
       return diff !== 0 ? diff : tieBreak(a, b);
     });
-  }, [projectiles, open, velocity, zeroRange, energyThresholdJ]);
+  }, [projectiles, open, velocity, zeroRange, energyThresholdJ, sortMode]);
 
   if (!open) return null;
 
@@ -355,21 +359,43 @@ export function CompareProjectilesModal({
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 flex-wrap">
                 <h2 className="text-sm font-heading font-semibold">{t('projectiles.compareTitle')}</h2>
-                {rows.length >= 2 && (
-                  <span
-                    className="inline-flex items-center gap-0.5 rounded bg-muted px-1.5 py-0.5 text-[10px] font-mono font-medium text-muted-foreground"
-                    title={
-                      energyThresholdJ !== null
-                        ? t('projectiles.compareSortByUsefulRangeHint', { j: energyThresholdJ.toFixed(2) })
-                        : t('projectiles.compareSortByBcHint')
-                    }
-                  >
-                    <span aria-hidden>↓</span>
-                    {energyThresholdJ !== null
-                      ? t('projectiles.compareSortByUsefulRange')
-                      : t('projectiles.compareSortByBc')}
-                  </span>
-                )}
+                {rows.length >= 2 && (() => {
+                  const effectiveSort: 'usefulRange' | 'bc' =
+                    sortMode ?? (energyThresholdJ !== null ? 'usefulRange' : 'bc');
+                  const usefulRangeAvailable = energyThresholdJ !== null;
+                  const nextMode: 'usefulRange' | 'bc' =
+                    effectiveSort === 'usefulRange' ? 'bc' : 'usefulRange';
+                  const canToggle = usefulRangeAvailable; // only meaningful when threshold exists
+                  const label = effectiveSort === 'usefulRange'
+                    ? t('projectiles.compareSortByUsefulRange')
+                    : t('projectiles.compareSortByBc');
+                  const hint = canToggle
+                    ? t('projectiles.compareSortToggleHint', {
+                        next: nextMode === 'usefulRange'
+                          ? t('projectiles.compareSortByUsefulRange')
+                          : t('projectiles.compareSortByBc'),
+                      })
+                    : effectiveSort === 'usefulRange'
+                      ? t('projectiles.compareSortByUsefulRangeHint', { j: (energyThresholdJ ?? 0).toFixed(2) })
+                      : t('projectiles.compareSortByBcHint');
+                  return (
+                    <button
+                      type="button"
+                      onClick={canToggle ? () => setSortMode(nextMode) : undefined}
+                      disabled={!canToggle}
+                      className={cn(
+                        'inline-flex items-center gap-0.5 rounded bg-muted px-1.5 py-0.5 text-[10px] font-mono font-medium text-muted-foreground',
+                        canToggle && 'hover:bg-muted/70 hover:text-foreground cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-primary',
+                        !canToggle && 'cursor-default'
+                      )}
+                      title={hint}
+                      aria-label={hint}
+                    >
+                      <span aria-hidden>↓</span>
+                      {label}
+                    </button>
+                  );
+                })()}
               </div>
               <p className="text-[11px] text-muted-foreground">
                 {t('projectiles.compareHint', { v: velocity, z: zeroRange })}

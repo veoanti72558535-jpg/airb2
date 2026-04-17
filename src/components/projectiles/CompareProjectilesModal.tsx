@@ -77,8 +77,8 @@ export function CompareProjectilesModal({
         projectileWeight: p.weight,
         sightHeight: 50,
         zeroRange: 30,
-        maxRange: 100,
-        rangeStep: 25,
+        maxRange: CHART_MAX,
+        rangeStep: CHART_STEP,
         weather,
         dragModel: p.bcModel ?? 'G1',
         customDragTable: p.customDragTable,
@@ -86,14 +86,16 @@ export function CompareProjectilesModal({
       const drops: Record<number, number> = {};
       const vels: Record<number, number> = {};
       const energies: Record<number, number> = {};
+      const curve: { range: number; drop: number }[] = [];
       for (const r of traj) {
+        curve.push({ range: r.range, drop: r.drop });
         if ((COMPARE_RANGES as readonly number[]).includes(r.range)) {
           drops[r.range] = r.drop;
           vels[r.range] = r.velocity;
           energies[r.range] = r.energy;
         }
       }
-      return { p, drops, vels, energies };
+      return { p, drops, vels, energies, curve };
     });
   }, [projectiles, open, velocity]);
 

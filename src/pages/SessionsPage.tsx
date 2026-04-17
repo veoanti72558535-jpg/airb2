@@ -1,16 +1,30 @@
 import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { History, Star, Trash2, Search, Crosshair, Play } from 'lucide-react';
+import { History, Star, Trash2, Search, Crosshair, Play, Filter, X } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
-import { sessionStore } from '@/lib/storage';
+import {
+  sessionStore,
+  airgunStore,
+  projectileStore,
+  opticStore,
+} from '@/lib/storage';
 import { Session } from '@/lib/types';
 import { motion } from 'framer-motion';
+import { EntitySelect } from '@/components/calc/EntitySelect';
 
 export default function SessionsPage() {
   const { t } = useI18n();
   const [sessions, setSessions] = useState<Session[]>(sessionStore.getAll());
   const [filter, setFilter] = useState<'all' | 'favorites'>('all');
   const [query, setQuery] = useState('');
+  const [airgunId, setAirgunId] = useState('');
+  const [projectileId, setProjectileId] = useState('');
+  const [opticId, setOpticId] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+
+  const airguns = useMemo(() => airgunStore.getAll(), []);
+  const projectiles = useMemo(() => projectileStore.getAll(), []);
+  const optics = useMemo(() => opticStore.getAll(), []);
 
   const refresh = () => setSessions(sessionStore.getAll());
 
@@ -21,13 +35,25 @@ export default function SessionsPage() {
 
   const handleDelete = (id: string) => { sessionStore.delete(id); refresh(); };
 
+  const activeFilterCount =
+    (airgunId ? 1 : 0) + (projectileId ? 1 : 0) + (opticId ? 1 : 0);
+
+  const clearEntityFilters = () => {
+    setAirgunId('');
+    setProjectileId('');
+    setOpticId('');
+  };
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return sessions
       .filter(s => filter === 'favorites' ? s.favorite : true)
+      .filter(s => !airgunId || s.airgunId === airgunId)
+      .filter(s => !projectileId || s.projectileId === projectileId)
+      .filter(s => !opticId || s.opticId === opticId)
       .filter(s => !q || `${s.name} ${s.notes ?? ''} ${s.tags.join(' ')}`.toLowerCase().includes(q))
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  }, [sessions, filter, query]);
+  }, [sessions, filter, query, airgunId, projectileId, opticId]);
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
@@ -52,6 +78,81 @@ export default function SessionsPage() {
           className="w-full bg-muted border border-border rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
         />
       </div>
+
+      {/* Entity filter toggle */}
+      <div className="flex items-center justify-between gap-2">
+        <button
+          type="button"
+          onClick={() => setShowFilters(v => !v)}
+          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium border transition-colors ${
+            showFilters || activeFilterCount > 0
+              ? 'border-primary/30 text-primary bg-primary/5'
+              : 'border-border text-muted-foreground hover:bg-muted/40'
+          }`}
+        >
+          <Filter className="h-3.5 w-3.5" />
+          {t('sessions.filterByEntity')}
+          {activeFilterCount > 0 && (
+            <span className="ml-1 px-1.5 py-0 rounded bg-primary/15 text-primary text-[10px] font-semibold">
+              {activeFilterCount}
+            </span>
+          )}
+        </button>
+        {activeFilterCount > 0 && (
+          <button
+            type="button"
+            onClick={clearEntityFilters}
+            className="inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] text-muted-foreground hover:text-foreground hover:bg-muted/40"
+          >
+            <X className="h-3 w-3" />
+            {t('common.clear')}
+          </button>
+        )}
+      </div>
+
+      {showFilters && (
+        <div className="surface-card p-3 grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+          <EntitySelect
+            label={t('sessions.filterAirgun')}
+            value={airgunId}
+            onChange={setAirgunId}
+            options={airguns.map(a => ({
+              id: a.id,
+              label: `${a.brand} ${a.model}`,
+              sub: a.caliber,
+            }))}
+            placeholder={t('common.all')}
+            emptyText={t('calc.noAirguns')}
+            addHref="/library"
+          />
+          <EntitySelect
+            label={t('sessions.filterProjectile')}
+            value={projectileId}
+            onChange={setProjectileId}
+            options={projectiles.map(p => ({
+              id: p.id,
+              label: `${p.brand} ${p.model}`,
+              sub: `${p.weight}gr · BC ${p.bc}`,
+            }))}
+            placeholder={t('common.all')}
+            emptyText={t('calc.noProjectiles')}
+            addHref="/library/projectiles"
+          />
+          <EntitySelect
+            label={t('sessions.filterOptic')}
+            value={opticId}
+            onChange={setOpticId}
+            options={optics.map(o => ({
+              id: o.id,
+              label: o.name,
+              sub: o.type,
+            }))}
+            placeholder={t('common.all')}
+            emptyText={t('calc.noOptics')}
+            addHref="/library/optics"
+          />
+        </div>
+      )}
 
       {/* CTA */}
       {filtered.length === 0 && sessions.length === 0 && (

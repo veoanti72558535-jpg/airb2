@@ -103,7 +103,7 @@ export function CompareProjectilesModal({
             <div className="min-w-0">
               <h2 className="text-sm font-heading font-semibold">{t('projectiles.compareTitle')}</h2>
               <p className="text-[11px] text-muted-foreground">
-                {t('projectiles.compareHint', { v: muzzleVelocity })}
+                {t('projectiles.compareHint', { v: velocity })}
               </p>
             </div>
           </div>
@@ -114,6 +114,49 @@ export function CompareProjectilesModal({
           >
             <X className="h-4 w-4" />
           </button>
+        </div>
+
+        {/* Velocity slider */}
+        <div className="px-4 py-3 border-b border-border bg-muted/20 space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <label
+              htmlFor="compare-velocity"
+              className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground"
+            >
+              <Gauge className="h-3.5 w-3.5" />
+              {t('projectiles.compareVelocity')}
+            </label>
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-xs text-foreground tabular-nums">
+                {velocity} m/s
+              </span>
+              {velocity !== DEFAULT_V && (
+                <button
+                  type="button"
+                  onClick={() => setVelocity(DEFAULT_V)}
+                  className="inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground"
+                  aria-label={t('common.reset')}
+                >
+                  <RotateCcw className="h-3 w-3" />
+                </button>
+              )}
+            </div>
+          </div>
+          <input
+            id="compare-velocity"
+            type="range"
+            min={MIN_V}
+            max={MAX_V}
+            step={5}
+            value={velocity}
+            onChange={e => setVelocity(Number(e.target.value))}
+            className="w-full accent-primary cursor-pointer"
+          />
+          <div className="flex justify-between text-[10px] text-muted-foreground font-mono">
+            <span>{MIN_V}</span>
+            <span className="text-muted-foreground/60">{t('projectiles.compareVelocityHint')}</span>
+            <span>{MAX_V}</span>
+          </div>
         </div>
 
         {/* Table */}

@@ -338,9 +338,11 @@ export function CompareProjectilesModal({
                           key={p.id}
                           className={cn(
                             'px-3 py-2 font-mono text-xs',
-                            isBest && 'text-tactical font-semibold'
+                            isBest && 'text-tactical font-semibold bg-tactical/10'
                           )}
+                          title={isBest ? t('projectiles.compareFlattest') : undefined}
                         >
+                          {isBest && <span aria-hidden className="mr-1">★</span>}
                           {d !== undefined ? `${d.toFixed(1)} mm` : '—'}
                         </td>
                       );

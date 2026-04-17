@@ -188,8 +188,31 @@ export default function QuickCalc() {
   const update = (patch: Partial<FormState>) =>
     setForm(prev => ({ ...prev, ...patch }));
 
+  // Manual edits to weather track per-field overrides so the source can shift
+  // from "auto" → "mixed" → "manual" without losing the auto base data.
+  const FIELD_KEYS = ['temperature','humidity','pressure','altitude','windSpeed','windAngle'] as const;
   const updateWeather = (patch: Partial<WeatherSnapshot>) =>
-    setForm(prev => ({ ...prev, weather: { ...prev.weather, ...patch } }));
+    setForm(prev => {
+      const overrides = new Set(prev.weather.manualOverrides ?? []);
+      for (const k of FIELD_KEYS) {
+        if (patch[k] !== undefined && patch[k] !== prev.weather[k]) overrides.add(k);
+      }
+      const next: WeatherSnapshot = {
+        ...prev.weather,
+        ...patch,
+        manualOverrides: Array.from(overrides),
+        timestamp: new Date().toISOString(),
+      };
+      const total = FIELD_KEYS.length;
+      next.source = !prev.weather.provider
+        ? 'manual'
+        : overrides.size === 0
+          ? 'auto'
+          : overrides.size >= total
+            ? 'manual'
+            : 'mixed';
+      return { ...prev, weather: next };
+    });
 
   const updateZeroWeather = (patch: Partial<WeatherSnapshot>) =>
     setForm(prev => ({ ...prev, zeroWeather: { ...prev.zeroWeather, ...patch } }));
@@ -427,7 +450,8 @@ export default function QuickCalc() {
         <div className="md:col-span-2">
           <EnvironmentSection
             weather={form.weather}
-            onChange={updateWeather}
+            onPatchManual={updateWeather}
+            onReplace={next => update({ weather: next })}
             advanced={advanced}
           />
         </div>

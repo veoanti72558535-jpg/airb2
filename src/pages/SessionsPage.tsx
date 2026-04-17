@@ -71,6 +71,9 @@ export default function SessionsPage() {
             if (s.input.focalPlane) advBadges.push(s.input.focalPlane);
             if (s.input.zeroWeather) advBadges.push(t('sessions.badgeZeroWeather'));
             if (s.input.twistRate) advBadges.push(`1:${s.input.twistRate}″`);
+            const wsrc = s.input.weather?.source;
+            if (wsrc === 'auto') advBadges.push(t('sessions.badgeAuto'));
+            else if (wsrc === 'mixed') advBadges.push(t('sessions.badgeMixed'));
             return (
               <div key={s.id} className="surface-elevated p-4">
                 <div className="flex items-start justify-between gap-2">

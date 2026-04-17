@@ -67,6 +67,15 @@ export interface Optic {
   updatedAt: string;
 }
 
+export type WeatherSource = 'auto' | 'manual' | 'mixed';
+export type WeatherFieldKey =
+  | 'temperature'
+  | 'humidity'
+  | 'pressure'
+  | 'altitude'
+  | 'windSpeed'
+  | 'windAngle';
+
 export interface WeatherSnapshot {
   temperature: number; // °C
   humidity: number; // %
@@ -74,9 +83,20 @@ export interface WeatherSnapshot {
   altitude: number; // m
   windSpeed: number; // m/s
   windAngle: number; // degrees (0 = headwind, 90 = right)
-  source: 'auto' | 'manual';
+  /** Origin of the snapshot as a whole. */
+  source: WeatherSource;
+  /** ISO timestamp of last data refresh (auto fetch or manual edit). */
   timestamp: string;
+  /** Human-readable location label when known (auto fetch only). */
   location?: string;
+  /** Provider id when fetched (e.g. 'open-meteo'). */
+  provider?: string;
+  /** Latitude used for the fetch. */
+  latitude?: number;
+  /** Longitude used for the fetch. */
+  longitude?: number;
+  /** Names of fields the user manually overrode after an auto fetch. */
+  manualOverrides?: WeatherFieldKey[];
 }
 
 export interface BallisticInput {
@@ -159,4 +179,6 @@ export interface AppSettings {
     ai: boolean;
     weather: boolean;
   };
+  /** When true, the calculator may suggest auto-fill from a weather provider. */
+  weatherAutoSuggest?: boolean;
 }

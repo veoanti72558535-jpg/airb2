@@ -43,6 +43,11 @@ export default function ProjectileDetailPage() {
           {p.projectileType && p.projectileType !== 'pellet' && (
             <span className="tactical-badge">{p.projectileType}</span>
           )}
+          {p.customDragTable && p.customDragTable.length > 0 && (
+            <span className="tactical-badge">
+              {t('projectiles.dragTableBadge', { count: p.customDragTable.length })}
+            </span>
+          )}
         </>
       }
     >

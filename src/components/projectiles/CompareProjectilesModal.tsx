@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { X, GitCompare, Gauge, RotateCcw, Target, Download, Maximize2, Minimize2 } from 'lucide-react';
+import { X, GitCompare, Gauge, RotateCcw, Target, Download, Maximize2, Minimize2, Copy, Check } from 'lucide-react';
 import { toPng } from 'html-to-image';
 import { Projectile, WeatherSnapshot } from '@/lib/types';
 import { getSettings } from '@/lib/storage';
@@ -80,6 +80,8 @@ export function CompareProjectilesModal({
   const [velocity, setVelocity] = useState<number>(initialVelocity);
   const [zeroRange, setZeroRange] = useState<number>(DEFAULT_Z);
   const [exporting, setExporting] = useState(false);
+  const [copying, setCopying] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
   /** Wraps the chart + table — that's what gets snapshotted to PNG. */
   const exportRef = useRef<HTMLDivElement | null>(null);
@@ -111,7 +113,44 @@ export function CompareProjectilesModal({
     }
   };
 
-  // Reset sliders when modal re-opens with a new initial velocity.
+  /**
+   * Render the chart+table as a PNG and write it to the system clipboard so
+   * the user can paste it directly into Discord, a forum, etc. Falls back to
+   * the download flow when the browser/OS lacks Clipboard image support
+   * (Safari < 16, Firefox without `dom.events.asyncClipboard.clipboardItem`).
+   */
+  const handleCopy = async () => {
+    if (!exportRef.current || rows.length === 0) return;
+
+    // Feature-detect ClipboardItem + async clipboard.write.
+    const ClipboardItemCtor = (window as unknown as { ClipboardItem?: typeof ClipboardItem }).ClipboardItem;
+    if (!ClipboardItemCtor || !navigator.clipboard?.write) {
+      toast.error(t('projectiles.compareCopyUnsupported'));
+      return;
+    }
+
+    setCopying(true);
+    try {
+      const dataUrl = await toPng(exportRef.current, {
+        backgroundColor: getComputedStyle(document.body).getPropertyValue('background-color') || '#111827',
+        pixelRatio: 2,
+        cacheBust: true,
+        style: { fontFamily: getComputedStyle(document.body).fontFamily },
+      });
+      // Convert data URL → Blob → ClipboardItem.
+      const blob = await (await fetch(dataUrl)).blob();
+      await navigator.clipboard.write([new ClipboardItemCtor({ 'image/png': blob })]);
+      setCopied(true);
+      toast.success(t('projectiles.compareCopySuccess'));
+      // Revert the icon after a moment so repeated copies still feel responsive.
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Copy PNG failed', err);
+      toast.error(t('projectiles.compareCopyError'));
+    } finally {
+      setCopying(false);
+    }
+  };
   useEffect(() => {
     if (open) {
       setVelocity(initialVelocity);

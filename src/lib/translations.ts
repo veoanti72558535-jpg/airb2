@@ -698,6 +698,7 @@ const en: Record<keyof typeof fr, string> = {
   'projectiles.compareMuzzleEnergy': 'Muzzle energy',
   'projectiles.compareDropSection': 'Drop (sight-line)',
   'projectiles.compareDropAt': 'Drop @ {r} m',
+  'projectiles.compareFlattest': 'Flattest trajectory at this distance',
   'projectiles.compareEnergySection': 'Velocity & energy',
   'projectiles.compareEnergyAt': '@ {r} m',
   'projectiles.compareDisclaimer': 'Indicative values — velocity is unified to isolate BC effect. Real drops depend on your airgun and tune.',

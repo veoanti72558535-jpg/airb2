@@ -656,6 +656,10 @@ const en: Record<keyof typeof fr, string> = {
   'weather.lon': 'Longitude',
   'weather.fetchAtCoords': 'Fetch here',
   'weather.errInvalidCoords': 'Invalid coordinates: latitude -90..90, longitude -180..180.',
+  'weather.citySearch': 'Search a city',
+  'weather.citySearchPlaceholder': 'e.g. Paris, London, New York…',
+  'weather.errGeocode': 'Search unavailable — try again or enter coordinates.',
+  'weather.noCityFound': 'No matching city.',
 
   'conv.title': 'Unit Conversions',
   'conv.subtitle': 'Deterministic conversions — no AI involved',

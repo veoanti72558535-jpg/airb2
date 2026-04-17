@@ -283,15 +283,17 @@ export function CompareProjectilesModal({
       const vels: Record<number, number> = {};
       const energies: Record<number, number> = {};
       const curve: { range: number; drop: number }[] = [];
+      const energyCurve: { range: number; energy: number }[] = [];
       for (const r of traj) {
         curve.push({ range: r.range, drop: r.drop });
+        energyCurve.push({ range: r.range, energy: r.energy });
         if ((COMPARE_RANGES as readonly number[]).includes(r.range)) {
           drops[r.range] = r.drop;
           vels[r.range] = r.velocity;
           energies[r.range] = r.energy;
         }
       }
-      return { p, drops, vels, energies, curve };
+      return { p, drops, vels, energies, curve, energyCurve };
     });
   }, [projectiles, open, velocity, zeroRange]);
 

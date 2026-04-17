@@ -274,7 +274,7 @@ export function CompareProjectilesModal({
   const rows = useMemo(() => {
     if (!open || projectiles.length === 0) return [];
     const weather = neutralWeather();
-    return projectiles.map(p => {
+    const computed = projectiles.map(p => {
       const traj = calculateTrajectory({
         muzzleVelocity: velocity,
         bc: p.bc,
@@ -303,7 +303,29 @@ export function CompareProjectilesModal({
       }
       return { p, drops, vels, energies, curve, energyCurve };
     });
-  }, [projectiles, open, velocity, zeroRange]);
+    // Auto-sort columns: by max useful range (desc) when an energy threshold is set,
+    // otherwise by ballistic coefficient (desc). Stable fallback on brand+model so the
+    // order is deterministic when projectiles tie (e.g. two BCs equal).
+    const tieBreak = (a: typeof computed[number], b: typeof computed[number]) =>
+      `${a.p.brand} ${a.p.model}`.localeCompare(`${b.p.brand} ${b.p.model}`);
+    if (energyThresholdJ !== null) {
+      const maxUsefulRange = (row: typeof computed[number]) => {
+        let max = -Infinity;
+        for (const pt of row.energyCurve) {
+          if (pt.energy > energyThresholdJ && pt.range > max) max = pt.range;
+        }
+        return max === -Infinity ? -1 : max;
+      };
+      return [...computed].sort((a, b) => {
+        const diff = maxUsefulRange(b) - maxUsefulRange(a);
+        return diff !== 0 ? diff : tieBreak(a, b);
+      });
+    }
+    return [...computed].sort((a, b) => {
+      const diff = b.p.bc - a.p.bc;
+      return diff !== 0 ? diff : tieBreak(a, b);
+    });
+  }, [projectiles, open, velocity, zeroRange, energyThresholdJ]);
 
   if (!open) return null;
 

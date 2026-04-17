@@ -240,6 +240,7 @@ const fr = {
   'projectiles.compareMuzzleEnergy': 'Énergie initiale',
   'projectiles.compareDropSection': 'Chute (sight-line)',
   'projectiles.compareDropAt': 'Chute @ {r} m',
+  'projectiles.compareFlattest': 'Trajectoire la plus tendue à cette distance',
   'projectiles.compareEnergySection': 'Vélocité & énergie',
   'projectiles.compareEnergyAt': '@ {r} m',
   'projectiles.compareDisclaimer': 'Valeurs indicatives — vélocité unifiée pour isoler l\'effet du BC. Les chutes réelles dépendent de votre arme et de votre tune.',

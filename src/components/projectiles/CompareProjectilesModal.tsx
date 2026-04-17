@@ -443,6 +443,8 @@ export function CompareProjectilesModal({
     if (oldIdx < 0 || newIdx < 0) return;
     setManualOrder(arrayMove(currentIds, oldIdx, newIdx));
     setManualMode(true);
+    // Short confirmation that the manual order has been persisted to localStorage.
+    toast.success(t('projectiles.compareManualOrderSaved'), { duration: 1500 });
   };
 
   if (!open) return null;

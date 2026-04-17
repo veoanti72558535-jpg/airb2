@@ -62,7 +62,8 @@ export function WeatherLocationPicker({ weather, api, autoEnabled }: Props) {
       return;
     }
     setCoordsError(null);
-    void api.fetchByCoords(parsed.data.lat, parsed.data.lon, { force: true });
+    // Cache-aware: a recent lookup at the same coords surfaces "from cache".
+    void api.fetchByCoords(parsed.data.lat, parsed.data.lon);
   };
 
   const sourceLabel =

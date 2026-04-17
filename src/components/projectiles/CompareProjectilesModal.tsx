@@ -9,6 +9,9 @@ import { cn } from '@/lib/utils';
 const MIN_V = 200;
 const MAX_V = 380;
 const DEFAULT_V = 280;
+const MIN_Z = 10;
+const MAX_Z = 50;
+const DEFAULT_Z = 30;
 
 interface Props {
   projectiles: Projectile[];

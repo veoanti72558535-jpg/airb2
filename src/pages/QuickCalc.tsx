@@ -311,13 +311,25 @@ export default function QuickCalc() {
 
   const handleSelectAirgun = (id: string) => {
     const a = airguns.find(x => x.id === id);
-    if (!a) return update({ airgunId: '' });
+    // Clearing or switching airgun invalidates the linked tune.
+    if (!a) return update({ airgunId: '', tuneId: '' });
     update({
       airgunId: id,
+      tuneId: '',
       barrelLength: a.barrelLength ?? form.barrelLength,
       twistRate: a.twistRate ?? form.twistRate,
       sightHeight: a.defaultSightHeight ?? form.sightHeight,
       zeroRange: a.defaultZeroRange ?? form.zeroRange,
+    });
+  };
+
+  const handleSelectTune = (id: string) => {
+    const tn = tunes.find(x => x.id === id);
+    if (!tn) return update({ tuneId: '' });
+    // Auto-fill muzzle velocity from the tune's nominal value when present.
+    update({
+      tuneId: id,
+      muzzleVelocity: tn.nominalVelocity ?? form.muzzleVelocity,
     });
   };
 

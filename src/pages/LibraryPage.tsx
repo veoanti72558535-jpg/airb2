@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { BookOpen, Target, Zap, Eye, Music } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { motion } from 'framer-motion';
@@ -7,6 +7,7 @@ import ProjectilesPage from './ProjectilesPage';
 import OpticsPage from './OpticsPage';
 import TunesPage from './TunesPage';
 import { cn } from '@/lib/utils';
+import { useUrlFilter } from '@/hooks/use-url-filter';
 
 const tabs = [
   { key: 'airguns', icon: Target, labelKey: 'library.tabs.airguns' as const },
@@ -16,10 +17,15 @@ const tabs = [
 ] as const;
 
 type TabKey = typeof tabs[number]['key'];
+const TAB_KEYS = tabs.map(t => t.key) as readonly TabKey[];
 
 export default function LibraryPage() {
   const { t } = useI18n();
-  const [activeTab, setActiveTab] = useState<TabKey>('airguns');
+  const [tabParam, setTabParam] = useUrlFilter('tab');
+  const activeTab: TabKey = (TAB_KEYS as readonly string[]).includes(tabParam ?? '')
+    ? (tabParam as TabKey)
+    : 'airguns';
+  const setActiveTab = (k: TabKey) => setTabParam(k === 'airguns' ? null : k);
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">

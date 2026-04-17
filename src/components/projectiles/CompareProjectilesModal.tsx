@@ -106,6 +106,54 @@ export function CompareProjectilesModal({
   const [hoverRange, setHoverRange] = useState<number | null>(null);
   /** Sort mode override — `null` = auto (useful range when threshold set, BC otherwise). */
   const [sortMode, setSortMode] = useState<'usefulRange' | 'bc' | null>(null);
+  /** When true, columns are reorderable via drag-and-drop and `manualOrder` overrides auto-sort. */
+  const [manualMode, setManualMode] = useState(false);
+  /**
+   * User-defined column order, as an array of projectile ids. Persisted in localStorage
+   * keyed by the sorted set of currently-selected projectile ids — so the order only
+   * applies when comparing the exact same set of projectiles again.
+   */
+  const [manualOrder, setManualOrder] = useState<string[] | null>(null);
+  /** Stable storage key for the current selection (sorted ids). */
+  const selectionKey = useMemo(
+    () => projectiles.map(p => p.id).sort().join('|'),
+    [projectiles]
+  );
+  // Load persisted manual order whenever the selection set changes (or modal reopens).
+  useEffect(() => {
+    if (!open) return;
+    try {
+      const raw = localStorage.getItem(`compare-manual-order:${selectionKey}`);
+      if (raw) {
+        const parsed = JSON.parse(raw) as string[];
+        // Validate: must contain exactly the same ids as the current selection.
+        const currentIds = new Set(projectiles.map(p => p.id));
+        if (
+          Array.isArray(parsed) &&
+          parsed.length === currentIds.size &&
+          parsed.every(id => currentIds.has(id))
+        ) {
+          setManualOrder(parsed);
+          setManualMode(true);
+          return;
+        }
+      }
+    } catch { /* ignore */ }
+    setManualOrder(null);
+    setManualMode(false);
+  }, [open, selectionKey, projectiles]);
+  // Persist manual order whenever it changes.
+  useEffect(() => {
+    if (!open) return;
+    try {
+      const key = `compare-manual-order:${selectionKey}`;
+      if (manualOrder && manualMode) {
+        localStorage.setItem(key, JSON.stringify(manualOrder));
+      } else {
+        localStorage.removeItem(key);
+      }
+    } catch { /* ignore */ }
+  }, [open, selectionKey, manualOrder, manualMode]);
   /** Per-section collapsed state — persisted in localStorage so it survives modal re-opens. */
   const [collapsed, setCollapsed] = useState<{ drop: boolean; vel: boolean; energy: boolean; overThreshold: boolean }>(() => {
     try {

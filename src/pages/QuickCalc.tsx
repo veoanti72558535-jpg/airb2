@@ -703,11 +703,24 @@ export default function QuickCalc() {
             </button>
           )}
         </motion.div>
-
+      ) : (
         <div className="rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
           {t('calc.empty')}
         </div>
       )}
+
+      {/* Compare picker — mounted at root so it survives results toggling. */}
+      <SessionPickerDialog
+        open={comparePickerOpen}
+        onOpenChange={setComparePickerOpen}
+        source={currentSessionId ? sessionStore.getById(currentSessionId) ?? null : null}
+        sessions={sessionStore.getAll()}
+        onPick={(other) => {
+          if (!currentSessionId) return;
+          navigate(`/compare?a=${currentSessionId}&b=${other.id}`);
+        }}
+      />
+
     </motion.div>
   );
 }

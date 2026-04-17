@@ -779,6 +779,12 @@ export function CompareProjectilesModal({
                         return { id: p.id, fpe, joules };
                       });
                       const maxFpe = energies.reduce((m, e) => (e.fpe > m ? e.fpe : m), 0);
+                      const maxJoules = energies.reduce((m, e) => (e.joules > m ? e.joules : m), 0);
+                      // Second-best joules — used to show the gap to the runner-up in the tooltip.
+                      const secondJoules = energies
+                        .filter(e => e.joules < maxJoules)
+                        .reduce((m, e) => (e.joules > m ? e.joules : m), 0);
+                      const energyGapJ = secondJoules > 0 ? maxJoules - secondJoules : null;
                       // Shared Y scale across all sparklines so curves are visually comparable.
                       const globalMaxJ = rows.reduce((m, r) => {
                         const local = r.energyCurve.reduce((mm, pt) => (pt.energy > mm ? pt.energy : mm), 0);
@@ -815,7 +821,11 @@ export function CompareProjectilesModal({
                                 title={
                                   energyThresholdJ !== null && e.joules > energyThresholdJ
                                     ? t('projectiles.compareFacOver')
-                                    : t('projectiles.compareMuzzleEnergy')
+                                    : isMax
+                                      ? (energyGapJ !== null
+                                          ? t('projectiles.compareBestEnergyDiff', { gap: energyGapJ.toFixed(1) })
+                                          : t('projectiles.compareBestEnergy'))
+                                      : t('projectiles.compareMuzzleEnergy')
                                 }
                               >
                                 {energyThresholdJ !== null && e.joules > energyThresholdJ ? (
@@ -906,7 +916,13 @@ export function CompareProjectilesModal({
                 </td>
               </tr>
               {!collapsed.drop && COMPARE_RANGES.map(r => {
-                const best = Math.min(...rows.map(x => Math.abs(x.drops[r] ?? Infinity)));
+                const absDrops = rows
+                  .map(x => (x.drops[r] !== undefined ? Math.abs(x.drops[r]!) : null))
+                  .filter((v): v is number => v !== null);
+                const best = absDrops.length ? Math.min(...absDrops) : Infinity;
+                // Second-smallest absolute drop — used to compute the gap to the runner-up.
+                const secondBest = absDrops.filter(v => v > best).reduce((m, v) => (m === null || v < m ? v : m), null as number | null);
+                const dropGap = secondBest !== null ? secondBest - best : null;
                 return (
                   <tr key={`drop-${r}`} id="cmp-drop-rows">
                     <td className="px-3 py-2 text-xs text-muted-foreground sticky left-0 bg-card z-10">
@@ -922,7 +938,11 @@ export function CompareProjectilesModal({
                             'px-3 py-2 font-mono text-xs',
                             isBest && 'text-tactical font-semibold bg-tactical/10'
                           )}
-                          title={isBest ? t('projectiles.compareFlattest') : undefined}
+                          title={isBest
+                            ? (dropGap !== null
+                                ? t('projectiles.compareFlattestDiff', { gap: dropGap.toFixed(1) })
+                                : t('projectiles.compareFlattestOnly'))
+                            : undefined}
                         >
                           {isBest && <span aria-hidden className="mr-1">★</span>}
                           {d !== undefined ? `${d.toFixed(1)} mm` : '—'}
@@ -957,7 +977,10 @@ export function CompareProjectilesModal({
               </tr>
               {!collapsed.vel && COMPARE_RANGES.map(r => {
                 // Highest residual velocity at this distance — projectile that retains speed best.
-                const bestVel = Math.max(...rows.map(x => x.vels[r] ?? -Infinity));
+                const velsAt = rows.map(x => x.vels[r] ?? -Infinity).filter(v => v !== -Infinity);
+                const bestVel = velsAt.length ? Math.max(...velsAt) : -Infinity;
+                const secondVel = velsAt.filter(v => v < bestVel).reduce((m, v) => (m === null || v > m ? v : m), null as number | null);
+                const velGap = secondVel !== null ? bestVel - secondVel : null;
                 return (
                   <tr key={`v-${r}`} id="cmp-vel-rows">
                     <td className="px-3 py-2 text-xs text-muted-foreground sticky left-0 bg-card z-10">
@@ -973,7 +996,11 @@ export function CompareProjectilesModal({
                             'px-3 py-2 font-mono text-xs',
                             isFastest && 'text-tactical font-semibold bg-tactical/10'
                           )}
-                          title={isFastest ? t('projectiles.compareFastest') : undefined}
+                          title={isFastest
+                            ? (velGap !== null
+                                ? t('projectiles.compareFastestDiff', { gap: velGap.toFixed(0) })
+                                : t('projectiles.compareFastestOnly'))
+                            : undefined}
                         >
                           {isFastest && <span aria-hidden className="mr-1">★</span>}
                           {v !== undefined ? `${v.toFixed(0)} m/s` : '—'}
@@ -1071,6 +1098,17 @@ export function CompareProjectilesModal({
                       (m, x) => (x.maxRange !== null && (m === null || x.maxRange > m) ? x.maxRange : m),
                       null,
                     );
+                    // Second-best useful range (strictly less than the winner) — to show the gap in the tooltip.
+                    const secondMaxRange = overByProjectile.reduce<number | null>(
+                      (m, x) =>
+                        x.maxRange !== null && bestMaxRange !== null && x.maxRange < bestMaxRange &&
+                        (m === null || x.maxRange > m)
+                          ? x.maxRange
+                          : m,
+                      null,
+                    );
+                    const rangeGap =
+                      bestMaxRange !== null && secondMaxRange !== null ? bestMaxRange - secondMaxRange : null;
                     return (
                       <>
                         {/* Max useful range row */}
@@ -1095,7 +1133,11 @@ export function CompareProjectilesModal({
                                       ? 'text-tactical font-semibold bg-tactical/10'
                                       : 'text-destructive font-semibold',
                                 )}
-                                title={isWinner ? t('projectiles.compareOverThresholdBest') : undefined}
+                                title={isWinner
+                                  ? (rangeGap !== null
+                                      ? t('projectiles.compareBestRangeDiff', { gap: rangeGap.toString() })
+                                      : t('projectiles.compareBestRangeOnly'))
+                                  : undefined}
                               >
                                 {isWinner && <span aria-hidden className="mr-1">★</span>}
                                 {maxRange === null

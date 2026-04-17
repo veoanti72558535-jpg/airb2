@@ -123,17 +123,25 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* Weather - disabled placeholder */}
-        <div className="surface-elevated p-4 opacity-50">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Cloud className="h-4 w-4 text-muted-foreground" />
-              <div>
-                <div className="text-sm font-medium">{t('settings.weather')}</div>
-                <div className="text-[11px] text-muted-foreground">{t('settings.weatherDesc')}</div>
+        {/* Weather auto suggest */}
+        <div className="surface-elevated p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <Cloud className="h-4 w-4 text-primary shrink-0" />
+              <div className="min-w-0">
+                <div className="text-sm font-medium">{t('weather.autoSuggest')}</div>
+                <div className="text-[11px] text-muted-foreground">{t('weather.autoSuggestDesc')}</div>
               </div>
             </div>
-            <span className="text-xs text-muted-foreground">{t('settings.comingSoon')}</span>
+            <button
+              onClick={() => {
+                saveSettings({ ...settings, weatherAutoSuggest: !(settings.weatherAutoSuggest !== false) });
+                window.location.reload();
+              }}
+              className={cn('px-3 py-1 rounded-md text-xs font-medium', settings.weatherAutoSuggest !== false ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted')}
+            >
+              {settings.weatherAutoSuggest !== false ? 'ON' : 'OFF'}
+            </button>
           </div>
         </div>
 

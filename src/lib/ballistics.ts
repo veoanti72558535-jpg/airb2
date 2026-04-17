@@ -197,13 +197,14 @@ function findZeroAngle(
   zeroRange: number,
   atmoFactor: number,
   model: DragModel,
+  customTable: DragTablePoint[] | undefined,
 ): number {
   let low = -0.01;
   let high = 0.05;
   const dt = 0.0005;
   for (let i = 0; i < 50; i++) {
     const mid = (low + high) / 2;
-    const y = simulateToRange(muzzleVelocity, bc, mid, sightHeightM, zeroRange, atmoFactor, dt, model);
+    const y = simulateToRange(muzzleVelocity, bc, mid, sightHeightM, zeroRange, atmoFactor, dt, model, customTable);
     if (Math.abs(y) < 0.00001) break;
     if (y > 0) high = mid;
     else low = mid;
@@ -220,6 +221,7 @@ function simulateToRange(
   atmoFactor: number,
   dt: number,
   model: DragModel,
+  customTable: DragTablePoint[] | undefined,
 ): number {
   let x = 0;
   let y = 0;
@@ -228,7 +230,7 @@ function simulateToRange(
   while (x < targetRange) {
     const v = Math.sqrt(vx * vx + vy * vy);
     if (v < 1) break;
-    const decel = dragDecel(v, bc, atmoFactor, model);
+    const decel = dragDecel(v, bc, atmoFactor, model, customTable);
     const ax = -(decel * vx) / v;
     const ay = -GRAVITY - (decel * vy) / v;
     vx += ax * dt;
@@ -262,6 +264,7 @@ export function calculateTrajectory(input: BallisticInput): BallisticResult[] {
     projectileLength,
     projectileDiameter,
     zeroWeather,
+    customDragTable,
   } = input;
 
   // Two-pass zeroing weather: zero at zero conditions, fly through current conditions.
@@ -287,6 +290,7 @@ export function calculateTrajectory(input: BallisticInput): BallisticResult[] {
     zeroRange,
     zeroAtmoFactor,
     dragModel,
+    customDragTable,
   );
 
   const results: BallisticResult[] = [];
@@ -326,7 +330,7 @@ export function calculateTrajectory(input: BallisticInput): BallisticResult[] {
     const v = Math.sqrt(vx * vx + vy * vy);
     if (v < 1) break;
 
-    const decel = dragDecel(v, bc, flightAtmoFactor, dragModel);
+    const decel = dragDecel(v, bc, flightAtmoFactor, dragModel, customDragTable);
     const ax = -(decel * vx) / v;
     const ay = -GRAVITY - (decel * vy) / v;
     // Crosswind lag: the projectile is pushed sideways at a fraction of crosswind speed.

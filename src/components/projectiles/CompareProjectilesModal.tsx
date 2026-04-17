@@ -25,6 +25,9 @@ interface Props {
 const COMPARE_RANGES = [25, 50, 75, 100] as const;
 const CHART_STEP = 5; // m — fine sampling for the SVG drop chart
 const CHART_MAX = 100; // m
+/** UK FAC airgun threshold: 12 ft·lb ≈ 16.27 J. Above this requires a Firearms Certificate. */
+const FAC_LIMIT_J = 16.27;
+const FAC_LIMIT_FPE = 12;
 
 /** Distinct hues for up to 4 projectiles. Tuned for dark + light themes. */
 const SERIES_COLORS = [

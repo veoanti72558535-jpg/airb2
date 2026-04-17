@@ -954,12 +954,14 @@ function EnergySparkline({
   globalMaxJ,
   thresholdJ,
   label,
+  hoverRange,
 }: {
   curve: { range: number; energy: number }[];
   color: string;
   globalMaxJ: number;
   thresholdJ: number | null;
   label: string;
+  hoverRange?: number | null;
 }) {
   if (curve.length < 2 || globalMaxJ <= 0) return null;
   const W = 120;
@@ -977,6 +979,13 @@ function EnergySparkline({
   // Filled area below the curve for visual weight.
   const area = `${path} L${xToPx(curve[curve.length - 1].range).toFixed(1)},${(H - PAD_Y).toFixed(1)} L${xToPx(curve[0].range).toFixed(1)},${(H - PAD_Y).toFixed(1)} Z`;
   const showThreshold = thresholdJ !== null && thresholdJ > 0 && thresholdJ <= globalMaxJ;
+
+  // Find the sample matching the hovered range (DropChart snaps to CHART_STEP, so an exact match is expected).
+  const hoverPoint =
+    hoverRange != null && hoverRange >= 0 && hoverRange <= xMax
+      ? curve.find(pt => pt.range === hoverRange) ?? null
+      : null;
+
   return (
     <svg
       viewBox={`0 0 ${W} ${H}`}
@@ -1000,6 +1009,23 @@ function EnergySparkline({
       )}
       <path d={area} fill={color} opacity={0.18} />
       <path d={path} fill="none" stroke={color} strokeWidth={1.25} strokeLinejoin="round" strokeLinecap="round" />
+      {hoverPoint && (
+        <g pointerEvents="none">
+          {/* Vertical guide line synced with the DropChart hover. */}
+          <line
+            x1={xToPx(hoverPoint.range)}
+            x2={xToPx(hoverPoint.range)}
+            y1={PAD_Y}
+            y2={H - PAD_Y}
+            stroke={color}
+            strokeWidth={0.5}
+            opacity={0.4}
+          />
+          {/* Halo + dot at the hovered (range, energy) sample. */}
+          <circle cx={xToPx(hoverPoint.range)} cy={yToPx(hoverPoint.energy)} r={2.6} fill={color} opacity={0.25} />
+          <circle cx={xToPx(hoverPoint.range)} cy={yToPx(hoverPoint.energy)} r={1.4} fill={color} />
+        </g>
+      )}
     </svg>
   );
 }

@@ -608,76 +608,81 @@ export function CompareProjectilesModal({
                   (energyThresholdJ !== null && collapsed.overThreshold ? 1 : 0);
                 if (hidden === 0) return null;
                 return (
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setCollapsed({ drop: false, vel: false, energy: false, overThreshold: false })
-                    }
-                    className="mt-0.5 inline-flex items-center gap-1 text-[10px] text-tactical font-medium hover:underline focus:outline-none focus-visible:ring-1 focus-visible:ring-tactical rounded"
-                    title={t('projectiles.compareExpandAll')}
-                    aria-label={t('projectiles.compareExpandAll')}
-                  >
-                    <EyeOff className="h-2.5 w-2.5" aria-hidden />
-                    {t('projectiles.compareHiddenCount', { hidden, total })}
-                  </button>
+                  <HoverHint label={t('projectiles.compareExpandAll')}>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setCollapsed({ drop: false, vel: false, energy: false, overThreshold: false })
+                      }
+                      className="mt-0.5 inline-flex items-center gap-1 text-[10px] text-tactical font-medium hover:underline focus:outline-none focus-visible:ring-1 focus-visible:ring-tactical rounded"
+                      aria-label={t('projectiles.compareExpandAll')}
+                    >
+                      <EyeOff className="h-2.5 w-2.5" aria-hidden />
+                      {t('projectiles.compareHiddenCount', { hidden, total })}
+                    </button>
+                  </HoverHint>
                 );
               })()}
             </div>
           </div>
           <div className="flex items-center gap-1 shrink-0">
-            <button
-              type="button"
-              onClick={handleCopy}
-              disabled={copying || rows.length === 0}
-              className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-[11px] font-medium hover:bg-muted text-muted-foreground hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              title={t('projectiles.compareCopy')}
-              aria-label={t('projectiles.compareCopy')}
-            >
-              {copied ? (
-                <Check className="h-3.5 w-3.5 text-tactical" />
-              ) : (
-                <Copy className="h-3.5 w-3.5" />
-              )}
-              <span className="hidden sm:inline">
-                {copying ? t('projectiles.compareCopying') : t('projectiles.compareCopy')}
-              </span>
-            </button>
-            <button
-              type="button"
-              onClick={handleExport}
-              disabled={exporting || rows.length === 0}
-              className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-[11px] font-medium hover:bg-muted text-muted-foreground hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              title={t('projectiles.compareExport')}
-              aria-label={t('projectiles.compareExport')}
-            >
-              <Download className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">
-                {exporting ? t('projectiles.compareExporting') : t('projectiles.compareExport')}
-              </span>
-            </button>
-            <button
-              type="button"
-              onClick={handleExportPdf}
-              disabled={exportingPdf || rows.length === 0}
-              className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-[11px] font-medium hover:bg-muted text-muted-foreground hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              title={t('projectiles.compareExportPdf')}
-              aria-label={t('projectiles.compareExportPdf')}
-            >
-              <FileText className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">
-                {exportingPdf ? t('projectiles.compareExportingPdf') : t('projectiles.compareExportPdf')}
-              </span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setFullscreen(f => !f)}
-              className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-              title={fullscreen ? t('projectiles.compareExitFullscreen') : t('projectiles.compareFullscreen')}
-              aria-label={fullscreen ? t('projectiles.compareExitFullscreen') : t('projectiles.compareFullscreen')}
-              aria-pressed={fullscreen}
-            >
-              {fullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-            </button>
+            <HoverHint label={t('projectiles.compareCopy')}>
+              <button
+                type="button"
+                onClick={handleCopy}
+                disabled={copying || rows.length === 0}
+                className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-[11px] font-medium hover:bg-muted text-muted-foreground hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                aria-label={t('projectiles.compareCopy')}
+              >
+                {copied ? (
+                  <Check className="h-3.5 w-3.5 text-tactical" />
+                ) : (
+                  <Copy className="h-3.5 w-3.5" />
+                )}
+                <span className="hidden sm:inline">
+                  {copying ? t('projectiles.compareCopying') : t('projectiles.compareCopy')}
+                </span>
+              </button>
+            </HoverHint>
+            <HoverHint label={t('projectiles.compareExport')}>
+              <button
+                type="button"
+                onClick={handleExport}
+                disabled={exporting || rows.length === 0}
+                className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-[11px] font-medium hover:bg-muted text-muted-foreground hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                aria-label={t('projectiles.compareExport')}
+              >
+                <Download className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">
+                  {exporting ? t('projectiles.compareExporting') : t('projectiles.compareExport')}
+                </span>
+              </button>
+            </HoverHint>
+            <HoverHint label={t('projectiles.compareExportPdf')}>
+              <button
+                type="button"
+                onClick={handleExportPdf}
+                disabled={exportingPdf || rows.length === 0}
+                className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-[11px] font-medium hover:bg-muted text-muted-foreground hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                aria-label={t('projectiles.compareExportPdf')}
+              >
+                <FileText className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">
+                  {exportingPdf ? t('projectiles.compareExportingPdf') : t('projectiles.compareExportPdf')}
+                </span>
+              </button>
+            </HoverHint>
+            <HoverHint label={fullscreen ? t('projectiles.compareExitFullscreen') : t('projectiles.compareFullscreen')}>
+              <button
+                type="button"
+                onClick={() => setFullscreen(f => !f)}
+                className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                aria-label={fullscreen ? t('projectiles.compareExitFullscreen') : t('projectiles.compareFullscreen')}
+                aria-pressed={fullscreen}
+              >
+                {fullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+              </button>
+            </HoverHint>
             <button
               onClick={onClose}
               className="p-1.5 rounded hover:bg-muted text-muted-foreground"

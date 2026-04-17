@@ -913,6 +913,68 @@ export function CompareProjectilesModal({
   );
 }
 
+/**
+ * Tiny inline SVG showing the energy decay (J) over the simulated range.
+ * - Shared globalMaxJ across all projectiles → curves are visually comparable.
+ * - Optional dashed line for the configured energy threshold.
+ * Designed to sit just below the muzzle-energy badge in the table header.
+ */
+function EnergySparkline({
+  curve,
+  color,
+  globalMaxJ,
+  thresholdJ,
+  label,
+}: {
+  curve: { range: number; energy: number }[];
+  color: string;
+  globalMaxJ: number;
+  thresholdJ: number | null;
+  label: string;
+}) {
+  if (curve.length < 2 || globalMaxJ <= 0) return null;
+  const W = 120;
+  const H = 22;
+  const PAD_X = 1;
+  const PAD_Y = 2;
+  const innerW = W - PAD_X * 2;
+  const innerH = H - PAD_Y * 2;
+  const xMax = curve[curve.length - 1].range || 1;
+  const xToPx = (x: number) => PAD_X + (x / xMax) * innerW;
+  const yToPx = (y: number) => PAD_Y + (1 - y / globalMaxJ) * innerH;
+  const path = curve
+    .map((pt, i) => `${i === 0 ? 'M' : 'L'}${xToPx(pt.range).toFixed(1)},${yToPx(pt.energy).toFixed(1)}`)
+    .join(' ');
+  // Filled area below the curve for visual weight.
+  const area = `${path} L${xToPx(curve[curve.length - 1].range).toFixed(1)},${(H - PAD_Y).toFixed(1)} L${xToPx(curve[0].range).toFixed(1)},${(H - PAD_Y).toFixed(1)} Z`;
+  const showThreshold = thresholdJ !== null && thresholdJ > 0 && thresholdJ <= globalMaxJ;
+  return (
+    <svg
+      viewBox={`0 0 ${W} ${H}`}
+      className="mt-1 block w-full max-w-[140px] h-[22px] overflow-visible"
+      preserveAspectRatio="none"
+      role="img"
+      aria-label={label}
+    >
+      <title>{label}</title>
+      {showThreshold && (
+        <line
+          x1={PAD_X}
+          x2={W - PAD_X}
+          y1={yToPx(thresholdJ!)}
+          y2={yToPx(thresholdJ!)}
+          stroke="hsl(var(--destructive))"
+          strokeWidth={0.6}
+          strokeDasharray="2 2"
+          opacity={0.7}
+        />
+      )}
+      <path d={area} fill={color} opacity={0.18} />
+      <path d={path} fill="none" stroke={color} strokeWidth={1.25} strokeLinejoin="round" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 interface DropChartProps {
   rows: {
     p: Projectile;

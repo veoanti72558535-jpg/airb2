@@ -916,7 +916,13 @@ export function CompareProjectilesModal({
                 </td>
               </tr>
               {!collapsed.drop && COMPARE_RANGES.map(r => {
-                const best = Math.min(...rows.map(x => Math.abs(x.drops[r] ?? Infinity)));
+                const absDrops = rows
+                  .map(x => (x.drops[r] !== undefined ? Math.abs(x.drops[r]!) : null))
+                  .filter((v): v is number => v !== null);
+                const best = absDrops.length ? Math.min(...absDrops) : Infinity;
+                // Second-smallest absolute drop — used to compute the gap to the runner-up.
+                const secondBest = absDrops.filter(v => v > best).reduce((m, v) => (m === null || v < m ? v : m), null as number | null);
+                const dropGap = secondBest !== null ? secondBest - best : null;
                 return (
                   <tr key={`drop-${r}`} id="cmp-drop-rows">
                     <td className="px-3 py-2 text-xs text-muted-foreground sticky left-0 bg-card z-10">
@@ -932,7 +938,11 @@ export function CompareProjectilesModal({
                             'px-3 py-2 font-mono text-xs',
                             isBest && 'text-tactical font-semibold bg-tactical/10'
                           )}
-                          title={isBest ? t('projectiles.compareFlattest') : undefined}
+                          title={isBest
+                            ? (dropGap !== null
+                                ? t('projectiles.compareFlattestDiff', { gap: dropGap.toFixed(1) })
+                                : t('projectiles.compareFlattestOnly'))
+                            : undefined}
                         >
                           {isBest && <span aria-hidden className="mr-1">★</span>}
                           {d !== undefined ? `${d.toFixed(1)} mm` : '—'}

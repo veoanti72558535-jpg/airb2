@@ -86,12 +86,15 @@ export function CompareProjectilesModal({
   const [copied, setCopied] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
   /** Per-section collapsed state — persisted in localStorage so it survives modal re-opens. */
-  const [collapsed, setCollapsed] = useState<{ vel: boolean; energy: boolean }>(() => {
+  const [collapsed, setCollapsed] = useState<{ drop: boolean; vel: boolean; energy: boolean }>(() => {
     try {
       const raw = localStorage.getItem('compare-sections-collapsed');
-      if (raw) return JSON.parse(raw) as { vel: boolean; energy: boolean };
+      if (raw) {
+        const parsed = JSON.parse(raw) as Partial<{ drop: boolean; vel: boolean; energy: boolean }>;
+        return { drop: !!parsed.drop, vel: !!parsed.vel, energy: !!parsed.energy };
+      }
     } catch { /* ignore */ }
-    return { vel: false, energy: false };
+    return { drop: false, vel: false, energy: false };
   });
 
   // Persist whenever collapsed state changes.
@@ -583,16 +586,30 @@ export function CompareProjectilesModal({
                 ))}
               </tr>
 
-              {/* Drop section header */}
+              {/* Drop section — collapsible header for consistency with Velocity / Energy. */}
               <tr className="bg-muted/20">
-                <td colSpan={rows.length + 1} className="px-3 py-1.5 text-[10px] uppercase tracking-wide text-muted-foreground font-semibold">
-                  {t('projectiles.compareDropSection')}
+                <td colSpan={rows.length + 1} className="p-0">
+                  <button
+                    type="button"
+                    onClick={() => setCollapsed(c => ({ ...c, drop: !c.drop }))}
+                    aria-expanded={!collapsed.drop}
+                    aria-controls="cmp-drop-rows"
+                    title={collapsed.drop ? t('projectiles.compareExpandSection') : t('projectiles.compareCollapseSection')}
+                    className="w-full flex items-center gap-1.5 px-3 py-1.5 text-[10px] uppercase tracking-wide text-muted-foreground font-semibold hover:text-foreground hover:bg-muted/30 transition-colors text-left"
+                  >
+                    {collapsed.drop ? (
+                      <ChevronRight className="h-3 w-3 shrink-0" aria-hidden />
+                    ) : (
+                      <ChevronDown className="h-3 w-3 shrink-0" aria-hidden />
+                    )}
+                    {t('projectiles.compareDropSection')}
+                  </button>
                 </td>
               </tr>
-              {COMPARE_RANGES.map(r => {
+              {!collapsed.drop && COMPARE_RANGES.map(r => {
                 const best = Math.min(...rows.map(x => Math.abs(x.drops[r] ?? Infinity)));
                 return (
-                  <tr key={`drop-${r}`}>
+                  <tr key={`drop-${r}`} id="cmp-drop-rows">
                     <td className="px-3 py-2 text-xs text-muted-foreground sticky left-0 bg-card z-10">
                       {t('projectiles.compareDropAt', { r })}
                     </td>

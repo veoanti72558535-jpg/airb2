@@ -175,6 +175,7 @@ const fr = {
   'optics.filterBrand': 'Marque',
   'optics.search': 'Rechercher par nom ou notes…',
   'optics.noMatch': 'Aucune optique pour ces filtres.',
+  'optics.resetFilters': 'Réinitialiser les filtres',
 
   // Sessions
   'sessions.title': 'Sessions',
@@ -475,6 +476,7 @@ const en: Record<keyof typeof fr, string> = {
   'optics.filterBrand': 'Brand',
   'optics.search': 'Search by name or notes…',
   'optics.noMatch': 'No optic for these filters.',
+  'optics.resetFilters': 'Reset filters',
 
   'sessions.title': 'Sessions',
   'sessions.add': 'New Session',

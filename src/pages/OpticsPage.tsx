@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Eye, Plus, Trash2, Edit2, Download, Search, X } from 'lucide-react';
+import { Eye, Plus, Trash2, Edit2, Download, Search, X, RotateCcw } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { opticStore } from '@/lib/storage';
 import { useUnits } from '@/hooks/use-units';
@@ -255,6 +255,19 @@ export default function OpticsPage() {
               {b} ({brandCounts[b]})
             </button>
           ))}
+          {(tubeFilter !== null || brandFilter !== null || searchQuery.trim() !== '') && (
+            <button
+              onClick={() => {
+                setTubeFilter(null);
+                setBrandFilter(null);
+                setSearchQuery('');
+              }}
+              className="ml-auto px-2.5 py-1 rounded text-xs font-medium transition-colors bg-destructive/10 text-destructive border border-destructive/30 hover:bg-destructive/20 inline-flex items-center gap-1"
+            >
+              <RotateCcw className="h-3 w-3" />
+              {t('optics.resetFilters')}
+            </button>
+          )}
         </div>
       )}
 

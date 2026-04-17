@@ -353,7 +353,24 @@ export function CompareProjectilesModal({
               <GitCompare className="h-4 w-4" />
             </div>
             <div className="min-w-0">
-              <h2 className="text-sm font-heading font-semibold">{t('projectiles.compareTitle')}</h2>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <h2 className="text-sm font-heading font-semibold">{t('projectiles.compareTitle')}</h2>
+                {rows.length >= 2 && (
+                  <span
+                    className="inline-flex items-center gap-0.5 rounded bg-muted px-1.5 py-0.5 text-[10px] font-mono font-medium text-muted-foreground"
+                    title={
+                      energyThresholdJ !== null
+                        ? t('projectiles.compareSortByUsefulRangeHint', { j: energyThresholdJ.toFixed(2) })
+                        : t('projectiles.compareSortByBcHint')
+                    }
+                  >
+                    <span aria-hidden>↓</span>
+                    {energyThresholdJ !== null
+                      ? t('projectiles.compareSortByUsefulRange')
+                      : t('projectiles.compareSortByBc')}
+                  </span>
+                )}
+              </div>
               <p className="text-[11px] text-muted-foreground">
                 {t('projectiles.compareHint', { v: velocity, z: zeroRange })}
               </p>

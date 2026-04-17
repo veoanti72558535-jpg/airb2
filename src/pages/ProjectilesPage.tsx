@@ -168,6 +168,7 @@ export default function ProjectilesPage() {
       material: p.material ?? 'lead',
       notes: p.notes ?? '',
       dataSource: p.dataSource ?? '',
+      customDragTable: p.customDragTable,
     });
     setShowForm(true);
   };

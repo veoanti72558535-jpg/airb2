@@ -295,8 +295,13 @@ export default function QuickCalc() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const update = (patch: Partial<FormState>) =>
+  const update = (patch: Partial<FormState>) => {
+    // Any manual edit makes the form diverge from the saved session — drop the
+    // currentSessionId link so the "Compare with another" CTA doesn't compare
+    // a stale snapshot.
+    setCurrentSessionId(null);
     setForm(prev => ({ ...prev, ...patch }));
+  };
 
   // Manual edits to weather track per-field overrides so the source can shift
   // from "auto" → "mixed" → "manual" without losing the auto base data.

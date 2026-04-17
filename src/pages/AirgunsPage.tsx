@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Target, Plus, Trash2, Edit2, RotateCcw } from 'lucide-react';
+import { Target, Plus, Trash2, Edit2 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { airgunStore } from '@/lib/storage';
 import { useUnits } from '@/hooks/use-units';
@@ -8,6 +8,7 @@ import { Airgun } from '@/lib/types';
 import { motion } from 'framer-motion';
 import { toast } from '@/hooks/use-toast';
 import { SearchBar } from '@/components/SearchBar';
+import { FilterChips } from '@/components/FilterChips';
 
 export default function AirgunsPage() {
   const { t } = useI18n();

@@ -597,20 +597,47 @@ function DragTablePreview({ table, t }: PreviewProps) {
             >
               {`Mach ${hover.toFixed(3)}`}
             </text>
-            {hoverRows.map((row, i) => (
-              <g key={i} transform={`translate(${tooltipX + 4}, ${PAD_T + 14 + i * TT_LINE_H})`}>
-                <rect x={0} y={2} width={5} height={2} fill={row.color} rx={0.5} />
-                <text
-                  x={8}
-                  y={7}
-                  className="fill-popover-foreground"
-                  fontSize={7.5}
-                  fontFamily="ui-monospace, monospace"
-                >
-                  {`${row.label}: ${row.cd.toFixed(3)}`}
-                </text>
-              </g>
-            ))}
+            {hoverRows.map((row, i) => {
+              // Δ sign drives colour: positive (ref higher than imported) =
+              // tactical amber, negative = teal. Neutral muted for the
+              // baseline imported row.
+              const deltaTxt =
+                row.delta === null
+                  ? ''
+                  : `${row.delta >= 0 ? '+' : '−'}${Math.abs(row.delta).toFixed(3)}`;
+              const deltaColor =
+                row.delta === null
+                  ? 'hsl(var(--muted-foreground))'
+                  : row.delta >= 0
+                    ? 'hsl(var(--tactical, var(--primary)))'
+                    : 'hsl(var(--accent))';
+              return (
+                <g key={i} transform={`translate(${tooltipX + 4}, ${PAD_T + 14 + i * TT_LINE_H})`}>
+                  <rect x={0} y={2} width={5} height={2} fill={row.color} rx={0.5} />
+                  <text
+                    x={8}
+                    y={7}
+                    className="fill-popover-foreground"
+                    fontSize={7.5}
+                    fontFamily="ui-monospace, monospace"
+                  >
+                    {`${row.label}: ${row.cd.toFixed(3)}`}
+                  </text>
+                  {deltaTxt && (
+                    <text
+                      x={TT_W - 6}
+                      y={7}
+                      textAnchor="end"
+                      fontSize={7.5}
+                      fontFamily="ui-monospace, monospace"
+                      fill={deltaColor}
+                    >
+                      {`Δ${deltaTxt}`}
+                    </text>
+                  )}
+                </g>
+              );
+            })}
           </g>
         )}
       </svg>

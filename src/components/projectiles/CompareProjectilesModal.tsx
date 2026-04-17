@@ -516,7 +516,7 @@ export function CompareProjectilesModal({
         <div className={cn('overflow-auto', fullscreen ? 'flex-1' : '')}>
           <div ref={exportRef} className="bg-card">
             {/* Drop chart */}
-            <DropChart rows={rows} t={t} tall={fullscreen} />
+            <DropChart rows={rows} t={t} tall={fullscreen} hoverRange={hoverRange} onHoverRange={setHoverRange} />
 
         {/* Table toolbar with expand/collapse all */}
         <div className="px-4 py-2 border-b border-border bg-muted/20 flex items-center justify-end gap-2">
@@ -613,6 +613,7 @@ export function CompareProjectilesModal({
                               color={seriesColor}
                               globalMaxJ={globalMaxJ}
                               thresholdJ={energyThresholdJ}
+                              hoverRange={hoverRange}
                               label={t('projectiles.compareEnergySparklineTitle', {
                                 start: energyCurve[0]?.energy.toFixed(1) ?? '—',
                                 end: energyCurve[energyCurve.length - 1]?.energy.toFixed(1) ?? '—',

@@ -1,5 +1,5 @@
-import React from 'react';
-import { Settings, Globe, Sun, Moon, Gauge, ToggleLeft, Cloud, Bot, Ruler } from 'lucide-react';
+import React, { useState } from 'react';
+import { Settings, Globe, Sun, Moon, Gauge, ToggleLeft, Cloud, Bot, Ruler, Zap } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { useTheme } from '@/lib/theme';
 import { getSettings, saveSettings } from '@/lib/storage';

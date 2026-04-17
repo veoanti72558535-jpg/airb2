@@ -484,6 +484,31 @@ export function CompareProjectilesModal({
             {/* Drop chart */}
             <DropChart rows={rows} t={t} tall={fullscreen} />
 
+        {/* Table toolbar with expand/collapse all */}
+        <div className="px-4 py-2 border-b border-border bg-muted/20 flex items-center justify-end gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              const allExpanded = !collapsed.drop && !collapsed.vel && !collapsed.energy;
+              setCollapsed({ drop: allExpanded, vel: allExpanded, energy: allExpanded });
+            }}
+            className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-[11px] font-medium hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+            title={(!collapsed.drop && !collapsed.vel && !collapsed.energy) ? t('projectiles.compareCollapseAll') : t('projectiles.compareExpandAll')}
+          >
+            {(!collapsed.drop && !collapsed.vel && !collapsed.energy) ? (
+              <>
+                <Minimize2 className="h-3 w-3" />
+                <span>{t('projectiles.compareCollapseAll')}</span>
+              </>
+            ) : (
+              <>
+                <Maximize2 className="h-3 w-3" />
+                <span>{t('projectiles.compareExpandAll')}</span>
+              </>
+            )}
+          </button>
+        </div>
+
         {/* Table */}
         <div className="overflow-auto">
           <table className="w-full text-sm">

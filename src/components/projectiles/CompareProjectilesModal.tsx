@@ -85,6 +85,8 @@ export function CompareProjectilesModal({
   const [copying, setCopying] = useState(false);
   const [copied, setCopied] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
+  /** Distance currently hovered in the DropChart (in meters) — synchronises sparklines. */
+  const [hoverRange, setHoverRange] = useState<number | null>(null);
   /** Per-section collapsed state — persisted in localStorage so it survives modal re-opens. */
   const [collapsed, setCollapsed] = useState<{ drop: boolean; vel: boolean; energy: boolean; overThreshold: boolean }>(() => {
     try {
@@ -514,7 +516,7 @@ export function CompareProjectilesModal({
         <div className={cn('overflow-auto', fullscreen ? 'flex-1' : '')}>
           <div ref={exportRef} className="bg-card">
             {/* Drop chart */}
-            <DropChart rows={rows} t={t} tall={fullscreen} />
+            <DropChart rows={rows} t={t} tall={fullscreen} hoverRange={hoverRange} onHoverRange={setHoverRange} />
 
         {/* Table toolbar with expand/collapse all */}
         <div className="px-4 py-2 border-b border-border bg-muted/20 flex items-center justify-end gap-2">
@@ -611,6 +613,7 @@ export function CompareProjectilesModal({
                               color={seriesColor}
                               globalMaxJ={globalMaxJ}
                               thresholdJ={energyThresholdJ}
+                              hoverRange={hoverRange}
                               label={t('projectiles.compareEnergySparklineTitle', {
                                 start: energyCurve[0]?.energy.toFixed(1) ?? '—',
                                 end: energyCurve[energyCurve.length - 1]?.energy.toFixed(1) ?? '—',
@@ -951,12 +954,14 @@ function EnergySparkline({
   globalMaxJ,
   thresholdJ,
   label,
+  hoverRange,
 }: {
   curve: { range: number; energy: number }[];
   color: string;
   globalMaxJ: number;
   thresholdJ: number | null;
   label: string;
+  hoverRange?: number | null;
 }) {
   if (curve.length < 2 || globalMaxJ <= 0) return null;
   const W = 120;
@@ -974,6 +979,13 @@ function EnergySparkline({
   // Filled area below the curve for visual weight.
   const area = `${path} L${xToPx(curve[curve.length - 1].range).toFixed(1)},${(H - PAD_Y).toFixed(1)} L${xToPx(curve[0].range).toFixed(1)},${(H - PAD_Y).toFixed(1)} Z`;
   const showThreshold = thresholdJ !== null && thresholdJ > 0 && thresholdJ <= globalMaxJ;
+
+  // Find the sample matching the hovered range (DropChart snaps to CHART_STEP, so an exact match is expected).
+  const hoverPoint =
+    hoverRange != null && hoverRange >= 0 && hoverRange <= xMax
+      ? curve.find(pt => pt.range === hoverRange) ?? null
+      : null;
+
   return (
     <svg
       viewBox={`0 0 ${W} ${H}`}
@@ -997,6 +1009,23 @@ function EnergySparkline({
       )}
       <path d={area} fill={color} opacity={0.18} />
       <path d={path} fill="none" stroke={color} strokeWidth={1.25} strokeLinejoin="round" strokeLinecap="round" />
+      {hoverPoint && (
+        <g pointerEvents="none">
+          {/* Vertical guide line synced with the DropChart hover. */}
+          <line
+            x1={xToPx(hoverPoint.range)}
+            x2={xToPx(hoverPoint.range)}
+            y1={PAD_Y}
+            y2={H - PAD_Y}
+            stroke={color}
+            strokeWidth={0.5}
+            opacity={0.4}
+          />
+          {/* Halo + dot at the hovered (range, energy) sample. */}
+          <circle cx={xToPx(hoverPoint.range)} cy={yToPx(hoverPoint.energy)} r={2.6} fill={color} opacity={0.25} />
+          <circle cx={xToPx(hoverPoint.range)} cy={yToPx(hoverPoint.energy)} r={1.4} fill={color} />
+        </g>
+      )}
     </svg>
   );
 }
@@ -1009,6 +1038,9 @@ interface DropChartProps {
   t: (key: string, vars?: Record<string, string | number>) => string;
   /** Render a taller chart for fullscreen mode. */
   tall?: boolean;
+  /** Controlled hover distance (m) — kept in the parent so sparklines can sync. */
+  hoverRange: number | null;
+  onHoverRange: (r: number | null) => void;
 }
 
 /**
@@ -1016,9 +1048,10 @@ interface DropChartProps {
  * Uses a shared Y scale so curves are directly comparable. Drop is plotted
  * with negative values (below sight line) downward, matching shooter intuition.
  */
-function DropChart({ rows, t, tall = false }: DropChartProps) {
+function DropChart({ rows, t, tall = false, hoverRange, onHoverRange }: DropChartProps) {
   const svgRef = useRef<SVGSVGElement | null>(null);
-  const [hoverX, setHoverX] = useState<number | null>(null); // distance in meters
+  const hoverX = hoverRange;
+  const setHoverX = onHoverRange;
 
   if (rows.length === 0 || rows.every(r => r.curve.length === 0)) return null;
 

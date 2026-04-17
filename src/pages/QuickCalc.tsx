@@ -42,6 +42,7 @@ interface FormState {
   zeroRange: number;
   clickValue: number;
   clickUnit: 'MOA' | 'MRAD';
+  currentMag?: number;
   // Distance
   targetDistance: number;
   useRange: boolean;

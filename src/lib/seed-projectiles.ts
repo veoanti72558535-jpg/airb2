@@ -103,6 +103,11 @@ export const SEED_PROJECTILES: SeedProjectile[] = [
   { brand: 'JSB', model: 'Knock Out Slug 22.66gr', weight: 22.66, bc: 0.068, bcModel: 'G1', caliber: '.22', projectileType: 'slug', shape: 'slug', diameter: 5.51, material: 'lead', dataSource: JSB, notes: 'Slug standard JSB' },
   { brand: 'JSB', model: 'Knock Out Slug 25.39gr', weight: 25.39, bc: 0.073, bcModel: 'G1', caliber: '.22', projectileType: 'slug', shape: 'slug', diameter: 5.51, material: 'lead', dataSource: JSB, notes: 'Slug lourd JSB' },
   { brand: 'JSB', model: 'Knock Out Slug 30.06gr', weight: 30.06, bc: 0.082, bcModel: 'G1', caliber: '.22', projectileType: 'slug', shape: 'slug', diameter: 5.51, material: 'lead', dataSource: JSB, notes: 'Slug très lourd JSB' },
+  { brand: 'JSB', model: 'Knock Out Slug 33.95gr MKII', weight: 33.95, bc: 0.090, bcModel: 'G1', caliber: '.22', projectileType: 'slug', shape: 'slug', diameter: 5.51, material: 'lead', dataSource: JSB, notes: 'Slug ultra-lourd MKII — long range' },
+  { brand: 'JSB', model: 'Hades 15.89gr (5.50)', weight: 15.89, bc: 0.024, bcModel: 'G1', caliber: '.22', projectileType: 'pellet', shape: 'hollow', diameter: 5.50, material: 'lead', dataSource: JSB, notes: 'Hollow point hunting — die 5.50' },
+  { brand: 'JSB', model: 'Exact Jumbo Beast Redesigned 16.54gr', weight: 16.54, bc: 0.033, bcModel: 'G1', caliber: '.22', projectileType: 'pellet', shape: 'domed', diameter: 5.52, material: 'lead', dataSource: JSB, notes: 'Beast révisé — meilleure stabilité' },
+  { brand: 'JSB', model: 'Exact Jumbo Diabolo 15.89gr', weight: 15.89, bc: 0.029, bcModel: 'G1', caliber: '.22', projectileType: 'pellet', shape: 'domed', diameter: 5.52, material: 'lead', dataSource: JSB, notes: 'Diabolo polyvalent FT' },
+  { brand: 'JSB', model: 'Match Diabolo 13.43gr', weight: 13.43, bc: 0.022, bcModel: 'G1', caliber: '.22', projectileType: 'pellet', shape: 'wadcutter', diameter: 5.50, material: 'lead', dataSource: JSB, notes: 'Wadcutter match 10m' },
 
   // ============================================================
   // .22 — H&N PELLETS

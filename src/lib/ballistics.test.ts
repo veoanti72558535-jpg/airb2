@@ -331,10 +331,12 @@ describe('calculateTrajectory — energy & physical bounds', () => {
 
 describe('calculateTrajectory — numerical calibration (regression sentinels)', () => {
   it('drop at the zero range is essentially zero (< 1 mm) for several zero distances', () => {
+    // Use a 5 m grid so every tested zero range is a sample point.
     for (const zr of [10, 20, 30, 50, 75, 100]) {
-      const out = calculateTrajectory(baseInput({ zeroRange: zr, maxRange: zr + 10 }));
-      const atZero = out.find(r => r.range === zr)!;
-      expect(Math.abs(atZero.drop)).toBeLessThan(1);
+      const out = calculateTrajectory(baseInput({ zeroRange: zr, maxRange: zr + 5, rangeStep: 5 }));
+      const atZero = out.find(r => r.range === zr);
+      expect(atZero, `expected a sample at range ${zr}`).toBeDefined();
+      expect(Math.abs(atZero!.drop)).toBeLessThan(1);
     }
   });
 

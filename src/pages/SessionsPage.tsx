@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { History, Star, Trash2, Search, Crosshair, Play, Filter, X, ArrowLeftRight, CheckSquare } from 'lucide-react';
+import { History, Star, Trash2, Search, Crosshair, Play, Filter, X, ArrowLeftRight, CheckSquare, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import { useI18n } from '@/lib/i18n';
 import {
@@ -16,6 +16,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { SessionPickerDialog } from '@/components/compare/SessionPickerDialog';
 import { EngineBadge } from '@/components/sessions/EngineBadge';
 import { CalculationMetadataBlock } from '@/components/sessions/CalculationMetadataBlock';
+import { RecalculateDialog } from '@/components/sessions/RecalculateDialog';
+import { SessionLineage } from '@/components/sessions/SessionLineage';
 import { normalizeSession } from '@/lib/session-normalize';
 
 export default function SessionsPage() {

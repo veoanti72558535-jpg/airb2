@@ -26,7 +26,11 @@
  */
 
 import { z } from 'zod';
-import { calculateTrajectory } from './ballistics';
+import {
+  calcAtmosphericFactor,
+  dragDecel,
+  findZeroAngle,
+} from './ballistics';
 import { BallisticInput, Session } from './types';
 
 // ── Tunables ────────────────────────────────────────────────────────────────
@@ -38,10 +42,14 @@ const K_MAX = 5.0;
 /** Convergence tolerance on the achieved drop, in millimetres. */
 const TOL_MM = 0.5;
 /** Bisection iteration cap — keeps the worst case bounded. */
-const ITER_MAX = 30;
+const ITER_MAX = 40;
 /** Beyond this multiplier, we still return a result but flag it as suspicious. */
 const PLAUSIBLE_K_LOW = 0.5;
 const PLAUSIBLE_K_HIGH = 2.0;
+
+// Physics — must stay in sync with src/lib/ballistics.ts.
+const GRAVITY = 9.80665;
+const DT = 0.0005;
 
 // ── Validation ──────────────────────────────────────────────────────────────
 
@@ -91,35 +99,54 @@ export interface CalibrationResult {
 // ── Engine adapter ──────────────────────────────────────────────────────────
 
 /**
- * Run the engine with a scaled BC and interpolate the drop at `distance`.
- *
- * Why interpolate: stored sessions are sampled at `rangeStep` (10 m typical),
- * so the measured distance rarely falls exactly on a grid point. Linear
- * interpolation between the two surrounding rows is plenty accurate for the
- * drop-vs-range curve at airgun distances.
+ * Drop (mm, relative to the original sight line) at `distance`, using a
+ * **fixed launch angle** equal to the rifle's physical zero with the
+ * original BC. We cannot reuse `calculateTrajectory` here because that
+ * function re-zeros the rifle for every candidate BC — which would mask
+ * the very effect we are trying to measure (BC's influence on drop at the
+ * test distance). By locking the launch angle, varying BC moves the
+ * trajectory in a strictly monotonic way, giving the bisection real
+ * traction.
  */
-function dropAtDistance(input: BallisticInput, distance: number): number {
-  // Tighten the grid around the measured distance: enough range to bracket it,
-  // and a small step for accurate interpolation. We don't reuse the saved
-  // step because a 50 m / 10 m grid is too coarse for a 23 m measurement.
-  const tightInput: BallisticInput = {
-    ...input,
-    maxRange: Math.max(distance + 5, input.maxRange),
-    rangeStep: 1,
-  };
-  const rows = calculateTrajectory(tightInput);
-  if (rows.length === 0) return Number.NaN;
+function dropAtDistance(
+  input: BallisticInput,
+  bcOverride: number,
+  zeroAngle: number,
+  distance: number,
+): number {
+  const flightAtmo = calcAtmosphericFactor(input.weather);
+  const sightHeightM = input.sightHeight / 1000;
+  const zeroRange = input.zeroRange;
+  const dragModel = input.dragModel ?? 'G1';
 
-  // Find the bracketing rows.
-  let lower = rows[0];
-  let upper = rows[rows.length - 1];
-  for (const r of rows) {
-    if (r.range <= distance && r.range >= lower.range) lower = r;
-    if (r.range >= distance && (upper.range < distance || r.range <= upper.range)) upper = r;
+  let x = 0;
+  let y = 0;
+  let vx = input.muzzleVelocity * Math.cos(zeroAngle);
+  let vy = input.muzzleVelocity * Math.sin(zeroAngle);
+
+  // Step until we cross the target distance, then linearly interpolate.
+  let prevX = x;
+  let prevY = y;
+  while (x < distance) {
+    const v = Math.sqrt(vx * vx + vy * vy);
+    if (v < 1) return Number.NaN;
+    const decel = dragDecel(v, bcOverride, flightAtmo, dragModel, input.customDragTable);
+    const ax = -(decel * vx) / v;
+    const ay = -GRAVITY - (decel * vy) / v;
+    prevX = x;
+    prevY = y;
+    vx += ax * DT;
+    vy += ay * DT;
+    x += vx * DT;
+    y += vy * DT;
+    if (x > distance + 50) return Number.NaN; // safety
   }
-  if (lower.range === upper.range) return lower.drop;
-  const t = (distance - lower.range) / (upper.range - lower.range);
-  return lower.drop + t * (upper.drop - lower.drop);
+
+  const span = x - prevX;
+  const t = span > 0 ? (distance - prevX) / span : 0;
+  const yAtD = prevY + t * (y - prevY);
+  const sightLine = -sightHeightM + (sightHeightM / zeroRange) * distance;
+  return (yAtD - sightLine) * 1000;
 }
 
 // ── Public API ──────────────────────────────────────────────────────────────

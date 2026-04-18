@@ -40,7 +40,7 @@ const K_MIN = 0.2;
 /** Maximum BC factor explored. 5× covers the most extreme miscalibrations. */
 const K_MAX = 5.0;
 /** Convergence tolerance on the achieved drop, in millimetres. */
-const TOL_MM = 0.5;
+const TOL_MM = 0.2;
 /** Bisection iteration cap — keeps the worst case bounded. */
 const ITER_MAX = 40;
 /** Beyond this multiplier, we still return a result but flag it as suspicious. */

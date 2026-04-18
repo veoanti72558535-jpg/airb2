@@ -57,3 +57,19 @@ Le fichier `cross-profile-deltas.md` est régénéré à chaque exécution de la
 suite de tests par `cross-profile.test.ts`. Il liste, pour chaque fixture,
 les deltas legacy → MERO sur les mêmes 6 métriques. Pas de gate, juste un
 artefact d'audit visuel committable.
+
+## Zero-solver validation matrix — Tranche E
+
+Le fichier `zero-solver-matrix.md` est régénéré à chaque exécution par
+`src/lib/ballistics/zero-solver-matrix.test.ts`. Il exerce le zero-solver
+sur une grille **4 zéros × 3 altitudes × 3 températures = 36 cellules**
+par profil (legacy + MERO = 72 cellules), et reporte le résidu de drop au
+point de zéro pour chaque cellule.
+
+- **WARN** : |drop| > 5 mm — informatif, pas bloquant
+- **FAIL** : |drop| > 50 mm — gate dur (régression catastrophique)
+
+Le seuil FAIL est intentionnellement large : c'est un filet de sécurité
+contre une régression majeure (sign flip, mauvais dispatch d'intégrateur,
+bisection qui sort sans converger). La qualité fine du solver se lit
+dans la colonne WARN, pas dans le pass/fail des tests.

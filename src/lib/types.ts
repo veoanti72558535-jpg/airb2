@@ -185,6 +185,17 @@ export interface Session {
   notes?: string;
   tags: string[];
   favorite: boolean;
+  /**
+   * Engine version that produced `results`. Optional for backwards compat:
+   * sessions saved before P1 don't carry this and are treated as legacy
+   * (will be flagged + offered for manual recalculation in P6).
+   */
+  engineVersion?: number;
+  /**
+   * Calculation profile id active when `results` was produced. Optional
+   * for backwards compat — defaults to `'legacy'` everywhere it matters.
+   */
+  profileId?: string;
   createdAt: string;
   updatedAt: string;
 }

@@ -369,8 +369,14 @@ export function calculateTrajectory(input: BallisticInput): BallisticResult[] {
     windDriftX = crosswind * t * 0.06;
 
     if (x >= nextRange && nextRange <= maxRange) {
-      const zeroSightAngle = Math.atan2(sightHeightM, zeroRange);
-      const sightLineAtRange = -sightHeightM + Math.tan(zeroAngle + zeroSightAngle) * x;
+      // CRITICAL: this sight-line formula MUST match the one used inside
+      // `simulateToRange` (the zero solver) — otherwise drop @ zeroRange
+      // will not be 0 even though the solver converged. The solver uses a
+      // straight line from (-sightHeight, 0) to (0, zeroRange), so we do
+      // exactly the same here. Using `tan(zeroAngle + zsa) * x` here was a
+      // prior bug that produced ~58 mm of phantom drop at the zero range
+      // for a 30 m zero, scaling linearly with x.
+      const sightLineAtRange = -sightHeightM + (sightHeightM / zeroRange) * x;
       const dropMm = (y - sightLineAtRange) * 1000;
 
       const holdoverMOA = x > 0 ? Math.atan2(-dropMm / 1000, x) * (180 / Math.PI) * 60 : 0;

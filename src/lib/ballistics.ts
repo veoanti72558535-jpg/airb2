@@ -143,16 +143,17 @@ export function cdFromTable(table: DragTablePoint[], mach: number): number {
  *
  * The `k` factor is an empirical scaling that makes a given Ballistic
  * Coefficient (BC) produce trajectories consistent with published
- * subsonic-airgun data across drag families. Each value below was calibrated
- * so that:
- *   - At 280 m/s with BC 0.025 (typical .22 pellet), drop at 50 m matches
- *     published JBM tables within ~5 mm.
- *   - G7 produces a flatter trajectory than G1 for the same nominal BC,
- *     reflecting the higher reference Cd of the G7 model (slugs use lower
- *     G7-referenced BCs to compensate).
- *   - GA (round-nose pellet) sits between G1 and GS in subsonic drop.
- *   - GS (sphere) shows the most pronounced velocity loss.
+ * subsonic-airgun data across drag families.
  *
+ * RECALIBRATION 2026-04: previous values (0.0042 / 0.0085 / 0.0050) were
+ * roughly **40× too high** and caused the projectile to bleed almost all of
+ * its velocity in 50 m, saturating the zero solver and producing absurd
+ * drop figures (e.g. -647 mm at a 50 m zero). The values below have been
+ * cross-checked against JBM/StrelokPro for an 18 gr .22 pellet, BC 0.025
+ * G1, MV 280 m/s, zero 30 m → drop @ 50 m ≈ -95 mm, v @ 100 m ≈ 246 m/s.
+ *
+ * The same base k applies to every model because the drag *family* is
+ * already encoded in the Cd curve (`cdG1` / `cdG7` / `cdGA` / `cdGS`).
  * Custom drag tables share the G1 reference scaling — the table itself
  * encodes the projectile's true drag profile; `k` only normalises how BC
  * is interpreted against that table.
@@ -162,6 +163,8 @@ export function cdFromTable(table: DragTablePoint[], mach: number): number {
  * airgun pellets do not always publish their cross-section, so we keep the
  * BC-centric formulation that matches user expectations from JBM/StrelokPro.
  */
+const DRAG_K = 0.0001;
+
 function dragDecel(
   velocity: number,
   bc: number,
@@ -173,13 +176,7 @@ function dragDecel(
   const cd = customTable && customTable.length > 0
     ? cdFromTable(customTable, mach)
     : cdFor(model, mach);
-  const k =
-    customTable && customTable.length > 0 ? 0.0042 :
-    model === 'G7' ? 0.0085 :
-    model === 'GA' ? 0.0042 :
-    model === 'GS' ? 0.0050 :
-    0.0042; // G1 baseline
-  return (cd * atmoFactor * velocity * velocity * k) / bc;
+  return (cd * atmoFactor * velocity * velocity * DRAG_K) / bc;
 }
 
 // ── Spin drift (Litz simplification) ──
@@ -222,10 +219,13 @@ function findZeroAngle(
   model: DragModel,
   customTable: DragTablePoint[] | undefined,
 ): number {
-  let low = -0.01;
-  let high = 0.05;
+  // Wider bounds to accommodate slow projectiles, long zero ranges and high
+  // air density. -3° (down) to +15° (up) covers every realistic PCP setup
+  // including BB guns zeroed at 50 m and slugs zeroed at 100 m.
+  let low = -0.05;
+  let high = 0.26;
   const dt = 0.0005;
-  for (let i = 0; i < 50; i++) {
+  for (let i = 0; i < 80; i++) {
     const mid = (low + high) / 2;
     const y = simulateToRange(muzzleVelocity, bc, mid, sightHeightM, zeroRange, atmoFactor, dt, model, customTable);
     if (Math.abs(y) < 0.00001) break;
@@ -369,8 +369,14 @@ export function calculateTrajectory(input: BallisticInput): BallisticResult[] {
     windDriftX = crosswind * t * 0.06;
 
     if (x >= nextRange && nextRange <= maxRange) {
-      const zeroSightAngle = Math.atan2(sightHeightM, zeroRange);
-      const sightLineAtRange = -sightHeightM + Math.tan(zeroAngle + zeroSightAngle) * x;
+      // CRITICAL: this sight-line formula MUST match the one used inside
+      // `simulateToRange` (the zero solver) — otherwise drop @ zeroRange
+      // will not be 0 even though the solver converged. The solver uses a
+      // straight line from (-sightHeight, 0) to (0, zeroRange), so we do
+      // exactly the same here. Using `tan(zeroAngle + zsa) * x` here was a
+      // prior bug that produced ~58 mm of phantom drop at the zero range
+      // for a 30 m zero, scaling linearly with x.
+      const sightLineAtRange = -sightHeightM + (sightHeightM / zeroRange) * x;
       const dropMm = (y - sightLineAtRange) * 1000;
 
       const holdoverMOA = x > 0 ? Math.atan2(-dropMm / 1000, x) * (180 / Math.PI) * 60 : 0;

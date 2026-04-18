@@ -106,7 +106,9 @@ describe('calculateTrajectory — click conversions', () => {
     ).find(r => r.range === 100)!;
     expect(Number.isInteger(withClicks.clicksElevation!)).toBe(true);
     expect(Number.isInteger(withClicks.clicksWindage!)).toBe(true);
-    expect(withClicks.clicksElevation!).toBeLessThanOrEqual(0);
+    // Past the zero range the projectile drops, so the user must dial UP
+    // on the turret → positive clicks. Right crosswind → positive windage.
+    expect(withClicks.clicksElevation!).toBeGreaterThan(0);
     expect(withClicks.clicksWindage!).toBeGreaterThan(0);
   });
 
@@ -311,5 +313,77 @@ describe('calculateTrajectory — energy & physical bounds', () => {
       baseInput({ weather: { ...stdWeather, windSpeed: 10, windAngle: 90 } }),
     );
     expect(out[0].windDrift).toBe(0);
+  });
+});
+
+// ── Numerical calibration sentinels ────────────────────────────────────────
+// These tests anchor the engine against published reference data
+// (JBM/StrelokPro). They guard against any regression in the empirical
+// `DRAG_K` constant, the Cd curves, or the sight-line geometry.
+//
+// Reference setup (well-known .22 PCP pellet):
+//   18 gr JSB-class, BC G1 = 0.025, MV = 280 m/s, sight height 40 mm,
+//   zero @ 30 m, ICAO standard atmosphere, no wind.
+// Expected JBM trajectory:
+//   30 m: drop ≈ 0       (zero point, by definition)
+//   50 m: drop ≈ -95 mm,  velocity ≈ 260 m/s
+//  100 m: drop ≈ -591 mm, velocity ≈ 246 m/s
+
+describe('calculateTrajectory — numerical calibration (regression sentinels)', () => {
+  it('drop at the zero range is essentially zero (< 1 mm) for several zero distances', () => {
+    // Use a 5 m grid so every tested zero range is a sample point.
+    for (const zr of [10, 20, 30, 50, 75, 100]) {
+      const out = calculateTrajectory(baseInput({ zeroRange: zr, maxRange: zr + 5, rangeStep: 5 }));
+      const atZero = out.find(r => r.range === zr);
+      expect(atZero, `expected a sample at range ${zr}`).toBeDefined();
+      expect(Math.abs(atZero!.drop)).toBeLessThan(1);
+    }
+  });
+
+  it('JBM-aligned drop & velocity at 50 m for the .22 18gr reference setup', () => {
+    const out = calculateTrajectory(baseInput());
+    const r50 = out.find(r => r.range === 50)!;
+    // Drop should sit in the realistic -75 to -120 mm window (JBM ≈ -95).
+    expect(r50.drop).toBeLessThan(-75);
+    expect(r50.drop).toBeGreaterThan(-120);
+    // Residual velocity must stay well above 240 m/s — the previous buggy
+    // `k = 0.0042` collapsed it to ~37 m/s here.
+    expect(r50.velocity).toBeGreaterThan(240);
+    expect(r50.velocity).toBeLessThan(280);
+  });
+
+  it('JBM-aligned drop & velocity at 100 m for the .22 18gr reference setup', () => {
+    const out = calculateTrajectory(baseInput());
+    const r100 = out.find(r => r.range === 100)!;
+    // Drop ≈ -591 mm — accept a generous envelope for engine refinements.
+    expect(r100.drop).toBeLessThan(-450);
+    expect(r100.drop).toBeGreaterThan(-750);
+    // Velocity should retain ≥ ~80% of muzzle for a BC-0.025 pellet.
+    expect(r100.velocity).toBeGreaterThan(220);
+  });
+
+  it('user-reported regression: zero @ 50 m gives ~0 mm drop @ 50 m (NOT -647 mm)', () => {
+    // This is the exact bug the user reported: a PCP zeroed at 50 m was
+    // showing a -647 mm drop at the very zero point. Guards against any
+    // future divergence between the zero solver's sight-line formula and
+    // the trajectory output's sight-line formula, AND against an over-
+    // calibrated DRAG_K that would saturate the solver.
+    const out = calculateTrajectory(baseInput({ zeroRange: 50 }));
+    const r50 = out.find(r => r.range === 50)!;
+    expect(Math.abs(r50.drop)).toBeLessThan(1);
+    // Trajectory must remain physically sane past the zero.
+    const r100 = out.find(r => r.range === 100)!;
+    expect(r100.drop).toBeLessThan(-200);
+    expect(r100.drop).toBeGreaterThan(-600);
+    expect(r100.velocity).toBeGreaterThan(220);
+  });
+
+  it('zero solver does not saturate at long zero ranges (100 m) for low-BC pellets', () => {
+    // Previously the bounds were [-0.01, +0.05] rad which could not reach
+    // the angle needed to zero a slow projectile at 100 m, causing the
+    // solver to "stick" at the upper bound and produce wildly wrong drops.
+    const out = calculateTrajectory(baseInput({ zeroRange: 100, maxRange: 100 }));
+    const r100 = out.find(r => r.range === 100)!;
+    expect(Math.abs(r100.drop)).toBeLessThan(2);
   });
 });

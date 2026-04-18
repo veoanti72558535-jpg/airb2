@@ -134,9 +134,20 @@ export default function QuickCalc() {
   const [results, setResults] = useState<BallisticResult[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sessionName, setSessionName] = useState('');
-  /** Id of the session currently mirrored in the form — set after a save or
-   *  after rehydration from ?session=. Drives the "Compare with another" CTA. */
-  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  /**
+   * Tranche C — explicit separation between "preview" and "persisted session".
+   *
+   * `previewOriginId` ONLY tracks which saved session was used to seed the
+   * form (via ?session=<id>). It exists to drive the "Compare with another"
+   * CTA after a load. It MUST NEVER be used as the target of an update —
+   * QuickCalc's save path is creation-only (`sessionStore.create`). Manual
+   * edits invalidate this id (see `update`/`updateWeather`/`updateZeroWeather`)
+   * so the CTA never compares a stale snapshot.
+   *
+   * The previously-named `currentSessionId` (which suggested ownership of
+   * the persisted row) is gone — naming was the only source of ambiguity.
+   */
+  const [previewOriginId, setPreviewOriginId] = useState<string | null>(null);
   const [comparePickerOpen, setComparePickerOpen] = useState(false);
   // Live mirror of the configured energy threshold so the header chip refreshes
   // when the user changes it in Settings (cross-tab via 'storage' event, or

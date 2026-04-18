@@ -134,9 +134,20 @@ export default function QuickCalc() {
   const [results, setResults] = useState<BallisticResult[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sessionName, setSessionName] = useState('');
-  /** Id of the session currently mirrored in the form — set after a save or
-   *  after rehydration from ?session=. Drives the "Compare with another" CTA. */
-  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  /**
+   * Tranche C — explicit separation between "preview" and "persisted session".
+   *
+   * `previewOriginId` ONLY tracks which saved session was used to seed the
+   * form (via ?session=<id>). It exists to drive the "Compare with another"
+   * CTA after a load. It MUST NEVER be used as the target of an update —
+   * QuickCalc's save path is creation-only (`sessionStore.create`). Manual
+   * edits invalidate this id (see `update`/`updateWeather`/`updateZeroWeather`)
+   * so the CTA never compares a stale snapshot.
+   *
+   * The previously-named `currentSessionId` (which suggested ownership of
+   * the persisted row) is gone — naming was the only source of ambiguity.
+   */
+  const [previewOriginId, setPreviewOriginId] = useState<string | null>(null);
   const [comparePickerOpen, setComparePickerOpen] = useState(false);
   // Live mirror of the configured energy threshold so the header chip refreshes
   // when the user changes it in Settings (cross-tab via 'storage' event, or
@@ -214,7 +225,7 @@ export default function QuickCalc() {
     setForm(hydrated);
     setResults(session.results ?? null);
     setSessionName(session.name);
-    setCurrentSessionId(session.id);
+    setPreviewOriginId(session.id);
     if (i.dragModel === 'G7' || i.zeroWeather || i.focalPlane === 'SFP' || i.twistRate) setAdvanced(true);
     toast.success(t('sessions.loaded'), { description: session.name });
     setSearchParams(prev => { const p = new URLSearchParams(prev); p.delete('session'); return p; });
@@ -296,9 +307,9 @@ export default function QuickCalc() {
 
   const update = (patch: Partial<FormState>) => {
     // Any manual edit makes the form diverge from the saved session — drop the
-    // currentSessionId link so the "Compare with another" CTA doesn't compare
+    // previewOriginId link so the "Compare with another" CTA doesn't compare
     // a stale snapshot.
-    setCurrentSessionId(null);
+    setPreviewOriginId(null);
     setForm(prev => ({ ...prev, ...patch }));
   };
 
@@ -306,7 +317,7 @@ export default function QuickCalc() {
   // from "auto" → "mixed" → "manual" without losing the auto base data.
   const FIELD_KEYS = ['temperature','humidity','pressure','altitude','windSpeed','windAngle'] as const;
   const updateWeather = (patch: Partial<WeatherSnapshot>) => {
-    setCurrentSessionId(null);
+    setPreviewOriginId(null);
     setForm(prev => {
       const overrides = new Set(prev.weather.manualOverrides ?? []);
       for (const k of FIELD_KEYS) {
@@ -331,7 +342,7 @@ export default function QuickCalc() {
   };
 
   const updateZeroWeather = (patch: Partial<WeatherSnapshot>) => {
-    setCurrentSessionId(null);
+    setPreviewOriginId(null);
     setForm(prev => ({ ...prev, zeroWeather: { ...prev.zeroWeather, ...patch } }));
   };
 
@@ -447,7 +458,7 @@ export default function QuickCalc() {
     setResults(null);
     setError(null);
     setSessionName('');
-    setCurrentSessionId(null);
+    setPreviewOriginId(null);
   };
 
   const handleSave = () => {
@@ -457,6 +468,12 @@ export default function QuickCalc() {
     // P3.1 — freeze engine metadata at save time so the audit trail is
     // immutable. Single source of truth: src/lib/session-metadata.ts.
     const metadata = buildSessionMetadata(input);
+    // Tranche C — invariant: QuickCalc save path is CREATION-ONLY. We never
+    // call `sessionStore.update` here. Any "recalculate an existing session"
+    // intent must go through the explicit RecalculateDialog on /sessions,
+    // which always creates a new linked copy via `derivedFromSessionId`.
+    // Even if `previewOriginId` is set (the form was seeded from a saved
+    // session), saving creates a brand-new row — the original is untouched.
     const created = sessionStore.create({
       name,
       airgunId: form.airgunId || undefined,
@@ -469,7 +486,7 @@ export default function QuickCalc() {
       favorite: false,
       ...metadata,
     });
-    setCurrentSessionId(created.id);
+    setPreviewOriginId(created.id);
     toast.success(t('calc.sessionSaved'), { description: name });
     setSessionName('');
   };
@@ -694,9 +711,9 @@ export default function QuickCalc() {
           </div>
 
           {/* Compare-with-another CTA — only after a save or rehydration from
-              ?session. Manual edits clear currentSessionId so a stale snapshot
+              ?session. Manual edits clear previewOriginId so a stale snapshot
               can never be silently compared. */}
-          {currentSessionId && sessionStore.getAll().length >= 2 && (
+          {previewOriginId && sessionStore.getAll().length >= 2 && (
             <button
               type="button"
               onClick={() => setComparePickerOpen(true)}
@@ -717,11 +734,11 @@ export default function QuickCalc() {
       <SessionPickerDialog
         open={comparePickerOpen}
         onOpenChange={setComparePickerOpen}
-        source={currentSessionId ? sessionStore.getById(currentSessionId) ?? null : null}
+        source={previewOriginId ? sessionStore.getById(previewOriginId) ?? null : null}
         sessions={sessionStore.getAll()}
         onPick={(other) => {
-          if (!currentSessionId) return;
-          navigate(`/compare?a=${currentSessionId}&b=${other.id}`);
+          if (!previewOriginId) return;
+          navigate(`/compare?a=${previewOriginId}&b=${other.id}`);
         }}
       />
 

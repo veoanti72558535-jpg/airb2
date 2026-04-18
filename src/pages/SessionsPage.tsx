@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { History, Star, Trash2, Search, Crosshair, Play, Filter, X, ArrowLeftRight, CheckSquare } from 'lucide-react';
+import { History, Star, Trash2, Search, Crosshair, Play, Filter, X, ArrowLeftRight, CheckSquare, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import { useI18n } from '@/lib/i18n';
 import {
@@ -16,6 +16,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { SessionPickerDialog } from '@/components/compare/SessionPickerDialog';
 import { EngineBadge } from '@/components/sessions/EngineBadge';
 import { CalculationMetadataBlock } from '@/components/sessions/CalculationMetadataBlock';
+import { RecalculateDialog } from '@/components/sessions/RecalculateDialog';
+import { SessionLineage } from '@/components/sessions/SessionLineage';
 import { normalizeSession } from '@/lib/session-normalize';
 
 export default function SessionsPage() {
@@ -35,6 +37,9 @@ export default function SessionsPage() {
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [pickerSource, setPickerSource] = useState<Session | null>(null);
+  // Tranche C — recalc target. Opening this dialog never recalculates; only
+  // confirmation does, and it always creates a NEW linked session.
+  const [recalcSource, setRecalcSource] = useState<Session | null>(null);
 
   const airguns = useMemo(() => airgunStore.getAll(), []);
   const projectiles = useMemo(() => projectileStore.getAll(), []);
@@ -330,6 +335,8 @@ export default function SessionsPage() {
                     </div>
                   )}
                 </div>
+                {/* Tranche C — Filiation badge (parent + linked copies count). */}
+                {!selectionMode && <SessionLineage session={s} allSessions={sessions} />}
                 {/* Quick summary */}
                 {s.results.length > 0 && (
                   <div className="mt-3 grid grid-cols-4 gap-2 text-center">
@@ -341,10 +348,20 @@ export default function SessionsPage() {
                     ))}
                   </div>
                 )}
-                {/* Calculation metadata — collapsed by default to keep mobile tidy. */}
+                {/* Calculation metadata — collapsed by default to keep mobile tidy.
+                    Tranche C — explicit recalc action lives in the same advanced strip
+                    so it stays secondary and never invites accidental clicks. */}
                 {!selectionMode && (
-                  <div className="mt-3">
+                  <div className="mt-3 space-y-2">
                     <CalculationMetadataBlock session={s} />
+                    <button
+                      type="button"
+                      onClick={() => setRecalcSource(s)}
+                      className="w-full inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md border border-dashed border-border text-[11px] text-muted-foreground hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-colors"
+                    >
+                      <RotateCcw className="h-3 w-3" />
+                      {t('recalculate.action')}
+                    </button>
                   </div>
                 )}
               </div>
@@ -360,6 +377,19 @@ export default function SessionsPage() {
         source={pickerSource}
         sessions={sessions}
         onPick={launchCompareWithPicker}
+      />
+
+      {/* Tranche C — Recalculate dialog. Opening = free; only confirm runs the
+          engine and creates a brand-new linked session. The original is never
+          mutated. */}
+      <RecalculateDialog
+        open={recalcSource !== null}
+        onOpenChange={(open) => { if (!open) setRecalcSource(null); }}
+        source={recalcSource}
+        onCreated={(created) => {
+          refresh();
+          toast.success(t('recalculate.toastSuccess'), { description: created.name });
+        }}
       />
     </motion.div>
   );

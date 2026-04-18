@@ -57,6 +57,13 @@ export interface EngineConfig {
     cant: boolean;
     slopeAngle: boolean;
   };
+  /**
+   * Self-reference to the profile this config came from. P3.2 hardening:
+   * lets `buildSessionMetadata` resolve the profile id explicitly instead
+   * of comparing structural shapes. Optional for backwards compat — when
+   * absent, callers fall back to the legacy structural resolution.
+   */
+  profileId?: ProfileId;
 }
 
 /**

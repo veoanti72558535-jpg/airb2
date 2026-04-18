@@ -219,10 +219,13 @@ function findZeroAngle(
   model: DragModel,
   customTable: DragTablePoint[] | undefined,
 ): number {
-  let low = -0.01;
-  let high = 0.05;
+  // Wider bounds to accommodate slow projectiles, long zero ranges and high
+  // air density. -3° (down) to +15° (up) covers every realistic PCP setup
+  // including BB guns zeroed at 50 m and slugs zeroed at 100 m.
+  let low = -0.05;
+  let high = 0.26;
   const dt = 0.0005;
-  for (let i = 0; i < 50; i++) {
+  for (let i = 0; i < 80; i++) {
     const mid = (low + high) / 2;
     const y = simulateToRange(muzzleVelocity, bc, mid, sightHeightM, zeroRange, atmoFactor, dt, model, customTable);
     if (Math.abs(y) < 0.00001) break;

@@ -170,7 +170,13 @@ export function cdFromTable(table: DragTablePoint[], mach: number): number {
  */
 const DRAG_K = 0.0001;
 
-function dragDecel(
+/**
+ * Retardation (deceleration along velocity direction) at a given speed.
+ * Exported so calibration tooling can run a fixed-angle simulation that
+ * reproduces the engine's flight physics exactly. The caller is responsible
+ * for the atmospheric factor (use `calcAtmosphericFactor`).
+ */
+export function dragDecel(
   velocity: number,
   bc: number,
   atmoFactor: number,

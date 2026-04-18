@@ -335,6 +335,8 @@ export default function SessionsPage() {
                     </div>
                   )}
                 </div>
+                {/* Tranche C — Filiation badge (parent + linked copies count). */}
+                {!selectionMode && <SessionLineage session={s} allSessions={sessions} />}
                 {/* Quick summary */}
                 {s.results.length > 0 && (
                   <div className="mt-3 grid grid-cols-4 gap-2 text-center">

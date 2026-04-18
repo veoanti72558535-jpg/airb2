@@ -28,6 +28,7 @@ import {
   getSettings,
   saveSettings,
 } from '@/lib/storage';
+import { buildSessionMetadata } from '@/lib/session-metadata';
 import { Switch } from '@/components/ui/switch';
 import { ProjectileSection } from '@/components/calc/ProjectileSection';
 import { VelocitySection } from '@/components/calc/VelocitySection';
@@ -452,16 +453,21 @@ export default function QuickCalc() {
   const handleSave = () => {
     if (!results) return;
     const name = sessionName.trim() || `Session ${new Date().toLocaleString()}`;
+    const input = buildInput();
+    // P3.1 — freeze engine metadata at save time so the audit trail is
+    // immutable. Single source of truth: src/lib/session-metadata.ts.
+    const metadata = buildSessionMetadata(input);
     const created = sessionStore.create({
       name,
       airgunId: form.airgunId || undefined,
       tuneId: form.tuneId || undefined,
       projectileId: form.projectileId || undefined,
       opticId: form.opticId || undefined,
-      input: buildInput(),
+      input,
       results,
       tags: [],
       favorite: false,
+      ...metadata,
     });
     setCurrentSessionId(created.id);
     toast.success(t('calc.sessionSaved'), { description: name });

@@ -71,16 +71,40 @@ function normalizeResults(rows: BallisticResult[] | undefined): BallisticResult[
 }
 
 /**
- * Returns a copy of `s` with every legacy-prone field filled with safe defaults.
- * Use this at the boundary of any view that consumes a stored Session.
+ * Returns a copy of `s` with every legacy-prone field filled with safe
+ * defaults.
+ *
+ * P3.1 contract for legacy v0 sessions (no engineVersion / profileId /
+ * cdProvenance / dragLawEffective / calculatedAt / engineMetadata):
+ *
+ *  - These fields are READ-ONLY filled here for consumer convenience
+ *    (badges, Compare warnings, exports).
+ *  - The function NEVER writes back to storage. The original row in
+ *    localStorage stays untouched — this is the "non-migration assumed"
+ *    rule from the P3 plan.
+ *  - A pre-P1 session is recognisable by `engineVersion === undefined` on
+ *    the raw row. Once normalised, it carries `profileId: 'legacy'` plus
+ *    `cdProvenance: 'legacy-piecewise'` so the UI can surface a "Legacy v0"
+ *    badge that is distinct from the modern "Legacy" badge (engineVersion
+ *    present).
  */
 export function normalizeSession(s: Session): Session {
+  const isLegacyV0 = s.engineVersion === undefined;
   return {
     ...s,
     tags: Array.isArray(s.tags) ? s.tags : [],
     favorite: !!s.favorite,
     input: normalizeInput(s.input),
     results: normalizeResults(s.results),
+    // Read-time fillers — never written back to storage.
+    profileId: s.profileId ?? 'legacy',
+    dragLawEffective: s.dragLawEffective ?? s.input?.dragModel ?? 'G1',
+    cdProvenance: s.cdProvenance ?? 'legacy-piecewise',
+    // engineVersion stays undefined for legacy v0 — UI marker.
+    engineVersion: s.engineVersion,
+    // calculatedAt falls back to updatedAt for legacy v0 only, so the badge
+    // tooltip has a date to show. Never overwrite a real one.
+    calculatedAt: s.calculatedAt ?? (isLegacyV0 ? s.updatedAt : undefined),
   };
 }
 

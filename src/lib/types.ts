@@ -259,6 +259,12 @@ export interface Session {
    */
   dragLawEffective?: DragModel;
   /**
+   * Drag law REQUESTED by the input before the engine's `?? 'G1'` fallback
+   * (P3.2). Lets the UI explain "you asked G7 but a G1 fallback was used
+   * because the projectile carried no bcModel". Optional for legacy v0.
+   */
+  dragLawRequested?: DragModel;
+  /**
    * Provenance of the Cd source used. Optional only for legacy v0 sessions
    * (treated as `legacy-piecewise` at read time).
    */
@@ -269,6 +275,18 @@ export interface Session {
    * (which tracks any field edit). Optional only for legacy v0 sessions.
    */
   calculatedAt?: string;
+  /**
+   * How `calculatedAt` was obtained — `frozen` for sessions saved by P3.1+,
+   * `inferred-from-*` for legacy v0 sessions back-filled at read time. UI
+   * MUST surface non-`frozen` values as approximate (P3.4 EngineBadge).
+   */
+  calculatedAtSource?: CalculatedAtSource;
+  /**
+   * `true` when ANY metadata field on this session was inferred at read
+   * time rather than frozen at save time (= legacy v0 sessions). Drives
+   * the "Legacy v0" badge variant. Defaults to `false` on modern sessions.
+   */
+  metadataInferred?: boolean;
   /**
    * Snapshot of the engine config at calculation time. Frozen — never
    * mutated after the session is saved. Optional only for legacy v0.

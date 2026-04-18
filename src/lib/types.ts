@@ -217,6 +217,17 @@ export interface SessionEngineMetadata {
   dt: number;
 }
 
+/**
+ * How the `calculatedAt` timestamp was obtained.
+ *
+ * - `frozen`                  : recorded by `buildSessionMetadata` at save time. Trustworthy.
+ * - `inferred-from-updatedAt` : back-filled from the legacy v0 `updatedAt` (approximation).
+ * - `inferred-from-createdAt` : back-filled from `createdAt` when `updatedAt` was missing too.
+ *
+ * UI consumers (EngineBadge) MUST surface non-`frozen` values as approximate.
+ */
+export type CalculatedAtSource = 'frozen' | 'inferred-from-updatedAt' | 'inferred-from-createdAt';
+
 export interface Session {
   id: string;
   name: string;

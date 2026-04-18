@@ -468,6 +468,12 @@ export default function QuickCalc() {
     // P3.1 — freeze engine metadata at save time so the audit trail is
     // immutable. Single source of truth: src/lib/session-metadata.ts.
     const metadata = buildSessionMetadata(input);
+    // Tranche C — invariant: QuickCalc save path is CREATION-ONLY. We never
+    // call `sessionStore.update` here. Any "recalculate an existing session"
+    // intent must go through the explicit RecalculateDialog on /sessions,
+    // which always creates a new linked copy via `derivedFromSessionId`.
+    // Even if `previewOriginId` is set (the form was seeded from a saved
+    // session), saving creates a brand-new row — the original is untouched.
     const created = sessionStore.create({
       name,
       airgunId: form.airgunId || undefined,

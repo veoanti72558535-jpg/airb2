@@ -144,7 +144,7 @@ export default function QuickCalc() {
    * edits invalidate this id (see `update`/`updateWeather`/`updateZeroWeather`)
    * so the CTA never compares a stale snapshot.
    *
-   * The previously-named `currentSessionId` (which suggested ownership of
+   * The previously-named `previewOriginId` (which suggested ownership of
    * the persisted row) is gone — naming was the only source of ambiguity.
    */
   const [previewOriginId, setPreviewOriginId] = useState<string | null>(null);
@@ -225,7 +225,7 @@ export default function QuickCalc() {
     setForm(hydrated);
     setResults(session.results ?? null);
     setSessionName(session.name);
-    setCurrentSessionId(session.id);
+    setPreviewOriginId(session.id);
     if (i.dragModel === 'G7' || i.zeroWeather || i.focalPlane === 'SFP' || i.twistRate) setAdvanced(true);
     toast.success(t('sessions.loaded'), { description: session.name });
     setSearchParams(prev => { const p = new URLSearchParams(prev); p.delete('session'); return p; });
@@ -307,9 +307,9 @@ export default function QuickCalc() {
 
   const update = (patch: Partial<FormState>) => {
     // Any manual edit makes the form diverge from the saved session — drop the
-    // currentSessionId link so the "Compare with another" CTA doesn't compare
+    // previewOriginId link so the "Compare with another" CTA doesn't compare
     // a stale snapshot.
-    setCurrentSessionId(null);
+    setPreviewOriginId(null);
     setForm(prev => ({ ...prev, ...patch }));
   };
 
@@ -317,7 +317,7 @@ export default function QuickCalc() {
   // from "auto" → "mixed" → "manual" without losing the auto base data.
   const FIELD_KEYS = ['temperature','humidity','pressure','altitude','windSpeed','windAngle'] as const;
   const updateWeather = (patch: Partial<WeatherSnapshot>) => {
-    setCurrentSessionId(null);
+    setPreviewOriginId(null);
     setForm(prev => {
       const overrides = new Set(prev.weather.manualOverrides ?? []);
       for (const k of FIELD_KEYS) {
@@ -342,7 +342,7 @@ export default function QuickCalc() {
   };
 
   const updateZeroWeather = (patch: Partial<WeatherSnapshot>) => {
-    setCurrentSessionId(null);
+    setPreviewOriginId(null);
     setForm(prev => ({ ...prev, zeroWeather: { ...prev.zeroWeather, ...patch } }));
   };
 
@@ -458,7 +458,7 @@ export default function QuickCalc() {
     setResults(null);
     setError(null);
     setSessionName('');
-    setCurrentSessionId(null);
+    setPreviewOriginId(null);
   };
 
   const handleSave = () => {
@@ -480,7 +480,7 @@ export default function QuickCalc() {
       favorite: false,
       ...metadata,
     });
-    setCurrentSessionId(created.id);
+    setPreviewOriginId(created.id);
     toast.success(t('calc.sessionSaved'), { description: name });
     setSessionName('');
   };
@@ -705,9 +705,9 @@ export default function QuickCalc() {
           </div>
 
           {/* Compare-with-another CTA — only after a save or rehydration from
-              ?session. Manual edits clear currentSessionId so a stale snapshot
+              ?session. Manual edits clear previewOriginId so a stale snapshot
               can never be silently compared. */}
-          {currentSessionId && sessionStore.getAll().length >= 2 && (
+          {previewOriginId && sessionStore.getAll().length >= 2 && (
             <button
               type="button"
               onClick={() => setComparePickerOpen(true)}
@@ -728,11 +728,11 @@ export default function QuickCalc() {
       <SessionPickerDialog
         open={comparePickerOpen}
         onOpenChange={setComparePickerOpen}
-        source={currentSessionId ? sessionStore.getById(currentSessionId) ?? null : null}
+        source={previewOriginId ? sessionStore.getById(previewOriginId) ?? null : null}
         sessions={sessionStore.getAll()}
         onPick={(other) => {
-          if (!currentSessionId) return;
-          navigate(`/compare?a=${currentSessionId}&b=${other.id}`);
+          if (!previewOriginId) return;
+          navigate(`/compare?a=${previewOriginId}&b=${other.id}`);
         }}
       />
 

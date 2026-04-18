@@ -23,7 +23,7 @@
  *  - one crosswind case
  */
 
-import type { BallisticInput, WeatherSnapshot } from '../../types';
+import type { BallisticInput, WeatherSnapshot } from '@/lib/types';
 
 export interface GoldenFixture {
   /** Stable id — also used as snapshot key. */

@@ -3,6 +3,7 @@ import { Session } from '@/lib/types';
 import { useI18n } from '@/lib/i18n';
 import { resolveSession, summariseWeather, buildInputDescriptor } from '@/lib/compare';
 import { cn } from '@/lib/utils';
+import { EngineBadge } from '@/components/sessions/EngineBadge';
 
 interface Props {
   session: Session;
@@ -43,11 +44,12 @@ export function SessionSummary({ session, letter }: Props) {
           {letter}
         </span>
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 flex-wrap">
             <h3 className="font-semibold text-sm truncate">{session.name}</h3>
             {session.favorite && (
               <Star className="h-3.5 w-3.5 text-primary shrink-0" fill="currentColor" />
             )}
+            <EngineBadge session={session} size="xs" />
           </div>
           <div className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1">
             <Calendar className="h-3 w-3" />

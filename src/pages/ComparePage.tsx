@@ -207,6 +207,17 @@ export default function ComparePage() {
       </header>
 
       <div ref={captureRef} className="space-y-5 bg-background">
+        {/* Mixed-profile honesty banner — must sit inside captureRef so the
+            PNG export carries the same warning the user saw on screen. */}
+        {((a.profileId ?? 'legacy') !== (b.profileId ?? 'legacy')) && (
+          <div
+            role="alert"
+            className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-700 dark:text-amber-300"
+          >
+            ⚠ {t('compare.profilesMixedWarning')}
+          </div>
+        )}
+
         {/* Bloc A — Summary cards side by side */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <SessionSummary session={a} letter="A" />

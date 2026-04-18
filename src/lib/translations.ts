@@ -639,6 +639,29 @@ const fr = {
   'compare.fieldWindSpeed': 'Vitesse vent',
   'compare.fieldWindAngle': 'Angle vent',
   'compare.fieldWeatherLocation': 'Lieu météo',
+
+  // Engine transparency (Tranche B)
+  'engine.badge.legacy': 'Legacy',
+  'engine.badge.meroBeta': 'MERO beta',
+  'engine.badge.legacyV0': 'Legacy v0',
+  'engine.label.engine': 'Moteur',
+  'engine.label.calculatedWith': 'Calculé avec',
+  'engine.label.calculatedAt': 'Calculé le',
+  'engine.label.calculatedAtSource': 'Source de date',
+  'engine.label.partialData': 'Données partielles',
+  'engine.label.dateApproximated': 'Date approximée depuis la dernière modification',
+  'engine.label.requestedDragModel': 'Loi demandée',
+  'engine.label.effectiveDragModel': 'Loi utilisée',
+  'engine.label.cdProvenance': 'Provenance Cd',
+  'engine.label.profile': 'Profil',
+  'engine.metadata.title': 'Métadonnées de calcul',
+  'engine.cdProvenance.legacyPiecewise': 'Table héritée (legacy)',
+  'engine.cdProvenance.derivedP2': 'Table dérivée P2 (beta)',
+  'engine.cdProvenance.meroOfficial': 'Table MERO officielle',
+  'engine.calculatedAtSource.frozen': 'Figée à la sauvegarde',
+  'engine.calculatedAtSource.inferredFromUpdated': 'Approximée depuis la dernière modification',
+  'engine.calculatedAtSource.inferredFromCreated': 'Approximée depuis la création',
+  'compare.profilesMixedWarning': 'Comparaison entre profils différents — résultats non strictement comparables.',
 } as const;
 
 const en: Record<keyof typeof fr, string> = {
@@ -1261,6 +1284,29 @@ const en: Record<keyof typeof fr, string> = {
   'compare.fieldWindSpeed': 'Wind speed',
   'compare.fieldWindAngle': 'Wind angle',
   'compare.fieldWeatherLocation': 'Weather location',
+
+  // Engine transparency (Tranche B)
+  'engine.badge.legacy': 'Legacy',
+  'engine.badge.meroBeta': 'MERO beta',
+  'engine.badge.legacyV0': 'Legacy v0',
+  'engine.label.engine': 'Engine',
+  'engine.label.calculatedWith': 'Calculated with',
+  'engine.label.calculatedAt': 'Calculated at',
+  'engine.label.calculatedAtSource': 'Date source',
+  'engine.label.partialData': 'Partial data',
+  'engine.label.dateApproximated': 'Date approximated from last update',
+  'engine.label.requestedDragModel': 'Requested drag model',
+  'engine.label.effectiveDragModel': 'Effective drag model',
+  'engine.label.cdProvenance': 'Cd provenance',
+  'engine.label.profile': 'Profile',
+  'engine.metadata.title': 'Calculation metadata',
+  'engine.cdProvenance.legacyPiecewise': 'Legacy piecewise table',
+  'engine.cdProvenance.derivedP2': 'Derived P2 table (beta)',
+  'engine.cdProvenance.meroOfficial': 'Official MERO table',
+  'engine.calculatedAtSource.frozen': 'Frozen at save time',
+  'engine.calculatedAtSource.inferredFromUpdated': 'Approximated from last update',
+  'engine.calculatedAtSource.inferredFromCreated': 'Approximated from creation date',
+  'compare.profilesMixedWarning': 'Comparison across different profiles — results are not strictly comparable.',
 };
 
 export const translations = { fr, en } as const;

@@ -14,6 +14,9 @@ import { motion } from 'framer-motion';
 import { EntitySelect } from '@/components/calc/EntitySelect';
 import { Checkbox } from '@/components/ui/checkbox';
 import { SessionPickerDialog } from '@/components/compare/SessionPickerDialog';
+import { EngineBadge } from '@/components/sessions/EngineBadge';
+import { CalculationMetadataBlock } from '@/components/sessions/CalculationMetadataBlock';
+import { normalizeSession } from '@/lib/session-normalize';
 
 export default function SessionsPage() {
   const { t } = useI18n();
@@ -251,7 +254,8 @@ export default function SessionsPage() {
         <div className="surface-card p-8 text-center text-muted-foreground text-sm">{t('sessions.noSessions')}</div>
       ) : (
         <div className="space-y-2">
-          {filtered.map(s => {
+          {filtered.map(raw => {
+            const s = normalizeSession(raw);
             const advBadges: string[] = [];
             if (s.input.dragModel && s.input.dragModel !== 'G1') advBadges.push(s.input.dragModel);
             if (s.input.focalPlane) advBadges.push(s.input.focalPlane);
@@ -283,7 +287,10 @@ export default function SessionsPage() {
                     className="flex-1 min-w-0 cursor-pointer"
                     onClick={() => selectionMode && toggleSelection(s.id)}
                   >
-                    <div className="font-semibold text-sm truncate">{s.name}</div>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="font-semibold text-sm truncate">{s.name}</span>
+                      <EngineBadge session={s} size="xs" />
+                    </div>
                     <div className="text-xs text-muted-foreground font-mono mt-1">
                       {s.input.muzzleVelocity} m/s • BC {s.input.bc} • {s.input.projectileWeight} gr • Zero {s.input.zeroRange}m
                     </div>
@@ -332,6 +339,12 @@ export default function SessionsPage() {
                         <div className="text-xs font-mono font-semibold">{r.drop.toFixed(1)}<span className="text-muted-foreground">mm</span></div>
                       </div>
                     ))}
+                  </div>
+                )}
+                {/* Calculation metadata — collapsed by default to keep mobile tidy. */}
+                {!selectionMode && (
+                  <div className="mt-3">
+                    <CalculationMetadataBlock session={s} />
                   </div>
                 )}
               </div>

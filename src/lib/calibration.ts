@@ -205,25 +205,32 @@ export function calibrateBC(args: CalibrateArgs): CalibrationResult {
 
   // Bisection on k. With the launch angle locked, drop is strictly monotonic
   // in BC: higher BC ⇒ less drag ⇒ less negative drop.
+  // Seed with k=1 first — the user's stored BC is the most likely correct
+  // value, and we want self-consistent inputs to return factor=1.0 exactly
+  // instead of whatever happens to land within tolerance.
   let kLow = K_MIN;
   let kHigh = K_MAX;
   let kMid = 1;
-  let achievedDropMm = predictedDropMm;
+  let achievedDropMm = dropAtDistance(baseInput, originalBc, zeroAngle, measuredDistance);
   let iterations = 0;
 
-  for (; iterations < ITER_MAX; iterations++) {
-    kMid = (kLow + kHigh) / 2;
-    achievedDropMm = dropAtDistance(baseInput, originalBc * kMid, zeroAngle, measuredDistance);
-    if (!Number.isFinite(achievedDropMm)) break;
+  if (Number.isFinite(achievedDropMm) && Math.abs(achievedDropMm - measuredDropMm) <= TOL_MM) {
+    iterations = 1;
+  } else {
+    for (; iterations < ITER_MAX; iterations++) {
+      kMid = (kLow + kHigh) / 2;
+      achievedDropMm = dropAtDistance(baseInput, originalBc * kMid, zeroAngle, measuredDistance);
+      if (!Number.isFinite(achievedDropMm)) break;
 
-    const diff = achievedDropMm - measuredDropMm;
-    if (Math.abs(diff) <= TOL_MM) {
-      iterations++;
-      break;
+      const diff = achievedDropMm - measuredDropMm;
+      if (Math.abs(diff) <= TOL_MM) {
+        iterations++;
+        break;
+      }
+      // achieved less negative than measured ⇒ k too high (less drag) ⇒ lower it.
+      if (diff > 0) kHigh = kMid;
+      else kLow = kMid;
     }
-    // achieved less negative than measured ⇒ k too high (less drag) ⇒ lower it.
-    if (diff > 0) kHigh = kMid;
-    else kLow = kMid;
   }
 
   const factor = kMid;

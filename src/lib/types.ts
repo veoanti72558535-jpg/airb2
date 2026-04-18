@@ -193,6 +193,30 @@ export interface BallisticResult {
   clicksWindage?: number;
 }
 
+/**
+ * Provenance of the Cd source used to produce a session's results.
+ *
+ * - `legacy-piecewise` : pre-P2 hand-tuned Cd ladders (G1/G7/GA/GS only).
+ * - `derived-p2`       : 169-pt analytical fits shipped in P2 (MERO beta).
+ * - `mero-official`    : digitised official MERO tables (post-P3).
+ *
+ * Stored on each Session so we can later flip provenance without changing
+ * the schema, and so a UI badge can warn users that "MERO beta" is not yet
+ * a scientific contract.
+ */
+export type CdProvenance = 'legacy-piecewise' | 'derived-p2' | 'mero-official';
+
+/**
+ * Snapshot of the engine config compiled at calculation time. Frozen on the
+ * Session at save time and never recomputed — this is the audit trail.
+ */
+export interface SessionEngineMetadata {
+  integrator: 'euler' | 'trapezoidal';
+  atmosphereModel: 'icao-simple' | 'tetens-full';
+  /** Integration time-step in seconds. */
+  dt: number;
+}
+
 export interface Session {
   id: string;
   name: string;
@@ -207,15 +231,44 @@ export interface Session {
   favorite: boolean;
   /**
    * Engine version that produced `results`. Optional for backwards compat:
-   * sessions saved before P1 don't carry this and are treated as legacy
-   * (will be flagged + offered for manual recalculation in P6).
+   * sessions saved before P1 don't carry this — `session-normalize` reads
+   * them as `legacy v0` (no rewrite). Required on every NEW save (P3+).
    */
   engineVersion?: number;
   /**
    * Calculation profile id active when `results` was produced. Optional
    * for backwards compat — defaults to `'legacy'` everywhere it matters.
+   * Required on every NEW save (P3+).
    */
   profileId?: string;
+  /**
+   * Drag law actually used by the engine to produce `results` (post-resolution
+   * — may differ from the projectile's stored bcModel if the profile forced a
+   * fallback). Optional only for legacy v0 sessions.
+   */
+  dragLawEffective?: DragModel;
+  /**
+   * Provenance of the Cd source used. Optional only for legacy v0 sessions
+   * (treated as `legacy-piecewise` at read time).
+   */
+  cdProvenance?: CdProvenance;
+  /**
+   * ISO timestamp at which `results` was produced. Distinct from
+   * `createdAt` (which is the session row creation time) and `updatedAt`
+   * (which tracks any field edit). Optional only for legacy v0 sessions.
+   */
+  calculatedAt?: string;
+  /**
+   * Snapshot of the engine config at calculation time. Frozen — never
+   * mutated after the session is saved. Optional only for legacy v0.
+   */
+  engineMetadata?: SessionEngineMetadata;
+  /**
+   * When the session was produced by an explicit "Recalculate" action on a
+   * pre-existing session, this points to the original. Used by the UI to
+   * show the filiation in LinkedSessions and to offer a side-by-side diff.
+   */
+  derivedFromSessionId?: string;
   createdAt: string;
   updatedAt: string;
 }

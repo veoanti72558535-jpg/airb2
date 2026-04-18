@@ -62,6 +62,50 @@ describe('normalizeSession — legacy fallbacks', () => {
   });
 });
 
+describe('normalizeSession — P3.1 metadata back-fill (legacy v0)', () => {
+  it('fills profileId with legacy and cdProvenance with legacy-piecewise', () => {
+    const out = normalizeSession(legacy);
+    expect(out.profileId).toBe('legacy');
+    expect(out.cdProvenance).toBe('legacy-piecewise');
+  });
+
+  it('keeps engineVersion undefined so UI can flag legacy v0', () => {
+    const out = normalizeSession(legacy);
+    expect(out.engineVersion).toBeUndefined();
+  });
+
+  it('falls back calculatedAt to updatedAt for legacy v0 only', () => {
+    const out = normalizeSession(legacy);
+    expect(out.calculatedAt).toBe(legacy.updatedAt);
+  });
+
+  it('never overwrites metadata that is already present', () => {
+    const modern: Session = {
+      ...legacy,
+      engineVersion: 1,
+      profileId: 'mero',
+      cdProvenance: 'derived-p2',
+      dragLawEffective: 'G7',
+      calculatedAt: '2025-06-01T12:00:00.000Z',
+      engineMetadata: { integrator: 'trapezoidal', atmosphereModel: 'tetens-full', dt: 1e-3 },
+    } as Session;
+    const out = normalizeSession(modern);
+    expect(out.engineVersion).toBe(1);
+    expect(out.profileId).toBe('mero');
+    expect(out.cdProvenance).toBe('derived-p2');
+    expect(out.dragLawEffective).toBe('G7');
+    expect(out.calculatedAt).toBe('2025-06-01T12:00:00.000Z');
+    expect(out.engineMetadata?.integrator).toBe('trapezoidal');
+  });
+
+  it('does not write back to storage (read-only fill)', () => {
+    const snap = JSON.parse(JSON.stringify(legacy));
+    normalizeSession(legacy);
+    expect(legacy).toEqual(snap);
+    expect((legacy as Session).profileId).toBeUndefined();
+  });
+});
+
 describe('normalizeSession — partial weather', () => {
   it('fills missing weather fields without overwriting present ones', () => {
     const partial: Session = {

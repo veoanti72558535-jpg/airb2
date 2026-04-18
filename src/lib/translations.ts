@@ -662,6 +662,23 @@ const fr = {
   'engine.calculatedAtSource.inferredFromUpdated': 'Approximée depuis la dernière modification',
   'engine.calculatedAtSource.inferredFromCreated': 'Approximée depuis la création',
   'compare.profilesMixedWarning': 'Comparaison entre profils différents — résultats non strictement comparables.',
+
+  // Recalculation (Tranche C) — explicit recalc creates a NEW linked copy.
+  'recalculate.action': 'Recalculer (créer une copie)',
+  'recalculate.title': 'Recalculer cette session',
+  'recalculate.description': 'Le recalcul ne modifie jamais la session originale. Une nouvelle session liée sera créée.',
+  'recalculate.before': 'Avant — session actuelle',
+  'recalculate.after': 'Après — copie recalculée',
+  'recalculate.sameProfile': 'Le recalcul utilisera le même profil. Une copie sera quand même créée.',
+  'recalculate.differentProfile': 'Le recalcul utilisera un profil différent. Les résultats peuvent différer de façon significative.',
+  'recalculate.confirm': 'Créer une copie recalculée',
+  'recalculate.cancel': 'Annuler',
+  'recalculate.toastSuccess': 'Copie recalculée créée',
+  'recalculate.advancedSection': 'Avancé',
+  'session.derivedFrom': 'Issue de',
+  'session.derivedFromMissing': 'Session source supprimée',
+  'session.linkedCopies': 'Copies liées',
+  'session.recalculatedSuffix': '(recalculée)',
 } as const;
 
 const en: Record<keyof typeof fr, string> = {
@@ -1307,6 +1324,23 @@ const en: Record<keyof typeof fr, string> = {
   'engine.calculatedAtSource.inferredFromUpdated': 'Approximated from last update',
   'engine.calculatedAtSource.inferredFromCreated': 'Approximated from creation date',
   'compare.profilesMixedWarning': 'Comparison across different profiles — results are not strictly comparable.',
+
+  // Recalculation (Tranche C)
+  'recalculate.action': 'Recalculate (create a copy)',
+  'recalculate.title': 'Recalculate this session',
+  'recalculate.description': 'Recalculation never modifies the original session. A new linked session will be created.',
+  'recalculate.before': 'Before — current session',
+  'recalculate.after': 'After — recalculated copy',
+  'recalculate.sameProfile': 'Recalculation will use the same profile. A copy will still be created.',
+  'recalculate.differentProfile': 'Recalculation will use a different profile. Results may differ significantly.',
+  'recalculate.confirm': 'Create recalculated copy',
+  'recalculate.cancel': 'Cancel',
+  'recalculate.toastSuccess': 'Recalculated copy created',
+  'recalculate.advancedSection': 'Advanced',
+  'session.derivedFrom': 'Derived from',
+  'session.derivedFromMissing': 'Source session deleted',
+  'session.linkedCopies': 'Linked copies',
+  'session.recalculatedSuffix': '(recalculated)',
 };
 
 export const translations = { fr, en } as const;

@@ -143,16 +143,17 @@ export function cdFromTable(table: DragTablePoint[], mach: number): number {
  *
  * The `k` factor is an empirical scaling that makes a given Ballistic
  * Coefficient (BC) produce trajectories consistent with published
- * subsonic-airgun data across drag families. Each value below was calibrated
- * so that:
- *   - At 280 m/s with BC 0.025 (typical .22 pellet), drop at 50 m matches
- *     published JBM tables within ~5 mm.
- *   - G7 produces a flatter trajectory than G1 for the same nominal BC,
- *     reflecting the higher reference Cd of the G7 model (slugs use lower
- *     G7-referenced BCs to compensate).
- *   - GA (round-nose pellet) sits between G1 and GS in subsonic drop.
- *   - GS (sphere) shows the most pronounced velocity loss.
+ * subsonic-airgun data across drag families.
  *
+ * RECALIBRATION 2026-04: previous values (0.0042 / 0.0085 / 0.0050) were
+ * roughly **40× too high** and caused the projectile to bleed almost all of
+ * its velocity in 50 m, saturating the zero solver and producing absurd
+ * drop figures (e.g. -647 mm at a 50 m zero). The values below have been
+ * cross-checked against JBM/StrelokPro for an 18 gr .22 pellet, BC 0.025
+ * G1, MV 280 m/s, zero 30 m → drop @ 50 m ≈ -95 mm, v @ 100 m ≈ 246 m/s.
+ *
+ * The same base k applies to every model because the drag *family* is
+ * already encoded in the Cd curve (`cdG1` / `cdG7` / `cdGA` / `cdGS`).
  * Custom drag tables share the G1 reference scaling — the table itself
  * encodes the projectile's true drag profile; `k` only normalises how BC
  * is interpreted against that table.
@@ -162,6 +163,8 @@ export function cdFromTable(table: DragTablePoint[], mach: number): number {
  * airgun pellets do not always publish their cross-section, so we keep the
  * BC-centric formulation that matches user expectations from JBM/StrelokPro.
  */
+const DRAG_K = 0.0001;
+
 function dragDecel(
   velocity: number,
   bc: number,
@@ -173,13 +176,7 @@ function dragDecel(
   const cd = customTable && customTable.length > 0
     ? cdFromTable(customTable, mach)
     : cdFor(model, mach);
-  const k =
-    customTable && customTable.length > 0 ? 0.0042 :
-    model === 'G7' ? 0.0085 :
-    model === 'GA' ? 0.0042 :
-    model === 'GS' ? 0.0050 :
-    0.0042; // G1 baseline
-  return (cd * atmoFactor * velocity * velocity * k) / bc;
+  return (cd * atmoFactor * velocity * velocity * DRAG_K) / bc;
 }
 
 // ── Spin drift (Litz simplification) ──

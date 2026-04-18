@@ -131,6 +131,12 @@ export function normalizeSession(s: Session): Session {
   // (defaults to false via buildSessionMetadata).
   const metadataInferred = s.metadataInferred ?? isLegacyV0;
 
+  // Capture requested drag law from the RAW input (pre-normalisation) so
+  // we record what the user originally asked for, not the G1 fallback that
+  // `normalizeInput` would inject. Idempotent: on a second pass `s` already
+  // carries `dragLawRequested`, so we reuse it.
+  const dragLawRequested = s.dragLawRequested ?? s.input?.dragModel;
+
   return {
     ...s,
     tags: Array.isArray(s.tags) ? s.tags : [],
@@ -140,7 +146,7 @@ export function normalizeSession(s: Session): Session {
     // Read-time fillers — never written back to storage.
     profileId: s.profileId ?? 'legacy',
     dragLawEffective: s.dragLawEffective ?? s.input?.dragModel ?? 'G1',
-    dragLawRequested: s.dragLawRequested ?? s.input?.dragModel,
+    dragLawRequested,
     cdProvenance: s.cdProvenance ?? 'legacy-piecewise',
     // engineVersion stays undefined for legacy v0 — UI marker.
     engineVersion: s.engineVersion,

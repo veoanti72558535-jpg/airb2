@@ -148,3 +148,48 @@ describe('ComparePage — resilience', () => {
     ).toBeInTheDocument();
   });
 });
+
+describe('ComparePage — mixed profiles warning', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('shows the warning when sessions have different profiles', () => {
+    const legacySession: Session = {
+      ...makeSession('s-leg', 'Leg'),
+      profileId: 'legacy',
+    };
+    const meroSession: Session = {
+      ...makeSession('s-mero', 'Mero'),
+      profileId: 'mero',
+    };
+    localStorage.setItem('pcp-sessions', JSON.stringify([legacySession, meroSession]));
+    renderAt('/compare?a=s-leg&b=s-mero');
+
+    expect(
+      screen.getByText(/profils différents|different profiles/i),
+    ).toBeInTheDocument();
+  });
+
+  it('does not show the warning when both sessions share the same profile', () => {
+    const a: Session = { ...makeSession('a', 'A'), profileId: 'legacy' };
+    const b: Session = { ...makeSession('b', 'B'), profileId: 'legacy' };
+    localStorage.setItem('pcp-sessions', JSON.stringify([a, b]));
+    renderAt('/compare?a=a&b=b');
+
+    expect(
+      screen.queryByText(/profils différents|different profiles/i),
+    ).not.toBeInTheDocument();
+  });
+
+  it('treats undefined profileId as "legacy" (no warning when both are undefined)', () => {
+    const a = makeSession('a', 'A'); // no profileId
+    const b = makeSession('b', 'B'); // no profileId
+    localStorage.setItem('pcp-sessions', JSON.stringify([a, b]));
+    renderAt('/compare?a=a&b=b');
+
+    expect(
+      screen.queryByText(/profils différents|different profiles/i),
+    ).not.toBeInTheDocument();
+  });
+});

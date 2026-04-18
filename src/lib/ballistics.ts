@@ -221,7 +221,13 @@ function spinDriftMm(
 
 // ── Zero-angle solver ──
 
-function findZeroAngle(
+/**
+ * Solve for the launch angle that makes the projectile cross the sight line
+ * at `zeroRange`. Exported so calibration tooling can lock the **physical**
+ * launch angle (rifle pointed exactly as it was when the user zeroed) and
+ * vary BC without inadvertently re-zeroing the rifle for each candidate.
+ */
+export function findZeroAngle(
   muzzleVelocity: number,
   bc: number,
   sightHeightM: number,

@@ -1,4 +1,8 @@
 import { Airgun, Projectile, Optic, Session, Tune, AppSettings } from './types';
+import {
+  sanitizeProjectileForPublic,
+  sanitizeSessionForPublic,
+} from './drag-law-policy';
 
 const KEYS = {
   airguns: 'pcp-airguns',
@@ -82,13 +86,34 @@ function defaultSettings(): AppSettings {
   };
 }
 
+/**
+ * Public/shareable export.
+ *
+ * Tranche D — security boundary: any drag law that is not in the V1 public
+ * whitelist (G1/G7/GA/GS) is rewritten to G1 before leaving the device.
+ * Two reasons:
+ *  1. The MERO laws (RA4/GA2/SLG0/SLG1) are engine-internal — exposing them
+ *     in a downloadable JSON would let a third party re-import them and
+ *     surface non-validated curves in their public UI.
+ *  2. A round-trip export → import on another device must produce a
+ *     coherent projectile/session, not a "mystery model" the receiving UI
+ *     cannot select. G1 is a safe, neutral fallback.
+ *
+ * `customDragTable` is preserved — those are user-provided Cd points and
+ * remain valid public content.
+ *
+ * NOTE: this is the ONLY export path wired to the user-facing "Export JSON"
+ * button. If a future internal/diagnostic export is added (e.g. for support
+ * tickets), it MUST live in a separate function with a different name to
+ * keep the policy boundary obvious.
+ */
 export function exportAllData(): string {
   return JSON.stringify({
     airguns: airgunStore.getAll(),
     tunes: tuneStore.getAll(),
-    projectiles: projectileStore.getAll(),
+    projectiles: projectileStore.getAll().map(p => sanitizeProjectileForPublic(p).projectile),
     optics: opticStore.getAll(),
-    sessions: sessionStore.getAll(),
+    sessions: sessionStore.getAll().map(s => sanitizeSessionForPublic(s)),
     settings: getSettings(),
     exportedAt: new Date().toISOString(),
   }, null, 2);

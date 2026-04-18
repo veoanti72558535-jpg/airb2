@@ -2,8 +2,9 @@ import { Cpu, FlaskConical, Info } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { useI18n } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
-import type { Session, CdProvenance, DragModel } from '@/lib/types';
+import type { Session, CdProvenance } from '@/lib/types';
 import type { TranslationKey } from '@/lib/translations';
+import { isPublicDragLaw as isPublicDragLawPolicy } from '@/lib/drag-law-policy';
 
 /**
  * Tranche B — EngineBadge
@@ -33,12 +34,15 @@ interface BadgeState {
   tone: string;
 }
 
-/** Public drag laws — anything else is internal-only and must not be surfaced. */
-const PUBLIC_DRAG_LAWS = new Set<DragModel>(['G1', 'G7', 'GA', 'GS']);
-
-export function isPublicDragLaw(law: DragModel | undefined): law is DragModel {
-  return !!law && PUBLIC_DRAG_LAWS.has(law);
-}
+/**
+ * Public drag-law guard.
+ *
+ * Tranche D : the canonical implementation now lives in
+ * `src/lib/drag-law-policy.ts` (single source of truth for any public
+ * boundary — UI, import, export). Re-exported here for backwards-compat
+ * with existing imports (`CalculationMetadataBlock`, tests).
+ */
+export const isPublicDragLaw = isPublicDragLawPolicy;
 
 export function resolveBadgeState(session: Session): BadgeState {
   if (session.metadataInferred) {

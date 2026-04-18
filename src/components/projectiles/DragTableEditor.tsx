@@ -196,19 +196,26 @@ interface PreviewProps {
  *  Persisting this means a user who always compares against G7 doesn't have
  *  to re-tick it every time they edit a different projectile. */
 const REF_TOGGLES_KEY = 'airballistik.dragTable.refToggles.v1';
-const DEFAULT_REF_TOGGLES: Record<DragModel, boolean> = {
+/**
+ * Reference-curve toggles use a narrowed subset of `DragModel`: only the
+ * four V1 UI laws (G1/G7/GA/GS) are surfaced as comparison curves. The
+ * P2 MERO laws (RA4/GA2/SLG0/SLG1) exist in the engine but never appear
+ * in the UI, so we explicitly exclude them from this Record type.
+ */
+type UiDragModel = 'G1' | 'G7' | 'GA' | 'GS';
+const DEFAULT_REF_TOGGLES: Record<UiDragModel, boolean> = {
   G1: true,
   G7: false,
   GA: false,
   GS: false,
 };
 
-function loadRefToggles(): Record<DragModel, boolean> {
+function loadRefToggles(): Record<UiDragModel, boolean> {
   if (typeof window === 'undefined') return DEFAULT_REF_TOGGLES;
   try {
     const raw = window.localStorage.getItem(REF_TOGGLES_KEY);
     if (!raw) return DEFAULT_REF_TOGGLES;
-    const parsed = JSON.parse(raw) as Partial<Record<DragModel, boolean>>;
+    const parsed = JSON.parse(raw) as Partial<Record<UiDragModel, boolean>>;
     // Merge with defaults so a future new model gets a sensible default
     // even if the stored shape is older.
     return { ...DEFAULT_REF_TOGGLES, ...parsed };
@@ -218,7 +225,7 @@ function loadRefToggles(): Record<DragModel, boolean> {
 }
 
 function DragTablePreview({ table, t }: PreviewProps) {
-  const [enabled, setEnabled] = useState<Record<DragModel, boolean>>(loadRefToggles);
+  const [enabled, setEnabled] = useState<Record<UiDragModel, boolean>>(loadRefToggles);
 
   // Persist on every change. Wrapped in try/catch because localStorage can
   // throw in private mode or when the quota is full — UX should never break.

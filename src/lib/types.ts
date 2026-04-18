@@ -1,4 +1,13 @@
-export type DragModel = 'G1' | 'G7' | 'GA' | 'GS';
+/**
+ * Drag law families.
+ *
+ * V1 UI exposes only G1/G7/GA/GS (cf. `LEGACY_PROFILE.dragLawsAvailable`).
+ * P2 widens the type to include the four MERO slug/round-ball laws
+ * (RA4, GA2, SLG0, SLG1) so the engine can resolve their Cd tables, but
+ * the UI surface is intentionally unchanged — these four are not picked
+ * by any selector and remain engine-only until validated.
+ */
+export type DragModel = 'G1' | 'G7' | 'GA' | 'GS' | 'RA4' | 'GA2' | 'SLG0' | 'SLG1';
 export type ProjectileType = 'pellet' | 'slug' | 'other';
 export type OpticFocalPlane = 'FFP' | 'SFP';
 /** Twist rate as "1:N" inches per turn, stored as N (e.g. 16, 18, 24). */
@@ -144,6 +153,17 @@ export interface BallisticInput {
    * the entire trajectory (linear interpolation between provided points).
    */
   customDragTable?: DragTablePoint[];
+  /**
+   * Optional engine configuration (P2). When omitted, the engine runs in
+   * legacy bit-exact mode (Euler dt=5e-4, ICAO-simple atmosphere, piecewise
+   * Cd) so existing sessions/tests reproduce identically. When present, the
+   * engine dispatches integrator / atmosphere / Cd source per profile.
+   *
+   * Stored on the input rather than passed as a separate argument to keep
+   * the public signature `calculateTrajectory(input)` stable for every
+   * existing call site.
+   */
+  engineConfig?: import('./ballistics/types').EngineConfig;
 }
 
 export interface BallisticResult {

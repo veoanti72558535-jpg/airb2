@@ -35,7 +35,12 @@ function calcAirDensity(weather: WeatherSnapshot): number {
   return (pd * 100) / (Rd * tempK) + (pv * 100) / (Rv * tempK);
 }
 
-function calcAtmosphericFactor(weather: WeatherSnapshot): number {
+/**
+ * Atmospheric density correction factor (current ÷ ICAO-standard).
+ * Exported so calibration / tooling can reuse the exact same atmosphere
+ * the engine uses, without re-implementing the formula.
+ */
+export function calcAtmosphericFactor(weather: WeatherSnapshot): number {
   const rhoActual = calcAirDensity(weather);
   const rhoStd = calcAirDensity({
     temperature: STANDARD_TEMP,
@@ -165,7 +170,13 @@ export function cdFromTable(table: DragTablePoint[], mach: number): number {
  */
 const DRAG_K = 0.0001;
 
-function dragDecel(
+/**
+ * Retardation (deceleration along velocity direction) at a given speed.
+ * Exported so calibration tooling can run a fixed-angle simulation that
+ * reproduces the engine's flight physics exactly. The caller is responsible
+ * for the atmospheric factor (use `calcAtmosphericFactor`).
+ */
+export function dragDecel(
   velocity: number,
   bc: number,
   atmoFactor: number,
@@ -210,7 +221,13 @@ function spinDriftMm(
 
 // ── Zero-angle solver ──
 
-function findZeroAngle(
+/**
+ * Solve for the launch angle that makes the projectile cross the sight line
+ * at `zeroRange`. Exported so calibration tooling can lock the **physical**
+ * launch angle (rifle pointed exactly as it was when the user zeroed) and
+ * vary BC without inadvertently re-zeroing the rifle for each candidate.
+ */
+export function findZeroAngle(
   muzzleVelocity: number,
   bc: number,
   sightHeightM: number,

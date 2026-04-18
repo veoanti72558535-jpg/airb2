@@ -225,7 +225,7 @@ function loadRefToggles(): Record<UiDragModel, boolean> {
 }
 
 function DragTablePreview({ table, t }: PreviewProps) {
-  const [enabled, setEnabled] = useState<Record<DragModel, boolean>>(loadRefToggles);
+  const [enabled, setEnabled] = useState<Record<UiDragModel, boolean>>(loadRefToggles);
 
   // Persist on every change. Wrapped in try/catch because localStorage can
   // throw in private mode or when the quota is full — UX should never break.

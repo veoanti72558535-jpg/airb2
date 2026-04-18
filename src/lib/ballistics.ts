@@ -35,7 +35,12 @@ function calcAirDensity(weather: WeatherSnapshot): number {
   return (pd * 100) / (Rd * tempK) + (pv * 100) / (Rv * tempK);
 }
 
-function calcAtmosphericFactor(weather: WeatherSnapshot): number {
+/**
+ * Atmospheric density correction factor (current ÷ ICAO-standard).
+ * Exported so calibration / tooling can reuse the exact same atmosphere
+ * the engine uses, without re-implementing the formula.
+ */
+export function calcAtmosphericFactor(weather: WeatherSnapshot): number {
   const rhoActual = calcAirDensity(weather);
   const rhoStd = calcAirDensity({
     temperature: STANDARD_TEMP,

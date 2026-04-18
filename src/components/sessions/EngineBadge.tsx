@@ -113,46 +113,48 @@ export function EngineBadge({ session, size = 'sm', className }: Props) {
   const isInferred = !!session.metadataInferred;
 
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <span
-          aria-label={`${t('engine.label.engine')}: ${label}`}
-          className={cn(
-            'inline-flex items-center rounded font-medium uppercase tracking-wide whitespace-nowrap',
-            sizeClass,
-            state.tone,
-            className,
-          )}
-        >
-          <Icon className={cn(iconSize, 'shrink-0')} aria-hidden />
-          <span>{label}</span>
-        </span>
-      </TooltipTrigger>
-      <TooltipContent side="top" className="max-w-[260px] text-xs space-y-1">
-        <div className="font-semibold">
-          {t('engine.label.calculatedWith')}: {label}
-        </div>
-        {dateStr && (
-          <div className="text-muted-foreground">
-            {t('engine.label.calculatedAt')}: <span className="font-mono">{dateStr}</span>
-          </div>
-        )}
-        {provenanceKey && (
-          <div className="text-muted-foreground">
-            {t('engine.label.cdProvenance')}: {t(provenanceKey)}
-          </div>
-        )}
-        {isInferred && (
-          <div className="text-amber-600 dark:text-amber-400 pt-0.5 border-t border-border/40">
-            ⚠ {t('engine.label.partialData')}
-            {sourceKey && sourceKey !== 'engine.calculatedAtSource.frozen' && (
-              <div className="text-[10px] mt-0.5 opacity-90">
-                {t('engine.label.dateApproximated')}
-              </div>
+    <TooltipProvider delayDuration={150}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span
+            aria-label={`${t('engine.label.engine')}: ${label}`}
+            className={cn(
+              'inline-flex items-center rounded font-medium uppercase tracking-wide whitespace-nowrap',
+              sizeClass,
+              state.tone,
+              className,
             )}
+          >
+            <Icon className={cn(iconSize, 'shrink-0')} aria-hidden />
+            <span>{label}</span>
+          </span>
+        </TooltipTrigger>
+        <TooltipContent side="top" className="max-w-[260px] text-xs space-y-1">
+          <div className="font-semibold">
+            {t('engine.label.calculatedWith')}: {label}
           </div>
-        )}
-      </TooltipContent>
-    </Tooltip>
+          {dateStr && (
+            <div className="text-muted-foreground">
+              {t('engine.label.calculatedAt')}: <span className="font-mono">{dateStr}</span>
+            </div>
+          )}
+          {provenanceKey && (
+            <div className="text-muted-foreground">
+              {t('engine.label.cdProvenance')}: {t(provenanceKey)}
+            </div>
+          )}
+          {isInferred && (
+            <div className="text-amber-600 dark:text-amber-400 pt-0.5 border-t border-border/40">
+              ⚠ {t('engine.label.partialData')}
+              {sourceKey && sourceKey !== 'engine.calculatedAtSource.frozen' && (
+                <div className="text-[10px] mt-0.5 opacity-90">
+                  {t('engine.label.dateApproximated')}
+                </div>
+              )}
+            </div>
+          )}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }

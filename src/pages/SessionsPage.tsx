@@ -37,6 +37,9 @@ export default function SessionsPage() {
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [pickerSource, setPickerSource] = useState<Session | null>(null);
+  // Tranche C — recalc target. Opening this dialog never recalculates; only
+  // confirmation does, and it always creates a NEW linked session.
+  const [recalcSource, setRecalcSource] = useState<Session | null>(null);
 
   const airguns = useMemo(() => airgunStore.getAll(), []);
   const projectiles = useMemo(() => projectileStore.getAll(), []);

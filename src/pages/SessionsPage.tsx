@@ -348,10 +348,20 @@ export default function SessionsPage() {
                     ))}
                   </div>
                 )}
-                {/* Calculation metadata — collapsed by default to keep mobile tidy. */}
+                {/* Calculation metadata — collapsed by default to keep mobile tidy.
+                    Tranche C — explicit recalc action lives in the same advanced strip
+                    so it stays secondary and never invites accidental clicks. */}
                 {!selectionMode && (
-                  <div className="mt-3">
+                  <div className="mt-3 space-y-2">
                     <CalculationMetadataBlock session={s} />
+                    <button
+                      type="button"
+                      onClick={() => setRecalcSource(s)}
+                      className="w-full inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md border border-dashed border-border text-[11px] text-muted-foreground hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-colors"
+                    >
+                      <RotateCcw className="h-3 w-3" />
+                      {t('recalculate.action')}
+                    </button>
                   </div>
                 )}
               </div>
@@ -367,6 +377,19 @@ export default function SessionsPage() {
         source={pickerSource}
         sessions={sessions}
         onPick={launchCompareWithPicker}
+      />
+
+      {/* Tranche C — Recalculate dialog. Opening = free; only confirm runs the
+          engine and creates a brand-new linked session. The original is never
+          mutated. */}
+      <RecalculateDialog
+        open={recalcSource !== null}
+        onOpenChange={(open) => { if (!open) setRecalcSource(null); }}
+        source={recalcSource}
+        onCreated={(created) => {
+          refresh();
+          toast.success(t('recalculate.toastSuccess'), { description: created.name });
+        }}
       />
     </motion.div>
   );

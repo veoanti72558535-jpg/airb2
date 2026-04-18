@@ -106,7 +106,9 @@ describe('calculateTrajectory — click conversions', () => {
     ).find(r => r.range === 100)!;
     expect(Number.isInteger(withClicks.clicksElevation!)).toBe(true);
     expect(Number.isInteger(withClicks.clicksWindage!)).toBe(true);
-    expect(withClicks.clicksElevation!).toBeLessThanOrEqual(0);
+    // Past the zero range the projectile drops, so the user must dial UP
+    // on the turret → positive clicks. Right crosswind → positive windage.
+    expect(withClicks.clicksElevation!).toBeGreaterThan(0);
     expect(withClicks.clicksWindage!).toBeGreaterThan(0);
   });
 

@@ -1,13 +1,13 @@
 /**
- * Profile registry — P1.
+ * Profile registry — P1 + P2.
  *
- * In P1 only the `legacy` profile is registered: it freezes today's physics
- * (Euler dt=5e-4, ICAO-simple atmosphere via Tetens, lateral-only wind, no
- * post-processings beyond spin drift) so existing sessions stay reproducible.
+ * P1 shipped only `legacy`. P2 adds `mero` (beta) — same engine code, but
+ * dispatched onto: trapezoidal RK2 integrator, dt=1e-3, Tetens-full
+ * atmosphere, MERO 169-pt Cd tables. Marked `beta:true` so the UI can
+ * keep it hidden until P3 validates the numbers against JBM/StrelokPro.
  *
- * `mero`, `chairgun`, `strelok`, `hybrid` are reserved here as comments and
- * will be added in P2/P3 alongside their physics changes — never as empty
- * shells (avoids the "ghost profile" anti-pattern called out in the plan).
+ * `chairgun`, `strelok`, `hybrid` remain reserved as comments — they will
+ * be added with their physics differences in P3+, never as empty shells.
  */
 
 import type { BallisticProfile, ProfileId } from './types';
@@ -31,11 +31,40 @@ export const LEGACY_PROFILE: BallisticProfile = {
   },
 };
 
-const REGISTRY: Record<string, BallisticProfile> = {
-  legacy: LEGACY_PROFILE,
+/**
+ * MERO profile — P2 beta.
+ *
+ * Higher-fidelity physics, opt-in. Even though the engine resolves Cd for
+ * RA4/GA2/SLG0/SLG1 too, `dragLawsAvailable` lists only the four V1 laws
+ * — we don't surface the slug-specific laws to the UI in P2 (they need
+ * dedicated projectile inventory work first).
+ */
+export const MERO_PROFILE: BallisticProfile = {
+  id: 'mero',
+  labelKey: 'profiles.mero',
+  dragLawsAvailable: ['G1', 'G7', 'GA', 'GS'],
+  defaultDragLaw: 'G1',
+  config: {
+    integrator: 'trapezoidal',
+    dt: 0.001,
+    atmosphereModel: 'tetens-full',
+    windModel: 'lateral-only',
+    postProcess: {
+      spinDrift: true,
+      coriolis: false,
+      cant: false,
+      slopeAngle: false,
+    },
+  },
+  beta: true,
 };
 
-/** Profile used when nothing else has been selected (P1 default = legacy). */
+const REGISTRY: Record<string, BallisticProfile> = {
+  legacy: LEGACY_PROFILE,
+  mero: MERO_PROFILE,
+};
+
+/** Profile used when nothing else has been selected (P2 default = legacy). */
 export const DEFAULT_PROFILE_ID: ProfileId = 'legacy';
 
 /** Returns the profile or `undefined` for unknown ids. */

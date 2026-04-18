@@ -144,7 +144,7 @@ export default function QuickCalc() {
    * edits invalidate this id (see `update`/`updateWeather`/`updateZeroWeather`)
    * so the CTA never compares a stale snapshot.
    *
-   * The previously-named `previewOriginId` (which suggested ownership of
+   * The previously-named `currentSessionId` (which suggested ownership of
    * the persisted row) is gone — naming was the only source of ambiguity.
    */
   const [previewOriginId, setPreviewOriginId] = useState<string | null>(null);

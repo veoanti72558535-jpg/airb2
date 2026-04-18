@@ -180,14 +180,31 @@ export function calibrateBC(args: CalibrateArgs): CalibrationResult {
   }
 
   const originalBc = baseInput.bc;
-  const predictedDropMm = dropAtDistance(baseInput, measuredDistance);
+  const sightHeightM = baseInput.sightHeight / 1000;
+  const dragModel = baseInput.dragModel ?? 'G1';
+
+  // Lock the launch angle to the rifle's actual zero with the original BC.
+  // We then sweep BC while keeping the angle fixed — that's what physically
+  // happens in the field: the user does not re-zero between shots, they just
+  // observe the resulting drop. Use the *zero atmosphere* (matches the engine).
+  const zeroAtmo = calcAtmosphericFactor(baseInput.zeroWeather ?? baseInput.weather);
+  const zeroAngle = findZeroAngle(
+    baseInput.muzzleVelocity,
+    originalBc,
+    sightHeightM,
+    baseInput.zeroRange,
+    zeroAtmo,
+    dragModel,
+    baseInput.customDragTable,
+  );
+
+  const predictedDropMm = dropAtDistance(baseInput, originalBc, zeroAngle, measuredDistance);
   if (!Number.isFinite(predictedDropMm)) {
     throw new Error('engine could not produce a baseline trajectory');
   }
 
-  // Bisection. We rely on the monotonicity of drop(k):
-  //   drop(K_MIN) is the most negative (high drag),
-  //   drop(K_MAX) is the least negative (low drag).
+  // Bisection on k. With the launch angle locked, drop is strictly monotonic
+  // in BC: higher BC ⇒ less drag ⇒ less negative drop.
   let kLow = K_MIN;
   let kHigh = K_MAX;
   let kMid = 1;
@@ -196,8 +213,7 @@ export function calibrateBC(args: CalibrateArgs): CalibrationResult {
 
   for (; iterations < ITER_MAX; iterations++) {
     kMid = (kLow + kHigh) / 2;
-    const candidateInput: BallisticInput = { ...baseInput, bc: originalBc * kMid };
-    achievedDropMm = dropAtDistance(candidateInput, measuredDistance);
+    achievedDropMm = dropAtDistance(baseInput, originalBc * kMid, zeroAngle, measuredDistance);
     if (!Number.isFinite(achievedDropMm)) break;
 
     const diff = achievedDropMm - measuredDropMm;

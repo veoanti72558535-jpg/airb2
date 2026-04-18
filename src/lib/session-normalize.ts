@@ -14,9 +14,23 @@
  *    to G1, weather defaults to ICAO standard, tags default to []). It NEVER
  *    invents physics values like muzzleVelocity or bc.
  *  - Returns the same shape as `Session` so call sites stay typed.
+ *
+ * P3.2 — inferred metadata flag:
+ *  - Sessions saved before P3.1 carry NO frozen metadata. We back-fill it at
+ *    read time so consumers (badges, Compare warnings) work, but we mark
+ *    every back-filled session with `metadataInferred: true` and set
+ *    `calculatedAtSource` to either `inferred-from-updatedAt` or
+ *    `inferred-from-createdAt` so the UI can be honest about it.
+ *  - Sessions that already carry frozen metadata pass through untouched.
  */
 
-import { BallisticInput, BallisticResult, Session, WeatherSnapshot } from './types';
+import {
+  BallisticInput,
+  BallisticResult,
+  CalculatedAtSource,
+  Session,
+  WeatherSnapshot,
+} from './types';
 
 /** ICAO standard atmosphere — used as the safe default for missing weather. */
 export function defaultWeatherSnapshot(): WeatherSnapshot {
@@ -74,8 +88,8 @@ function normalizeResults(rows: BallisticResult[] | undefined): BallisticResult[
  * Returns a copy of `s` with every legacy-prone field filled with safe
  * defaults.
  *
- * P3.1 contract for legacy v0 sessions (no engineVersion / profileId /
- * cdProvenance / dragLawEffective / calculatedAt / engineMetadata):
+ * P3.1 + P3.2 contract for legacy v0 sessions (no engineVersion / profileId
+ * / cdProvenance / dragLawEffective / calculatedAt / engineMetadata):
  *
  *  - These fields are READ-ONLY filled here for consumer convenience
  *    (badges, Compare warnings, exports).
@@ -87,9 +101,36 @@ function normalizeResults(rows: BallisticResult[] | undefined): BallisticResult[
  *    `cdProvenance: 'legacy-piecewise'` so the UI can surface a "Legacy v0"
  *    badge that is distinct from the modern "Legacy" badge (engineVersion
  *    present).
+ *  - P3.2: every legacy v0 session is tagged `metadataInferred: true`
+ *    with `calculatedAtSource` describing exactly how `calculatedAt` was
+ *    obtained, so the UI can never accidentally present an approximation
+ *    as a frozen fact.
  */
 export function normalizeSession(s: Session): Session {
   const isLegacyV0 = s.engineVersion === undefined;
+
+  // calculatedAt source resolution — only relevant when we're back-filling.
+  let calculatedAt = s.calculatedAt;
+  let calculatedAtSource: CalculatedAtSource | undefined = s.calculatedAtSource;
+  if (!calculatedAt && isLegacyV0) {
+    if (s.updatedAt) {
+      calculatedAt = s.updatedAt;
+      calculatedAtSource = 'inferred-from-updatedAt';
+    } else if (s.createdAt) {
+      calculatedAt = s.createdAt;
+      calculatedAtSource = 'inferred-from-createdAt';
+    }
+  }
+  // Modern saves always carry calculatedAtSource='frozen'. Preserve it.
+  if (s.calculatedAtSource) {
+    calculatedAtSource = s.calculatedAtSource;
+  }
+
+  // metadataInferred resolution — true ONLY for legacy v0 sessions whose
+  // builder never frozen anything. Modern sessions keep their stored value
+  // (defaults to false via buildSessionMetadata).
+  const metadataInferred = s.metadataInferred ?? isLegacyV0;
+
   return {
     ...s,
     tags: Array.isArray(s.tags) ? s.tags : [],
@@ -99,12 +140,13 @@ export function normalizeSession(s: Session): Session {
     // Read-time fillers — never written back to storage.
     profileId: s.profileId ?? 'legacy',
     dragLawEffective: s.dragLawEffective ?? s.input?.dragModel ?? 'G1',
+    dragLawRequested: s.dragLawRequested ?? s.input?.dragModel,
     cdProvenance: s.cdProvenance ?? 'legacy-piecewise',
     // engineVersion stays undefined for legacy v0 — UI marker.
     engineVersion: s.engineVersion,
-    // calculatedAt falls back to updatedAt for legacy v0 only, so the badge
-    // tooltip has a date to show. Never overwrite a real one.
-    calculatedAt: s.calculatedAt ?? (isLegacyV0 ? s.updatedAt : undefined),
+    calculatedAt,
+    calculatedAtSource,
+    metadataInferred,
   };
 }
 

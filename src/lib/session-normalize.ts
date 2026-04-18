@@ -133,9 +133,13 @@ export function normalizeSession(s: Session): Session {
 
   // Capture requested drag law from the RAW input (pre-normalisation) so
   // we record what the user originally asked for, not the G1 fallback that
-  // `normalizeInput` would inject. Idempotent: on a second pass `s` already
-  // carries `dragLawRequested`, so we reuse it.
-  const dragLawRequested = s.dragLawRequested ?? s.input?.dragModel;
+  // `normalizeInput` injects. Idempotent: once normalize has run, the
+  // session carries the field as a key (even if its value is undefined),
+  // so we use `in` to detect "already decided" rather than `??` which
+  // would re-resolve from the now-G1-filled input on the second pass.
+  const dragLawRequested = 'dragLawRequested' in s
+    ? s.dragLawRequested
+    : s.input?.dragModel;
 
   return {
     ...s,

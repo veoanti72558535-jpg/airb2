@@ -49,6 +49,57 @@ describe('buildSessionMetadata — legacy default', () => {
   });
 });
 
+describe('buildSessionMetadata — P3.2 new fields', () => {
+  it('always marks new saves as frozen, never inferred', () => {
+    const md = buildSessionMetadata(baseInput);
+    expect(md.calculatedAtSource).toBe('frozen');
+    expect(md.metadataInferred).toBe(false);
+  });
+
+  it('captures the requested drag law alongside the effective one', () => {
+    const md = buildSessionMetadata({ ...baseInput, dragModel: 'G7' });
+    expect(md.dragLawRequested).toBe('G7');
+    expect(md.dragLawEffective).toBe('G7');
+  });
+});
+
+describe('buildSessionMetadata — explicit profileId resolution (P3.2)', () => {
+  it('uses the profileId field on engineConfig when present (legacy)', () => {
+    const md = buildSessionMetadata(
+      { ...baseInput, engineConfig: LEGACY_PROFILE.config },
+      '2025-01-01T00:00:00.000Z',
+    );
+    expect(md.profileId).toBe('legacy');
+  });
+
+  it('records mero when MERO config is used (explicit profileId)', () => {
+    const md = buildSessionMetadata(
+      { ...baseInput, engineConfig: MERO_PROFILE.config },
+      '2025-01-01T00:00:00.000Z',
+    );
+    expect(md.profileId).toBe('mero');
+    expect(md.cdProvenance).toBe('derived-p2');
+  });
+
+  it('trusts the explicit profileId even when shape would suggest otherwise', () => {
+    const tricky = { ...LEGACY_PROFILE.config, profileId: 'mero' as const };
+    const md = buildSessionMetadata({ ...baseInput, engineConfig: tricky });
+    expect(md.profileId).toBe('mero');
+  });
+
+  it('falls back to structural matching when profileId is absent (rétrocompat)', () => {
+    const { profileId: _omit, ...rest } = LEGACY_PROFILE.config;
+    const meroShape = {
+      ...rest,
+      integrator: MERO_PROFILE.config.integrator,
+      atmosphereModel: MERO_PROFILE.config.atmosphereModel,
+      dt: MERO_PROFILE.config.dt,
+    };
+    const md = buildSessionMetadata({ ...baseInput, engineConfig: meroShape });
+    expect(md.profileId).toBe('mero');
+  });
+});
+
 describe('buildSessionMetadata — MERO opt-in', () => {
   it('flags profileId=mero and cdProvenance=derived-p2 when MERO config is passed', () => {
     const md = buildSessionMetadata(

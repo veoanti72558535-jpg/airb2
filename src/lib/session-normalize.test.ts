@@ -106,6 +106,48 @@ describe('normalizeSession — P3.1 metadata back-fill (legacy v0)', () => {
   });
 });
 
+describe('normalizeSession — P3.2 inferred metadata flags', () => {
+  it('marks legacy v0 sessions as metadataInferred=true', () => {
+    const out = normalizeSession(legacy);
+    expect(out.metadataInferred).toBe(true);
+  });
+
+  it('sets calculatedAtSource=inferred-from-updatedAt for legacy v0', () => {
+    const out = normalizeSession(legacy);
+    expect(out.calculatedAtSource).toBe('inferred-from-updatedAt');
+  });
+
+  it('falls back to inferred-from-createdAt when updatedAt is missing', () => {
+    const noUpdated = { ...legacy, updatedAt: undefined as unknown as string };
+    const out = normalizeSession(noUpdated as Session);
+    expect(out.calculatedAtSource).toBe('inferred-from-createdAt');
+    expect(out.calculatedAt).toBe(legacy.createdAt);
+  });
+
+  it('preserves frozen calculatedAtSource on modern sessions', () => {
+    const modern: Session = {
+      ...legacy,
+      engineVersion: 1,
+      profileId: 'legacy',
+      calculatedAt: '2025-06-01T12:00:00.000Z',
+      calculatedAtSource: 'frozen',
+      metadataInferred: false,
+    } as Session;
+    const out = normalizeSession(modern);
+    expect(out.calculatedAtSource).toBe('frozen');
+    expect(out.metadataInferred).toBe(false);
+  });
+
+  it('back-fills dragLawRequested from input.dragModel when absent', () => {
+    const withDrag: Session = {
+      ...legacy,
+      input: { ...legacy.input, dragModel: 'G7' },
+    } as Session;
+    const out = normalizeSession(withDrag);
+    expect(out.dragLawRequested).toBe('G7');
+  });
+});
+
 describe('normalizeSession — partial weather', () => {
   it('fills missing weather fields without overwriting present ones', () => {
     const partial: Session = {

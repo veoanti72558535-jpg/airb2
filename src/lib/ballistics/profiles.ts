@@ -18,6 +18,7 @@ export const LEGACY_PROFILE: BallisticProfile = {
   dragLawsAvailable: ['G1', 'G7', 'GA', 'GS'],
   defaultDragLaw: 'G1',
   config: {
+    profileId: 'legacy',
     integrator: 'euler',
     dt: 0.0005,
     atmosphereModel: 'icao-simple',
@@ -45,6 +46,7 @@ export const MERO_PROFILE: BallisticProfile = {
   dragLawsAvailable: ['G1', 'G7', 'GA', 'GS'],
   defaultDragLaw: 'G1',
   config: {
+    profileId: 'mero',
     integrator: 'trapezoidal',
     dt: 0.001,
     atmosphereModel: 'tetens-full',

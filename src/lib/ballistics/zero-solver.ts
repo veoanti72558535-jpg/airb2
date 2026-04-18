@@ -1,15 +1,20 @@
 /**
- * Zero-angle solver — P1 extraction.
+ * Zero-angle solver — P1 + P2.
  *
  * Bisection over launch angle. Bounds and step are identical to the legacy
- * engine so the same root is found bit-for-bit. P3 will swap this for a
- * Newton-bissection hybrid with stricter convergence guarantees.
+ * engine when called without an `EngineConfig`, so the same root is found
+ * bit-for-bit. P3 will swap this for a Newton-bissection hybrid with
+ * stricter convergence guarantees.
+ *
+ * P2 addition: an optional `EngineConfig` argument lets the solver use the
+ * same integrator + Cd resolver as the flight loop, ensuring zero ↔ flight
+ * consistency for the MERO profile.
  */
 
 import type { DragModel, DragTablePoint } from '../types';
-import { dragDecel } from './drag/retardation';
-
-const GRAVITY = 9.80665; // m/s²
+import { dragDecel, type CdResolver } from './drag/retardation';
+import { getIntegrator, type IntegratorState } from './integrators';
+import type { EngineConfig } from './types';
 
 /**
  * Solve for the launch angle that makes the projectile cross the sight line
@@ -25,16 +30,22 @@ export function findZeroAngle(
   atmoFactor: number,
   model: DragModel,
   customTable: DragTablePoint[] | undefined,
+  config?: EngineConfig,
+  cdResolver?: CdResolver,
 ): number {
   // Wider bounds to accommodate slow projectiles, long zero ranges and high
   // air density. -3° (down) to +15° (up) covers every realistic PCP setup
   // including BB guns zeroed at 50 m and slugs zeroed at 100 m.
   let low = -0.05;
   let high = 0.26;
-  const dt = 0.0005;
+  // Default dt MUST stay 5e-4 when no config is passed — legacy bit-exact.
+  const dt = config?.dt ?? 0.0005;
   for (let i = 0; i < 80; i++) {
     const mid = (low + high) / 2;
-    const y = simulateToRange(muzzleVelocity, bc, mid, sightHeightM, zeroRange, atmoFactor, dt, model, customTable);
+    const y = simulateToRange(
+      muzzleVelocity, bc, mid, sightHeightM, zeroRange,
+      atmoFactor, dt, model, customTable, config, cdResolver,
+    );
     if (Math.abs(y) < 0.00001) break;
     if (y > 0) high = mid;
     else low = mid;
@@ -52,22 +63,22 @@ function simulateToRange(
   dt: number,
   model: DragModel,
   customTable: DragTablePoint[] | undefined,
+  config: EngineConfig | undefined,
+  cdResolver: CdResolver | undefined,
 ): number {
-  let x = 0;
-  let y = 0;
-  let vx = muzzleVelocity * Math.cos(angle);
-  let vy = muzzleVelocity * Math.sin(angle);
-  while (x < targetRange) {
-    const v = Math.sqrt(vx * vx + vy * vy);
+  const step = getIntegrator(config?.integrator ?? 'euler');
+  const state: IntegratorState = {
+    x: 0,
+    y: 0,
+    vx: muzzleVelocity * Math.cos(angle),
+    vy: muzzleVelocity * Math.sin(angle),
+  };
+  const decelFn = (v: number) => dragDecel(v, bc, atmoFactor, model, customTable, cdResolver);
+  while (state.x < targetRange) {
+    const v = Math.sqrt(state.vx * state.vx + state.vy * state.vy);
     if (v < 1) break;
-    const decel = dragDecel(v, bc, atmoFactor, model, customTable);
-    const ax = -(decel * vx) / v;
-    const ay = -GRAVITY - (decel * vy) / v;
-    vx += ax * dt;
-    vy += ay * dt;
-    x += vx * dt;
-    y += vy * dt;
+    step(state, dt, decelFn);
   }
-  const sightLineY = -sightHeightM + (sightHeightM / targetRange) * x;
-  return y - sightLineY;
+  const sightLineY = -sightHeightM + (sightHeightM / targetRange) * state.x;
+  return state.y - sightLineY;
 }

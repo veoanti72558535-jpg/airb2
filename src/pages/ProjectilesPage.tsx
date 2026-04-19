@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Zap, Plus, Trash2, Edit2, Download, GitCompare, X } from 'lucide-react';
+import { Zap, Plus, Trash2, Edit2, Download, GitCompare, X, Layers, Sparkles, Database } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { projectileStore } from '@/lib/storage';
 import { useUnits } from '@/hooks/use-units';
@@ -17,6 +17,29 @@ import { ImportPresetProjectilesModal } from '@/components/projectiles/ImportPre
 import { CompareProjectilesModal } from '@/components/projectiles/CompareProjectilesModal';
 import { DragTableEditor } from '@/components/projectiles/DragTableEditor';
 import { seedProjectileKey } from '@/lib/seed-projectiles';
+
+/** Tranche K — un projectile a-t-il au moins une zone BC exploitable (informatif). */
+export function hasBcZones(p: Projectile): boolean {
+  return Array.isArray(p.bcZones) && p.bcZones.length > 0;
+}
+
+/** Tranche K — un projectile expose-t-il au moins un champ catalogue enrichi bullets4. */
+export function isEnrichedProjectile(p: Projectile): boolean {
+  return (
+    p.caliberLabel !== undefined ||
+    p.diameterMm !== undefined ||
+    p.diameterIn !== undefined ||
+    p.weightGrains !== undefined ||
+    p.weightGrams !== undefined ||
+    p.bcG1 !== undefined ||
+    p.bcG7 !== undefined ||
+    hasBcZones(p) ||
+    (p.lengthMm !== undefined && p.lengthMm !== null) ||
+    (p.lengthIn !== undefined && p.lengthIn !== null) ||
+    p.sourceDbId !== undefined ||
+    p.sourceTable !== undefined
+  );
+}
 
 const MAX_COMPARE = 4;
 

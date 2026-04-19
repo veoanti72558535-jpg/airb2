@@ -240,6 +240,7 @@ export default function QuickCalc() {
     setResults(session.results ?? null);
     setSessionName(session.name);
     setPreviewOriginId(session.id);
+    setTableConfig(prev => ({ ...defaultConfig(i.maxRange), columns: prev.columns }));
     if (i.dragModel === 'G7' || i.zeroWeather || i.focalPlane === 'SFP' || i.twistRate) setAdvanced(true);
     toast.success(t('sessions.loaded'), { description: session.name });
     setSearchParams(prev => { const p = new URLSearchParams(prev); p.delete('session'); return p; });

@@ -527,7 +527,7 @@ export function importProjectilesPreview(
       };
     }
     const norm = normaliseProjectile(result.data, opts.source);
-    if (!norm.ok) {
+    if (norm.ok !== true) {
       return { index, status: 'rejected', issues: norm.issues };
     }
     const { data, notes } = norm;

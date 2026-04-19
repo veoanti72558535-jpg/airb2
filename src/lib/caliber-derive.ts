@@ -43,8 +43,12 @@ const CALIBER_TABLE: ReadonlyArray<CaliberCandidate> = [
   { token: '.45', inches: 0.45 },
 ];
 
-/** Tolérance par défaut en pouces (couvre les écarts catalogue habituels). */
-const DEFAULT_TOLERANCE_IN = 0.003;
+/**
+ * Tolérance par défaut en pouces (≈ 0.127 mm). Couvre l'écart 5.5 mm
+ * (0.2165") ↔ .22 (0.220") qui apparaît dans les exports bullets4 où le
+ * diamètre est exprimé en mm puis converti.
+ */
+const DEFAULT_TOLERANCE_IN = 0.005;
 
 /**
  * Retourne le token caliber canonique le plus proche de `diameterIn`, ou

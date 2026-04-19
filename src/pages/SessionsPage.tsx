@@ -24,6 +24,8 @@ import { ZeroIntersectionsCard } from '@/components/calc/ZeroIntersectionsCard';
 import { TrajectoryMiniChart } from '@/components/calc/TrajectoryMiniChart';
 import { PbrCard } from '@/components/calc/PbrCard';
 import { computeZeroIntersections } from '@/lib/zero-intersections';
+import { computePointBlankRange } from '@/lib/pbr';
+import { usePbrPrefs } from '@/hooks/use-pbr-prefs';
 import { ReticleAssistPanel } from '@/components/calc/ReticleAssistPanel';
 import {
   buildDistanceList,
@@ -435,18 +437,33 @@ function SessionAdvancedReadouts({ session }: { session: Session }) {
     () => computeZeroIntersections(session.results),
     [session.results],
   );
+  // Tranche R — Overlay PBR pour le mini-graphe (préférence utilisateur partagée).
+  const { vitalZoneM } = usePbrPrefs();
+  const pbrOverlay = useMemo(
+    () => computePointBlankRange(session.results, vitalZoneM),
+    [session.results, vitalZoneM],
+  );
   return (
     <>
       {/* Tranche O — Near / Far Zero, dérivés des résultats stockés. */}
       {session.results && session.results.length > 1 && (
         <ZeroIntersectionsCard data={zeroIntersections} />
       )}
-      {/* Tranche P — Mini-graphique trajectoire avec marqueurs NZ/FZ. */}
+      {/* Tranche P — Mini-graphique trajectoire avec marqueurs NZ/FZ.
+          Tranche R — overlay bande PBR (zone vitale persistée). */}
       {session.results && session.results.length > 1 && (
         <TrajectoryMiniChart
           rows={session.results}
           nearZeroDistance={zeroIntersections.nearZeroDistance}
           farZeroDistance={zeroIntersections.farZeroDistance}
+          pbr={{
+            vitalZoneM,
+            startDistance: pbrOverlay.startDistance,
+            endDistance: pbrOverlay.endDistance,
+            apexDistance: pbrOverlay.maxOrdinateDistance,
+            apexMm: pbrOverlay.maxOrdinateMm,
+            limitedByComputedRange: pbrOverlay.limitedByComputedRange,
+          }}
         />
       )}
       {/* Tranche P — Point Blank Range, dérivé des résultats stockés. */}

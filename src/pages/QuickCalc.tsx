@@ -44,6 +44,8 @@ import { ZeroIntersectionsCard } from '@/components/calc/ZeroIntersectionsCard';
 import { TrajectoryMiniChart } from '@/components/calc/TrajectoryMiniChart';
 import { PbrCard } from '@/components/calc/PbrCard';
 import { computeZeroIntersections } from '@/lib/zero-intersections';
+import { computePointBlankRange } from '@/lib/pbr';
+import { usePbrPrefs } from '@/hooks/use-pbr-prefs';
 import {
   buildDistanceList,
   defaultConfig,
@@ -180,6 +182,13 @@ export default function QuickCalc() {
   const zeroIntersections = useMemo(
     () => computeZeroIntersections(results),
     [results],
+  );
+  // Tranche R — Overlay PBR pour le mini-graphe : on réutilise la zone vitale
+  // persistée localement et le helper pur. Aucune duplication de physique.
+  const { vitalZoneM } = usePbrPrefs();
+  const pbrOverlay = useMemo(
+    () => computePointBlankRange(results, vitalZoneM),
+    [results, vitalZoneM],
   );
   useEffect(() => {
     const refresh = () => {
@@ -730,12 +739,21 @@ export default function QuickCalc() {
           )}
 
           {/* Tranche P — Mini-graphique inline trajectoire vs ligne de visée
-              avec marqueurs Near/Far Zero. Pure présentation. */}
+              avec marqueurs Near/Far Zero. Tranche R — overlay bande PBR
+              dérivé de la zone vitale persistée + helper pur. */}
           {results.length > 1 && (
             <TrajectoryMiniChart
               rows={results}
               nearZeroDistance={zeroIntersections.nearZeroDistance}
               farZeroDistance={zeroIntersections.farZeroDistance}
+              pbr={{
+                vitalZoneM,
+                startDistance: pbrOverlay.startDistance,
+                endDistance: pbrOverlay.endDistance,
+                apexDistance: pbrOverlay.maxOrdinateDistance,
+                apexMm: pbrOverlay.maxOrdinateMm,
+                limitedByComputedRange: pbrOverlay.limitedByComputedRange,
+              }}
             />
           )}
 

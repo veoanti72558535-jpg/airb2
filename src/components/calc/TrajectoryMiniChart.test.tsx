@@ -118,3 +118,156 @@ describe('TrajectoryMiniChart — Tranche P', () => {
     expect(root.textContent).toMatch(/FZ/);
   });
 });
+
+describe('TrajectoryMiniChart — Tranche R (overlay PBR)', () => {
+  it("affiche la bande vitale ± rayon quand pbr.vitalZoneM est valide", () => {
+    renderChart({
+      pbr: {
+        vitalZoneM: 0.05,
+        startDistance: 12,
+        endDistance: 55,
+        apexDistance: 30,
+        apexMm: 12,
+        limitedByComputedRange: false,
+      },
+    });
+    expect(screen.getByTestId('trajectory-mini-chart-pbr')).toBeInTheDocument();
+    expect(screen.getByTestId('trajectory-mini-chart-pbr-band')).toBeInTheDocument();
+    expect(screen.getByTestId('trajectory-mini-chart-pbr-window')).toBeInTheDocument();
+    expect(screen.getByTestId('trajectory-mini-chart-pbr-start')).toBeInTheDocument();
+    expect(screen.getByTestId('trajectory-mini-chart-pbr-end')).toBeInTheDocument();
+    expect(screen.getByTestId('trajectory-mini-chart-pbr-apex')).toBeInTheDocument();
+  });
+
+  it("n'affiche pas la borne 'end' quand limitedByComputedRange est vrai", () => {
+    renderChart({
+      pbr: {
+        vitalZoneM: 0.05,
+        startDistance: 12,
+        endDistance: 100,
+        apexDistance: 40,
+        apexMm: 6,
+        limitedByComputedRange: true,
+      },
+    });
+    expect(screen.getByTestId('trajectory-mini-chart-pbr-start')).toBeInTheDocument();
+    expect(screen.queryByTestId('trajectory-mini-chart-pbr-end')).toBeNull();
+    // La sub-bande PBR (windowRect) reste honnête : clamp à la plage.
+    expect(screen.getByTestId('trajectory-mini-chart-pbr-window')).toBeInTheDocument();
+  });
+
+  it("n'affiche pas de fenêtre PBR quand start/end sont null mais garde la bande", () => {
+    renderChart({
+      pbr: {
+        vitalZoneM: 0.05,
+        startDistance: null,
+        endDistance: null,
+        apexDistance: null,
+        apexMm: null,
+        limitedByComputedRange: false,
+      },
+    });
+    expect(screen.getByTestId('trajectory-mini-chart-pbr-band')).toBeInTheDocument();
+    expect(screen.queryByTestId('trajectory-mini-chart-pbr-window')).toBeNull();
+    expect(screen.queryByTestId('trajectory-mini-chart-pbr-start')).toBeNull();
+    expect(screen.queryByTestId('trajectory-mini-chart-pbr-end')).toBeNull();
+    expect(screen.queryByTestId('trajectory-mini-chart-pbr-apex')).toBeNull();
+  });
+
+  it('ignore une zone vitale invalide (0, négative, NaN)', () => {
+    renderChart({
+      pbr: {
+        vitalZoneM: 0,
+        startDistance: 10,
+        endDistance: 50,
+      },
+    });
+    expect(screen.queryByTestId('trajectory-mini-chart-pbr')).toBeNull();
+
+    renderChart({
+      pbr: {
+        vitalZoneM: NaN,
+        startDistance: 10,
+        endDistance: 50,
+      },
+    });
+    expect(screen.queryAllByTestId('trajectory-mini-chart-pbr').length).toBe(0);
+  });
+
+  it("n'affiche aucune couche PBR quand pbr est null/undefined", () => {
+    renderChart({ pbr: null });
+    expect(screen.queryByTestId('trajectory-mini-chart-pbr')).toBeNull();
+    renderChart({ pbr: undefined });
+    expect(screen.queryAllByTestId('trajectory-mini-chart-pbr').length).toBe(0);
+  });
+
+  it('affiche la légende textuelle PBR (start–end) quand fenêtre disponible', () => {
+    renderChart({
+      pbr: {
+        vitalZoneM: 0.05,
+        startDistance: 12,
+        endDistance: 55,
+      },
+    });
+    const legend = screen.getByTestId('trajectory-mini-chart-pbr-legend');
+    expect(legend.textContent).toMatch(/PBR/);
+  });
+
+  it("la légende PBR montre un '+' quand limitedByComputedRange", () => {
+    renderChart({
+      pbr: {
+        vitalZoneM: 0.05,
+        startDistance: 12,
+        endDistance: 100,
+        limitedByComputedRange: true,
+      },
+    });
+    const legend = screen.getByTestId('trajectory-mini-chart-pbr-legend');
+    expect(legend.textContent).toMatch(/\+/);
+  });
+
+  it('clamp la sub-bande PBR à la plage du graphe sans crasher', () => {
+    renderChart({
+      pbr: {
+        vitalZoneM: 0.05,
+        startDistance: -50, // hors plage min
+        endDistance: 9999,  // hors plage max
+      },
+    });
+    // La fenêtre est clampée sur le domaine X, donc visible.
+    expect(screen.getByTestId('trajectory-mini-chart-pbr-window')).toBeInTheDocument();
+    // Les bornes hors plage ne sont pas tracées.
+    expect(screen.queryByTestId('trajectory-mini-chart-pbr-start')).toBeNull();
+    expect(screen.queryByTestId('trajectory-mini-chart-pbr-end')).toBeNull();
+  });
+
+  it("n'affiche pas l'apex si la distance est hors plage", () => {
+    renderChart({
+      pbr: {
+        vitalZoneM: 0.05,
+        startDistance: 10,
+        endDistance: 60,
+        apexDistance: 9999,
+        apexMm: 10,
+      },
+    });
+    expect(screen.queryByTestId('trajectory-mini-chart-pbr-apex')).toBeNull();
+  });
+
+  it('ne mute pas le tableau de résultats quand l’overlay PBR est actif', () => {
+    const snapshot = ROWS.map(r => ({ ...r }));
+    renderChart({
+      pbr: {
+        vitalZoneM: 0.05,
+        startDistance: 10,
+        endDistance: 55,
+        apexDistance: 30,
+        apexMm: 6,
+      },
+    });
+    for (let i = 0; i < ROWS.length; i++) {
+      expect(ROWS[i].range).toBe(snapshot[i].range);
+      expect(ROWS[i].drop).toBe(snapshot[i].drop);
+    }
+  });
+});

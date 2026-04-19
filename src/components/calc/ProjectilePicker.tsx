@@ -153,11 +153,16 @@ export function ProjectilePicker({
       case 'bc':
         sorted.sort((a, b) => (b.bc ?? 0) - (a.bc ?? 0));
         break;
-      case 'caliber':
-        sorted.sort((a, b) =>
-          calToken(a.caliber).localeCompare(calToken(b.caliber), undefined, { numeric: true }),
-        );
+      case 'caliber': {
+        // Sort by numeric value of the canonical caliber token (".177" → 0.177).
+        const num = (s: string) => {
+          const tok = calToken(s);
+          const n = parseFloat(tok);
+          return Number.isFinite(n) ? n : Number.POSITIVE_INFINITY;
+        };
+        sorted.sort((a, b) => num(a.caliber) - num(b.caliber));
         break;
+      }
       case 'relevance':
       default:
         // Keep insertion order — already roughly recency-based via store.

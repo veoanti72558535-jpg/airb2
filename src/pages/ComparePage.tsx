@@ -27,6 +27,7 @@ import { SessionSummary } from '@/components/compare/SessionSummary';
 import { DifferencesList } from '@/components/compare/DifferencesList';
 import { ComparisonTable } from '@/components/compare/ComparisonTable';
 import { BallisticTable } from '@/components/compare/BallisticTable';
+import { PbrZeroReadout } from '@/components/compare/PbrZeroReadout';
 
 /**
  * Dedicated, bookmarkable comparison view for two sessions.
@@ -222,6 +223,12 @@ export default function ComparePage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <SessionSummary session={a} letter="A" />
           <SessionSummary session={b} letter="B" />
+        </div>
+
+        {/* Bloc A.bis — Tranche S : lecture comparative zero / near / far / PBR */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <PbrZeroReadout session={a} letter="A" />
+          <PbrZeroReadout session={b} letter="B" />
         </div>
 
         {/* Bloc B — Differences */}

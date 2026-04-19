@@ -685,6 +685,10 @@ const fr = {
   'compare.tableA': 'Tableau A',
   'compare.tableB': 'Tableau B',
 
+  // Compare — Tranche S : lecture comparative zero / near / far / PBR
+  'compare.pbrZeroTitle': 'Zéro & PBR',
+  'compare.zeroRange': 'Zéro',
+
   // Compare — diff group labels
   'compare.groupProjectile': 'Projectile',
   'compare.groupWeapon': 'Arme',
@@ -1561,6 +1565,10 @@ const en: Record<keyof typeof fr, string> = {
   'compare.compareFromCalcCta': 'Compare with another session',
   'compare.tableA': 'Table A',
   'compare.tableB': 'Table B',
+
+  // Compare — Tranche S: comparative zero / near / far / PBR readout
+  'compare.pbrZeroTitle': 'Zero & PBR',
+  'compare.zeroRange': 'Zero',
 
   'compare.groupProjectile': 'Projectile',
   'compare.groupWeapon': 'Weapon',

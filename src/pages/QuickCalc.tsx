@@ -172,6 +172,13 @@ export default function QuickCalc() {
     const s = getSettings();
     return s.energyThresholdJ === undefined ? 16.27 : s.energyThresholdJ;
   });
+  // Tranche P — Near / Far Zero mémoïsés pour partager la même donnée entre
+  // la carte dédiée et les marqueurs de ligne dans la BallisticTable. Pure
+  // dérivation des résultats déjà produits par le moteur.
+  const zeroIntersections = useMemo(
+    () => computeZeroIntersections(results),
+    [results],
+  );
   useEffect(() => {
     const refresh = () => {
       const s = getSettings();

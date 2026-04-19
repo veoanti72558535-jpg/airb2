@@ -11,6 +11,7 @@
 import { useMemo, useState } from 'react';
 import { ChevronDown, ChevronUp, Settings2, RotateCcw } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
+import type { TranslationKey } from '@/lib/translations';
 import { useUnits } from '@/hooks/use-units';
 import { cn } from '@/lib/utils';
 import type { BallisticResult } from '@/lib/types';
@@ -44,7 +45,7 @@ interface Props {
   title?: string;
 }
 
-const COLUMN_LABEL_KEYS: Record<BallisticTableColumn, string> = {
+const COLUMN_LABEL_KEYS: Record<BallisticTableColumn, TranslationKey> = {
   distance: 'ballisticTable.distance',
   drop: 'ballisticTable.drop',
   holdover: 'ballisticTable.holdover',

@@ -358,6 +358,16 @@ const fr = {
   'optics.search': 'Rechercher par nom ou notes…',
   'optics.noMatch': 'Aucune optique pour ces filtres.',
   'optics.resetFilters': 'Réinitialiser les filtres',
+  // Tranche G — liaison Optic ↔ Reticle
+  'optics.reticle.label': 'Réticule lié',
+  'optics.reticle.none': 'Aucun réticule lié',
+  'optics.reticle.link': 'Lier un réticule',
+  'optics.reticle.change': 'Changer',
+  'optics.reticle.unlink': 'Dissocier',
+  'optics.reticle.open': 'Ouvrir',
+  'optics.reticle.notFound': 'Réticule lié introuvable',
+  'optics.reticle.selectTitle': 'Choisir un réticule',
+  'optics.reticle.placeholder': 'Aucune image',
 
   // Sessions
   'sessions.title': 'Sessions',
@@ -1098,6 +1108,16 @@ const en: Record<keyof typeof fr, string> = {
   'optics.search': 'Search by name or notes…',
   'optics.noMatch': 'No optic for these filters.',
   'optics.resetFilters': 'Reset filters',
+  // Tranche G — Optic ↔ Reticle link
+  'optics.reticle.label': 'Linked reticle',
+  'optics.reticle.none': 'No linked reticle',
+  'optics.reticle.link': 'Link a reticle',
+  'optics.reticle.change': 'Change',
+  'optics.reticle.unlink': 'Unlink',
+  'optics.reticle.open': 'Open',
+  'optics.reticle.notFound': 'Linked reticle not found',
+  'optics.reticle.selectTitle': 'Select a reticle',
+  'optics.reticle.placeholder': 'No image',
 
   'sessions.title': 'Sessions',
   'sessions.add': 'New Session',

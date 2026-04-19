@@ -1737,6 +1737,17 @@ const en: Record<keyof typeof fr, string> = {
   'trajectoryChart.los': 'Line of sight',
   'trajectoryChart.legend': 'Trajectory (—) vs line of sight (- -)',
   'trajectoryChart.empty': 'Not enough points to plot the trajectory.',
+  'pbr.title': 'Point Blank Range (PBR)',
+  'pbr.vitalZone': 'Vital zone',
+  'pbr.range': 'PBR range',
+  'pbr.start': 'Start',
+  'pbr.end': 'End',
+  'pbr.maxOrdinate': 'Apex (above LOS)',
+  'pbr.maxOrdinateDistance': 'Apex distance',
+  'pbr.unavailable': 'Unavailable — not enough data.',
+  'pbr.outOfRange': 'Out of computed range',
+  'pbr.notDeterminable': 'Trajectory never enters the vital zone in this range.',
+  'pbr.limitedByComputedRange': 'Limited by computed range',
 
   // Reticle Assist (Tranche I)
   'reticleAssist.title': 'Reticle assistant',

@@ -120,6 +120,10 @@ export function EngineBadge({ session, size = 'sm', className }: Props) {
   const sourceKey = calcSourceKey(session.calculatedAtSource);
   const isInferred = !!session.metadataInferred;
 
+  // Tranche F.5 — origine d'import des entités liées (projectile, optique).
+  // Ne lit PAS le réticule : pas de lien session ↔ réticule en V1.
+  const importedFrom = resolveSessionImportedFrom(session);
+
   return (
     <TooltipProvider delayDuration={150}>
       <Tooltip>

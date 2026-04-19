@@ -78,7 +78,11 @@ const importedWeightUnit = z.enum(['gr', 'g']);
 const bcZoneSchema = z
   .object({
     bc: z.number().finite().positive().max(2),
-    minVelocity: z.number().finite().min(0).max(2000),
+    // bullets4 stocke `minVelocity` en fps (Strelok) — un .22 LR plafonne
+    // ~1500 fps, mais les calibres centerfire peuvent dépasser 3500 fps.
+    // On élargit la borne à 4000 pour couvrir fps ET m/s sans rejeter de
+    // données légitimes en provenance de bullets4-db.
+    minVelocity: z.number().finite().min(0).max(4000),
   })
   .strict();
 

@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useI18n } from '@/lib/i18n';
 import {
   AlertTriangle,
   CheckCircle2,
+  ChevronDown,
+  ChevronRight,
   Copy,
   Wand2,
 } from 'lucide-react';

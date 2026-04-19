@@ -41,6 +41,7 @@ import { ResultsCard } from '@/components/calc/ResultsCard';
 import { BallisticTable } from '@/components/calc/BallisticTable';
 import { ReticleAssistPanel } from '@/components/calc/ReticleAssistPanel';
 import { ZeroIntersectionsCard } from '@/components/calc/ZeroIntersectionsCard';
+import { TrajectoryMiniChart } from '@/components/calc/TrajectoryMiniChart';
 import { computeZeroIntersections } from '@/lib/zero-intersections';
 import {
   buildDistanceList,

@@ -1,4 +1,4 @@
-import { Airgun, Projectile, Optic, Session, Tune, AppSettings } from './types';
+import { Airgun, Projectile, Optic, Reticle, Session, Tune, AppSettings } from './types';
 import {
   sanitizeProjectileForPublic,
   sanitizeSessionForPublic,
@@ -9,6 +9,7 @@ const KEYS = {
   tunes: 'pcp-tunes',
   projectiles: 'pcp-projectiles',
   optics: 'pcp-optics',
+  reticles: 'pcp-reticles',
   sessions: 'pcp-sessions',
   settings: 'pcp-settings',
 } as const;
@@ -63,6 +64,12 @@ export const airgunStore = createCRUD<Airgun>(KEYS.airguns);
 export const tuneStore = createCRUD<Tune>(KEYS.tunes);
 export const projectileStore = createCRUD<Projectile>(KEYS.projectiles);
 export const opticStore = createCRUD<Optic>(KEYS.optics);
+/**
+ * Tranche F.1 — store CRUD pour l'entité `Reticle`. Suit strictement le
+ * pattern des autres stores (createCRUD) : pas de logique métier ici, la
+ * normalisation/validation arrivera avec la pipeline d'import en F.2.
+ */
+export const reticleStore = createCRUD<Reticle>(KEYS.reticles);
 export const sessionStore = createCRUD<Session>(KEYS.sessions);
 
 export function getSettings(): AppSettings {

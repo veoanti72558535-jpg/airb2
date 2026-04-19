@@ -305,3 +305,68 @@ describe('ProjectilePicker — sort', () => {
     expect(rowsInOrder()).toEqual(['b', 'c', 'a']);
   });
 });
+
+describe('ProjectilePicker — Tranche M perf & virtualization', () => {
+  function makeMany(n: number): Projectile[] {
+    return Array.from({ length: n }, (_, i) =>
+      legacy({
+        id: `bulk-${i}`,
+        brand: i % 2 === 0 ? 'JSB' : 'NSA',
+        model: `M${i}`,
+        weight: 8 + (i % 30),
+        caliber: i % 3 === 0 ? '.177' : '.22',
+      }),
+    );
+  }
+
+  it('virtualizes once the result set is large (renders far fewer DOM rows than items)', () => {
+    const data = makeMany(2000);
+    renderPicker(data);
+    const listbox = screen.getByRole('listbox');
+    expect(listbox.getAttribute('data-virtualized')).toBe('true');
+    const renderedRows = listbox.querySelectorAll('[data-projectile-id]');
+    expect(renderedRows.length).toBeGreaterThan(0);
+    expect(renderedRows.length).toBeLessThan(200);
+    expect(renderedRows.length).toBeLessThan(data.length / 5);
+  });
+
+  it('does NOT virtualize for small result sets (below threshold)', () => {
+    const data = makeMany(__PICKER_INTERNAL.VIRTUALIZATION_THRESHOLD - 5);
+    renderPicker(data);
+    const listbox = screen.getByRole('listbox');
+    expect(listbox.getAttribute('data-virtualized')).toBe('false');
+    const renderedRows = listbox.querySelectorAll('[data-projectile-id]');
+    expect(renderedRows.length).toBe(data.length);
+  });
+
+  it('keeps results count accurate even when virtualized', () => {
+    renderPicker(makeMany(2000));
+    expect(screen.getByText(/2000 sur 2000/)).toBeInTheDocument();
+  });
+
+  it('debounce coalesces rapid keystrokes into a single filter pass', () => {
+    const data = makeMany(2000);
+    renderPicker(data);
+    const input = screen.getByLabelText(/rechercher/i);
+    fireEvent.change(input, { target: { value: 'j' } });
+    fireEvent.change(input, { target: { value: 'js' } });
+    fireEvent.change(input, { target: { value: 'jsb' } });
+    expect(screen.getByText(/2000 sur 2000/)).toBeInTheDocument();
+    act(() => {
+      vi.advanceTimersByTime(__PICKER_INTERNAL.SEARCH_DEBOUNCE_MS + 10);
+    });
+    expect(screen.getByText(/1000 sur 2000/)).toBeInTheDocument();
+  });
+
+  it('virtualized list shows the "optimized rendering" footer hint', () => {
+    renderPicker(makeMany(500));
+    expect(screen.getByText(/affichage optimisé/i)).toBeInTheDocument();
+  });
+
+  it('exposes a DialogDescription for screen readers (a11y)', () => {
+    renderPicker([legacy()]);
+    expect(
+      screen.getByText(/recherchez, filtrez et triez votre bibliothèque/i),
+    ).toBeInTheDocument();
+  });
+});

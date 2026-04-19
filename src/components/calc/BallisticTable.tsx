@@ -9,7 +9,7 @@
  * the table itself scrolls horizontally when the chosen columns overflow.
  */
 import { useMemo, useState } from 'react';
-import { ChevronDown, ChevronUp, Settings2, RotateCcw } from 'lucide-react';
+import { ChevronDown, ChevronUp, Settings2, RotateCcw, Crosshair } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import type { TranslationKey } from '@/lib/translations';
 import { useUnits } from '@/hooks/use-units';

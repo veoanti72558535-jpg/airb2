@@ -361,14 +361,11 @@ export default function SessionsPage() {
                 {!selectionMode && (
                   <div className="mt-3 space-y-2">
                     <CalculationMetadataBlock session={s} />
-                    {/* Tranche H — Configurable ballistic table on saved sessions.
-                        Reads frozen results, never re-runs the engine. */}
+                    {/* Tranche H + J — Table balistique configurable +
+                        assistant réticule synchronisé sur la même grille.
+                        Lit les résultats figés, aucun recalcul moteur. */}
                     {s.results && s.results.length > 1 && (
-                      <BallisticTable
-                        rows={s.results}
-                        clickUnit={s.input.clickUnit ?? 'MRAD'}
-                        maxRangeHint={s.input.maxRange}
-                      />
+                      <SessionAdvancedReadouts session={s} />
                     )}
                     <button
                       type="button"

@@ -129,8 +129,14 @@ describe('BallisticTable — distance/step config', () => {
 
 describe('BallisticTable — non-régression engine', () => {
   it("n'altère pas les données BallisticResult passées en input", () => {
-    const original = JSON.parse(JSON.stringify(ROWS));
+    const snapshot = ROWS.map(r => ({ ...r }));
     renderTable();
-    expect(ROWS).toEqual(original);
+    // Compare numerically — JSON serialisation makes 0 vs -0 spuriously differ.
+    expect(ROWS.length).toBe(snapshot.length);
+    for (let i = 0; i < ROWS.length; i++) {
+      expect(ROWS[i].range).toBe(snapshot[i].range);
+      expect(ROWS[i].velocity).toBe(snapshot[i].velocity);
+      expect(ROWS[i].drop).toBe(snapshot[i].drop);
+    }
   });
 });

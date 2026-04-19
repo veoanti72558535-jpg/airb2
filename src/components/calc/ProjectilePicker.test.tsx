@@ -135,7 +135,7 @@ describe('ProjectilePicker — listing & search', () => {
 
   it('filters by brand text', () => {
     renderPicker(data);
-    fireEvent.change(screen.getByLabelText(/rechercher/i), { target: { value: 'jsb' } });
+    typeSearch('jsb');
     expect(screen.getByText(/JSB Exact Heavy/)).toBeInTheDocument();
     expect(screen.getByText(/JSB Match/)).toBeInTheDocument();
     expect(screen.queryByText(/H&N Baracuda/)).not.toBeInTheDocument();
@@ -144,21 +144,21 @@ describe('ProjectilePicker — listing & search', () => {
 
   it('filters by model text', () => {
     renderPicker(data);
-    fireEvent.change(screen.getByLabelText(/rechercher/i), { target: { value: 'baracuda' } });
+    typeSearch('baracuda');
     expect(screen.getByText(/H&N Baracuda/)).toBeInTheDocument();
     expect(screen.queryByText(/JSB Exact Heavy/)).not.toBeInTheDocument();
   });
 
   it('filters by caliber text', () => {
     renderPicker(data);
-    fireEvent.change(screen.getByLabelText(/rechercher/i), { target: { value: '.177' } });
+    typeSearch('.177');
     expect(screen.getByText(/JSB Match/)).toBeInTheDocument();
     expect(screen.queryByText(/H&N Baracuda/)).not.toBeInTheDocument();
   });
 
   it('shows the no-results message when filters exclude everything', () => {
     renderPicker(data);
-    fireEvent.change(screen.getByLabelText(/rechercher/i), { target: { value: 'zzznever' } });
+    typeSearch('zzznever');
     expect(screen.getByText(/aucun projectile ne correspond/i)).toBeInTheDocument();
   });
 });

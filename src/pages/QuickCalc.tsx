@@ -38,6 +38,7 @@ import { EnvironmentSection } from '@/components/calc/EnvironmentSection';
 import { DistanceSection } from '@/components/calc/DistanceSection';
 import { ZeroingSection } from '@/components/calc/ZeroingSection';
 import { ResultsCard } from '@/components/calc/ResultsCard';
+import { BallisticTable } from '@/components/calc/BallisticTable';
 
 interface FormState {
   // Projectile

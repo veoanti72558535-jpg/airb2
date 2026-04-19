@@ -1,8 +1,9 @@
-import { describe, it, expect } from 'vitest';
+import { afterEach, beforeEach, describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { I18nProvider } from '@/lib/i18n';
 import { EngineBadge, resolveBadgeState } from '@/components/sessions/EngineBadge';
+import { projectileStore, opticStore } from '@/lib/storage';
 import type { Session } from '@/lib/types';
 
 function makeSession(overrides: Partial<Session> = {}): Session {

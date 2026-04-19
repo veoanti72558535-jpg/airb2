@@ -60,11 +60,20 @@ function readFileAsDataUrl(file: File): Promise<string> {
   });
 }
 
-function loadImage(dataUrl: string): Promise<HTMLImageElement> {
+function loadImage(dataUrl: string, timeoutMs = 1500): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = () => reject(new ReticleImageError('process-error', 'Image decode failed'));
+    const timer = setTimeout(() => {
+      reject(new ReticleImageError('process-error', 'Image decode timeout'));
+    }, timeoutMs);
+    img.onload = () => {
+      clearTimeout(timer);
+      resolve(img);
+    };
+    img.onerror = () => {
+      clearTimeout(timer);
+      reject(new ReticleImageError('process-error', 'Image decode failed'));
+    };
     img.src = dataUrl;
   });
 }

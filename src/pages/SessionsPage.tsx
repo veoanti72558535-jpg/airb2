@@ -20,6 +20,12 @@ import { RecalculateDialog } from '@/components/sessions/RecalculateDialog';
 import { SessionLineage } from '@/components/sessions/SessionLineage';
 import { normalizeSession } from '@/lib/session-normalize';
 import { BallisticTable } from '@/components/calc/BallisticTable';
+import { ReticleAssistPanel } from '@/components/calc/ReticleAssistPanel';
+import {
+  buildDistanceList,
+  defaultConfig,
+  type BallisticTableConfig,
+} from '@/lib/ballistic-table';
 
 export default function SessionsPage() {
   const { t } = useI18n();

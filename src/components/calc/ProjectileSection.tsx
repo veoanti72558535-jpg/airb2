@@ -1,10 +1,12 @@
-import { Crosshair, HelpCircle } from 'lucide-react';
+import { useState } from 'react';
+import { Crosshair, HelpCircle, ChevronRight, Layers, Database } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { Section } from './Section';
 import { Field } from './Field';
 import { UnitField } from './UnitField';
-import { EntitySelect } from './EntitySelect';
+import { ProjectilePicker, pickerHasBcZones, pickerIsImported } from './ProjectilePicker';
 import { Projectile, DragModel, ProjectileType } from '@/lib/types';
+import { cn } from '@/lib/utils';
 
 interface Props {
   projectiles: Projectile[];
@@ -41,22 +43,73 @@ export function ProjectileSection({
   advanced,
 }: Props) {
   const { t } = useI18n();
+  const [pickerOpen, setPickerOpen] = useState(false);
+
+  const selected = projectiles.find(p => p.id === selectedId);
+  const isEmpty = projectiles.length === 0;
 
   return (
     <Section icon={Crosshair} title={t('calc.sectionProjectile')}>
-      <EntitySelect
-        label={t('calc.selectProjectile')}
-        value={selectedId}
-        onChange={onSelect}
-        options={projectiles.map(p => ({
-          id: p.id,
-          label: `${p.brand} ${p.model}`,
-          sub: `${p.weight}gr · BC ${p.bc} · ${p.caliber}`,
-        }))}
-        placeholder={t('calc.manualEntry')}
-        emptyText={t('calc.noProjectiles')}
-        addHref="/library"
+      {/* Tranche L — picker trigger replacing the basic combobox. */}
+      <div className="space-y-1">
+        <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
+          {t('calc.selectProjectile')}
+        </label>
+        <button
+          type="button"
+          onClick={() => setPickerOpen(true)}
+          disabled={isEmpty}
+          aria-label={t('projectilePicker.open')}
+          aria-haspopup="dialog"
+          data-testid="projectile-picker-trigger"
+          className={cn(
+            'w-full flex items-center justify-between gap-2 bg-muted/40 border border-border rounded-md px-3 py-2 text-sm text-left focus:outline-none focus:ring-1 focus:ring-primary hover:bg-muted/60 transition-colors',
+            isEmpty && 'opacity-60 cursor-not-allowed',
+          )}
+        >
+          <span className="min-w-0 flex-1 truncate">
+            {selected ? (
+              <span className="flex items-baseline gap-1.5 flex-wrap">
+                <span className="font-medium">{selected.brand} {selected.model}</span>
+                <span className="text-[11px] text-muted-foreground font-mono truncate">
+                  {selected.caliberLabel || selected.caliber} · {selected.weight}gr · BC {selected.bc?.toFixed(3) ?? '—'}
+                </span>
+                {pickerHasBcZones(selected) && (
+                  <span
+                    className="inline-flex items-center gap-0.5 px-1 rounded text-[9px] bg-primary/10 text-primary border border-primary/20"
+                    title={t('projectiles.list.bcZonesBadgeTitle')}
+                  >
+                    <Layers className="h-2 w-2" aria-hidden />
+                    {t('projectilePicker.bcZones')}
+                  </span>
+                )}
+                {pickerIsImported(selected) && (
+                  <span
+                    className="inline-flex items-center gap-0.5 px-1 rounded text-[9px] bg-muted/60 text-muted-foreground border border-border"
+                    title={t('projectiles.list.importedBadgeTitle', { source: selected.importedFrom ?? '' })}
+                  >
+                    <Database className="h-2 w-2" aria-hidden />
+                  </span>
+                )}
+              </span>
+            ) : isEmpty ? (
+              <span className="text-muted-foreground italic">{t('calc.noProjectiles')}</span>
+            ) : (
+              <span className="text-muted-foreground">— {t('calc.manualEntry')} —</span>
+            )}
+          </span>
+          <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden />
+        </button>
+      </div>
+
+      <ProjectilePicker
+        open={pickerOpen}
+        onOpenChange={setPickerOpen}
+        projectiles={projectiles}
+        selectedId={selectedId}
+        onSelect={onSelect}
       />
+
       <div className="grid grid-cols-2 gap-2.5">
         <UnitField
           label={t('calc.projectileWeight')}

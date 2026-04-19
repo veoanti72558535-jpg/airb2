@@ -110,8 +110,21 @@ export const projectileImportSchema = z
   .object({
     brand: shortString,
     model: shortString,
-    weight: finiteNumber.positive().max(1000), // grains, garde-fou
-    bc: finiteNumber.positive().max(2),
+    /**
+     * `weight` (grains) historiquement obligatoire. Rendu optionnel pour
+     * accepter les sources bullets4 qui n'exposent que `weightGrains` /
+     * `weightGrams`. La pipeline dérive `weight` depuis ces variantes et
+     * marque l'item `sanitized`. Si aucune des trois variantes n'est
+     * fournie, la pipeline rejette l'item avec un message explicite.
+     */
+    weight: finiteNumber.positive().max(1000).optional(),
+    /**
+     * `bc` historiquement obligatoire. Rendu optionnel pour accepter les
+     * sources bullets4 qui n'exposent que `bcG1` / `bcG7`. La pipeline
+     * dérive `bc` depuis `bcG1` (ou `bcG7` à défaut) et marque l'item
+     * `sanitized`. Si aucune variante n'est fournie, la pipeline rejette.
+     */
+    bc: finiteNumber.positive().max(2).optional(),
     bcModel: importedDragModel.optional(),
     projectileType: importedProjectileType.optional(),
     shape: optionalShortString,

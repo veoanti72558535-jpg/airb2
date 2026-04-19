@@ -379,6 +379,15 @@ const fr = {
   'projectilePicker.unpin': 'Désépingler des favoris',
   'projectilePicker.clearRecents': 'Effacer les récents',
 
+  // Tranche O — Near / Far Zero
+  'zeroIntersections.title': 'Croisements de la ligne de visée',
+  'zeroIntersections.nearZero': 'Near Zero',
+  'zeroIntersections.farZero': 'Far Zero',
+  'zeroIntersections.unavailable': 'Indisponible',
+  'zeroIntersections.outOfRange': 'Hors plage calculée',
+  'zeroIntersections.notDeterminable': 'Non déterminable sur cette trajectoire',
+  'zeroIntersections.exactSample': 'Croisement exact sur un point calculé',
+
   // Optics
   'optics.title': 'Bibliothèque d\'optiques',
   'optics.add': 'Ajouter une optique',
@@ -1238,6 +1247,15 @@ const en: Record<keyof typeof fr, string> = {
   'projectilePicker.pin': 'Pin to favorites',
   'projectilePicker.unpin': 'Unpin from favorites',
   'projectilePicker.clearRecents': 'Clear recents',
+
+  // Tranche O — Near / Far Zero
+  'zeroIntersections.title': 'Line-of-sight crossings',
+  'zeroIntersections.nearZero': 'Near Zero',
+  'zeroIntersections.farZero': 'Far Zero',
+  'zeroIntersections.unavailable': 'Unavailable',
+  'zeroIntersections.outOfRange': 'Out of computed range',
+  'zeroIntersections.notDeterminable': 'Not determinable on this trajectory',
+  'zeroIntersections.exactSample': 'Exact crossing on a computed sample',
 
   'optics.title': 'Optics Library',
   'optics.add': 'Add Optic',

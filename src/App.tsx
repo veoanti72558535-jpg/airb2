@@ -12,6 +12,8 @@ import LibraryPage from "@/pages/LibraryPage";
 import AirgunDetailPage from "@/pages/AirgunDetailPage";
 import ProjectileDetailPage from "@/pages/ProjectileDetailPage";
 import OpticDetailPage from "@/pages/OpticDetailPage";
+import ReticlesPage from "@/pages/ReticlesPage";
+import ReticleDetailPage from "@/pages/ReticleDetailPage";
 import SessionsPage from "@/pages/SessionsPage";
 import ComparePage from "@/pages/ComparePage";
 import ConversionsPage from "@/pages/ConversionsPage";
@@ -39,6 +41,8 @@ const App = () => (
                 <Route path="/library/airgun/:id" element={<AirgunDetailPage />} />
                 <Route path="/library/projectile/:id" element={<ProjectileDetailPage />} />
                 <Route path="/library/optic/:id" element={<OpticDetailPage />} />
+                <Route path="/library/reticles" element={<ReticlesPage />} />
+                <Route path="/library/reticles/:id" element={<ReticleDetailPage />} />
                 <Route path="/sessions" element={<SessionsPage />} />
                 <Route path="/compare" element={<ComparePage />} />
                 <Route path="/conversions" element={<ConversionsPage />} />

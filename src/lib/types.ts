@@ -166,6 +166,14 @@ export interface Reticle {
   notes?: string;
   /** Tranche F.1 — origine de la donnée si importée. */
   importedFrom?: ImportSource;
+  /**
+   * Tranche F.4 — image principale optionnelle, encodée en data URL
+   * (data:image/<png|jpeg|webp>;base64,...). Une seule image par réticule
+   * en V1 (pas de galerie). Compressée/redimensionnée côté client avant
+   * stockage pour ne pas saturer localStorage. Champ optionnel : les
+   * réticules existants sans image restent strictement valides.
+   */
+  imageDataUrl?: string;
   createdAt: string;
   updatedAt: string;
 }

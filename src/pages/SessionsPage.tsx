@@ -437,6 +437,12 @@ function SessionAdvancedReadouts({ session }: { session: Session }) {
     () => computeZeroIntersections(session.results),
     [session.results],
   );
+  // Tranche R — Overlay PBR pour le mini-graphe (préférence utilisateur partagée).
+  const { vitalZoneM } = usePbrPrefs();
+  const pbrOverlay = useMemo(
+    () => computePointBlankRange(session.results, vitalZoneM),
+    [session.results, vitalZoneM],
+  );
   return (
     <>
       {/* Tranche O — Near / Far Zero, dérivés des résultats stockés. */}

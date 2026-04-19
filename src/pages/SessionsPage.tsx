@@ -21,6 +21,7 @@ import { SessionLineage } from '@/components/sessions/SessionLineage';
 import { normalizeSession } from '@/lib/session-normalize';
 import { BallisticTable } from '@/components/calc/BallisticTable';
 import { ZeroIntersectionsCard } from '@/components/calc/ZeroIntersectionsCard';
+import { TrajectoryMiniChart } from '@/components/calc/TrajectoryMiniChart';
 import { computeZeroIntersections } from '@/lib/zero-intersections';
 import { ReticleAssistPanel } from '@/components/calc/ReticleAssistPanel';
 import {
@@ -438,6 +439,14 @@ function SessionAdvancedReadouts({ session }: { session: Session }) {
       {/* Tranche O — Near / Far Zero, dérivés des résultats stockés. */}
       {session.results && session.results.length > 1 && (
         <ZeroIntersectionsCard data={zeroIntersections} />
+      )}
+      {/* Tranche P — Mini-graphique trajectoire avec marqueurs NZ/FZ. */}
+      {session.results && session.results.length > 1 && (
+        <TrajectoryMiniChart
+          rows={session.results}
+          nearZeroDistance={zeroIntersections.nearZeroDistance}
+          farZeroDistance={zeroIntersections.farZeroDistance}
+        />
       )}
       <BallisticTable
         rows={session.results}

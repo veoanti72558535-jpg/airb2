@@ -41,6 +41,7 @@ import { ResultsCard } from '@/components/calc/ResultsCard';
 import { BallisticTable } from '@/components/calc/BallisticTable';
 import { ReticleAssistPanel } from '@/components/calc/ReticleAssistPanel';
 import { ZeroIntersectionsCard } from '@/components/calc/ZeroIntersectionsCard';
+import { TrajectoryMiniChart } from '@/components/calc/TrajectoryMiniChart';
 import { computeZeroIntersections } from '@/lib/zero-intersections';
 import {
   buildDistanceList,
@@ -725,6 +726,16 @@ export default function QuickCalc() {
               ligne dans la BallisticTable. */}
           {results.length > 1 && (
             <ZeroIntersectionsCard data={zeroIntersections} />
+          )}
+
+          {/* Tranche P — Mini-graphique inline trajectoire vs ligne de visée
+              avec marqueurs Near/Far Zero. Pure présentation. */}
+          {results.length > 1 && (
+            <TrajectoryMiniChart
+              rows={results}
+              nearZeroDistance={zeroIntersections.nearZeroDistance}
+              farZeroDistance={zeroIntersections.farZeroDistance}
+            />
           )}
 
           {/* Tranche H + J — Configurable ballistic table. Source de vérité

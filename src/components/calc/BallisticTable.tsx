@@ -72,6 +72,8 @@ export function BallisticTable({
   onConfigChange,
   defaultOpen = false,
   title,
+  nearZeroDistance,
+  farZeroDistance,
 }: Props) {
   const { t } = useI18n();
   const { symbol } = useUnits();
@@ -100,6 +102,33 @@ export function BallisticTable({
   const energyUnit = symbol('energy');
 
   const tableRows = useMemo(() => buildTableRows(rows, cfg), [rows, cfg]);
+
+  // Tranche O — Détermine quelle ligne du tableau (échantillonnée à `step`)
+  // est la plus proche de Near / Far Zero. Tolérance = step/2 pour ne marquer
+  // qu'au plus une ligne par croisement, sans inventer un croisement absent.
+  const { nearRowDistance, farRowDistance } = useMemo(() => {
+    if (tableRows.length === 0) {
+      return { nearRowDistance: null as number | null, farRowDistance: null as number | null };
+    }
+    const tol = Math.max(0.5, cfg.step / 2);
+    const findClosest = (target: number | null | undefined): number | null => {
+      if (target == null || !Number.isFinite(target)) return null;
+      let best: number | null = null;
+      let bestDelta = Infinity;
+      for (const r of tableRows) {
+        const d = Math.abs(r.range - target);
+        if (d < bestDelta) {
+          bestDelta = d;
+          best = r.range;
+        }
+      }
+      return best != null && bestDelta <= tol ? best : null;
+    };
+    return {
+      nearRowDistance: findClosest(nearZeroDistance),
+      farRowDistance: findClosest(farZeroDistance),
+    };
+  }, [tableRows, cfg.step, nearZeroDistance, farZeroDistance]);
 
   const reset = () => updateCfg(defaultConfig(maxRangeHint));
 

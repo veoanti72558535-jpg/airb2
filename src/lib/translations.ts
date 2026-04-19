@@ -709,6 +709,32 @@ const fr = {
   'admin.import.reticles': 'Importer des réticules (JSON)',
   'admin.import.section': 'Imports JSON',
   'admin.import.sectionDesc': 'Aperçu obligatoire avant tout import. Les doublons et rejets ne sont jamais écrits.',
+
+  // Reticles (Tranche F.4)
+  'reticles.title': 'Bibliothèque de réticules',
+  'reticles.add': 'Ajouter un réticule',
+  'reticles.empty': 'Aucun réticule. Importez-en depuis Admin ou ajoutez-en un manuellement.',
+  'reticles.open': 'Ouvrir le réticule',
+  'reticles.brand': 'Marque',
+  'reticles.model': 'Modèle',
+  'reticles.type': 'Type',
+  'reticles.unit': 'Unité',
+  'reticles.subtension': 'Subtension',
+  'reticles.focalPlane': 'Plan focal',
+  'reticles.marks': 'Graduations',
+  'reticles.importedFrom': 'Importé depuis',
+  'reticles.placeholder': 'Aucune image',
+  'reticles.backToList': 'Retour aux réticules',
+  'reticles.detail.title': 'Détail du réticule',
+  'reticles.image': 'Image principale',
+  'reticles.image.none': 'Aucune image — utilisez le bouton ci-dessous.',
+  'reticles.image.upload': 'Ajouter une image',
+  'reticles.image.replace': 'Remplacer l\'image',
+  'reticles.image.remove': 'Supprimer l\'image',
+  'reticles.image.invalidType': 'Format non supporté (PNG, JPG ou WebP uniquement).',
+  'reticles.image.tooLarge': 'Image trop volumineuse (max 5 Mo).',
+  'reticles.image.processError': 'Erreur lors du traitement de l\'image.',
+  'library.tabs.reticles': 'Réticules',
 } as const;
 
 const en: Record<keyof typeof fr, string> = {

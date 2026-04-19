@@ -754,6 +754,28 @@ const fr = {
   'reticles.image.tooLarge': 'Image trop volumineuse (max 5 Mo).',
   'reticles.image.processError': 'Erreur lors du traitement de l\'image.',
   'library.tabs.reticles': 'Réticules',
+
+  // Ballistic Table (Tranche H) — table balistique configurable
+  'ballisticTable.title': 'Table balistique',
+  'ballisticTable.subtitle': 'Configurable — distances, pas, colonnes',
+  'ballisticTable.distance': 'Distance',
+  'ballisticTable.drop': 'Chute',
+  'ballisticTable.holdover': 'Correction',
+  'ballisticTable.elevationClicks': 'Clics élév.',
+  'ballisticTable.windDrift': 'Dérive vent',
+  'ballisticTable.windClicks': 'Clics vent',
+  'ballisticTable.velocity': 'Vitesse',
+  'ballisticTable.energy': 'Énergie',
+  'ballisticTable.timeOfFlight': 'Temps de vol',
+  'ballisticTable.settings': 'Réglages',
+  'ballisticTable.startDistance': 'Distance départ',
+  'ballisticTable.maxDistance': 'Distance max',
+  'ballisticTable.step': 'Pas',
+  'ballisticTable.columns': 'Colonnes',
+  'ballisticTable.resetDefaults': 'Réinitialiser',
+  'ballisticTable.empty': 'Aucune ligne dans cette plage — élargissez la distance ou réduisez le pas.',
+  'ballisticTable.compact': 'Compact',
+  'ballisticTable.advanced': 'Avancé',
 } as const;
 
 const en: Record<keyof typeof fr, string> = {
@@ -1491,6 +1513,28 @@ const en: Record<keyof typeof fr, string> = {
   'reticles.image.tooLarge': 'Image too large (max 5 MB).',
   'reticles.image.processError': 'Failed to process the image.',
   'library.tabs.reticles': 'Reticles',
+
+  // Ballistic Table (Tranche H)
+  'ballisticTable.title': 'Ballistic Table',
+  'ballisticTable.subtitle': 'Configurable — distances, step, columns',
+  'ballisticTable.distance': 'Distance',
+  'ballisticTable.drop': 'Drop',
+  'ballisticTable.holdover': 'Holdover',
+  'ballisticTable.elevationClicks': 'Elev. clicks',
+  'ballisticTable.windDrift': 'Wind drift',
+  'ballisticTable.windClicks': 'Wind clicks',
+  'ballisticTable.velocity': 'Velocity',
+  'ballisticTable.energy': 'Energy',
+  'ballisticTable.timeOfFlight': 'Time of flight',
+  'ballisticTable.settings': 'Settings',
+  'ballisticTable.startDistance': 'Start distance',
+  'ballisticTable.maxDistance': 'Max distance',
+  'ballisticTable.step': 'Step',
+  'ballisticTable.columns': 'Columns',
+  'ballisticTable.resetDefaults': 'Reset',
+  'ballisticTable.empty': 'No rows in this range — widen the distance or shorten the step.',
+  'ballisticTable.compact': 'Compact',
+  'ballisticTable.advanced': 'Advanced',
 };
 
 export const translations = { fr, en } as const;

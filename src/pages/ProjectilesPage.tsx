@@ -437,7 +437,12 @@ export default function ProjectilesPage() {
                 <Link to={`/library/projectile/${p.id}`} className="block">
                   <div className="flex items-start justify-between mb-2">
                     <div className="min-w-0 flex-1 pr-2">
-                      <div className="font-semibold text-sm">{p.brand} {p.model}</div>
+                      <div className="font-semibold text-sm flex items-center gap-1.5 flex-wrap">
+                        <span className="truncate">{p.brand} {p.model}</span>
+                        {p.caliberLabel && p.caliberLabel !== p.caliber && (
+                          <span className="text-[10px] font-mono text-muted-foreground">({p.caliberLabel})</span>
+                        )}
+                      </div>
                       <div className="flex flex-wrap gap-1.5 mt-1">
                         <span className="tactical-badge">{p.caliber}</span>
                         <span className="tactical-badge">{p.weight} {weightSym}</span>
@@ -445,11 +450,43 @@ export default function ProjectilesPage() {
                         {p.projectileType && p.projectileType !== 'pellet' && (
                           <span className="tactical-badge">{p.projectileType}</span>
                         )}
+                        {hasBcZones(p) && (
+                          <span
+                            className="tactical-badge bg-primary/10 text-primary border-primary/30 inline-flex items-center gap-1"
+                            title={t('projectiles.list.bcZonesBadgeTitle')}
+                            data-testid="badge-bc-zones"
+                          >
+                            <Layers className="h-3 w-3" />
+                            {t('projectiles.list.bcZonesBadge')} ({p.bcZones!.length})
+                          </span>
+                        )}
+                        {p.importedFrom && (
+                          <span
+                            className="tactical-badge bg-accent/10 text-accent-foreground border-accent/30 inline-flex items-center gap-1"
+                            title={t('projectiles.list.importedBadgeTitle', { source: p.importedFrom })}
+                            data-testid="badge-imported"
+                          >
+                            <Database className="h-3 w-3" />
+                            {t('projectiles.list.importedBadge')}
+                          </span>
+                        )}
+                        {!hasBcZones(p) && !p.importedFrom && isEnrichedProjectile(p) && (
+                          <span
+                            className="tactical-badge bg-muted text-muted-foreground border-border inline-flex items-center gap-1"
+                            title={t('projectiles.list.enrichedBadgeTitle')}
+                            data-testid="badge-enriched"
+                          >
+                            <Sparkles className="h-3 w-3" />
+                            {t('projectiles.list.enrichedBadge')}
+                          </span>
+                        )}
                       </div>
-                      {(p.length || p.diameter || p.shape || p.material) && (
+                      {(p.length || p.lengthMm || p.diameter || p.diameterMm || p.diameterIn || p.shape || p.material) && (
                         <div className="text-[11px] text-muted-foreground font-mono mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5">
-                          {p.length ? <span>L {p.length}{lengthSym}</span> : null}
-                          {p.diameter ? <span>⌀ {p.diameter}{lengthSym}</span> : null}
+                          {(p.lengthMm ?? p.length) ? <span>L {p.lengthMm ?? p.length}{lengthSym}</span> : null}
+                          {(p.diameterMm ?? p.diameter)
+                            ? <span>⌀ {(p.diameterMm ?? p.diameter)!.toFixed?.(2) ?? p.diameterMm ?? p.diameter}{lengthSym}</span>
+                            : p.diameterIn ? <span>⌀ {p.diameterIn} in</span> : null}
                           {p.shape ? <span>{p.shape}</span> : null}
                           {p.material ? <span>{p.material}</span> : null}
                         </div>

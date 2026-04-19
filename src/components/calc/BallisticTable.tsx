@@ -307,19 +307,54 @@ export function BallisticTable({
                       energyThresholdJ != null &&
                       energyThresholdJ > 0 &&
                       r.energy > energyThresholdJ;
+                    const isNear = nearRowDistance != null && r.range === nearRowDistance;
+                    const isFar = farRowDistance != null && r.range === farRowDistance;
+                    const isZero = isNear || isFar;
                     return (
                       <tr
                         key={r.range}
                         data-testid={`bt-row-${r.range}`}
+                        data-zero-marker={isNear ? 'near' : isFar ? 'far' : undefined}
                         className={cn(
                           'border-b border-border/20',
                           overThreshold && 'bg-destructive/10 text-destructive',
+                          isZero &&
+                            !overThreshold &&
+                            'bg-primary/5 border-l-2 border-l-primary/60',
                         )}
                       >
                         {isColumnVisible(cfg, 'distance') && (
                           <td className="py-1.5 pr-2 font-semibold">
-                            {r.range}
-                            {distUnit}
+                            <span className="inline-flex items-center gap-1">
+                              {isZero && (
+                                <Crosshair
+                                  className="h-3 w-3 text-primary shrink-0"
+                                  aria-hidden
+                                />
+                              )}
+                              <span>
+                                {r.range}
+                                {distUnit}
+                              </span>
+                              {isNear && (
+                                <span
+                                  className="text-[8px] uppercase tracking-wide font-bold text-primary/80 px-1 rounded bg-primary/10 border border-primary/30"
+                                  title={t('zeroIntersections.nearZero')}
+                                  aria-label={t('zeroIntersections.nearZero')}
+                                >
+                                  {t('ballisticTable.nearTag')}
+                                </span>
+                              )}
+                              {isFar && (
+                                <span
+                                  className="text-[8px] uppercase tracking-wide font-bold text-primary/80 px-1 rounded bg-primary/10 border border-primary/30"
+                                  title={t('zeroIntersections.farZero')}
+                                  aria-label={t('zeroIntersections.farZero')}
+                                >
+                                  {t('ballisticTable.farTag')}
+                                </span>
+                              )}
+                            </span>
                           </td>
                         )}
                         {isColumnVisible(cfg, 'drop') && (

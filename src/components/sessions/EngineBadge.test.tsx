@@ -110,7 +110,7 @@ describe('EngineBadge — Tranche F.5 imported-from tooltip', () => {
   it('does not render the imported-from line when no entity is imported', () => {
     renderBadge(makeSession());
     openTooltip();
-    expect(screen.queryByTestId('engine-badge-imported-from')).not.toBeInTheDocument();
+    expect(screen.queryAllByTestId('engine-badge-imported-from').length).toBe(0);
   });
 
   it('renders the projectile imported-from line when only the projectile is imported', () => {
@@ -120,9 +120,10 @@ describe('EngineBadge — Tranche F.5 imported-from tooltip', () => {
     });
     renderBadge(makeSession({ projectileId: p.id }));
     openTooltip();
-    expect(screen.getByTestId('imported-from-projectile')).toBeInTheDocument();
-    expect(screen.queryByTestId('imported-from-optic')).not.toBeInTheDocument();
-    expect(screen.getByTestId('imported-from-projectile').textContent).toContain('Strelok');
+    const projLines = screen.getAllByTestId('imported-from-projectile');
+    expect(projLines.length).toBeGreaterThan(0);
+    expect(screen.queryAllByTestId('imported-from-optic').length).toBe(0);
+    expect(projLines[0].textContent).toContain('Strelok');
   });
 
   it('renders the optic imported-from line when only the optic is imported', () => {
@@ -132,9 +133,10 @@ describe('EngineBadge — Tranche F.5 imported-from tooltip', () => {
     });
     renderBadge(makeSession({ opticId: o.id }));
     openTooltip();
-    expect(screen.getByTestId('imported-from-optic')).toBeInTheDocument();
-    expect(screen.queryByTestId('imported-from-projectile')).not.toBeInTheDocument();
-    expect(screen.getByTestId('imported-from-optic').textContent).toContain('JSON utilisateur');
+    const opticLines = screen.getAllByTestId('imported-from-optic');
+    expect(opticLines.length).toBeGreaterThan(0);
+    expect(screen.queryAllByTestId('imported-from-projectile').length).toBe(0);
+    expect(opticLines[0].textContent).toContain('JSON utilisateur');
   });
 
   it('renders BOTH lines when projectile + optic are both imported', () => {
@@ -148,14 +150,14 @@ describe('EngineBadge — Tranche F.5 imported-from tooltip', () => {
     });
     renderBadge(makeSession({ projectileId: p.id, opticId: o.id }));
     openTooltip();
-    expect(screen.getByTestId('imported-from-projectile').textContent).toContain('ChairGun');
-    expect(screen.getByTestId('imported-from-optic').textContent).toContain('AirBallistik');
+    expect(screen.getAllByTestId('imported-from-projectile')[0].textContent).toContain('ChairGun');
+    expect(screen.getAllByTestId('imported-from-optic')[0].textContent).toContain('AirBallistik');
   });
 
   it('does not crash when the linked entities are missing from the stores', () => {
     renderBadge(makeSession({ projectileId: 'ghost-1', opticId: 'ghost-2' }));
     openTooltip();
-    expect(screen.queryByTestId('engine-badge-imported-from')).not.toBeInTheDocument();
+    expect(screen.queryAllByTestId('engine-badge-imported-from').length).toBe(0);
   });
 
   it('keeps the existing variant logic untouched (legacy → Legacy)', () => {

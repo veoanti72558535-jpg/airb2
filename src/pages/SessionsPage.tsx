@@ -19,6 +19,7 @@ import { CalculationMetadataBlock } from '@/components/sessions/CalculationMetad
 import { RecalculateDialog } from '@/components/sessions/RecalculateDialog';
 import { SessionLineage } from '@/components/sessions/SessionLineage';
 import { normalizeSession } from '@/lib/session-normalize';
+import { BallisticTable } from '@/components/calc/BallisticTable';
 
 export default function SessionsPage() {
   const { t } = useI18n();

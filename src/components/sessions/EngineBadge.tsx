@@ -165,6 +165,25 @@ export function EngineBadge({ session, size = 'sm', className }: Props) {
               )}
             </div>
           )}
+          {(importedFrom.projectile || importedFrom.optic) && (
+            <div
+              className="pt-0.5 border-t border-border/40 text-muted-foreground space-y-0.5"
+              data-testid="engine-badge-imported-from"
+            >
+              {importedFrom.projectile && (
+                <div data-testid="imported-from-projectile">
+                  {t('engine.importedFrom')} : {t('engine.importedFrom.projectile')} —{' '}
+                  {t(importSourceLabelKey(importedFrom.projectile))}
+                </div>
+              )}
+              {importedFrom.optic && (
+                <div data-testid="imported-from-optic">
+                  {t('engine.importedFrom')} : {t('engine.importedFrom.optic')} —{' '}
+                  {t(importSourceLabelKey(importedFrom.optic))}
+                </div>
+              )}
+            </div>
+          )}
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>

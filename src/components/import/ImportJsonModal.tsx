@@ -25,6 +25,7 @@ import {
   projectileStore,
   opticStore,
   reticleStore,
+  StorageQuotaExceededError,
 } from '@/lib/storage';
 import type { ImportSource } from '@/lib/types';
 

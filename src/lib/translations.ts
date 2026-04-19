@@ -1544,6 +1544,7 @@ const en: Record<keyof typeof fr, string> = {
   'import.fileTooLarge': 'File too large (> 1 MB).',
   'import.writeCount': 'Import {count}',
   'import.previewRequired': 'Pick a file and click Preview to validate before importing.',
+  'import.moreItems': 'more (not displayed)',
   'admin.import.projectiles': 'Import projectiles (JSON)',
   'admin.import.optics': 'Import optics (JSON)',
   'admin.import.reticles': 'Import reticles (JSON)',

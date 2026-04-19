@@ -85,3 +85,68 @@ describe('EngineBadge — resolveBadgeState (pure)', () => {
     expect(resolveBadgeState(makeSession()).variant).toBe('legacy');
   });
 });
+
+// ──────────────────────────────────────────────────────────────────────────
+// Tranche F.5 — tooltip enrichi avec `Importé depuis : …` quand au moins
+// une entité liée (projectile / optique) porte un `importedFrom`. La
+// résolution lit les stores réels via `resolveSessionImportedFrom`.
+// ──────────────────────────────────────────────────────────────────────────
+describe('EngineBadge — Tranche F.5 imported-from tooltip', () => {
+  beforeEach(() => localStorage.clear());
+  afterEach(() => localStorage.clear());
+
+  it('does not render the imported-from line when no entity is imported', () => {
+    renderBadge(makeSession());
+    expect(screen.queryByTestId('engine-badge-imported-from')).not.toBeInTheDocument();
+  });
+
+  it('renders the projectile imported-from line when only the projectile is imported', () => {
+    const p = projectileStore.create({
+      brand: 'JSB', model: 'Hades', weight: 16.2, bc: 0.025, caliber: '.22',
+      importedFrom: 'strelok',
+    });
+    renderBadge(makeSession({ projectileId: p.id }));
+    expect(screen.getByTestId('imported-from-projectile')).toBeInTheDocument();
+    expect(screen.queryByTestId('imported-from-optic')).not.toBeInTheDocument();
+    expect(screen.getByTestId('imported-from-projectile').textContent).toContain('Strelok');
+  });
+
+  it('renders the optic imported-from line when only the optic is imported', () => {
+    const o = opticStore.create({
+      name: 'Element Helix', clickUnit: 'MRAD', clickValue: 0.1,
+      importedFrom: 'json-user',
+    });
+    renderBadge(makeSession({ opticId: o.id }));
+    expect(screen.getByTestId('imported-from-optic')).toBeInTheDocument();
+    expect(screen.queryByTestId('imported-from-projectile')).not.toBeInTheDocument();
+    expect(screen.getByTestId('imported-from-optic').textContent).toContain('JSON utilisateur');
+  });
+
+  it('renders BOTH lines when projectile + optic are both imported', () => {
+    const p = projectileStore.create({
+      brand: 'JSB', model: 'Hades', weight: 16.2, bc: 0.025, caliber: '.22',
+      importedFrom: 'chairgun',
+    });
+    const o = opticStore.create({
+      name: 'Athlon Helos', clickUnit: 'MRAD', clickValue: 0.1,
+      importedFrom: 'airballistik',
+    });
+    renderBadge(makeSession({ projectileId: p.id, opticId: o.id }));
+    expect(screen.getByTestId('imported-from-projectile').textContent).toContain('ChairGun');
+    expect(screen.getByTestId('imported-from-optic').textContent).toContain('AirBallistik');
+  });
+
+  it('does not crash when the linked entities are missing from the stores', () => {
+    renderBadge(makeSession({ projectileId: 'ghost-1', opticId: 'ghost-2' }));
+    expect(screen.queryByTestId('engine-badge-imported-from')).not.toBeInTheDocument();
+  });
+
+  it('keeps the existing variant logic untouched (legacy → Legacy)', () => {
+    const p = projectileStore.create({
+      brand: 'JSB', model: 'Hades', weight: 16.2, bc: 0.025, caliber: '.22',
+      importedFrom: 'strelok',
+    });
+    renderBadge(makeSession({ projectileId: p.id }));
+    expect(screen.getByText('Legacy')).toBeInTheDocument();
+  });
+});

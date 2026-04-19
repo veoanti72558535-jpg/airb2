@@ -133,6 +133,21 @@ export interface Optic {
   notes?: string;
   /** Tranche F.1 — origine de la donnée si importée. */
   importedFrom?: ImportSource;
+  /**
+   * Tranche G — lien optionnel vers un réticule de la bibliothèque
+   * (`reticleStore`). Une optique référence 0 ou 1 réticule en V1.
+   *
+   * Règles :
+   *  - rétrocompatible : champ optionnel, les optiques existantes restent
+   *    valides ;
+   *  - source de vérité : le réticule lui-même reste dans `reticleStore`
+   *    (pas de duplication / snapshot dans l'optique) ;
+   *  - aucune sémantique balistique en V1 : ce lien est purement
+   *    documentaire et ne participe à aucun calcul moteur ;
+   *  - lien unidirectionnel Optic → Reticle (pas de back-pointer
+   *    persistant côté `Reticle`).
+   */
+  reticleId?: string;
   createdAt: string;
   updatedAt: string;
 }

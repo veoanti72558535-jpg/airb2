@@ -451,7 +451,7 @@ function SessionAdvancedReadouts({ session }: { session: Session }) {
       )}
       {/* Tranche P — Point Blank Range, dérivé des résultats stockés. */}
       {session.results && session.results.length > 1 && (
-        <PbrCard rows={session.results} initialVitalZoneM={0.05} />
+        <PbrCard rows={session.results} />
       )}
       <BallisticTable
         rows={session.results}

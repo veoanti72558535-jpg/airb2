@@ -6,17 +6,22 @@
  * helper pur `computePointBlankRange` et l'affiche sobrement. Aucun
  * recalcul moteur, aucune persistance globale du diamètre.
  */
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Target } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { useUnits } from '@/hooks/use-units';
+import { usePbrPrefs, DEFAULT_PBR_VITAL_ZONE_M } from '@/hooks/use-pbr-prefs';
 import { cn } from '@/lib/utils';
 import type { BallisticResult } from '@/lib/types';
 import { computePointBlankRange } from '@/lib/pbr';
 
 interface Props {
   rows: BallisticResult[];
-  /** Initial vital-zone diameter in metres (defaults to 0.05 m = 5 cm). */
+  /**
+   * Initial vital-zone diameter in metres. **Optional** — if omitted, the
+   * card uses the locally persisted preference (Tranche Q). Provided value
+   * is only used to seed the persisted preference if none exists yet.
+   */
   initialVitalZoneM?: number;
   className?: string;
   /** Optional callback when the user changes the vital zone (advanced use). */
@@ -25,21 +30,31 @@ interface Props {
 
 export function PbrCard({
   rows,
-  initialVitalZoneM = 0.05,
+  initialVitalZoneM,
   className,
   onVitalZoneChange,
 }: Props) {
   const { t } = useI18n();
   const { display, toRef, symbol } = useUnits();
+  const { vitalZoneM: persistedM, setVitalZoneM: setPersistedM } = usePbrPrefs();
   const distSym = symbol('distance');
   const lengthSym = symbol('length');
 
-  // Vital zone is held locally — pas de pollution des settings globaux V1.
-  // On stocke la valeur en unité d'affichage utilisateur (length) pour que
-  // la saisie reste stable lors des re-rendus.
-  const [vitalDisplay, setVitalDisplay] = useState<number>(() =>
-    Number(display('length', initialVitalZoneM).toFixed(2)),
-  );
+  // Tranche Q — la valeur persistée fait foi. `initialVitalZoneM` ne sert que
+  // de seed lors du tout premier rendu si une valeur explicite est fournie.
+  // L'input local (en unité d'affichage) suit la persistance.
+  const [vitalDisplay, setVitalDisplay] = useState<number>(() => {
+    const seedM = Number.isFinite(initialVitalZoneM as number) && (initialVitalZoneM as number) > 0
+      ? (initialVitalZoneM as number)
+      : persistedM ?? DEFAULT_PBR_VITAL_ZONE_M;
+    return Number(display('length', seedM).toFixed(2));
+  });
+
+  // Resync l'input affiché si la persistance change (autre onglet, reset).
+  useEffect(() => {
+    const next = Number(display('length', persistedM).toFixed(2));
+    setVitalDisplay(prev => (Math.abs(prev - next) < 1e-6 ? prev : next));
+  }, [persistedM, display]);
 
   const vitalZoneM = useMemo(() => {
     const m = toRef('length', vitalDisplay);
@@ -60,6 +75,8 @@ export function PbrCard({
       setVitalDisplay(v);
       const meters = toRef('length', v);
       if (Number.isFinite(meters) && meters > 0) {
+        // Tranche Q — toute saisie valide est persistée localement.
+        setPersistedM(meters);
         onVitalZoneChange?.(meters);
       }
     }

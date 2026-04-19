@@ -87,6 +87,14 @@ export function ImportPreview({ preview }: ImportPreviewProps) {
   const duplicates = preview.items.filter(i => i.status === 'duplicate');
   const ok = preview.items.filter(i => i.status === 'ok');
 
+  // Garde-fou rendu : avec des imports massifs (bullets4 = 8732 items),
+  // rendre toutes les <li> fait exploser React (call stack + DOM lourd).
+  // On affiche au maximum MAX_RENDER items par section + un footer "+N autres".
+  const MAX_RENDER = 50;
+  const slice = <T,>(arr: T[]) => arr.slice(0, MAX_RENDER);
+  const moreLabel = (total: number) =>
+    total > MAX_RENDER ? `+${total - MAX_RENDER} ${t('import.moreItems')}` : null;
+
   return (
     <div className="space-y-3 text-sm" data-testid="import-preview">
       {/* Compteurs */}
@@ -104,8 +112,9 @@ export function ImportPreview({ preview }: ImportPreviewProps) {
         title={t('import.section.rejected')}
         count={rejected.length}
         icon={<AlertTriangle className="h-3.5 w-3.5 text-destructive" />}
+        more={moreLabel(rejected.length)}
       >
-        {rejected.map(item => (
+        {slice(rejected).map(item => (
           <li key={`r-${item.index}`} className="text-xs">
             <span className="text-muted-foreground">#{item.index + 1}</span>{' '}
             <span className="text-destructive">{formatIssues(item.issues) || '—'}</span>
@@ -118,8 +127,9 @@ export function ImportPreview({ preview }: ImportPreviewProps) {
         title={t('import.section.sanitized')}
         count={sanitized.length}
         icon={<Wand2 className="h-3.5 w-3.5 text-warning" />}
+        more={moreLabel(sanitized.length)}
       >
-        {sanitized.map(item => (
+        {slice(sanitized).map(item => (
           <li key={`s-${item.index}`} className="text-xs">
             <span className="font-medium">{describeItem(item.data)}</span>{' '}
             <span className="text-muted-foreground">— {formatNotes(item.notes)}</span>
@@ -132,8 +142,9 @@ export function ImportPreview({ preview }: ImportPreviewProps) {
         title={t('import.section.duplicates')}
         count={duplicates.length}
         icon={<Copy className="h-3.5 w-3.5 text-muted-foreground" />}
+        more={moreLabel(duplicates.length)}
       >
-        {duplicates.map(item => (
+        {slice(duplicates).map(item => (
           <li key={`d-${item.index}`} className="text-xs text-muted-foreground">
             {describeItem(item.data)}
           </li>
@@ -145,8 +156,9 @@ export function ImportPreview({ preview }: ImportPreviewProps) {
         title={t('import.section.ok')}
         count={ok.length}
         icon={<CheckCircle2 className="h-3.5 w-3.5 text-primary" />}
+        more={moreLabel(ok.length)}
       >
-        {ok.map(item => (
+        {slice(ok).map(item => (
           <li key={`o-${item.index}`} className="text-xs">
             {describeItem(item.data)}
           </li>
@@ -188,12 +200,14 @@ function Section({
   count,
   icon,
   testId,
+  more,
   children,
 }: {
   title: string;
   count: number;
   icon: React.ReactNode;
   testId: string;
+  more?: string | null;
   children: React.ReactNode;
 }) {
   if (count === 0) return null;
@@ -205,6 +219,11 @@ function Section({
         <span className="ml-auto font-mono text-muted-foreground">{count}</span>
       </div>
       <ul className="space-y-1 max-h-48 overflow-y-auto pl-1">{children}</ul>
+      {more && (
+        <div className="text-[11px] text-muted-foreground italic mt-1.5 pl-1">
+          {more}
+        </div>
+      )}
     </div>
   );
 }

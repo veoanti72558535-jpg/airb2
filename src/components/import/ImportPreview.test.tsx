@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { I18nProvider } from '@/lib/i18n';
 import { ImportPreview } from './ImportPreview';
 import type { ProjectileImportPreview } from '@/lib/import-pipeline';
@@ -98,6 +98,10 @@ describe('ImportPreview', () => {
       <I18nProvider>
         <ImportPreview preview={makePreview()} />
       </I18nProvider>,
+    );
+    // Sections are collapsed by default (except `rejected`) — open it first.
+    fireEvent.click(
+      screen.getByTestId('section-sanitized').querySelector('button')!,
     );
     expect(
       screen.getByText(/Drag law .* SLG1 .* non publique/i),

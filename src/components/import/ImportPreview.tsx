@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useI18n } from '@/lib/i18n';
 import {
   AlertTriangle,
   CheckCircle2,
+  ChevronDown,
+  ChevronRight,
   Copy,
   Wand2,
 } from 'lucide-react';
@@ -113,6 +115,7 @@ export function ImportPreview({ preview }: ImportPreviewProps) {
         count={rejected.length}
         icon={<AlertTriangle className="h-3.5 w-3.5 text-destructive" />}
         more={moreLabel(rejected.length)}
+        defaultOpen
       >
         {slice(rejected).map(item => (
           <li key={`r-${item.index}`} className="text-xs">
@@ -201,6 +204,7 @@ function Section({
   icon,
   testId,
   more,
+  defaultOpen = false,
   children,
 }: {
   title: string;
@@ -208,21 +212,37 @@ function Section({
   icon: React.ReactNode;
   testId: string;
   more?: string | null;
+  defaultOpen?: boolean;
   children: React.ReactNode;
 }) {
+  const [open, setOpen] = useState(defaultOpen);
   if (count === 0) return null;
   return (
     <div className="surface-elevated p-2.5" data-testid={testId}>
-      <div className="flex items-center gap-1.5 text-xs font-medium mb-1.5">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="flex items-center gap-1.5 text-xs font-medium w-full hover:text-primary transition-colors"
+        aria-expanded={open}
+      >
+        {open ? (
+          <ChevronDown className="h-3 w-3 text-muted-foreground" />
+        ) : (
+          <ChevronRight className="h-3 w-3 text-muted-foreground" />
+        )}
         {icon}
         <span>{title}</span>
         <span className="ml-auto font-mono text-muted-foreground">{count}</span>
-      </div>
-      <ul className="space-y-1 max-h-48 overflow-y-auto pl-1">{children}</ul>
-      {more && (
-        <div className="text-[11px] text-muted-foreground italic mt-1.5 pl-1">
-          {more}
-        </div>
+      </button>
+      {open && (
+        <>
+          <ul className="space-y-1 pl-1 mt-1.5">{children}</ul>
+          {more && (
+            <div className="text-[11px] text-muted-foreground italic mt-1.5 pl-1">
+              {more}
+            </div>
+          )}
+        </>
       )}
     </div>
   );

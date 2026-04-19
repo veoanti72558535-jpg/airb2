@@ -320,7 +320,7 @@ function normaliseProjectile(
     caliber: caliber ?? '',
     importedFrom,
     ...(bcModel !== undefined ? { bcModel } : {}),
-    ...(parsed.projectileType !== undefined ? { projectileType: parsed.projectileType } : {}),
+    ...((parsed.projectileType ?? parsed.type) !== undefined ? { projectileType: (parsed.projectileType ?? parsed.type) } : {}),
     ...(parsed.shape !== undefined ? { shape: parsed.shape } : {}),
     ...(parsed.length !== undefined ? { length: parsed.length } : {}),
     ...(parsed.diameter !== undefined ? { diameter: parsed.diameter } : {}),

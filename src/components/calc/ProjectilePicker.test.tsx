@@ -1,16 +1,37 @@
 import React from 'react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { act, render, screen, fireEvent, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { I18nProvider } from '@/lib/i18n';
 import { ThemeProvider } from '@/lib/theme';
-import { ProjectilePicker, pickerHasBcZones, pickerIsImported } from './ProjectilePicker';
+import {
+  ProjectilePicker,
+  pickerHasBcZones,
+  pickerIsImported,
+  __PICKER_INTERNAL,
+} from './ProjectilePicker';
 import type { Projectile } from '@/lib/types';
 
 /**
- * Tranche L — tests for the advanced projectile picker.
- * No engine code is exercised here — purely UI selection behavior.
+ * Tranches L + M — tests for the advanced projectile picker.
+ * No engine code is exercised here — purely UI selection behavior + perf.
  */
+
+/** Type into the search input AND flush the internal debounce. */
+function typeSearch(value: string) {
+  fireEvent.change(screen.getByLabelText(/rechercher/i), { target: { value } });
+  act(() => {
+    vi.advanceTimersByTime(__PICKER_INTERNAL.SEARCH_DEBOUNCE_MS + 10);
+  });
+}
+
+beforeEach(() => {
+  vi.useFakeTimers({ shouldAdvanceTime: true });
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 function legacy(over: Partial<Projectile> = {}): Projectile {
   return {
@@ -114,7 +135,7 @@ describe('ProjectilePicker — listing & search', () => {
 
   it('filters by brand text', () => {
     renderPicker(data);
-    fireEvent.change(screen.getByLabelText(/rechercher/i), { target: { value: 'jsb' } });
+    typeSearch('jsb');
     expect(screen.getByText(/JSB Exact Heavy/)).toBeInTheDocument();
     expect(screen.getByText(/JSB Match/)).toBeInTheDocument();
     expect(screen.queryByText(/H&N Baracuda/)).not.toBeInTheDocument();
@@ -123,21 +144,21 @@ describe('ProjectilePicker — listing & search', () => {
 
   it('filters by model text', () => {
     renderPicker(data);
-    fireEvent.change(screen.getByLabelText(/rechercher/i), { target: { value: 'baracuda' } });
+    typeSearch('baracuda');
     expect(screen.getByText(/H&N Baracuda/)).toBeInTheDocument();
     expect(screen.queryByText(/JSB Exact Heavy/)).not.toBeInTheDocument();
   });
 
   it('filters by caliber text', () => {
     renderPicker(data);
-    fireEvent.change(screen.getByLabelText(/rechercher/i), { target: { value: '.177' } });
+    typeSearch('.177');
     expect(screen.getByText(/JSB Match/)).toBeInTheDocument();
     expect(screen.queryByText(/H&N Baracuda/)).not.toBeInTheDocument();
   });
 
   it('shows the no-results message when filters exclude everything', () => {
     renderPicker(data);
-    fireEvent.change(screen.getByLabelText(/rechercher/i), { target: { value: 'zzznever' } });
+    typeSearch('zzznever');
     expect(screen.getByText(/aucun projectile ne correspond/i)).toBeInTheDocument();
   });
 });
@@ -282,5 +303,70 @@ describe('ProjectilePicker — sort', () => {
     fireEvent.change(screen.getByLabelText(/tri/i), { target: { value: 'caliber' } });
     // .177 < .22 < .30 → b, c, a
     expect(rowsInOrder()).toEqual(['b', 'c', 'a']);
+  });
+});
+
+describe('ProjectilePicker — Tranche M perf & virtualization', () => {
+  function makeMany(n: number): Projectile[] {
+    return Array.from({ length: n }, (_, i) =>
+      legacy({
+        id: `bulk-${i}`,
+        brand: i % 2 === 0 ? 'JSB' : 'NSA',
+        model: `M${i}`,
+        weight: 8 + (i % 30),
+        caliber: i % 3 === 0 ? '.177' : '.22',
+      }),
+    );
+  }
+
+  it('virtualizes once the result set is large (renders far fewer DOM rows than items)', () => {
+    const data = makeMany(2000);
+    renderPicker(data);
+    const listbox = screen.getByRole('listbox');
+    expect(listbox.getAttribute('data-virtualized')).toBe('true');
+    const renderedRows = listbox.querySelectorAll('[data-projectile-id]');
+    expect(renderedRows.length).toBeGreaterThan(0);
+    expect(renderedRows.length).toBeLessThan(200);
+    expect(renderedRows.length).toBeLessThan(data.length / 5);
+  });
+
+  it('does NOT virtualize for small result sets (below threshold)', () => {
+    const data = makeMany(__PICKER_INTERNAL.VIRTUALIZATION_THRESHOLD - 5);
+    renderPicker(data);
+    const listbox = screen.getByRole('listbox');
+    expect(listbox.getAttribute('data-virtualized')).toBe('false');
+    const renderedRows = listbox.querySelectorAll('[data-projectile-id]');
+    expect(renderedRows.length).toBe(data.length);
+  });
+
+  it('keeps results count accurate even when virtualized', () => {
+    renderPicker(makeMany(2000));
+    expect(screen.getByText(/2000 sur 2000/)).toBeInTheDocument();
+  });
+
+  it('debounce coalesces rapid keystrokes into a single filter pass', () => {
+    const data = makeMany(2000);
+    renderPicker(data);
+    const input = screen.getByLabelText(/rechercher/i);
+    fireEvent.change(input, { target: { value: 'j' } });
+    fireEvent.change(input, { target: { value: 'js' } });
+    fireEvent.change(input, { target: { value: 'jsb' } });
+    expect(screen.getByText(/2000 sur 2000/)).toBeInTheDocument();
+    act(() => {
+      vi.advanceTimersByTime(__PICKER_INTERNAL.SEARCH_DEBOUNCE_MS + 10);
+    });
+    expect(screen.getByText(/1000 sur 2000/)).toBeInTheDocument();
+  });
+
+  it('virtualized list shows the "optimized rendering" footer hint', () => {
+    renderPicker(makeMany(500));
+    expect(screen.getByText(/affichage optimisé/i)).toBeInTheDocument();
+  });
+
+  it('exposes a DialogDescription for screen readers (a11y)', () => {
+    renderPicker([legacy()]);
+    expect(
+      screen.getByText(/recherchez, filtrez et triez votre bibliothèque/i),
+    ).toBeInTheDocument();
   });
 });

@@ -367,6 +367,8 @@ const fr = {
   'projectilePicker.resultsCount': '{shown} sur {total}',
   'projectilePicker.open': 'Ouvrir le sélecteur',
   'projectilePicker.change': 'Changer',
+  'projectilePicker.dialogDescription': 'Recherchez, filtrez et triez votre bibliothèque de projectiles pour en sélectionner un.',
+  'projectilePicker.virtualized': 'Affichage optimisé',
 
   // Optics
   'optics.title': 'Bibliothèque d\'optiques',
@@ -1216,6 +1218,8 @@ const en: Record<keyof typeof fr, string> = {
   'projectilePicker.resultsCount': '{shown} of {total}',
   'projectilePicker.open': 'Open picker',
   'projectilePicker.change': 'Change',
+  'projectilePicker.dialogDescription': 'Search, filter and sort your projectile library to pick one.',
+  'projectilePicker.virtualized': 'Optimized rendering',
 
   'optics.title': 'Optics Library',
   'optics.add': 'Add Optic',

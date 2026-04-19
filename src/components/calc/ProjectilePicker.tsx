@@ -5,16 +5,14 @@ import {
   X,
   Check,
   Plus,
-  ChevronDown,
   Layers,
   Database,
-  Sparkles,
   Filter as FilterIcon,
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { calToken, buildCaliberCounts, CANONICAL_CALIBERS } from '@/lib/caliber';
+import { calToken, buildCaliberCounts } from '@/lib/caliber';
 import { Projectile, ProjectileType } from '@/lib/types';
 
 /**

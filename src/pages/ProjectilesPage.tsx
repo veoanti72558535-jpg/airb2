@@ -350,6 +350,44 @@ export default function ProjectilesPage() {
         />
       )}
 
+      {projectiles.length > 0 && (importedCount > 0 || bcZonesCount > 0) && (
+        <div className="flex items-center gap-1.5 flex-wrap text-xs">
+          <span className="text-[11px] uppercase tracking-wide text-muted-foreground mr-1">
+            {t('projectiles.list.filterFlags')}
+          </span>
+          {importedCount > 0 && (
+            <button
+              type="button"
+              aria-pressed={importedFilter}
+              onClick={() => setImportedFilter(v => !v)}
+              className={`px-2.5 py-1 rounded font-medium border inline-flex items-center gap-1 ${
+                importedFilter
+                  ? 'bg-primary/10 text-primary border-primary/40'
+                  : 'bg-muted text-muted-foreground border-border hover:bg-muted/70'
+              }`}
+            >
+              <Database className="h-3 w-3" />
+              {t('projectiles.list.filterImported')} ({importedCount})
+            </button>
+          )}
+          {bcZonesCount > 0 && (
+            <button
+              type="button"
+              aria-pressed={bcZonesFilter}
+              onClick={() => setBcZonesFilter(v => !v)}
+              className={`px-2.5 py-1 rounded font-medium border inline-flex items-center gap-1 ${
+                bcZonesFilter
+                  ? 'bg-primary/10 text-primary border-primary/40'
+                  : 'bg-muted text-muted-foreground border-border hover:bg-muted/70'
+              }`}
+            >
+              <Layers className="h-3 w-3" />
+              {t('projectiles.list.filterHasBcZones')} ({bcZonesCount})
+            </button>
+          )}
+        </div>
+      )}
+
       {projectiles.length > 0 && (
         <div className="flex items-center gap-2 flex-wrap text-xs">
           <span className="uppercase tracking-wide text-muted-foreground font-medium">{t('projectiles.filterType')}</span>
@@ -367,13 +405,16 @@ export default function ProjectilesPage() {
           ))}
           <span className="mx-2 h-4 w-px bg-border" />
           <span className="uppercase tracking-wide text-muted-foreground font-medium">{t('common.sortBy')}</span>
-          {(['name', 'weight', 'bc'] as const).map(sk => (
+          {(['name', 'weight', 'bc', 'caliber'] as const).map(sk => (
             <button
               key={sk}
               onClick={() => setSortKey(sk)}
               className={`px-2.5 py-1 rounded font-medium ${sortKey === sk ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted'}`}
             >
-              {sk === 'name' ? t('common.sortName') : sk === 'weight' ? t('common.sortWeight') : t('common.sortBc')}
+              {sk === 'name' ? t('common.sortName')
+                : sk === 'weight' ? t('common.sortWeight')
+                : sk === 'bc' ? t('common.sortBc')
+                : t('projectiles.list.sortCaliber')}
             </button>
           ))}
         </div>

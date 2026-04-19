@@ -22,6 +22,7 @@ import { normalizeSession } from '@/lib/session-normalize';
 import { BallisticTable } from '@/components/calc/BallisticTable';
 import { ZeroIntersectionsCard } from '@/components/calc/ZeroIntersectionsCard';
 import { TrajectoryMiniChart } from '@/components/calc/TrajectoryMiniChart';
+import { PbrCard } from '@/components/calc/PbrCard';
 import { computeZeroIntersections } from '@/lib/zero-intersections';
 import { ReticleAssistPanel } from '@/components/calc/ReticleAssistPanel';
 import {
@@ -447,6 +448,10 @@ function SessionAdvancedReadouts({ session }: { session: Session }) {
           nearZeroDistance={zeroIntersections.nearZeroDistance}
           farZeroDistance={zeroIntersections.farZeroDistance}
         />
+      )}
+      {/* Tranche P — Point Blank Range, dérivé des résultats stockés. */}
+      {session.results && session.results.length > 1 && (
+        <PbrCard rows={session.results} initialVitalZoneM={0.05} />
       )}
       <BallisticTable
         rows={session.results}

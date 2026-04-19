@@ -20,10 +20,10 @@ describe('deriveCaliberFromDiameterIn', () => {
     expect(deriveCaliberFromDiameterIn(0.45)).toBe('.45');
   });
 
-  it('tolerates small offsets within ±0.003"', () => {
+  it('tolerates small offsets within ±0.005"', () => {
     expect(deriveCaliberFromDiameterIn(0.218)).toBe('.22');
     expect(deriveCaliberFromDiameterIn(0.222)).toBe('.22');
-    expect(deriveCaliberFromDiameterIn(0.226)).toBe('.224');
+    expect(deriveCaliberFromDiameterIn(0.227)).toBe('.224');
   });
 
   it('returns null when no candidate is within tolerance', () => {
@@ -41,14 +41,14 @@ describe('deriveCaliberFromDiameterIn', () => {
   });
 
   it('picks the closest candidate when several are within tolerance', () => {
-    // .22 (0.220) and .224 are both close to 0.222 within tolerance — .22 wins.
+    // 0.222 → .22 (Δ=0.002) preferred over .224 (Δ=0.002): tie broken by table order.
     expect(deriveCaliberFromDiameterIn(0.222)).toBe('.22');
-    // 0.223 is closer to .224 than to .22
+    // 0.223 is closer to .22 (Δ=0.003) than to .224 (Δ=0.001) → .224
     expect(deriveCaliberFromDiameterIn(0.223)).toBe('.224');
   });
 
   it('exposes the default tolerance for downstream callers', () => {
-    expect(CALIBER_DERIVE_DEFAULT_TOLERANCE_IN).toBe(0.003);
+    expect(CALIBER_DERIVE_DEFAULT_TOLERANCE_IN).toBe(0.005);
   });
 });
 

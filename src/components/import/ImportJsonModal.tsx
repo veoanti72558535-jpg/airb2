@@ -136,7 +136,13 @@ export function ImportJsonModal({
       onSuccess?.(written);
       handleClose();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : t('import.fileInvalid'));
+      if (e instanceof StorageQuotaExceededError) {
+        // Message actionnable : l'utilisateur doit purger ou exporter avant
+        // de réessayer. Ne pas perdre la preview pour qu'il puisse retenter.
+        toast.error(t('import.quotaExceeded'), { duration: 8000 });
+      } else {
+        toast.error(e instanceof Error ? e.message : t('import.fileInvalid'));
+      }
       setIsWriting(false);
     }
   }, [handleClose, onSuccess, preview, t, writableCount]);

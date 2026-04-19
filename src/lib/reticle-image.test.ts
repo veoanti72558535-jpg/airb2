@@ -12,13 +12,17 @@ import {
   RETICLE_IMAGE_MAX_INPUT_BYTES,
 } from './reticle-image';
 
-function makeFile(content: string, type: string, size?: number): File {
-  const blob = new Blob([content], { type });
-  // Override size when needed for the "too-large" test.
-  if (size !== undefined) {
-    Object.defineProperty(blob, 'size', { value: size });
-  }
-  return new File([blob], 'reticle.bin', { type });
+function makeFile(content: string, type: string): File {
+  return new File([content], 'reticle.bin', { type });
+}
+
+function makeOversizedFile(type: string): File {
+  const file = new File(['x'], 'big.bin', { type });
+  Object.defineProperty(file, 'size', {
+    value: RETICLE_IMAGE_MAX_INPUT_BYTES + 1,
+    configurable: true,
+  });
+  return file;
 }
 
 describe('reticle-image', () => {
@@ -33,7 +37,7 @@ describe('reticle-image', () => {
   });
 
   it('rejects files larger than the input limit', async () => {
-    const file = makeFile('x', 'image/png', RETICLE_IMAGE_MAX_INPUT_BYTES + 1);
+    const file = makeOversizedFile('image/png');
     try {
       await fileToReticleImageDataUrl(file);
       throw new Error('should have rejected');

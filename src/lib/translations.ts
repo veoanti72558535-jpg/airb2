@@ -1552,6 +1552,23 @@ const en: Record<keyof typeof fr, string> = {
   'ballisticTable.empty': 'No rows in this range — widen the distance or shorten the step.',
   'ballisticTable.compact': 'Compact',
   'ballisticTable.advanced': 'Advanced',
+
+  // Reticle Assist (Tranche I)
+  'reticleAssist.title': 'Reticle assistant',
+  'reticleAssist.subtitle': 'Corrections shown in the linked reticle\'s unit',
+  'reticleAssist.none': 'No assistance available',
+  'reticleAssist.noOptic': 'Select an optic to enable the assistant.',
+  'reticleAssist.noReticle': 'No reticle linked to this optic. Link one from the optic page.',
+  'reticleAssist.reticleMissing': 'Linked reticle not found. Edit the optic to remove or replace it.',
+  'reticleAssist.unit': 'Unit',
+  'reticleAssist.vertical': 'Vertical',
+  'reticleAssist.wind': 'Wind',
+  'reticleAssist.nearestMark': 'Nearest mark',
+  'reticleAssist.betweenMarks': 'Between marks',
+  'reticleAssist.noMarks': 'No marks defined on this reticle — showing {unit} only.',
+  'reticleAssist.notAvailable': 'Mark assistance unavailable for this reticle (SFP not calibrated).',
+  'reticleAssist.moa': 'MOA',
+  'reticleAssist.mrad': 'MRAD',
 };
 
 export const translations = { fr, en } as const;

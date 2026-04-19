@@ -231,4 +231,83 @@ describe('import projectile — extension bullets4', () => {
     expect(preview.sanitizedCount).toBe(0);
     expect(preview.items[0].notes ?? []).toEqual([]);
   });
+
+  it('E2E payload bullets4 minimal (sans weight/bc/caliber) → sanitized + .22 + json-user', () => {
+    const preview = importProjectilesPreview(
+      [
+        {
+          brand: 'Test Bullets4',
+          model: 'B4-001',
+          diameterIn: 0.2165,
+          diameterMm: 5.5,
+          weightGrains: 18.13,
+          weightUnit: 'gr',
+          bcG1: 0.035,
+          bcG7: 0.018,
+          bcZones: [
+            { bc: 0.035, minVelocity: 250 },
+            { bc: 0.03, minVelocity: 200 },
+          ],
+          sourceDbId: 'b4-row-001',
+          sourceTable: 'bullets4_pellets',
+          importedFrom: 'bullets4-db',
+        },
+      ],
+      { source: 'bullets4-db' },
+    );
+    expect(preview.sanitizedCount).toBe(1);
+    expect(preview.rejectedCount).toBe(0);
+    const item = preview.items[0];
+    expect(item.status).toBe('sanitized');
+    expect(item.data?.weight).toBe(18.13);
+    expect(item.data?.bc).toBe(0.035);
+    expect(item.data?.bcModel).toBe('G1');
+    expect(item.data?.caliber).toBe('.22');
+    expect(item.data?.importedFrom).toBe('json-user');
+    const codes = (item.notes ?? []).map(n => n.code).sort();
+    expect(codes).toEqual([
+      'bc-derived-from-variant',
+      'caliber-derived-from-diameter',
+      'imported-from-remapped',
+      'weight-derived-from-variant',
+    ]);
+  });
+
+  it('rejects when neither weight nor weightGrains/weightGrams provided', () => {
+    const preview = importProjectilesPreview(
+      [{ brand: 'X', model: 'Y', bc: 0.02, caliber: '.22' }],
+      { source: 'json-user' },
+    );
+    expect(preview.rejectedCount).toBe(1);
+    expect(preview.items[0].issues?.[0].path).toEqual(['weight']);
+  });
+
+  it('rejects when neither bc nor bcG1/bcG7 provided', () => {
+    const preview = importProjectilesPreview(
+      [{ brand: 'X', model: 'Y', weight: 15.89, caliber: '.22' }],
+      { source: 'json-user' },
+    );
+    expect(preview.rejectedCount).toBe(1);
+    expect(preview.items[0].issues?.[0].path).toEqual(['bc']);
+  });
+
+  it('derives bc from bcG7 and aligns bcModel=G7 when only bcG7 present', () => {
+    const preview = importProjectilesPreview(
+      [{ brand: 'X', model: 'Y', weight: 15.89, caliber: '.22', bcG7: 0.018 }],
+      { source: 'json-user' },
+    );
+    expect(preview.sanitizedCount).toBe(1);
+    expect(preview.items[0].data?.bc).toBe(0.018);
+    expect(preview.items[0].data?.bcModel).toBe('G7');
+  });
+
+  it('derives weight from weightGrams when weight absent', () => {
+    const preview = importProjectilesPreview(
+      [{ brand: 'X', model: 'Y', caliber: '.22', bc: 0.021, weightGrams: 1 }],
+      { source: 'json-user' },
+    );
+    expect(preview.sanitizedCount).toBe(1);
+    // 1 g ≈ 15.4324 gr
+    expect(preview.items[0].data?.weight).toBeCloseTo(15.4324, 3);
+  });
 });

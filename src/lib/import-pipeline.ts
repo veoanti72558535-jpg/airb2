@@ -526,7 +526,11 @@ export function importProjectilesPreview(
         issues: zodIssuesToRejection(result.error),
       };
     }
-    const { data, notes } = normaliseProjectile(result.data, opts.source);
+    const norm = normaliseProjectile(result.data, opts.source);
+    if (!norm.ok) {
+      return { index, status: 'rejected', issues: norm.issues };
+    }
+    const { data, notes } = norm;
     const key = projectileKey(data);
     if (existingKeys.has(key) || seenInBatch.has(key)) {
       return { index, status: 'duplicate', data, duplicateKey: key };

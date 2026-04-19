@@ -51,8 +51,36 @@ const finiteNumber = z.number().finite();
  */
 const importedDragModel = z.string().trim().min(1).max(8);
 
-/** Type projectile importé — taxonomie ouverte côté schéma, fermée côté pipeline. */
-const importedProjectileType = z.enum(['pellet', 'slug', 'other']);
+/**
+ * Type projectile importé. Étendu (extension bullets4) pour accepter `bb`
+ * et `dart` en plus de `pellet`/`slug`/`other`. La taxonomie côté domaine
+ * reste fermée mais alignée sur `ProjectileType`.
+ */
+const importedProjectileType = z.enum(['pellet', 'slug', 'bb', 'dart', 'other']);
+
+/** Forme normalisée bullets4 — taxonomie ouverte (string libre toléré côté schema via `shape: shortString`). */
+const importedProjectileShape = z.enum([
+  'domed',
+  'pointed',
+  'hollow-point',
+  'wadcutter',
+  'round-nose',
+  'semi-wadcutter',
+  'flat-nose',
+  'hybrid',
+  'other',
+]);
+
+/** Unité de poids importée. */
+const importedWeightUnit = z.enum(['gr', 'g']);
+
+/** Zone BC (Litz / bullets4) — bornes prudentes. */
+const bcZoneSchema = z
+  .object({
+    bc: z.number().finite().positive().max(2),
+    minVelocity: z.number().finite().min(0).max(2000),
+  })
+  .strict();
 
 /**
  * Point Cd vs Mach. Bornes métier strictes :

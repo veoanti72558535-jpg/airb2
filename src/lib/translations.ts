@@ -863,6 +863,17 @@ const fr = {
   'trajectoryChart.los': 'Ligne de visée',
   'trajectoryChart.legend': 'Trajectoire (—) vs ligne de visée (- -)',
   'trajectoryChart.empty': 'Pas assez de points pour tracer la trajectoire.',
+  'pbr.title': 'Point Blank Range (PBR)',
+  'pbr.vitalZone': 'Zone vitale',
+  'pbr.range': 'Plage PBR',
+  'pbr.start': 'Début',
+  'pbr.end': 'Fin',
+  'pbr.maxOrdinate': 'Apex (au-dessus LOS)',
+  'pbr.maxOrdinateDistance': 'Distance apex',
+  'pbr.unavailable': 'Indisponible — données insuffisantes.',
+  'pbr.outOfRange': 'Hors plage calculée',
+  'pbr.notDeterminable': 'Trajectoire jamais dans la zone vitale sur cette plage.',
+  'pbr.limitedByComputedRange': 'Borné par la plage calculée',
 
   // Reticle Assist (Tranche I) — aide de lecture, pas un nouveau moteur
   'reticleAssist.title': 'Assistant réticule',

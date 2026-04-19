@@ -40,7 +40,11 @@ import { ZeroingSection } from '@/components/calc/ZeroingSection';
 import { ResultsCard } from '@/components/calc/ResultsCard';
 import { BallisticTable } from '@/components/calc/BallisticTable';
 import { ReticleAssistPanel } from '@/components/calc/ReticleAssistPanel';
-import { buildDistanceList, defaultConfig } from '@/lib/ballistic-table';
+import {
+  buildDistanceList,
+  defaultConfig,
+  type BallisticTableConfig,
+} from '@/lib/ballistic-table';
 
 interface FormState {
   // Projectile

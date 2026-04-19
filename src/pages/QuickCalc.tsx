@@ -728,6 +728,16 @@ export default function QuickCalc() {
             <ZeroIntersectionsCard data={zeroIntersections} />
           )}
 
+          {/* Tranche P — Mini-graphique inline trajectoire vs ligne de visée
+              avec marqueurs Near/Far Zero. Pure présentation. */}
+          {results.length > 1 && (
+            <TrajectoryMiniChart
+              rows={results}
+              nearZeroDistance={zeroIntersections.nearZeroDistance}
+              farZeroDistance={zeroIntersections.farZeroDistance}
+            />
+          )}
+
           {/* Tranche H + J — Configurable ballistic table. Source de vérité
               de la grille d'affichage partagée avec ReticleAssistPanel.
               Tranche P — propage les croisements pour matérialiser Near/Far

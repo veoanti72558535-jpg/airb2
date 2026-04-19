@@ -258,7 +258,7 @@ function normaliseProjectile(
     ...(parsed.bcG1 !== undefined ? { bcG1: parsed.bcG1 } : {}),
     ...(parsed.bcG7 !== undefined ? { bcG7: parsed.bcG7 } : {}),
     // bcZones : on conserve `null` (distinct de "absent") tel quel.
-    ...(parsed.bcZones !== undefined ? { bcZones: parsed.bcZones } : {}),
+    ...(parsed.bcZones !== undefined ? { bcZones: parsed.bcZones as NormalisedProjectile['bcZones'] } : {}),
     ...(parsed.lengthMm !== undefined ? { lengthMm: parsed.lengthMm } : {}),
     ...(parsed.lengthIn !== undefined ? { lengthIn: parsed.lengthIn } : {}),
     ...(parsed.sourceDbId !== undefined ? { sourceDbId: parsed.sourceDbId } : {}),

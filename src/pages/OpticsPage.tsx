@@ -11,6 +11,7 @@ import { Optic, OpticFocalPlane } from '@/lib/types';
 import { motion } from 'framer-motion';
 import { toast } from '@/hooks/use-toast';
 import { ImportPresetOpticsModal } from '@/components/optics/ImportPresetOpticsModal';
+import { OpticReticleLink } from '@/components/optics/OpticReticleLink';
 
 interface FormState {
   name: string;
@@ -22,6 +23,7 @@ interface FormState {
   tubeDiameter: 25.4 | 30 | 34;
   magCalibration: number | '';
   notes: string;
+  reticleId: string | undefined;
 }
 
 const emptyForm: FormState = {
@@ -34,6 +36,7 @@ const emptyForm: FormState = {
   tubeDiameter: 30,
   magCalibration: '',
   notes: '',
+  reticleId: undefined,
 };
 
 export default function OpticsPage() {
@@ -80,6 +83,7 @@ export default function OpticsPage() {
           ? Number(form.magCalibration)
           : undefined,
       notes: form.notes,
+      reticleId: form.reticleId,
     };
     if (editing) {
       opticStore.update(editing.id, payload);
@@ -106,6 +110,7 @@ export default function OpticsPage() {
       tubeDiameter: o.tubeDiameter ?? 30,
       magCalibration: o.magCalibration ?? '',
       notes: o.notes ?? '',
+      reticleId: o.reticleId,
     });
     setShowForm(true);
   };

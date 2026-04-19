@@ -171,7 +171,7 @@ function Counter({
       : tone === 'warning'
         ? 'text-warning'
         : tone === 'success'
-          ? 'text-success'
+          ? 'text-primary'
           : tone === 'muted'
             ? 'text-muted-foreground'
             : 'text-foreground';

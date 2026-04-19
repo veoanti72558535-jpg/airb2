@@ -242,6 +242,13 @@ export default function OpticsPage() {
             )}
           </div>
           <div><label className="text-xs text-muted-foreground">{t('airguns.notes')}</label><textarea className={inputClass} rows={2} value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} /></div>
+          <div>
+            <label className="text-xs text-muted-foreground">{t('optics.reticle.label')}</label>
+            <OpticReticleLink
+              reticleId={form.reticleId}
+              onChange={next => setForm(f => ({ ...f, reticleId: next }))}
+            />
+          </div>
           <div className="flex gap-2">
             <button onClick={handleSave} className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium">{t('common.save')}</button>
             <button onClick={() => { setShowForm(false); setEditing(null); setForm(emptyForm); }} className="px-4 py-2 bg-muted text-muted-foreground rounded-md text-sm">{t('common.cancel')}</button>

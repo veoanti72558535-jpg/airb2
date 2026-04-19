@@ -5,6 +5,10 @@ import { cn } from '@/lib/utils';
 import type { Session, CdProvenance } from '@/lib/types';
 import type { TranslationKey } from '@/lib/translations';
 import { isPublicDragLaw as isPublicDragLawPolicy } from '@/lib/drag-law-policy';
+import {
+  importSourceLabelKey,
+  resolveSessionImportedFrom,
+} from '@/lib/imported-from';
 
 /**
  * Tranche B — EngineBadge

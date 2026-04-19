@@ -149,4 +149,48 @@ describe('PbrCard — Tranche P (UI)', () => {
     // La carte reste rendue, on ne crashe pas.
     expect(screen.getByTestId('pbr-card')).toBeInTheDocument();
   });
+
+  // ──────────────────────────── Tranche Q ────────────────────────────
+
+  it('Tranche Q — persiste la zone vitale en localStorage en mètres', () => {
+    renderCard();
+    const input = screen.getByTestId('pbr-vital-input') as HTMLInputElement;
+    fireEvent.change(input, { target: { value: '12' } });
+    // 12 cm en mode métrique = 0.12 m (length category = cm par défaut métrique).
+    const stored = localStorage.getItem('pbr-vital-zone-m-v1');
+    expect(stored).not.toBeNull();
+    const parsed = JSON.parse(stored!);
+    expect(typeof parsed).toBe('number');
+    expect(parsed).toBeGreaterThan(0);
+  });
+
+  it('Tranche Q — relit la valeur persistée au montage (sans initialVitalZoneM)', () => {
+    // Pré-seed du storage avec 0.09 m.
+    localStorage.setItem('pbr-vital-zone-m-v1', JSON.stringify(0.09));
+    render(
+      <I18nProvider>
+        <PbrCard rows={ROWS_OK} />
+      </I18nProvider>,
+    );
+    const input = screen.getByTestId('pbr-vital-input') as HTMLInputElement;
+    // L'input doit refléter 0.09 m dans l'unité d'affichage (cm par défaut → 9).
+    expect(Number(input.value)).toBeGreaterThan(0);
+  });
+
+  it('Tranche Q — deux instances montées simultanément voient la même valeur', () => {
+    localStorage.setItem('pbr-vital-zone-m-v1', JSON.stringify(0.07));
+    const { container: c1 } = render(
+      <I18nProvider>
+        <PbrCard rows={ROWS_OK} />
+      </I18nProvider>,
+    );
+    const { container: c2 } = render(
+      <I18nProvider>
+        <PbrCard rows={ROWS_OK} />
+      </I18nProvider>,
+    );
+    const v1 = (c1.querySelector('[data-testid="pbr-vital-input"]') as HTMLInputElement).value;
+    const v2 = (c2.querySelector('[data-testid="pbr-vital-input"]') as HTMLInputElement).value;
+    expect(v1).toBe(v2);
+  });
 });

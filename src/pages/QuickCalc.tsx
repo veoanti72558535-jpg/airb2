@@ -464,7 +464,14 @@ export default function QuickCalc() {
       return;
     }
     setError(null);
-    setResults(calculateTrajectory(buildInput()));
+    const input = buildInput();
+    setResults(calculateTrajectory(input));
+    // Tranche J — recale la grille partagée sur la portée réellement calculée
+    // tout en préservant les colonnes choisies par l'utilisateur.
+    setTableConfig(prev => {
+      const next = defaultConfig(input.maxRange);
+      return { ...next, columns: prev.columns };
+    });
   };
 
   const handleReset = () => {
@@ -473,6 +480,7 @@ export default function QuickCalc() {
     setError(null);
     setSessionName('');
     setPreviewOriginId(null);
+    setTableConfig(defaultConfig(100));
   };
 
   const handleSave = () => {

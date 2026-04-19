@@ -557,6 +557,28 @@ const fr = {
   'detail.notFound': 'Élément introuvable',
   'detail.notFoundHint': 'Cet élément a peut-être été supprimé.',
 
+  // Bullets4 enriched projectile fields (affichage uniquement, jamais consommé par le moteur)
+  'projectiles.bullets4.title': 'Données catalogue avancées',
+  'projectiles.bullets4.hint': 'Champs enrichis importés depuis la base bullets4. Affichés à titre informatif — non utilisés par le moteur balistique.',
+  'projectiles.bullets4.caliberLabel': 'Calibre (libellé)',
+  'projectiles.bullets4.diameterMm': 'Diamètre (mm)',
+  'projectiles.bullets4.diameterIn': 'Diamètre (in)',
+  'projectiles.bullets4.weightGrains': 'Poids (gr)',
+  'projectiles.bullets4.weightGrams': 'Poids (g)',
+  'projectiles.bullets4.weightUnit': 'Unité de poids importée',
+  'projectiles.bullets4.bcG1': 'BC G1',
+  'projectiles.bullets4.bcG7': 'BC G7',
+  'projectiles.bullets4.lengthMm': 'Longueur (mm)',
+  'projectiles.bullets4.lengthIn': 'Longueur (in)',
+  'projectiles.bullets4.bcZonesTitle': 'Zones BC (BC vs vitesse min.)',
+  'projectiles.bullets4.bcZonesHeaderBc': 'BC',
+  'projectiles.bullets4.bcZonesHeaderVmin': 'V min (m/s)',
+  'projectiles.bullets4.bcZonesEmpty': 'Aucune zone BC fournie.',
+  'projectiles.bullets4.provenanceTitle': 'Provenance',
+  'projectiles.bullets4.sourceDbId': 'ID source',
+  'projectiles.bullets4.sourceTable': 'Table source',
+  'projectiles.bullets4.importedFrom': 'Importé depuis',
+
   // Compare (Build 7) — sessions A/B
   'compare.title': 'Comparaison de sessions',
   'compare.subtitle': 'Compare deux sessions enregistrées côte à côte',

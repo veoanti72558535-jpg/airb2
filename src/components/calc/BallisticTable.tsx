@@ -9,7 +9,7 @@
  * the table itself scrolls horizontally when the chosen columns overflow.
  */
 import { useMemo, useState } from 'react';
-import { ChevronDown, ChevronUp, Settings2, RotateCcw } from 'lucide-react';
+import { ChevronDown, ChevronUp, Settings2, RotateCcw, Crosshair } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import type { TranslationKey } from '@/lib/translations';
 import { useUnits } from '@/hooks/use-units';
@@ -43,6 +43,12 @@ interface Props {
   defaultOpen?: boolean;
   /** Optional title override; falls back to `ballisticTable.title`. */
   title?: string;
+  /**
+   * Tranche O — Optional Near/Far Zero distances (in metres) to highlight
+   * the corresponding rows in the table. Purely visual; never recomputed.
+   */
+  nearZeroDistance?: number | null;
+  farZeroDistance?: number | null;
 }
 
 const COLUMN_LABEL_KEYS: Record<BallisticTableColumn, TranslationKey> = {
@@ -66,6 +72,8 @@ export function BallisticTable({
   onConfigChange,
   defaultOpen = false,
   title,
+  nearZeroDistance,
+  farZeroDistance,
 }: Props) {
   const { t } = useI18n();
   const { symbol } = useUnits();
@@ -94,6 +102,33 @@ export function BallisticTable({
   const energyUnit = symbol('energy');
 
   const tableRows = useMemo(() => buildTableRows(rows, cfg), [rows, cfg]);
+
+  // Tranche O — Détermine quelle ligne du tableau (échantillonnée à `step`)
+  // est la plus proche de Near / Far Zero. Tolérance = step/2 pour ne marquer
+  // qu'au plus une ligne par croisement, sans inventer un croisement absent.
+  const { nearRowDistance, farRowDistance } = useMemo(() => {
+    if (tableRows.length === 0) {
+      return { nearRowDistance: null as number | null, farRowDistance: null as number | null };
+    }
+    const tol = Math.max(0.5, cfg.step / 2);
+    const findClosest = (target: number | null | undefined): number | null => {
+      if (target == null || !Number.isFinite(target)) return null;
+      let best: number | null = null;
+      let bestDelta = Infinity;
+      for (const r of tableRows) {
+        const d = Math.abs(r.range - target);
+        if (d < bestDelta) {
+          bestDelta = d;
+          best = r.range;
+        }
+      }
+      return best != null && bestDelta <= tol ? best : null;
+    };
+    return {
+      nearRowDistance: findClosest(nearZeroDistance),
+      farRowDistance: findClosest(farZeroDistance),
+    };
+  }, [tableRows, cfg.step, nearZeroDistance, farZeroDistance]);
 
   const reset = () => updateCfg(defaultConfig(maxRangeHint));
 
@@ -272,19 +307,54 @@ export function BallisticTable({
                       energyThresholdJ != null &&
                       energyThresholdJ > 0 &&
                       r.energy > energyThresholdJ;
+                    const isNear = nearRowDistance != null && r.range === nearRowDistance;
+                    const isFar = farRowDistance != null && r.range === farRowDistance;
+                    const isZero = isNear || isFar;
                     return (
                       <tr
                         key={r.range}
                         data-testid={`bt-row-${r.range}`}
+                        data-zero-marker={isNear ? 'near' : isFar ? 'far' : undefined}
                         className={cn(
                           'border-b border-border/20',
                           overThreshold && 'bg-destructive/10 text-destructive',
+                          isZero &&
+                            !overThreshold &&
+                            'bg-primary/5 border-l-2 border-l-primary/60',
                         )}
                       >
                         {isColumnVisible(cfg, 'distance') && (
                           <td className="py-1.5 pr-2 font-semibold">
-                            {r.range}
-                            {distUnit}
+                            <span className="inline-flex items-center gap-1">
+                              {isZero && (
+                                <Crosshair
+                                  className="h-3 w-3 text-primary shrink-0"
+                                  aria-hidden
+                                />
+                              )}
+                              <span>
+                                {r.range}
+                                {distUnit}
+                              </span>
+                              {isNear && (
+                                <span
+                                  className="text-[8px] uppercase tracking-wide font-bold text-primary/80 px-1 rounded bg-primary/10 border border-primary/30"
+                                  title={t('zeroIntersections.nearZero')}
+                                  aria-label={t('zeroIntersections.nearZero')}
+                                >
+                                  {t('ballisticTable.nearTag')}
+                                </span>
+                              )}
+                              {isFar && (
+                                <span
+                                  className="text-[8px] uppercase tracking-wide font-bold text-primary/80 px-1 rounded bg-primary/10 border border-primary/30"
+                                  title={t('zeroIntersections.farZero')}
+                                  aria-label={t('zeroIntersections.farZero')}
+                                >
+                                  {t('ballisticTable.farTag')}
+                                </span>
+                              )}
+                            </span>
                           </td>
                         )}
                         {isColumnVisible(cfg, 'drop') && (
@@ -322,6 +392,15 @@ export function BallisticTable({
                   })}
                 </tbody>
               </table>
+              {(nearRowDistance != null || farRowDistance != null) && (
+                <div
+                  data-testid="bt-zero-legend"
+                  className="mt-1.5 px-1 text-[10px] text-muted-foreground/80 italic flex items-center gap-1.5"
+                >
+                  <Crosshair className="h-3 w-3 text-primary/70" aria-hidden />
+                  <span>{t('ballisticTable.zeroLegend')}</span>
+                </div>
+              )}
             </div>
           )}
         </div>

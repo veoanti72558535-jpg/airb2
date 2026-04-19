@@ -172,6 +172,13 @@ export default function QuickCalc() {
     const s = getSettings();
     return s.energyThresholdJ === undefined ? 16.27 : s.energyThresholdJ;
   });
+  // Tranche P — Near / Far Zero mémoïsés pour partager la même donnée entre
+  // la carte dédiée et les marqueurs de ligne dans la BallisticTable. Pure
+  // dérivation des résultats déjà produits par le moteur.
+  const zeroIntersections = useMemo(
+    () => computeZeroIntersections(results),
+    [results],
+  );
   useEffect(() => {
     const refresh = () => {
       const s = getSettings();
@@ -713,13 +720,17 @@ export default function QuickCalc() {
             energyThresholdJ={energyThresholdJ}
           />
 
-          {/* Tranche O — Near / Far Zero, dérivés de `results`. */}
+          {/* Tranche O — Near / Far Zero, dérivés de `results`. Mémoïsé pour
+              partager la donnée entre la carte dédiée et les marqueurs de
+              ligne dans la BallisticTable. */}
           {results.length > 1 && (
-            <ZeroIntersectionsCard data={computeZeroIntersections(results)} />
+            <ZeroIntersectionsCard data={zeroIntersections} />
           )}
 
           {/* Tranche H + J — Configurable ballistic table. Source de vérité
-              de la grille d'affichage partagée avec ReticleAssistPanel. */}
+              de la grille d'affichage partagée avec ReticleAssistPanel.
+              Tranche P — propage les croisements pour matérialiser Near/Far
+              Zero directement dans le tableau. */}
           {results.length > 1 && (
             <BallisticTable
               rows={results}
@@ -728,6 +739,8 @@ export default function QuickCalc() {
               energyThresholdJ={energyThresholdJ}
               initialConfig={tableConfig}
               onConfigChange={setTableConfig}
+              nearZeroDistance={zeroIntersections.nearZeroDistance}
+              farZeroDistance={zeroIntersections.farZeroDistance}
             />
           )}
 

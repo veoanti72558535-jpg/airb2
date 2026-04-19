@@ -427,11 +427,17 @@ function SessionAdvancedReadouts({ session }: { session: Session }) {
     () => buildDistanceList(tableConfig).filter(d => d > 0),
     [tableConfig],
   );
+  // Tranche P — Near / Far Zero mémoïsés, partagés entre la carte dédiée et
+  // les marqueurs de ligne dans la BallisticTable.
+  const zeroIntersections = useMemo(
+    () => computeZeroIntersections(session.results),
+    [session.results],
+  );
   return (
     <>
       {/* Tranche O — Near / Far Zero, dérivés des résultats stockés. */}
       {session.results && session.results.length > 1 && (
-        <ZeroIntersectionsCard data={computeZeroIntersections(session.results)} />
+        <ZeroIntersectionsCard data={zeroIntersections} />
       )}
       <BallisticTable
         rows={session.results}
@@ -439,6 +445,8 @@ function SessionAdvancedReadouts({ session }: { session: Session }) {
         maxRangeHint={session.input.maxRange}
         initialConfig={tableConfig}
         onConfigChange={setTableConfig}
+        nearZeroDistance={zeroIntersections.nearZeroDistance}
+        farZeroDistance={zeroIntersections.farZeroDistance}
       />
       <ReticleAssistPanel
         optic={optic}

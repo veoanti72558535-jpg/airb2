@@ -855,6 +855,9 @@ const fr = {
   'ballisticTable.empty': 'Aucune ligne dans cette plage — élargissez la distance ou réduisez le pas.',
   'ballisticTable.compact': 'Compact',
   'ballisticTable.advanced': 'Avancé',
+  'ballisticTable.nearTag': 'NZ',
+  'ballisticTable.farTag': 'FZ',
+  'ballisticTable.zeroLegend': 'NZ = Near Zero · FZ = Far Zero (ligne approchée à ±½ pas)',
 
   // Reticle Assist (Tranche I) — aide de lecture, pas un nouveau moteur
   'reticleAssist.title': 'Assistant réticule',
@@ -1710,6 +1713,9 @@ const en: Record<keyof typeof fr, string> = {
   'ballisticTable.empty': 'No rows in this range — widen the distance or shorten the step.',
   'ballisticTable.compact': 'Compact',
   'ballisticTable.advanced': 'Advanced',
+  'ballisticTable.nearTag': 'NZ',
+  'ballisticTable.farTag': 'FZ',
+  'ballisticTable.zeroLegend': 'NZ = Near Zero · FZ = Far Zero (snapped to closest row within ±½ step)',
 
   // Reticle Assist (Tranche I)
   'reticleAssist.title': 'Reticle assistant',

@@ -72,12 +72,19 @@ export function BallisticTable({
 
   const [open, setOpen] = useState(defaultOpen);
   const [showSettings, setShowSettings] = useState(false);
-  const [cfg, setCfg] = useState<BallisticTableConfig>(
+  // Tranche J — composant contrôlable. Si le parent fournit `initialConfig`
+  // ET un `onConfigChange`, on synchronise l'état interne sur la prop à
+  // chaque rendu pour éviter toute divergence avec une grille partagée
+  // (BallisticTable ↔ ReticleAssistPanel). Sinon, comportement legacy
+  // non-contrôlé conservé.
+  const [internalCfg, setInternalCfg] = useState<BallisticTableConfig>(
     () => initialConfig ?? defaultConfig(maxRangeHint),
   );
+  const isControlled = initialConfig != null && onConfigChange != null;
+  const cfg = isControlled ? initialConfig! : internalCfg;
 
   const updateCfg = (next: BallisticTableConfig) => {
-    setCfg(next);
+    if (!isControlled) setInternalCfg(next);
     onConfigChange?.(next);
   };
 

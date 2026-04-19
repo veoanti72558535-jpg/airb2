@@ -53,7 +53,9 @@ export interface ImportSanitizationNote {
     | 'reticle-unit-canonicalised'
     | 'unknown-field-stripped'
     | 'caliber-derived-from-diameter'
-    | 'imported-from-remapped';
+    | 'imported-from-remapped'
+    | 'weight-derived-from-variant'
+    | 'bc-derived-from-variant';
   /** Message lisible (FR) — non i18n pour l'instant, factorisable plus tard. */
   message: string;
   /** Champ touché. */

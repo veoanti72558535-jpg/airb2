@@ -10,6 +10,50 @@
 export type DragModel = 'G1' | 'G7' | 'GA' | 'GS' | 'RA4' | 'GA2' | 'SLG0' | 'SLG1';
 export type ProjectileType = 'pellet' | 'slug' | 'other';
 export type OpticFocalPlane = 'FFP' | 'SFP';
+
+/**
+ * Tranche F.1 — Provenance d'une donnée importée.
+ *
+ * Taxonomie fermée pour tracer l'origine des entités (Projectile, Optic,
+ * Reticle) qui n'ont pas été créées manuellement par l'utilisateur dans
+ * l'app. Utilisée uniquement comme marqueur — la pipeline d'import réelle
+ * (validation Zod, sanitisation, dry-run) arrivera en F.2/F.3.
+ *
+ * - `'json-user'`        : import JSON utilisateur arbitraire
+ * - `'preset-internal'`  : seed embarqué dans l'app (SEED_PROJECTILES, …)
+ * - `'strelok'`          : import depuis un export Strelok Pro
+ * - `'chairgun'`         : import depuis un export ChairGun Elite
+ * - `'airballistik'`     : round-trip d'un export AirBallistik (`exportAllData`)
+ *
+ * Volontairement NON appliqué à `Session` : la provenance d'une session
+ * est déjà couverte par `derivedFromSessionId` + `metadataInferred`.
+ */
+export type ImportSource =
+  | 'json-user'
+  | 'preset-internal'
+  | 'strelok'
+  | 'chairgun'
+  | 'airballistik';
+
+/**
+ * Tranche F.1 — Type de réticule (taxonomie fermée V1).
+ * Extensible plus tard sans migration : on ajoute juste un littéral.
+ */
+export type ReticleType =
+  | 'mil-dot'
+  | 'moa-grid'
+  | 'mrad-grid'
+  | 'duplex'
+  | 'bdc'
+  | 'other';
+
+/**
+ * Tranche F.1 — Unité angulaire canonique d'un réticule, persistée dans le
+ * modèle interne. STRICTEMENT `'MOA' | 'MRAD'` : `'mil'` n'est PAS un
+ * troisième canon (alias possiblement géré au moment de l'import en F.2,
+ * jamais stocké tel quel).
+ */
+export type ReticleUnit = 'MOA' | 'MRAD';
 /** Twist rate as "1:N" inches per turn, stored as N (e.g. 16, 18, 24). */
 export type TwistRate = number;
 

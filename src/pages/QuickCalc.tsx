@@ -743,7 +743,7 @@ export default function QuickCalc() {
               (pas de pollution des settings globaux V1). Pure dérivation des
               résultats existants — aucun recalcul moteur. */}
           {results.length > 1 && (
-            <PbrCard rows={results} initialVitalZoneM={0.05} />
+            <PbrCard rows={results} />
           )}
 
           {/* Tranche H + J — Configurable ballistic table. Source de vérité

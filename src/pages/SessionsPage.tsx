@@ -407,3 +407,38 @@ export default function SessionsPage() {
     </motion.div>
   );
 }
+
+/**
+ * Tranche J — Bloc avancé d'une session : table balistique + assistant
+ * réticule, partageant la même `BallisticTableConfig` locale. Aucun recalcul
+ * moteur, aucune persistance — la config vit le temps de la vue.
+ */
+function SessionAdvancedReadouts({ session }: { session: Session }) {
+  const [tableConfig, setTableConfig] = useState<BallisticTableConfig>(() =>
+    defaultConfig(session.input.maxRange),
+  );
+  const optic = useMemo(
+    () => (session.opticId ? opticStore.getById(session.opticId) ?? null : null),
+    [session.opticId],
+  );
+  const distances = useMemo(
+    () => buildDistanceList(tableConfig).filter(d => d > 0),
+    [tableConfig],
+  );
+  return (
+    <>
+      <BallisticTable
+        rows={session.results}
+        clickUnit={session.input.clickUnit ?? 'MRAD'}
+        maxRangeHint={session.input.maxRange}
+        initialConfig={tableConfig}
+        onConfigChange={setTableConfig}
+      />
+      <ReticleAssistPanel
+        optic={optic}
+        results={session.results}
+        distances={distances}
+      />
+    </>
+  );
+}

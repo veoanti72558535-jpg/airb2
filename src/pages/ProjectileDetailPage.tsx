@@ -83,6 +83,8 @@ export default function ProjectileDetailPage() {
         </DetailSection>
       )}
 
+      <Bullets4ProjectileDetails projectile={p} />
+
       <LinkedSessions field="projectileId" id={p.id} />
 
       <DetailSection title={t('detail.metadata')}>

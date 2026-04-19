@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Zap, Plus, Trash2, Edit2, Download, GitCompare, X } from 'lucide-react';
+import { Zap, Plus, Trash2, Edit2, Download, GitCompare, X, Layers, Sparkles, Database } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { projectileStore } from '@/lib/storage';
 import { useUnits } from '@/hooks/use-units';
@@ -17,6 +17,29 @@ import { ImportPresetProjectilesModal } from '@/components/projectiles/ImportPre
 import { CompareProjectilesModal } from '@/components/projectiles/CompareProjectilesModal';
 import { DragTableEditor } from '@/components/projectiles/DragTableEditor';
 import { seedProjectileKey } from '@/lib/seed-projectiles';
+
+/** Tranche K — un projectile a-t-il au moins une zone BC exploitable (informatif). */
+export function hasBcZones(p: Projectile): boolean {
+  return Array.isArray(p.bcZones) && p.bcZones.length > 0;
+}
+
+/** Tranche K — un projectile expose-t-il au moins un champ catalogue enrichi bullets4. */
+export function isEnrichedProjectile(p: Projectile): boolean {
+  return (
+    p.caliberLabel !== undefined ||
+    p.diameterMm !== undefined ||
+    p.diameterIn !== undefined ||
+    p.weightGrains !== undefined ||
+    p.weightGrams !== undefined ||
+    p.bcG1 !== undefined ||
+    p.bcG7 !== undefined ||
+    hasBcZones(p) ||
+    (p.lengthMm !== undefined && p.lengthMm !== null) ||
+    (p.lengthIn !== undefined && p.lengthIn !== null) ||
+    p.sourceDbId !== undefined ||
+    p.sourceTable !== undefined
+  );
+}
 
 const MAX_COMPARE = 4;
 
@@ -71,7 +94,9 @@ export default function ProjectilesPage() {
   const [editing, setEditing] = useState<Projectile | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [typeFilter, setTypeFilter] = useState<'all' | ProjectileType>('all');
-  const [sortKey, setSortKey] = useState<'name' | 'weight' | 'bc'>('name');
+  const [importedFilter, setImportedFilter] = useState(false);
+  const [bcZonesFilter, setBcZonesFilter] = useState(false);
+  const [sortKey, setSortKey] = useState<'name' | 'weight' | 'bc' | 'caliber'>('name');
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [showCompare, setShowCompare] = useState(false);
 
@@ -110,6 +135,8 @@ export default function ProjectilesPage() {
       if (bf && (p.brand ?? '').toLowerCase() !== bf) return false;
       if (cf && calToken(p.caliber) !== cf) return false;
       if (typeFilter !== 'all' && (p.projectileType ?? 'pellet') !== typeFilter) return false;
+      if (importedFilter && !p.importedFrom) return false;
+      if (bcZonesFilter && !hasBcZones(p)) return false;
       if (tokens.length) {
         const hay = `${p.brand} ${p.model} ${p.notes ?? ''} ${p.caliber} ${p.weight} ${p.bc}`.toLowerCase();
         if (!tokens.every(tok => hay.includes(tok))) return false;
@@ -119,12 +146,16 @@ export default function ProjectilesPage() {
     const sorted = [...list];
     if (sortKey === 'weight') sorted.sort((a, b) => a.weight - b.weight);
     else if (sortKey === 'bc') sorted.sort((a, b) => b.bc - a.bc);
+    else if (sortKey === 'caliber') sorted.sort((a, b) => calToken(a.caliber).localeCompare(calToken(b.caliber)) || `${a.brand} ${a.model}`.localeCompare(`${b.brand} ${b.model}`));
     else sorted.sort((a, b) => `${a.brand} ${a.model}`.localeCompare(`${b.brand} ${b.model}`));
     return sorted;
-  }, [projectiles, searchQuery, brandFilter, caliberFilter, typeFilter, sortKey]);
+  }, [projectiles, searchQuery, brandFilter, caliberFilter, typeFilter, importedFilter, bcZonesFilter, sortKey]);
 
-  const hasAnyFilter = (brandFilter !== null && brandFilter !== '') || (caliberFilter !== null && caliberFilter !== '') || typeFilter !== 'all' || searchQuery.trim() !== '';
-  const resetAllFilters = () => { setBrandFilter(null); setCaliberFilter(null); setSearchQuery(''); setTypeFilter('all'); };
+  const hasAnyFilter = (brandFilter !== null && brandFilter !== '') || (caliberFilter !== null && caliberFilter !== '') || typeFilter !== 'all' || importedFilter || bcZonesFilter || searchQuery.trim() !== '';
+  const resetAllFilters = () => { setBrandFilter(null); setCaliberFilter(null); setSearchQuery(''); setTypeFilter('all'); setImportedFilter(false); setBcZonesFilter(false); };
+
+  const importedCount = useMemo(() => projectiles.filter(p => Boolean(p.importedFrom)).length, [projectiles]);
+  const bcZonesCount = useMemo(() => projectiles.filter(hasBcZones).length, [projectiles]);
 
   const refresh = () => setProjectiles(projectileStore.getAll());
 
@@ -319,6 +350,44 @@ export default function ProjectilesPage() {
         />
       )}
 
+      {projectiles.length > 0 && (importedCount > 0 || bcZonesCount > 0) && (
+        <div className="flex items-center gap-1.5 flex-wrap text-xs">
+          <span className="text-[11px] uppercase tracking-wide text-muted-foreground mr-1">
+            {t('projectiles.list.filterFlags')}
+          </span>
+          {importedCount > 0 && (
+            <button
+              type="button"
+              aria-pressed={importedFilter}
+              onClick={() => setImportedFilter(v => !v)}
+              className={`px-2.5 py-1 rounded font-medium border inline-flex items-center gap-1 ${
+                importedFilter
+                  ? 'bg-primary/10 text-primary border-primary/40'
+                  : 'bg-muted text-muted-foreground border-border hover:bg-muted/70'
+              }`}
+            >
+              <Database className="h-3 w-3" />
+              {t('projectiles.list.filterImported')} ({importedCount})
+            </button>
+          )}
+          {bcZonesCount > 0 && (
+            <button
+              type="button"
+              aria-pressed={bcZonesFilter}
+              onClick={() => setBcZonesFilter(v => !v)}
+              className={`px-2.5 py-1 rounded font-medium border inline-flex items-center gap-1 ${
+                bcZonesFilter
+                  ? 'bg-primary/10 text-primary border-primary/40'
+                  : 'bg-muted text-muted-foreground border-border hover:bg-muted/70'
+              }`}
+            >
+              <Layers className="h-3 w-3" />
+              {t('projectiles.list.filterHasBcZones')} ({bcZonesCount})
+            </button>
+          )}
+        </div>
+      )}
+
       {projectiles.length > 0 && (
         <div className="flex items-center gap-2 flex-wrap text-xs">
           <span className="uppercase tracking-wide text-muted-foreground font-medium">{t('projectiles.filterType')}</span>
@@ -336,13 +405,16 @@ export default function ProjectilesPage() {
           ))}
           <span className="mx-2 h-4 w-px bg-border" />
           <span className="uppercase tracking-wide text-muted-foreground font-medium">{t('common.sortBy')}</span>
-          {(['name', 'weight', 'bc'] as const).map(sk => (
+          {(['name', 'weight', 'bc', 'caliber'] as const).map(sk => (
             <button
               key={sk}
               onClick={() => setSortKey(sk)}
               className={`px-2.5 py-1 rounded font-medium ${sortKey === sk ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted'}`}
             >
-              {sk === 'name' ? t('common.sortName') : sk === 'weight' ? t('common.sortWeight') : t('common.sortBc')}
+              {sk === 'name' ? t('common.sortName')
+                : sk === 'weight' ? t('common.sortWeight')
+                : sk === 'bc' ? t('common.sortBc')
+                : t('projectiles.list.sortCaliber')}
             </button>
           ))}
         </div>
@@ -365,7 +437,12 @@ export default function ProjectilesPage() {
                 <Link to={`/library/projectile/${p.id}`} className="block">
                   <div className="flex items-start justify-between mb-2">
                     <div className="min-w-0 flex-1 pr-2">
-                      <div className="font-semibold text-sm">{p.brand} {p.model}</div>
+                      <div className="font-semibold text-sm flex items-center gap-1.5 flex-wrap">
+                        <span className="truncate">{p.brand} {p.model}</span>
+                        {p.caliberLabel && p.caliberLabel !== p.caliber && (
+                          <span className="text-[10px] font-mono text-muted-foreground">({p.caliberLabel})</span>
+                        )}
+                      </div>
                       <div className="flex flex-wrap gap-1.5 mt-1">
                         <span className="tactical-badge">{p.caliber}</span>
                         <span className="tactical-badge">{p.weight} {weightSym}</span>
@@ -373,11 +450,43 @@ export default function ProjectilesPage() {
                         {p.projectileType && p.projectileType !== 'pellet' && (
                           <span className="tactical-badge">{p.projectileType}</span>
                         )}
+                        {hasBcZones(p) && (
+                          <span
+                            className="tactical-badge bg-primary/10 text-primary border-primary/30 inline-flex items-center gap-1"
+                            title={t('projectiles.list.bcZonesBadgeTitle')}
+                            data-testid="badge-bc-zones"
+                          >
+                            <Layers className="h-3 w-3" />
+                            {t('projectiles.list.bcZonesBadge')} ({p.bcZones!.length})
+                          </span>
+                        )}
+                        {p.importedFrom && (
+                          <span
+                            className="tactical-badge bg-accent/10 text-accent-foreground border-accent/30 inline-flex items-center gap-1"
+                            title={t('projectiles.list.importedBadgeTitle', { source: p.importedFrom })}
+                            data-testid="badge-imported"
+                          >
+                            <Database className="h-3 w-3" />
+                            {t('projectiles.list.importedBadge')}
+                          </span>
+                        )}
+                        {!hasBcZones(p) && !p.importedFrom && isEnrichedProjectile(p) && (
+                          <span
+                            className="tactical-badge bg-muted text-muted-foreground border-border inline-flex items-center gap-1"
+                            title={t('projectiles.list.enrichedBadgeTitle')}
+                            data-testid="badge-enriched"
+                          >
+                            <Sparkles className="h-3 w-3" />
+                            {t('projectiles.list.enrichedBadge')}
+                          </span>
+                        )}
                       </div>
-                      {(p.length || p.diameter || p.shape || p.material) && (
+                      {(p.length || p.lengthMm || p.diameter || p.diameterMm || p.diameterIn || p.shape || p.material) && (
                         <div className="text-[11px] text-muted-foreground font-mono mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5">
-                          {p.length ? <span>L {p.length}{lengthSym}</span> : null}
-                          {p.diameter ? <span>⌀ {p.diameter}{lengthSym}</span> : null}
+                          {(p.lengthMm ?? p.length) ? <span>L {p.lengthMm ?? p.length}{lengthSym}</span> : null}
+                          {(p.diameterMm ?? p.diameter)
+                            ? <span>⌀ {(p.diameterMm ?? p.diameter)!.toFixed?.(2) ?? p.diameterMm ?? p.diameter}{lengthSym}</span>
+                            : p.diameterIn ? <span>⌀ {p.diameterIn} in</span> : null}
                           {p.shape ? <span>{p.shape}</span> : null}
                           {p.material ? <span>{p.material}</span> : null}
                         </div>

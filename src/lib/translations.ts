@@ -332,6 +332,18 @@ const fr = {
   'projectiles.compareMax': 'Maximum 4 projectiles',
   'projectiles.compareClear': 'Vider la sélection',
 
+  // Tranche K — badges & filtres liste projectile (bullets4)
+  'projectiles.list.bcZonesBadge': 'Zones BC',
+  'projectiles.list.bcZonesBadgeTitle': 'BC par zones de vélocité disponible (informatif)',
+  'projectiles.list.importedBadge': 'Importé',
+  'projectiles.list.importedBadgeTitle': 'Provenance : {source}',
+  'projectiles.list.enrichedBadge': 'Enrichi',
+  'projectiles.list.enrichedBadgeTitle': 'Données catalogue avancées disponibles',
+  'projectiles.list.filterFlags': 'Affichage',
+  'projectiles.list.filterImported': 'Importés',
+  'projectiles.list.filterHasBcZones': 'Avec zones BC',
+  'projectiles.list.sortCaliber': 'Calibre',
+
   // Optics
   'optics.title': 'Bibliothèque d\'optiques',
   'optics.add': 'Ajouter une optique',
@@ -1144,6 +1156,18 @@ const en: Record<keyof typeof fr, string> = {
   'projectiles.compareDisclaimer': 'Indicative values — velocity is unified to isolate BC effect. Real drops depend on your airgun and tune.',
   'projectiles.compareMax': 'Maximum 4 projectiles',
   'projectiles.compareClear': 'Clear selection',
+
+  // Slice K — projectile list badges & filters (bullets4)
+  'projectiles.list.bcZonesBadge': 'BC zones',
+  'projectiles.list.bcZonesBadgeTitle': 'Velocity-banded BC available (informational)',
+  'projectiles.list.importedBadge': 'Imported',
+  'projectiles.list.importedBadgeTitle': 'Source: {source}',
+  'projectiles.list.enrichedBadge': 'Enriched',
+  'projectiles.list.enrichedBadgeTitle': 'Advanced catalog data available',
+  'projectiles.list.filterFlags': 'Show',
+  'projectiles.list.filterImported': 'Imported',
+  'projectiles.list.filterHasBcZones': 'With BC zones',
+  'projectiles.list.sortCaliber': 'Caliber',
 
   'optics.title': 'Optics Library',
   'optics.add': 'Add Optic',

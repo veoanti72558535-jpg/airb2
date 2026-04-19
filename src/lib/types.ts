@@ -56,7 +56,8 @@ export type ImportSource =
   | 'preset-internal'
   | 'strelok'
   | 'chairgun'
-  | 'airballistik';
+  | 'airballistik'
+  | 'bullets4-db';
 
 /**
  * Tranche F.1 — Type de réticule (taxonomie fermée V1).

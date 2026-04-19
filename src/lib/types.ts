@@ -131,6 +131,41 @@ export interface Optic {
   tubeDiameter?: 25.4 | 30 | 34; // mm
   magCalibration?: number; // x (zoom at which SFP reticle is calibrated)
   notes?: string;
+  /** Tranche F.1 — origine de la donnée si importée. */
+  importedFrom?: ImportSource;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Tranche F.1 — Réticule (entité minimale V1).
+ *
+ * Persistable, propre, extensible. PAS de lien Optic↔Reticle ici, PAS de
+ * holdover dynamique, PAS de PBR : tout cela arrivera après F.x si jamais
+ * un besoin produit le justifie.
+ *
+ * `unit` est strictement `'MOA' | 'MRAD'` (cf. ReticleUnit) — `'mil'` est
+ * un alias d'import éventuel, jamais un canon interne.
+ *
+ * `subtension` = valeur d'un cran principal du réticule, exprimée dans
+ * `unit` (ex. mil-dot ⇒ unit='MRAD', subtension=1).
+ *
+ * `marks` = positions optionnelles des graduations majeures dans `unit`,
+ * relatives au centre (utile pour BDC custom). Vide pour les réticules
+ * réguliers — la régularité est implicite via `subtension`.
+ */
+export interface Reticle {
+  id: string;
+  brand: string;
+  model: string;
+  type: ReticleType;
+  unit: ReticleUnit;
+  subtension: number;
+  focalPlane?: OpticFocalPlane;
+  marks?: number[];
+  notes?: string;
+  /** Tranche F.1 — origine de la donnée si importée. */
+  importedFrom?: ImportSource;
   createdAt: string;
   updatedAt: string;
 }

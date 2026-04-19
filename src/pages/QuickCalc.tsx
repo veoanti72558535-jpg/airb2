@@ -40,7 +40,11 @@ import { ZeroingSection } from '@/components/calc/ZeroingSection';
 import { ResultsCard } from '@/components/calc/ResultsCard';
 import { BallisticTable } from '@/components/calc/BallisticTable';
 import { ReticleAssistPanel } from '@/components/calc/ReticleAssistPanel';
-import { buildDistanceList, defaultConfig } from '@/lib/ballistic-table';
+import {
+  buildDistanceList,
+  defaultConfig,
+  type BallisticTableConfig,
+} from '@/lib/ballistic-table';
 
 interface FormState {
   // Projectile
@@ -152,6 +156,13 @@ export default function QuickCalc() {
    */
   const [previewOriginId, setPreviewOriginId] = useState<string | null>(null);
   const [comparePickerOpen, setComparePickerOpen] = useState(false);
+  // Tranche J — Source de vérité partagée pour la grille d'affichage
+  // (BallisticTable + ReticleAssistPanel). Initialisée paresseusement à
+  // partir de la portée par défaut ; recalibrée à chaque calcul / chargement
+  // de session via l'effet plus bas.
+  const [tableConfig, setTableConfig] = useState<BallisticTableConfig>(() =>
+    defaultConfig(100),
+  );
   // Live mirror of the configured energy threshold so the header chip refreshes
   // when the user changes it in Settings (cross-tab via 'storage' event, or
   // intra-tab via window focus / re-mount).
@@ -229,6 +240,7 @@ export default function QuickCalc() {
     setResults(session.results ?? null);
     setSessionName(session.name);
     setPreviewOriginId(session.id);
+    setTableConfig(prev => ({ ...defaultConfig(i.maxRange), columns: prev.columns }));
     if (i.dragModel === 'G7' || i.zeroWeather || i.focalPlane === 'SFP' || i.twistRate) setAdvanced(true);
     toast.success(t('sessions.loaded'), { description: session.name });
     setSearchParams(prev => { const p = new URLSearchParams(prev); p.delete('session'); return p; });
@@ -453,7 +465,14 @@ export default function QuickCalc() {
       return;
     }
     setError(null);
-    setResults(calculateTrajectory(buildInput()));
+    const input = buildInput();
+    setResults(calculateTrajectory(input));
+    // Tranche J — recale la grille partagée sur la portée réellement calculée
+    // tout en préservant les colonnes choisies par l'utilisateur.
+    setTableConfig(prev => {
+      const next = defaultConfig(input.maxRange);
+      return { ...next, columns: prev.columns };
+    });
   };
 
   const handleReset = () => {
@@ -462,6 +481,7 @@ export default function QuickCalc() {
     setError(null);
     setSessionName('');
     setPreviewOriginId(null);
+    setTableConfig(defaultConfig(100));
   };
 
   const handleSave = () => {
@@ -691,28 +711,27 @@ export default function QuickCalc() {
             energyThresholdJ={energyThresholdJ}
           />
 
-          {/* Tranche H — Configurable ballistic table. Reads the same engine
-              results, no recomputation. Collapsed by default to keep mobile
-              tidy. */}
+          {/* Tranche H + J — Configurable ballistic table. Source de vérité
+              de la grille d'affichage partagée avec ReticleAssistPanel. */}
           {results.length > 1 && (
             <BallisticTable
               rows={results}
               clickUnit={form.clickUnit}
               maxRangeHint={form.useRange ? form.maxRange : form.targetDistance}
               energyThresholdJ={energyThresholdJ}
+              initialConfig={tableConfig}
+              onConfigChange={setTableConfig}
             />
           )}
 
-          {/* Tranche I — Assistant de correction réticule. Aide de lecture
-              dans l'unité du réticule lié à l'optique. Aucun recalcul moteur,
-              aucune subtension dynamique. Replié par défaut. */}
+          {/* Tranche I + J — Assistant de correction réticule. Consomme
+              exactement la même grille de distances que la BallisticTable
+              ci-dessus afin d'éviter toute divergence silencieuse. */}
           {results.length > 1 && (
             <ReticleAssistPanel
               optic={form.opticId ? optics.find(o => o.id === form.opticId) ?? null : null}
               results={results}
-              distances={buildDistanceList(
-                defaultConfig(form.useRange ? form.maxRange : form.targetDistance),
-              ).filter(d => d > 0)}
+              distances={buildDistanceList(tableConfig).filter(d => d > 0)}
             />
           )}
 

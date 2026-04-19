@@ -20,6 +20,12 @@ import { RecalculateDialog } from '@/components/sessions/RecalculateDialog';
 import { SessionLineage } from '@/components/sessions/SessionLineage';
 import { normalizeSession } from '@/lib/session-normalize';
 import { BallisticTable } from '@/components/calc/BallisticTable';
+import { ReticleAssistPanel } from '@/components/calc/ReticleAssistPanel';
+import {
+  buildDistanceList,
+  defaultConfig,
+  type BallisticTableConfig,
+} from '@/lib/ballistic-table';
 
 export default function SessionsPage() {
   const { t } = useI18n();
@@ -355,14 +361,11 @@ export default function SessionsPage() {
                 {!selectionMode && (
                   <div className="mt-3 space-y-2">
                     <CalculationMetadataBlock session={s} />
-                    {/* Tranche H — Configurable ballistic table on saved sessions.
-                        Reads frozen results, never re-runs the engine. */}
+                    {/* Tranche H + J — Table balistique configurable +
+                        assistant réticule synchronisé sur la même grille.
+                        Lit les résultats figés, aucun recalcul moteur. */}
                     {s.results && s.results.length > 1 && (
-                      <BallisticTable
-                        rows={s.results}
-                        clickUnit={s.input.clickUnit ?? 'MRAD'}
-                        maxRangeHint={s.input.maxRange}
-                      />
+                      <SessionAdvancedReadouts session={s} />
                     )}
                     <button
                       type="button"
@@ -402,5 +405,40 @@ export default function SessionsPage() {
         }}
       />
     </motion.div>
+  );
+}
+
+/**
+ * Tranche J — Bloc avancé d'une session : table balistique + assistant
+ * réticule, partageant la même `BallisticTableConfig` locale. Aucun recalcul
+ * moteur, aucune persistance — la config vit le temps de la vue.
+ */
+function SessionAdvancedReadouts({ session }: { session: Session }) {
+  const [tableConfig, setTableConfig] = useState<BallisticTableConfig>(() =>
+    defaultConfig(session.input.maxRange),
+  );
+  const optic = useMemo(
+    () => (session.opticId ? opticStore.getById(session.opticId) ?? null : null),
+    [session.opticId],
+  );
+  const distances = useMemo(
+    () => buildDistanceList(tableConfig).filter(d => d > 0),
+    [tableConfig],
+  );
+  return (
+    <>
+      <BallisticTable
+        rows={session.results}
+        clickUnit={session.input.clickUnit ?? 'MRAD'}
+        maxRangeHint={session.input.maxRange}
+        initialConfig={tableConfig}
+        onConfigChange={setTableConfig}
+      />
+      <ReticleAssistPanel
+        optic={optic}
+        results={session.results}
+        distances={distances}
+      />
+    </>
   );
 }

@@ -115,6 +115,7 @@ export function ImportPreview({ preview }: ImportPreviewProps) {
         count={rejected.length}
         icon={<AlertTriangle className="h-3.5 w-3.5 text-destructive" />}
         more={moreLabel(rejected.length)}
+        defaultOpen
       >
         {slice(rejected).map(item => (
           <li key={`r-${item.index}`} className="text-xs">

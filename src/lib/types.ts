@@ -114,6 +114,8 @@ export interface Projectile {
    * Source: Doppler radar export, JBM table, or manual measurement.
    */
   customDragTable?: DragTablePoint[];
+  /** Tranche F.1 — origine de la donnée si importée. */
+  importedFrom?: ImportSource;
   createdAt: string;
   updatedAt: string;
 }

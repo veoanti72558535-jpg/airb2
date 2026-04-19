@@ -151,6 +151,7 @@ export function ImportJsonModal({
             <Upload className="h-4 w-4 text-primary" />
             {t(titleKey as never)}
           </DialogTitle>
+          <DialogDescription>{t('admin.import.sectionDesc')}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-3">

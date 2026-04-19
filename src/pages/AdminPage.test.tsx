@@ -35,7 +35,10 @@ describe('AdminPage — Tranche F.3 import actions', () => {
     renderPage();
     fireEvent.click(screen.getByTestId('admin-import-projectiles'));
     await waitFor(() => {
-      expect(screen.getByText(/Importer des projectiles|Import projectiles/)).toBeTruthy();
+      // Modal title + button text both match the locale label.
+      expect(
+        screen.getAllByText(/Importer des projectiles|Import projectiles/).length,
+      ).toBeGreaterThanOrEqual(2);
     });
   });
 
@@ -43,7 +46,9 @@ describe('AdminPage — Tranche F.3 import actions', () => {
     renderPage();
     fireEvent.click(screen.getByTestId('admin-import-reticles'));
     await waitFor(() => {
-      expect(screen.getByText(/Importer des réticules|Import reticles/)).toBeTruthy();
+      expect(
+        screen.getAllByText(/Importer des réticules|Import reticles/).length,
+      ).toBeGreaterThanOrEqual(2);
     });
   });
 
@@ -51,7 +56,9 @@ describe('AdminPage — Tranche F.3 import actions', () => {
     renderPage();
     fireEvent.click(screen.getByTestId('admin-import-optics'));
     await waitFor(() => {
-      expect(screen.getByText(/Importer des optiques|Import optics/)).toBeTruthy();
+      expect(
+        screen.getAllByText(/Importer des optiques|Import optics/).length,
+      ).toBeGreaterThanOrEqual(2);
     });
   });
 });

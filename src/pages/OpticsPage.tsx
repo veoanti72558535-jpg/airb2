@@ -11,6 +11,7 @@ import { Optic, OpticFocalPlane } from '@/lib/types';
 import { motion } from 'framer-motion';
 import { toast } from '@/hooks/use-toast';
 import { ImportPresetOpticsModal } from '@/components/optics/ImportPresetOpticsModal';
+import { OpticReticleLink } from '@/components/optics/OpticReticleLink';
 
 interface FormState {
   name: string;
@@ -22,6 +23,7 @@ interface FormState {
   tubeDiameter: 25.4 | 30 | 34;
   magCalibration: number | '';
   notes: string;
+  reticleId: string | undefined;
 }
 
 const emptyForm: FormState = {
@@ -34,6 +36,7 @@ const emptyForm: FormState = {
   tubeDiameter: 30,
   magCalibration: '',
   notes: '',
+  reticleId: undefined,
 };
 
 export default function OpticsPage() {
@@ -80,6 +83,7 @@ export default function OpticsPage() {
           ? Number(form.magCalibration)
           : undefined,
       notes: form.notes,
+      reticleId: form.reticleId,
     };
     if (editing) {
       opticStore.update(editing.id, payload);
@@ -106,6 +110,7 @@ export default function OpticsPage() {
       tubeDiameter: o.tubeDiameter ?? 30,
       magCalibration: o.magCalibration ?? '',
       notes: o.notes ?? '',
+      reticleId: o.reticleId,
     });
     setShowForm(true);
   };
@@ -237,6 +242,13 @@ export default function OpticsPage() {
             )}
           </div>
           <div><label className="text-xs text-muted-foreground">{t('airguns.notes')}</label><textarea className={inputClass} rows={2} value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} /></div>
+          <div>
+            <label className="text-xs text-muted-foreground">{t('optics.reticle.label')}</label>
+            <OpticReticleLink
+              reticleId={form.reticleId}
+              onChange={next => setForm(f => ({ ...f, reticleId: next }))}
+            />
+          </div>
           <div className="flex gap-2">
             <button onClick={handleSave} className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium">{t('common.save')}</button>
             <button onClick={() => { setShowForm(false); setEditing(null); setForm(emptyForm); }} className="px-4 py-2 bg-muted text-muted-foreground rounded-md text-sm">{t('common.cancel')}</button>

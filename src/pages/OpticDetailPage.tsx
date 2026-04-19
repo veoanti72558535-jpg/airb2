@@ -1,4 +1,5 @@
 import { useParams } from 'react-router-dom';
+import { useState } from 'react';
 import { Eye } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { opticStore } from '@/lib/storage';
@@ -6,17 +7,24 @@ import { useUnits } from '@/hooks/use-units';
 import { DetailLayout, DetailRow, DetailSection } from '@/components/library/DetailLayout';
 import { LinkedSessions } from '@/components/library/LinkedSessions';
 import { NotFoundDetail } from '@/components/library/NotFoundDetail';
+import { OpticReticleLink } from '@/components/optics/OpticReticleLink';
+import type { Optic } from '@/lib/types';
 
 export default function OpticDetailPage() {
   const { id = '' } = useParams<{ id: string }>();
   const { t, locale } = useI18n();
   const { symbol } = useUnits();
-  const o = opticStore.getById(id);
+  const [o, setO] = useState<Optic | undefined>(() => opticStore.getById(id));
 
   if (!o) return <NotFoundDetail />;
 
   const lengthSym = symbol('length');
   const fp = o.focalPlane ?? (o.magCalibration ? 'SFP' : null);
+
+  const handleReticleChange = (next: string | undefined) => {
+    const updated = opticStore.update(o.id, { reticleId: next });
+    if (updated) setO(updated);
+  };
 
   const date = (iso: string) =>
     new Date(iso).toLocaleString(locale, {
@@ -77,6 +85,13 @@ export default function OpticDetailPage() {
           </p>
         </DetailSection>
       )}
+
+      <DetailSection title={t('optics.reticle.label')}>
+        <OpticReticleLink
+          reticleId={o.reticleId}
+          onChange={handleReticleChange}
+        />
+      </DetailSection>
 
       <LinkedSessions field="opticId" id={o.id} />
 

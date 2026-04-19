@@ -392,6 +392,15 @@ export function BallisticTable({
                   })}
                 </tbody>
               </table>
+              {(nearRowDistance != null || farRowDistance != null) && (
+                <div
+                  data-testid="bt-zero-legend"
+                  className="mt-1.5 px-1 text-[10px] text-muted-foreground/80 italic flex items-center gap-1.5"
+                >
+                  <Crosshair className="h-3 w-3 text-primary/70" aria-hidden />
+                  <span>{t('ballisticTable.zeroLegend')}</span>
+                </div>
+              )}
             </div>
           )}
         </div>

@@ -75,24 +75,27 @@ export function ImportJsonModal({
     onClose();
   }, [onClose, reset]);
 
-  const handleFile = useCallback(async (file: File) => {
+  const handleFile = useCallback((file: File) => {
     setPreview(null);
     if (file.size > MAX_PAYLOAD_BYTES) {
       toast.error(t('import.fileTooLarge'));
       return;
     }
-    try {
-      const text = await file.text();
+    const reader = new FileReader();
+    reader.onload = () => {
+      const text = typeof reader.result === 'string' ? reader.result : '';
       setFileName(file.name);
       setRawText(text);
-    } catch {
+    };
+    reader.onerror = () => {
       toast.error(t('import.fileInvalid'));
-    }
+    };
+    reader.readAsText(file);
   }, [t]);
 
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
-    if (f) void handleFile(f);
+    if (f) handleFile(f);
   };
 
   const handlePreview = useCallback(() => {

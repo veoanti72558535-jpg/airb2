@@ -15,6 +15,8 @@ import {
   Layers,
   Database,
   Filter as FilterIcon,
+  Star,
+  Clock,
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
@@ -29,6 +31,7 @@ import { calToken, buildCaliberCounts } from '@/lib/caliber';
 import { Projectile, ProjectileType } from '@/lib/types';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import { useVirtualList } from '@/hooks/use-virtual-list';
+import { useProjectilePrefs } from '@/hooks/use-projectile-prefs';
 
 /**
  * Tranches L + M — sélecteur projectile avancé pour QuickCalc.
@@ -125,6 +128,8 @@ export function ProjectilePicker({
   addHref = '/library',
 }: Props) {
   const { t } = useI18n();
+  const { favorites, recents, isFavorite, toggleFavorite, pushRecent, clearRecents } =
+    useProjectilePrefs();
 
   const [query, setQuery] = useState('');
   const [caliberFilter, setCaliberFilter] = useState<string>(''); // '' = all
@@ -150,6 +155,13 @@ export function ProjectilePicker({
 
   /** Pre-compute haystacks once per projectiles reference. */
   const searchIndex = useMemo(() => buildIndex(projectiles), [projectiles]);
+
+  /** Lookup map id → projectile, used to resolve favorite/recent ids fast. */
+  const byId = useMemo(() => {
+    const map = new Map<string, Projectile>();
+    for (const p of projectiles) map.set(p.id, p);
+    return map;
+  }, [projectiles]);
 
   /** Caliber availability — only show calibers actually present in the data. */
   const caliberCounts = useMemo(
@@ -277,17 +289,51 @@ export function ProjectilePicker({
 
   // Stable click handler — does not re-create per row, so memoized rows skip
   // re-rendering when other rows' selection state changes.
+  // Tranche N — sélectionner un projectile pousse aussi son id dans les récents.
   const pickRef = useRef<(id: string) => void>(() => {});
   useEffect(() => {
     pickRef.current = (id: string) => {
+      if (id) pushRecent(id);
       onSelect(id);
       onOpenChange(false);
     };
-  }, [onSelect, onOpenChange]);
+  }, [onSelect, onOpenChange, pushRecent]);
 
   const handleRowPick = useCallback((id: string) => pickRef.current(id), []);
 
+  // Stable favorite toggle — same pattern as pick, keeps rows memoized.
+  const toggleFavRef = useRef<(id: string) => void>(() => {});
+  useEffect(() => {
+    toggleFavRef.current = toggleFavorite;
+  }, [toggleFavorite]);
+  const handleToggleFav = useCallback((id: string) => toggleFavRef.current(id), []);
+
   const isEmptyLibrary = projectiles.length === 0;
+
+  /**
+   * Quick-access sections (favorites + recents) are only shown when no
+   * search/filter is active — otherwise they would compete with the user's
+   * own filtering intent. We resolve ids → projectiles via the lookup map
+   * and skip orphaned ids (deleted from library).
+   */
+  const hasActiveQuery = tokens.length > 0 || activeFilterCount > 0;
+  const favoriteProjectiles = useMemo(
+    () =>
+      hasActiveQuery
+        ? []
+        : favorites.map(id => byId.get(id)).filter((p): p is Projectile => !!p),
+    [hasActiveQuery, favorites, byId],
+  );
+  const recentProjectiles = useMemo(() => {
+    if (hasActiveQuery) return [];
+    const favSet = new Set(favorites);
+    return recents
+      .filter(id => !favSet.has(id))
+      .map(id => byId.get(id))
+      .filter((p): p is Projectile => !!p);
+  }, [hasActiveQuery, recents, favorites, byId]);
+  const showQuickAccess =
+    !hasActiveQuery && (favoriteProjectiles.length > 0 || recentProjectiles.length > 0);
 
   // Compute the slice to render.
   const visibleSlice = useVirtual
@@ -502,6 +548,48 @@ export function ProjectilePicker({
                 — {t('calc.manualEntry')} —
               </button>
 
+              {/* Tranche N — Quick-access sections (only when no search/filter active) */}
+              {showQuickAccess && (
+                <div
+                  data-testid="quick-access"
+                  className="space-y-2 mt-1 mb-2 px-1"
+                >
+                  {favoriteProjectiles.length > 0 && (
+                    <QuickAccessSection
+                      testid="favorites-section"
+                      icon={<Star className="h-3 w-3 fill-primary text-primary" aria-hidden />}
+                      title={t('projectilePicker.favorites')}
+                      items={favoriteProjectiles}
+                      selectedId={selectedId}
+                      isFavorite={isFavorite}
+                      onPick={handleRowPick}
+                      onToggleFav={handleToggleFav}
+                    />
+                  )}
+                  {recentProjectiles.length > 0 && (
+                    <QuickAccessSection
+                      testid="recents-section"
+                      icon={<Clock className="h-3 w-3 text-muted-foreground" aria-hidden />}
+                      title={t('projectilePicker.recents')}
+                      items={recentProjectiles}
+                      selectedId={selectedId}
+                      isFavorite={isFavorite}
+                      onPick={handleRowPick}
+                      onToggleFav={handleToggleFav}
+                      action={
+                        <button
+                          type="button"
+                          onClick={clearRecents}
+                          className="text-[10px] text-muted-foreground hover:text-primary hover:underline"
+                        >
+                          {t('projectilePicker.clearRecents')}
+                        </button>
+                      }
+                    />
+                  )}
+                </div>
+              )}
+
               {filtered.length === 0 ? (
                 <div className="p-6 text-center text-sm text-muted-foreground">
                   {t('projectilePicker.noResults')}
@@ -522,7 +610,9 @@ export function ProjectilePicker({
                         <ProjectileRow
                           projectile={p}
                           selected={p.id === selectedId}
+                          favorite={isFavorite(p.id)}
                           onPick={handleRowPick}
+                          onToggleFav={handleToggleFav}
                         />
                       </li>
                     ))}
@@ -535,7 +625,9 @@ export function ProjectilePicker({
                       <ProjectileRow
                         projectile={p}
                         selected={p.id === selectedId}
+                        favorite={isFavorite(p.id)}
                         onPick={handleRowPick}
+                        onToggleFav={handleToggleFav}
                       />
                     </li>
                   ))}
@@ -597,10 +689,18 @@ function FilterChip({
 interface RowProps {
   projectile: Projectile;
   selected: boolean;
+  favorite?: boolean;
   onPick: (id: string) => void;
+  onToggleFav?: (id: string) => void;
 }
 
-const ProjectileRow = memo(function ProjectileRow({ projectile, selected, onPick }: RowProps) {
+const ProjectileRow = memo(function ProjectileRow({
+  projectile,
+  selected,
+  favorite = false,
+  onPick,
+  onToggleFav,
+}: RowProps) {
   const { t } = useI18n();
   const p = projectile;
 
@@ -625,77 +725,197 @@ const ProjectileRow = memo(function ProjectileRow({ projectile, selected, onPick
   const isImported = pickerIsImported(p);
 
   return (
-    <button
-      type="button"
-      onClick={() => onPick(p.id)}
-      role="option"
-      aria-selected={selected}
-      data-projectile-id={p.id}
+    <div
       className={cn(
-        'w-full h-full text-left p-2.5 rounded-md border transition-colors flex items-start gap-2',
+        'relative w-full h-full rounded-md border transition-colors flex items-stretch',
         selected
           ? 'border-primary/40 bg-primary/10'
           : 'border-border bg-card/60 hover:bg-muted/40',
       )}
     >
-      <Check
-        className={cn(
-          'h-4 w-4 mt-0.5 shrink-0',
-          selected ? 'text-primary' : 'opacity-0',
-        )}
-        aria-hidden
-      />
-      <div className="min-w-0 flex-1 space-y-1">
-        {/* Title row */}
-        <div className="flex items-baseline gap-1.5 flex-wrap">
-          <span className="font-medium text-sm truncate">
-            {p.brand} {p.model}
-          </span>
-          {p.projectileType && (
-            <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-              · {p.projectileType}
-            </span>
+      <button
+        type="button"
+        onClick={() => onPick(p.id)}
+        role="option"
+        aria-selected={selected}
+        data-projectile-id={p.id}
+        className="flex-1 min-w-0 text-left p-2.5 flex items-start gap-2"
+      >
+        <Check
+          className={cn(
+            'h-4 w-4 mt-0.5 shrink-0',
+            selected ? 'text-primary' : 'opacity-0',
           )}
-        </div>
-        {/* Specs row */}
-        <div className="text-[11px] font-mono text-muted-foreground flex flex-wrap gap-x-2 gap-y-0.5">
-          <span>{caliberDisplay}</span>
-          <span>· {weightDisplay}</span>
-          <span>
-            · BC {p.bc?.toFixed(3) ?? '—'} {bcModel}
-          </span>
-          {diameterDisplay && <span>· ⌀ {diameterDisplay}</span>}
-          {p.shape && <span>· {p.shape}</span>}
-        </div>
-        {/* Badges row */}
-        {(hasZones || isImported) && (
-          <div className="flex flex-wrap gap-1 pt-0.5">
-            {hasZones && (
-              <span
-                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] bg-primary/10 text-primary border border-primary/20"
-                title={t('projectiles.list.bcZonesBadgeTitle')}
-              >
-                <Layers className="h-2.5 w-2.5" aria-hidden />
-                {t('projectilePicker.bcZones')}
-              </span>
-            )}
-            {isImported && (
-              <span
-                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] bg-muted/60 text-muted-foreground border border-border"
-                title={t('projectiles.list.importedBadgeTitle', {
-                  source: p.importedFrom ?? '',
-                })}
-              >
-                <Database className="h-2.5 w-2.5" aria-hidden />
-                {t('projectilePicker.imported')}
+          aria-hidden
+        />
+        <div className="min-w-0 flex-1 space-y-1">
+          {/* Title row */}
+          <div className="flex items-baseline gap-1.5 flex-wrap">
+            <span className="font-medium text-sm truncate">
+              {p.brand} {p.model}
+            </span>
+            {p.projectileType && (
+              <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                · {p.projectileType}
               </span>
             )}
           </div>
-        )}
-      </div>
-    </button>
+          {/* Specs row */}
+          <div className="text-[11px] font-mono text-muted-foreground flex flex-wrap gap-x-2 gap-y-0.5">
+            <span>{caliberDisplay}</span>
+            <span>· {weightDisplay}</span>
+            <span>
+              · BC {p.bc?.toFixed(3) ?? '—'} {bcModel}
+            </span>
+            {diameterDisplay && <span>· ⌀ {diameterDisplay}</span>}
+            {p.shape && <span>· {p.shape}</span>}
+          </div>
+          {/* Badges row */}
+          {(hasZones || isImported) && (
+            <div className="flex flex-wrap gap-1 pt-0.5">
+              {hasZones && (
+                <span
+                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] bg-primary/10 text-primary border border-primary/20"
+                  title={t('projectiles.list.bcZonesBadgeTitle')}
+                >
+                  <Layers className="h-2.5 w-2.5" aria-hidden />
+                  {t('projectilePicker.bcZones')}
+                </span>
+              )}
+              {isImported && (
+                <span
+                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] bg-muted/60 text-muted-foreground border border-border"
+                  title={t('projectiles.list.importedBadgeTitle', {
+                    source: p.importedFrom ?? '',
+                  })}
+                >
+                  <Database className="h-2.5 w-2.5" aria-hidden />
+                  {t('projectilePicker.imported')}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+      </button>
+      {onToggleFav && (
+        <button
+          type="button"
+          onClick={e => {
+            e.stopPropagation();
+            onToggleFav(p.id);
+          }}
+          aria-pressed={favorite}
+          aria-label={
+            favorite ? t('projectilePicker.unpin') : t('projectilePicker.pin')
+          }
+          data-testid={`fav-toggle-${p.id}`}
+          className={cn(
+            'shrink-0 px-2 self-stretch flex items-center justify-center rounded-r-md transition-colors',
+            favorite
+              ? 'text-primary hover:bg-primary/10'
+              : 'text-muted-foreground/50 hover:text-primary hover:bg-muted/60',
+          )}
+        >
+          <Star
+            className={cn('h-4 w-4', favorite && 'fill-primary')}
+            aria-hidden
+          />
+        </button>
+      )}
+    </div>
   );
 });
+
+interface QuickAccessSectionProps {
+  testid: string;
+  icon: React.ReactNode;
+  title: string;
+  items: Projectile[];
+  selectedId: string;
+  isFavorite: (id: string) => boolean;
+  onPick: (id: string) => void;
+  onToggleFav: (id: string) => void;
+  action?: React.ReactNode;
+}
+
+function QuickAccessSection({
+  testid,
+  icon,
+  title,
+  items,
+  selectedId,
+  isFavorite,
+  onPick,
+  onToggleFav,
+  action,
+}: QuickAccessSectionProps) {
+  return (
+    <section data-testid={testid} className="space-y-1">
+      <div className="flex items-center justify-between px-1">
+        <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-muted-foreground font-semibold">
+          {icon}
+          <span>
+            {title} <span className="opacity-60">({items.length})</span>
+          </span>
+        </div>
+        {action}
+      </div>
+      <ul className="flex flex-wrap gap-1.5">
+        {items.map(p => {
+          const fav = isFavorite(p.id);
+          const selected = p.id === selectedId;
+          return (
+            <li key={p.id} className="max-w-full">
+              <div
+                className={cn(
+                  'inline-flex items-stretch rounded-full border text-[11px] overflow-hidden',
+                  selected
+                    ? 'border-primary/40 bg-primary/15'
+                    : 'border-border bg-muted/30 hover:bg-muted/50',
+                )}
+              >
+                <button
+                  type="button"
+                  onClick={() => onPick(p.id)}
+                  data-projectile-id={p.id}
+                  className={cn(
+                    'flex items-center gap-1 px-2 py-1 max-w-[14rem] truncate transition-colors',
+                    selected ? 'text-primary' : 'text-foreground',
+                  )}
+                  title={`${p.brand} ${p.model}`}
+                >
+                  <span className="font-medium truncate">
+                    {p.brand} {p.model}
+                  </span>
+                  <span className="text-muted-foreground font-mono text-[10px] shrink-0">
+                    · {p.caliberLabel || p.caliber}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={e => {
+                    e.stopPropagation();
+                    onToggleFav(p.id);
+                  }}
+                  aria-pressed={fav}
+                  aria-label={fav ? 'unpin' : 'pin'}
+                  className={cn(
+                    'px-1.5 border-l border-border/60 flex items-center justify-center transition-colors',
+                    fav
+                      ? 'text-primary hover:bg-primary/10'
+                      : 'text-muted-foreground/50 hover:text-primary hover:bg-muted/60',
+                  )}
+                >
+                  <Star className={cn('h-3 w-3', fav && 'fill-primary')} aria-hidden />
+                </button>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
 
 /** Test-only export — exposes internal tuning constants. */
 export const __PICKER_INTERNAL = {

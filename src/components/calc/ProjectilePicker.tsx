@@ -548,6 +548,48 @@ export function ProjectilePicker({
                 — {t('calc.manualEntry')} —
               </button>
 
+              {/* Tranche N — Quick-access sections (only when no search/filter active) */}
+              {showQuickAccess && (
+                <div
+                  data-testid="quick-access"
+                  className="space-y-2 mt-1 mb-2 px-1"
+                >
+                  {favoriteProjectiles.length > 0 && (
+                    <QuickAccessSection
+                      testid="favorites-section"
+                      icon={<Star className="h-3 w-3 fill-primary text-primary" aria-hidden />}
+                      title={t('projectilePicker.favorites')}
+                      items={favoriteProjectiles}
+                      selectedId={selectedId}
+                      isFavorite={isFavorite}
+                      onPick={handleRowPick}
+                      onToggleFav={handleToggleFav}
+                    />
+                  )}
+                  {recentProjectiles.length > 0 && (
+                    <QuickAccessSection
+                      testid="recents-section"
+                      icon={<Clock className="h-3 w-3 text-muted-foreground" aria-hidden />}
+                      title={t('projectilePicker.recents')}
+                      items={recentProjectiles}
+                      selectedId={selectedId}
+                      isFavorite={isFavorite}
+                      onPick={handleRowPick}
+                      onToggleFav={handleToggleFav}
+                      action={
+                        <button
+                          type="button"
+                          onClick={clearRecents}
+                          className="text-[10px] text-muted-foreground hover:text-primary hover:underline"
+                        >
+                          {t('projectilePicker.clearRecents')}
+                        </button>
+                      }
+                    />
+                  )}
+                </div>
+              )}
+
               {filtered.length === 0 ? (
                 <div className="p-6 text-center text-sm text-muted-foreground">
                   {t('projectilePicker.noResults')}
@@ -568,7 +610,9 @@ export function ProjectilePicker({
                         <ProjectileRow
                           projectile={p}
                           selected={p.id === selectedId}
+                          favorite={isFavorite(p.id)}
                           onPick={handleRowPick}
+                          onToggleFav={handleToggleFav}
                         />
                       </li>
                     ))}
@@ -581,7 +625,9 @@ export function ProjectilePicker({
                       <ProjectileRow
                         projectile={p}
                         selected={p.id === selectedId}
+                        favorite={isFavorite(p.id)}
                         onPick={handleRowPick}
+                        onToggleFav={handleToggleFav}
                       />
                     </li>
                   ))}

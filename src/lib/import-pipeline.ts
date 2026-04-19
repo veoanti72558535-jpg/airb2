@@ -41,8 +41,8 @@ import type {
   ReticleUnit,
 } from './types';
 
-export const MAX_PAYLOAD_BYTES = 1_000_000; // 1 MB
-export const MAX_ITEMS = 1000;
+export const MAX_PAYLOAD_BYTES = 20_000_000; // 20 MB — couvre les exports bullets4 complets côté client
+export const MAX_ITEMS = 20_000;
 
 export type ImportItemStatus = 'ok' | 'sanitized' | 'duplicate' | 'rejected';
 

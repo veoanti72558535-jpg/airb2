@@ -20,8 +20,8 @@
  *     pipeline, pas par le schéma.
  *
  * Limites globales appliquées par la pipeline :
- *   - taille de payload max : 1 MB (1_000_000 octets de JSON brut)
- *   - nombre max d'items : 1000
+ *   - taille de payload max : 20 MB (20_000_000 octets de JSON brut)
+ *   - nombre max d'items : 20_000
  *
  * Ces limites ne sont PAS dans Zod (Zod ne voit jamais le payload brut)
  * — voir `import-pipeline.ts` (`MAX_PAYLOAD_BYTES`, `MAX_ITEMS`).

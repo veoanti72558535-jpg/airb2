@@ -1,4 +1,4 @@
-import { Airgun, Projectile, Optic, Session, Tune, AppSettings } from './types';
+import { Airgun, Projectile, Optic, Reticle, Session, Tune, AppSettings } from './types';
 import {
   sanitizeProjectileForPublic,
   sanitizeSessionForPublic,
@@ -9,6 +9,7 @@ const KEYS = {
   tunes: 'pcp-tunes',
   projectiles: 'pcp-projectiles',
   optics: 'pcp-optics',
+  reticles: 'pcp-reticles',
   sessions: 'pcp-sessions',
   settings: 'pcp-settings',
 } as const;

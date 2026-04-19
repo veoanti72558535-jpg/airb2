@@ -94,7 +94,9 @@ export default function ProjectilesPage() {
   const [editing, setEditing] = useState<Projectile | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [typeFilter, setTypeFilter] = useState<'all' | ProjectileType>('all');
-  const [sortKey, setSortKey] = useState<'name' | 'weight' | 'bc'>('name');
+  const [importedFilter, setImportedFilter] = useState(false);
+  const [bcZonesFilter, setBcZonesFilter] = useState(false);
+  const [sortKey, setSortKey] = useState<'name' | 'weight' | 'bc' | 'caliber'>('name');
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [showCompare, setShowCompare] = useState(false);
 

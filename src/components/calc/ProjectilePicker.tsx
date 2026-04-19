@@ -1,4 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { Link } from 'react-router-dom';
 import {
   Search,
@@ -11,22 +18,26 @@ import {
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { calToken, buildCaliberCounts } from '@/lib/caliber';
 import { Projectile, ProjectileType } from '@/lib/types';
+import { useDebouncedValue } from '@/hooks/use-debounced-value';
+import { useVirtualList } from '@/hooks/use-virtual-list';
 
 /**
- * Tranche L — sélecteur projectile avancé pour QuickCalc.
+ * Tranches L + M — sélecteur projectile avancé pour QuickCalc.
  *
- * Objectifs :
- * - retrouver vite un projectile parmi des milliers (bullets4)
- * - filtres : caliber, type, importé, BC zones
- * - tri : pertinence (par défaut), marque, poids, BC, calibre
- * - mobile-friendly (modal full-width compact)
- * - rétro-compatible : projectile legacy (sans champs enrichis) reste affiché
+ * Tranche L : recherche + filtres + tri + badges + état vide.
+ * Tranche M : virtualisation, debounce de la recherche, haystack pré-calculé,
+ *             memoization des lignes, DialogDescription pour a11y.
  *
- * IMPORTANT : ce composant n'effectue AUCUN calcul. Il se contente de
- * sélectionner un id de projectile et de le renvoyer via `onSelect`.
+ * Aucune logique balistique. Aucune dérivation moteur.
  */
 
 export type ProjectilePickerSort = 'relevance' | 'brand' | 'weight' | 'bc' | 'caliber';
@@ -50,24 +61,60 @@ export function pickerIsImported(p: Projectile): boolean {
   return !!p.importedFrom;
 }
 
-/** Tokenized substring match across brand, model, caliber, caliberLabel, notes. */
-function matchesQuery(p: Projectile, tokens: string[]): boolean {
-  if (tokens.length === 0) return true;
-  const hay = [
-    p.brand,
-    p.model,
-    p.caliber,
-    p.caliberLabel ?? '',
-    p.shape ?? '',
-    p.projectileType ?? '',
-    p.notes ?? '',
-  ]
-    .join(' ')
-    .toLowerCase();
-  return tokens.every(tok => hay.includes(tok));
+const TYPE_VALUES: ProjectileType[] = ['pellet', 'slug', 'bb', 'dart', 'other'];
+
+/** Search debounce — short enough to feel instant, long enough to skip strokes. */
+const SEARCH_DEBOUNCE_MS = 120;
+
+/**
+ * Pixel height of a projectile row — kept in sync with `ProjectileRow` styles.
+ * If you change row paddings/badges, audit this constant.
+ */
+const ROW_HEIGHT = 84;
+/**
+ * Threshold above which virtualization kicks in. Below it we render the
+ * whole list directly (cheaper, simpler, friendlier to a11y trees).
+ */
+const VIRTUALIZATION_THRESHOLD = 60;
+
+/** Pre-computed search index — stable per projectile reference. */
+interface SearchEntry {
+  /** lowercased haystack used for tokenized search */
+  hay: string;
+  /** numeric value of the canonical caliber token, +Infinity if unparseable */
+  calNum: number;
+  /** sort key for brand sort */
+  brandKey: string;
 }
 
-const TYPE_VALUES: ProjectileType[] = ['pellet', 'slug', 'bb', 'dart', 'other'];
+/** Build a haystack/sort cache once per `projectiles` reference. */
+function buildIndex(projectiles: Projectile[]): WeakMap<Projectile, SearchEntry> {
+  const map = new WeakMap<Projectile, SearchEntry>();
+  for (const p of projectiles) {
+    const hay = (
+      p.brand +
+      ' ' +
+      p.model +
+      ' ' +
+      p.caliber +
+      ' ' +
+      (p.caliberLabel ?? '') +
+      ' ' +
+      (p.shape ?? '') +
+      ' ' +
+      (p.projectileType ?? '') +
+      ' ' +
+      (p.notes ?? '')
+    ).toLowerCase();
+    const calNumRaw = parseFloat(calToken(p.caliber));
+    map.set(p, {
+      hay,
+      calNum: Number.isFinite(calNumRaw) ? calNumRaw : Number.POSITIVE_INFINITY,
+      brandKey: `${p.brand} ${p.model}`.toLowerCase(),
+    });
+  }
+  return map;
+}
 
 export function ProjectilePicker({
   open,
@@ -88,6 +135,9 @@ export function ProjectilePicker({
   const [showFilters, setShowFilters] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Debounced query — heavy work runs only after the user pauses typing.
+  const debouncedQuery = useDebouncedValue(query, SEARCH_DEBOUNCE_MS);
+
   // Reset transient state on open/close.
   useEffect(() => {
     if (open) {
@@ -98,6 +148,9 @@ export function ProjectilePicker({
     }
   }, [open]);
 
+  /** Pre-compute haystacks once per projectiles reference. */
+  const searchIndex = useMemo(() => buildIndex(projectiles), [projectiles]);
+
   /** Caliber availability — only show calibers actually present in the data. */
   const caliberCounts = useMemo(
     () => buildCaliberCounts(projectiles, p => p.caliber),
@@ -107,11 +160,11 @@ export function ProjectilePicker({
   /** Type availability — only show types actually present. */
   const typeCounts = useMemo(() => {
     const map = new Map<string, number>();
-    projectiles.forEach(p => {
-      const t2 = p.projectileType;
-      if (!t2) return;
-      map.set(t2, (map.get(t2) ?? 0) + 1);
-    });
+    for (const p of projectiles) {
+      const tt = p.projectileType;
+      if (!tt) continue;
+      map.set(tt, (map.get(tt) ?? 0) + 1);
+    }
     return TYPE_VALUES.filter(v => (map.get(v) ?? 0) > 0).map(value => ({
       value,
       count: map.get(value) ?? 0,
@@ -122,54 +175,92 @@ export function ProjectilePicker({
   const hasAnyBcZones = useMemo(() => projectiles.some(pickerHasBcZones), [projectiles]);
 
   const tokens = useMemo(
-    () =>
-      query
-        .trim()
-        .toLowerCase()
-        .split(/\s+/)
-        .filter(Boolean),
-    [query],
+    () => debouncedQuery.trim().toLowerCase().split(/\s+/).filter(Boolean),
+    [debouncedQuery],
   );
 
   const filtered = useMemo(() => {
-    let list = projectiles.filter(p => matchesQuery(p, tokens));
-    if (caliberFilter) list = list.filter(p => calToken(p.caliber) === caliberFilter);
-    if (typeFilter) list = list.filter(p => p.projectileType === typeFilter);
-    if (onlyImported) list = list.filter(pickerIsImported);
-    if (onlyBcZones) list = list.filter(pickerHasBcZones);
+    const noTokens = tokens.length === 0;
+    const list: Projectile[] = [];
 
-    const sorted = [...list];
+    for (const p of projectiles) {
+      if (caliberFilter && calToken(p.caliber) !== caliberFilter) continue;
+      if (typeFilter && p.projectileType !== typeFilter) continue;
+      if (onlyImported && !pickerIsImported(p)) continue;
+      if (onlyBcZones && !pickerHasBcZones(p)) continue;
+      if (!noTokens) {
+        const entry = searchIndex.get(p);
+        const hay = entry?.hay ?? '';
+        let match = true;
+        for (const tok of tokens) {
+          if (!hay.includes(tok)) {
+            match = false;
+            break;
+          }
+        }
+        if (!match) continue;
+      }
+      list.push(p);
+    }
+
+    if (sortBy === 'relevance') return list;
+
     switch (sortBy) {
       case 'brand':
-        sorted.sort((a, b) =>
-          `${a.brand} ${a.model}`.localeCompare(`${b.brand} ${b.model}`, undefined, {
-            sensitivity: 'base',
-          }),
-        );
+        list.sort((a, b) => {
+          const ka = searchIndex.get(a)?.brandKey ?? '';
+          const kb = searchIndex.get(b)?.brandKey ?? '';
+          return ka < kb ? -1 : ka > kb ? 1 : 0;
+        });
         break;
       case 'weight':
-        sorted.sort((a, b) => (a.weight ?? 0) - (b.weight ?? 0));
+        list.sort((a, b) => (a.weight ?? 0) - (b.weight ?? 0));
         break;
       case 'bc':
-        sorted.sort((a, b) => (b.bc ?? 0) - (a.bc ?? 0));
+        list.sort((a, b) => (b.bc ?? 0) - (a.bc ?? 0));
         break;
-      case 'caliber': {
-        // Sort by numeric value of the canonical caliber token (".177" → 0.177).
-        const num = (s: string) => {
-          const tok = calToken(s);
-          const n = parseFloat(tok);
-          return Number.isFinite(n) ? n : Number.POSITIVE_INFINITY;
-        };
-        sorted.sort((a, b) => num(a.caliber) - num(b.caliber));
-        break;
-      }
-      case 'relevance':
-      default:
-        // Keep insertion order — already roughly recency-based via store.
+      case 'caliber':
+        list.sort((a, b) => {
+          const na = searchIndex.get(a)?.calNum ?? Number.POSITIVE_INFINITY;
+          const nb = searchIndex.get(b)?.calNum ?? Number.POSITIVE_INFINITY;
+          return na - nb;
+        });
         break;
     }
-    return sorted;
-  }, [projectiles, tokens, caliberFilter, typeFilter, onlyImported, onlyBcZones, sortBy]);
+    return list;
+  }, [
+    projectiles,
+    searchIndex,
+    tokens,
+    caliberFilter,
+    typeFilter,
+    onlyImported,
+    onlyBcZones,
+    sortBy,
+  ]);
+
+  // Virtualization — only kicks in for big lists. Below the threshold, we
+  // pretend there are 0 virtual items (and fall back to a normal map).
+  const useVirtual = filtered.length >= VIRTUALIZATION_THRESHOLD;
+  const virtual = useVirtualList({
+    itemCount: useVirtual ? filtered.length : 0,
+    itemHeight: ROW_HEIGHT,
+    overscan: 8,
+  });
+
+  // Reset scroll when the result set changes shape (filters/sort/query).
+  useEffect(() => {
+    if (useVirtual) virtual.scrollToTop();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    debouncedQuery,
+    caliberFilter,
+    typeFilter,
+    onlyImported,
+    onlyBcZones,
+    sortBy,
+    useVirtual,
+  ]);
 
   const activeFilterCount =
     (caliberFilter ? 1 : 0) +
@@ -177,19 +268,31 @@ export function ProjectilePicker({
     (onlyImported ? 1 : 0) +
     (onlyBcZones ? 1 : 0);
 
-  const clearFilters = () => {
+  const clearFilters = useCallback(() => {
     setCaliberFilter('');
     setTypeFilter('');
     setOnlyImported(false);
     setOnlyBcZones(false);
-  };
+  }, []);
 
-  const pick = (id: string) => {
-    onSelect(id);
-    onOpenChange(false);
-  };
+  // Stable click handler — does not re-create per row, so memoized rows skip
+  // re-rendering when other rows' selection state changes.
+  const pickRef = useRef<(id: string) => void>(() => {});
+  useEffect(() => {
+    pickRef.current = (id: string) => {
+      onSelect(id);
+      onOpenChange(false);
+    };
+  }, [onSelect, onOpenChange]);
+
+  const handleRowPick = useCallback((id: string) => pickRef.current(id), []);
 
   const isEmptyLibrary = projectiles.length === 0;
+
+  // Compute the slice to render.
+  const visibleSlice = useVirtual
+    ? filtered.slice(virtual.startIndex, virtual.endIndex)
+    : filtered;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -204,6 +307,9 @@ export function ProjectilePicker({
           <DialogTitle className="text-base font-heading">
             {t('projectilePicker.title')}
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            {t('projectilePicker.dialogDescription')}
+          </DialogDescription>
         </DialogHeader>
 
         {isEmptyLibrary ? (
@@ -294,7 +400,6 @@ export function ProjectilePicker({
 
               {showFilters && (
                 <div className="mt-3 space-y-2 rounded-md border border-border bg-muted/20 p-2.5">
-                  {/* Caliber */}
                   {caliberCounts.length > 0 && (
                     <div className="space-y-1">
                       <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
@@ -318,7 +423,6 @@ export function ProjectilePicker({
                     </div>
                   )}
 
-                  {/* Type */}
                   {typeCounts.length > 0 && (
                     <div className="space-y-1">
                       <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
@@ -342,7 +446,6 @@ export function ProjectilePicker({
                     </div>
                   )}
 
-                  {/* Flags */}
                   {(hasAnyImported || hasAnyBcZones) && (
                     <div className="flex flex-wrap gap-1.5 pt-1">
                       {hasAnyImported && (
@@ -377,16 +480,18 @@ export function ProjectilePicker({
               )}
             </div>
 
-            {/* Results list */}
+            {/* Results list (scroll container) */}
             <div
+              ref={virtual.containerRef}
               role="listbox"
               aria-label={t('projectilePicker.title')}
+              data-virtualized={useVirtual ? 'true' : 'false'}
               className="flex-1 overflow-y-auto px-2 pb-2 border-t border-border bg-card/30"
             >
-              {/* Manual entry / clear */}
+              {/* Manual entry / clear — always rendered, always at the top */}
               <button
                 type="button"
-                onClick={() => pick('')}
+                onClick={() => handleRowPick('')}
                 className={cn(
                   'w-full text-left px-3 py-2 mt-2 mb-1 rounded-md text-xs italic border transition-colors',
                   selectedId === ''
@@ -401,14 +506,36 @@ export function ProjectilePicker({
                 <div className="p-6 text-center text-sm text-muted-foreground">
                   {t('projectilePicker.noResults')}
                 </div>
+              ) : useVirtual ? (
+                <div
+                  style={{
+                    paddingTop: virtual.paddingTop,
+                    paddingBottom: virtual.paddingBottom,
+                  }}
+                >
+                  <ul className="space-y-1">
+                    {visibleSlice.map(p => (
+                      <li
+                        key={p.id}
+                        style={{ height: ROW_HEIGHT - 4 /* matches space-y-1 gap */ }}
+                      >
+                        <ProjectileRow
+                          projectile={p}
+                          selected={p.id === selectedId}
+                          onPick={handleRowPick}
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               ) : (
                 <ul className="space-y-1">
-                  {filtered.map(p => (
+                  {visibleSlice.map(p => (
                     <li key={p.id}>
                       <ProjectileRow
                         projectile={p}
                         selected={p.id === selectedId}
-                        onPick={() => pick(p.id)}
+                        onPick={handleRowPick}
                       />
                     </li>
                   ))}
@@ -423,6 +550,11 @@ export function ProjectilePicker({
                   total: projectiles.length,
                 })}
               </span>
+              {useVirtual && (
+                <span className="text-[10px] uppercase tracking-wide opacity-70">
+                  {t('projectilePicker.virtualized')}
+                </span>
+              )}
             </div>
           </>
         )}
@@ -462,15 +594,13 @@ function FilterChip({
   );
 }
 
-function ProjectileRow({
-  projectile,
-  selected,
-  onPick,
-}: {
+interface RowProps {
   projectile: Projectile;
   selected: boolean;
-  onPick: () => void;
-}) {
+  onPick: (id: string) => void;
+}
+
+const ProjectileRow = memo(function ProjectileRow({ projectile, selected, onPick }: RowProps) {
   const { t } = useI18n();
   const p = projectile;
 
@@ -497,12 +627,12 @@ function ProjectileRow({
   return (
     <button
       type="button"
-      onClick={onPick}
+      onClick={() => onPick(p.id)}
       role="option"
       aria-selected={selected}
       data-projectile-id={p.id}
       className={cn(
-        'w-full text-left p-2.5 rounded-md border transition-colors flex items-start gap-2',
+        'w-full h-full text-left p-2.5 rounded-md border transition-colors flex items-start gap-2',
         selected
           ? 'border-primary/40 bg-primary/10'
           : 'border-border bg-card/60 hover:bg-muted/40',
@@ -565,4 +695,11 @@ function ProjectileRow({
       </div>
     </button>
   );
-}
+});
+
+/** Test-only export — exposes internal tuning constants. */
+export const __PICKER_INTERNAL = {
+  ROW_HEIGHT,
+  VIRTUALIZATION_THRESHOLD,
+  SEARCH_DEBOUNCE_MS,
+};

@@ -42,6 +42,25 @@ function createCRUD<T extends { id: string; createdAt: string; updatedAt: string
       save(key, items);
       return newItem;
     },
+    /**
+     * Bulk insert : un seul `load` + un seul `save` quels que soient N items.
+     * Indispensable pour les imports massifs (bullets4 = ~8700 projectiles)
+     * où l'appel séquentiel à `create()` est O(N²) sur localStorage et
+     * fait crasher le tab.
+     */
+    createMany: (newItems: ReadonlyArray<Omit<T, 'id' | 'createdAt' | 'updatedAt'>>): T[] => {
+      if (newItems.length === 0) return [];
+      const now = new Date().toISOString();
+      const items = load<T>(key);
+      const created: T[] = [];
+      for (const it of newItems) {
+        const fresh = { ...it, id: generateId(), createdAt: now, updatedAt: now } as T;
+        items.push(fresh);
+        created.push(fresh);
+      }
+      save(key, items);
+      return created;
+    },
     update: (id: string, updates: Partial<T>): T | undefined => {
       const items = load<T>(key);
       const idx = items.findIndex(i => i.id === id);

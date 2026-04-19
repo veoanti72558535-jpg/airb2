@@ -112,21 +112,24 @@ export function ImportJsonModal({
   const handleConfirm = useCallback(() => {
     if (!preview || writableCount === 0) return;
     setIsWriting(true);
-    let written = 0;
     try {
-      for (const item of preview.items) {
-        if (item.status !== 'ok' && item.status !== 'sanitized') continue;
-        if (!item.data) continue;
-        if (preview.entityType === 'projectile') {
-          projectileStore.create(item.data as NormalisedProjectile);
-          written += 1;
-        } else if (preview.entityType === 'optic') {
-          opticStore.create(item.data as NormalisedOptic);
-          written += 1;
-        } else if (preview.entityType === 'reticle') {
-          reticleStore.create(item.data as NormalisedReticle);
-          written += 1;
-        }
+      // Bulk insert : un seul localStorage write quel que soit N. Sans cela,
+      // un import massif (ex. bullets4 ~8700 projectiles) effectue O(N²)
+      // de sérialisation et crash le tab.
+      const writable = preview.items.filter(
+        (item) =>
+          (item.status === 'ok' || item.status === 'sanitized') && !!item.data,
+      );
+      let written = 0;
+      if (preview.entityType === 'projectile') {
+        const data = writable.map((i) => i.data as NormalisedProjectile);
+        written = projectileStore.createMany(data).length;
+      } else if (preview.entityType === 'optic') {
+        const data = writable.map((i) => i.data as NormalisedOptic);
+        written = opticStore.createMany(data).length;
+      } else if (preview.entityType === 'reticle') {
+        const data = writable.map((i) => i.data as NormalisedReticle);
+        written = reticleStore.createMany(data).length;
       }
       toast.success(t('import.success', { count: written }));
       onSuccess?.(written);

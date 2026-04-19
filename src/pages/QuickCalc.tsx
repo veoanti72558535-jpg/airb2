@@ -42,6 +42,7 @@ import { BallisticTable } from '@/components/calc/BallisticTable';
 import { ReticleAssistPanel } from '@/components/calc/ReticleAssistPanel';
 import { ZeroIntersectionsCard } from '@/components/calc/ZeroIntersectionsCard';
 import { TrajectoryMiniChart } from '@/components/calc/TrajectoryMiniChart';
+import { PbrCard } from '@/components/calc/PbrCard';
 import { computeZeroIntersections } from '@/lib/zero-intersections';
 import {
   buildDistanceList,
@@ -736,6 +737,13 @@ export default function QuickCalc() {
               nearZeroDistance={zeroIntersections.nearZeroDistance}
               farZeroDistance={zeroIntersections.farZeroDistance}
             />
+          )}
+
+          {/* Tranche P — Point Blank Range. Diamètre de zone vitale local
+              (pas de pollution des settings globaux V1). Pure dérivation des
+              résultats existants — aucun recalcul moteur. */}
+          {results.length > 1 && (
+            <PbrCard rows={results} initialVitalZoneM={0.05} />
           )}
 
           {/* Tranche H + J — Configurable ballistic table. Source de vérité

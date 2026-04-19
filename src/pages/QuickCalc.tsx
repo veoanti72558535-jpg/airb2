@@ -40,6 +40,8 @@ import { ZeroingSection } from '@/components/calc/ZeroingSection';
 import { ResultsCard } from '@/components/calc/ResultsCard';
 import { BallisticTable } from '@/components/calc/BallisticTable';
 import { ReticleAssistPanel } from '@/components/calc/ReticleAssistPanel';
+import { ZeroIntersectionsCard } from '@/components/calc/ZeroIntersectionsCard';
+import { computeZeroIntersections } from '@/lib/zero-intersections';
 import {
   buildDistanceList,
   defaultConfig,
@@ -710,6 +712,11 @@ export default function QuickCalc() {
             zeroWeather={form.useZeroWeather ? form.zeroWeather : undefined}
             energyThresholdJ={energyThresholdJ}
           />
+
+          {/* Tranche O — Near / Far Zero, dérivés de `results`. */}
+          {results.length > 1 && (
+            <ZeroIntersectionsCard data={computeZeroIntersections(results)} />
+          )}
 
           {/* Tranche H + J — Configurable ballistic table. Source de vérité
               de la grille d'affichage partagée avec ReticleAssistPanel. */}

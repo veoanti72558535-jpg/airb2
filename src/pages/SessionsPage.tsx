@@ -20,6 +20,8 @@ import { RecalculateDialog } from '@/components/sessions/RecalculateDialog';
 import { SessionLineage } from '@/components/sessions/SessionLineage';
 import { normalizeSession } from '@/lib/session-normalize';
 import { BallisticTable } from '@/components/calc/BallisticTable';
+import { ZeroIntersectionsCard } from '@/components/calc/ZeroIntersectionsCard';
+import { computeZeroIntersections } from '@/lib/zero-intersections';
 import { ReticleAssistPanel } from '@/components/calc/ReticleAssistPanel';
 import {
   buildDistanceList,
@@ -427,6 +429,10 @@ function SessionAdvancedReadouts({ session }: { session: Session }) {
   );
   return (
     <>
+      {/* Tranche O — Near / Far Zero, dérivés des résultats stockés. */}
+      {session.results && session.results.length > 1 && (
+        <ZeroIntersectionsCard data={computeZeroIntersections(session.results)} />
+      )}
       <BallisticTable
         rows={session.results}
         clickUnit={session.input.clickUnit ?? 'MRAD'}

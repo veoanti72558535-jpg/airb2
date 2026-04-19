@@ -140,6 +140,44 @@ export interface Projectile {
   customDragTable?: DragTablePoint[];
   /** Tranche F.1 — origine de la donnée si importée. */
   importedFrom?: ImportSource;
+  // -------------------------------------------------------------------------
+  // Extension bullets4 — tous champs OPTIONNELS, additifs, rétrocompatibles.
+  // Aucun champ ci-dessous n'est consommé par le moteur balistique en V1 :
+  // ils servent au catalogue / import / affichage / futurs profils. Les
+  // champs historiques (`weight`, `bc`, `bcModel`, `caliber`, `length`,
+  // `diameter`, `shape`, `projectileType`) restent la source de vérité
+  // utilisée par QuickCalc, Sessions et Compare.
+  // -------------------------------------------------------------------------
+  /** Libellé caliber lisible (ex: ".22 LR", ".22 (5.5mm)"). */
+  caliberLabel?: string;
+  /** Diamètre nominal en millimètres, distinct de `diameter` historique. */
+  diameterMm?: number;
+  /** Diamètre nominal en pouces — utilisé pour dériver le caliber canonique. */
+  diameterIn?: number;
+  /** Unité de référence pour `weight` (gr par défaut). */
+  weightUnit?: ProjectileWeightUnit;
+  /** Poids exprimé en grains (miroir explicite de `weight` quand `weightUnit='gr'`). */
+  weightGrains?: number;
+  /** Poids exprimé en grammes. */
+  weightGrams?: number;
+  /** BC G1 explicite (catalogue multi-modèles), distinct de `bc` qui suit `bcModel`. */
+  bcG1?: number;
+  /** BC G7 explicite (catalogue multi-modèles). */
+  bcG7?: number;
+  /**
+   * Table BC par zones de vélocité (Litz / bullets4). Acceptée et stockée
+   * telle quelle, NON exploitée par le moteur balistique en V1. `null`
+   * autorisé pour préserver les imports qui distinguent "absent" de "vide".
+   */
+  bcZones?: { bc: number; minVelocity: number }[] | null;
+  /** Longueur en millimètres, distincte de `length` historique. */
+  lengthMm?: number | null;
+  /** Longueur en pouces. */
+  lengthIn?: number | null;
+  /** Identifiant d'origine dans la base externe (bullets4 row id, etc.). */
+  sourceDbId?: string;
+  /** Table source dans la base externe (ex: "bullets4_pellets"). */
+  sourceTable?: string;
   createdAt: string;
   updatedAt: string;
 }

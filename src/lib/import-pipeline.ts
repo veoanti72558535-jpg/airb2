@@ -53,7 +53,9 @@ export interface ImportSanitizationNote {
     | 'reticle-unit-canonicalised'
     | 'unknown-field-stripped'
     | 'caliber-derived-from-diameter'
-    | 'imported-from-remapped';
+    | 'imported-from-remapped'
+    | 'weight-derived-from-variant'
+    | 'bc-derived-from-variant';
   /** Message lisible (FR) — non i18n pour l'instant, factorisable plus tard. */
   message: string;
   /** Champ touché. */
@@ -170,7 +172,9 @@ function reticleKey(r: { brand: string; model: string }): string {
 function normaliseProjectile(
   parsed: ProjectileImport,
   source: ImportSource,
-): { data: NormalisedProjectile; notes: ImportSanitizationNote[] } {
+):
+  | { ok: true; data: NormalisedProjectile; notes: ImportSanitizationNote[] }
+  | { ok: false; issues: ImportRejectionIssue[] } {
   const notes: ImportSanitizationNote[] = [];
 
   // Sanitisation drag-law via la source unique Tranche D.
@@ -188,6 +192,84 @@ function normaliseProjectile(
         originalValue: parsed.bcModel,
         appliedValue: safe,
       });
+    }
+  }
+
+  // -----------------------------------------------------------------
+  // Dérivation `weight` (grains) : si absent, on tente weightGrains
+  // puis weightGrams (×15.4324). Si rien, rejet métier explicite.
+  // -----------------------------------------------------------------
+  let weight: number | undefined = parsed.weight;
+  if (weight === undefined) {
+    if (parsed.weightGrains !== undefined) {
+      weight = parsed.weightGrains;
+      notes.push({
+        code: 'weight-derived-from-variant',
+        message: `Poids dérivé depuis « weightGrains » : ${weight} gr.`,
+        field: 'weight',
+        originalValue: null,
+        appliedValue: weight,
+      });
+    } else if (parsed.weightGrams !== undefined) {
+      weight = parsed.weightGrams * 15.4323583529;
+      notes.push({
+        code: 'weight-derived-from-variant',
+        message: `Poids dérivé depuis « weightGrams » : ${weight.toFixed(3)} gr.`,
+        field: 'weight',
+        originalValue: parsed.weightGrams,
+        appliedValue: weight,
+      });
+    } else {
+      return {
+        ok: false,
+        issues: [
+          {
+            path: ['weight'],
+            message: 'weight, weightGrains ou weightGrams requis.',
+            code: 'custom',
+          },
+        ],
+      };
+    }
+  }
+
+  // -----------------------------------------------------------------
+  // Dérivation `bc` : si absent, on tente bcG1 puis bcG7. Si l'on a
+  // dérivé depuis bcG7, on aligne bcModel='G7' si non spécifié.
+  // -----------------------------------------------------------------
+  let bc: number | undefined = parsed.bc;
+  if (bc === undefined) {
+    if (parsed.bcG1 !== undefined) {
+      bc = parsed.bcG1;
+      if (bcModel === undefined) bcModel = 'G1';
+      notes.push({
+        code: 'bc-derived-from-variant',
+        message: `BC dérivé depuis « bcG1 » : ${bc}.`,
+        field: 'bc',
+        originalValue: null,
+        appliedValue: bc,
+      });
+    } else if (parsed.bcG7 !== undefined) {
+      bc = parsed.bcG7;
+      if (bcModel === undefined) bcModel = 'G7';
+      notes.push({
+        code: 'bc-derived-from-variant',
+        message: `BC dérivé depuis « bcG7 » : ${bc}.`,
+        field: 'bc',
+        originalValue: null,
+        appliedValue: bc,
+      });
+    } else {
+      return {
+        ok: false,
+        issues: [
+          {
+            path: ['bc'],
+            message: 'bc, bcG1 ou bcG7 requis.',
+            code: 'custom',
+          },
+        ],
+      };
     }
   }
 
@@ -233,8 +315,8 @@ function normaliseProjectile(
   const data: NormalisedProjectile = {
     brand: parsed.brand,
     model: parsed.model,
-    weight: parsed.weight,
-    bc: parsed.bc,
+    weight,
+    bc,
     caliber: caliber ?? '',
     importedFrom,
     ...(bcModel !== undefined ? { bcModel } : {}),
@@ -265,7 +347,7 @@ function normaliseProjectile(
     ...(parsed.sourceTable !== undefined ? { sourceTable: parsed.sourceTable } : {}),
   };
 
-  return { data, notes };
+  return { ok: true, data, notes };
 }
 
 function normaliseOptic(
@@ -444,7 +526,11 @@ export function importProjectilesPreview(
         issues: zodIssuesToRejection(result.error),
       };
     }
-    const { data, notes } = normaliseProjectile(result.data, opts.source);
+    const norm = normaliseProjectile(result.data, opts.source);
+    if (norm.ok !== true) {
+      return { index, status: 'rejected', issues: norm.issues };
+    }
+    const { data, notes } = norm;
     const key = projectileKey(data);
     if (existingKeys.has(key) || seenInBatch.has(key)) {
       return { index, status: 'duplicate', data, duplicateKey: key };

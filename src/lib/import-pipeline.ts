@@ -203,7 +203,9 @@ function normaliseProjectile(
     ...(parsed.material !== undefined ? { material: parsed.material } : {}),
     ...(parsed.notes !== undefined ? { notes: parsed.notes } : {}),
     ...(parsed.dataSource !== undefined ? { dataSource: parsed.dataSource } : {}),
-    ...(parsed.customDragTable !== undefined ? { customDragTable: parsed.customDragTable } : {}),
+    ...(parsed.customDragTable !== undefined
+      ? { customDragTable: parsed.customDragTable as NormalisedProjectile['customDragTable'] }
+      : {}),
   };
 
   return { data, notes };

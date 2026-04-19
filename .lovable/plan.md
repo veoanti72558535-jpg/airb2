@@ -1,58 +1,56 @@
 
-L'utilisateur a fourni le 5ème APK manquant : `Chairgun.Elite.v.4.7.2.b.172.minSDK23.orig_resigned.apks`. Le périmètre APK.A1 + APK.A2 est désormais complet avec les 5 artefacts.
+## Tranche APK.A3 — MERO localization + drag law menu
 
-## Plan d'exécution Tranche APK.A1 + APK.A2
+### Objectif strict
+Extraire et documenter, à partir de l'APK MERO 1.2.5 déjà uploadé :
+1. Les libellés UI contenus dans les fichiers `assets/localization_*.json` (≈18 fichiers — nombre exact à confirmer en mode default via `unzip -l`)
+2. La liste exhaustive des entrées du menu drag law (handlers `lambda$showDragLawMenu$*` déjà repérés en APK.A2)
 
-### Artefacts (5 APK / bundles)
-1. `Chairgun.Elite.v.4.7.2.b.172.minSDK23.orig_resigned.apks` (nouveau — bundle .apks)
-2. `ChairGun-1.3.7-2.apk`
-3. `com.jetlab.chairgunelite.apk`
-4. `MERO_1.2.5_APKPure-2.xapk`
-5. `strelok-pro-v6.8.8-mod-lenov.ru.apk`
+Aucun autre APK n'est touché. Aucune modification de `src/`.
 
-### Étape 1 — Extraction & préparation
-- `lov-copy` les 5 fichiers vers `/tmp/apk-analysis/`
-- Décompresser `.apks` (split bundle) et `.xapk` (zip multi-APK + OBB) → identifier APK base
-- `unzip -l` sur chaque APK pour vue d'ensemble structurelle
+### Étape 1 — Re-extraction MERO
+- Vérifier la présence de `/tmp/apk-analysis/mero/` (résidu APK.A2). Si absent, re-copier `MERO_1.2.5_APKPure-2.xapk` depuis `user-uploads://` et décompresser le bundle xapk → APK base.
+- `unzip -l mero-base.apk | grep -i localization` → liste exacte des fichiers localization (confirmer le compte de 18).
 
-### Étape 2 — Inventaire APK.A1
-Pour chaque APK :
-- `aapt2 dump badging` (via `nix run nixpkgs#aapt`) → package, version, versionCode, minSdk, targetSdk, permissions, ABIs
-- `aapt2 dump xmltree` sur AndroidManifest.xml → activités, services, providers significatifs
-- Liste `lib/<abi>/*.so` + `strings` ciblés balistique
-- Identification assets/raw (`.db`, `.json`, `.csv`, `.xml`)
-- Détection obfuscation (R8/ProGuard via classes `a.class`, `b.class`)
+### Étape 2 — Extraction libellés localization
+- `unzip` ciblé sur `assets/localization_*.json` vers `/tmp/apk-analysis/mero/loc/`
+- Détection du format (JSON plat clé→valeur, ou imbriqué). Détection encodage / langue par fichier (suffixe `_fr`, `_en`, `_de` etc. ou clé interne `language`).
+- Construction d'un index pivot : pour chaque clé, valeurs par langue (ou au minimum la langue de référence si une seule existe).
+- Filtrage thématique balistique : drag law, BC, atmosphère, vent, zéro, PBR, réticule, unités, projectile, optique, inclinaison.
 
-### Étape 3 — Cartographie APK.A2
-Pour chaque APK :
-- `strings classes*.dex | grep -iE "ballist|drag|bc|G1|G7|zero|PBR|wind|atmos|reticle|click|MOA|MIL|mrad|projectile|scope|turret"`
-- Identification SQLite embarquées (schemas via `sqlite3 .schema`, sans dump propriétaire)
-- Distinction certitudes / hypothèses / incertitudes
-- Découpage logique : UI / métier / tables / natif
+### Étape 3 — Enumération exhaustive du menu drag law
+- `strings classes*.dex | grep -E "showDragLawMenu|DragLaw|drag.?law" -i` → handlers numérotés.
+- Croisement avec les libellés localization (clés type `dragLaw.*`, `drag_law_*`, `_lab_drag*`).
+- Reconstruction du menu : pour chaque entrée numérique (lambda$showDragLawMenu$0..N), associer le label trouvé. Marquer ❓ si correspondance non certaine.
+- Sortie : tableau ordonné (index, identifiant, label FR/EN si dispo, famille — airgun/rimfire/slug/générique/sphérique).
 
-### Étape 4 — Lecture comparative AirBallistik
-Tableau markdown synthétique des écarts.
+### Étape 4 — Documentation (livrable)
+Création de **2 fichiers** sous `docs/apk-analysis/mero/` :
 
-### Étape 5 — Documentation
-Création dans `docs/apk-analysis/` :
-- `README.md` — vue d'ensemble, niveau de confiance global
-- `inventory.md` — APK.A1 par APK
-- `ballistic-mapping.md` — APK.A2 par APK
-- `comparison-airballistik.md` — tableau comparatif
-- `limits-and-recommendations.md` — limites, risques, suites APK.A3/A4
+1. `localization-extract.md`
+   - Liste des fichiers localization détectés + format
+   - Tableau pivot des libellés balistiques (clé → labels par langue)
+   - Section non-balistique : résumé seulement (volume, langues, exemples), pas de dump exhaustif
+   - Note légale : extraction structurelle pour analyse comparative interne, pas de redistribution
+2. `drag-law-menu.md`
+   - Tableau exhaustif des entrées du menu drag law
+   - Cartographie famille / cas d'usage attendu (selon la phrase produit déjà observée en APK.A2)
+   - Comparaison synthétique avec les drag laws AirBallistik (G1/G7/GA/GS publiques, RA4/GA2/SLG0/SLG1 internes)
+   - Distinction certitudes ✅ / hypothèses 🟡 / incertitudes ❓
 
 ### Garanties de périmètre
-- **Aucune** modification de `src/` (code produit AirBallistik)
-- **Aucun** changement moteur, EngineBadge, QuickCalc, Sessions, Compare, Routes, MERO
-- Tests AirBallistik restent à 786/786
-- Tous artefacts dans `docs/apk-analysis/` uniquement
+- **Aucune** modification de `src/` (zéro impact code produit AirBallistik)
+- **Aucun** changement moteur, EngineBadge, QuickCalc, Sessions, Compare, Routes, MERO exposure
+- Tests AirBallistik restent à 786/786 (rien touché)
+- Aucun autre APK analysé (ChairGun / Strelok Pro hors périmètre de cette tranche)
+- Pas de déchiffrement, pas d'extraction de l'asset `HTRv1wt4YJgUR0H` de ChairGun Elite (hors scope)
 
 ### Points sensibles
-1. **Légal** : ChairGun (Hawke), MERO, Strelok Pro = propriétaires. Cartographie structurelle seulement, pas d'extraction massive de code/données protégées. Mention "analyse interne, usage personnel".
-2. **Strelok Pro modé** : version non officielle — fiabilité d'analyse réduite, signalée explicitement.
-3. **Obfuscation** : ChairGun Elite et Strelok Pro probablement obfusqués (R8). Cartographie partielle attendue.
-4. **Bundle .apks** : peut contenir plusieurs splits (base + config + locale). Analyse focalisée sur le split base.
-5. **Fichiers chiffrés / SQLCipher** : signalés sans tentative de déchiffrement.
+1. **Légal** : MERO est propriétaire. L'extraction des libellés sert à documenter l'éventail fonctionnel pour comparaison interne. Mention explicite "analyse personnelle, pas de redistribution".
+2. **Volume** : si les 18 fichiers contiennent des centaines de clés non-balistiques (UI générale), le livrable filtrera et résumera. Pas de dump intégral en markdown.
+3. **Mapping menu ↔ labels** : si l'obfuscation a effacé la correspondance index→clé i18n, certaines entrées resteront marquées ❓ avec hypothèse motivée.
+4. **Fichiers localization manquants** : si le compte réel diverge de 18, livrable adapté + signalement explicite.
 
 ### Livrable final
-5 fichiers markdown dans `docs/apk-analysis/` + compte rendu technique détaillé en fin de réponse, avec confirmation explicite qu'aucun code produit n'a été modifié et que les tests restent à 786/786.
+- 2 fichiers markdown créés sous `docs/apk-analysis/mero/`
+- Compte rendu technique en fin de réponse avec confirmation explicite : aucun code produit modifié, 786/786 tests, aucun autre APK touché.

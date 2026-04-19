@@ -439,6 +439,14 @@ function SessionAdvancedReadouts({ session }: { session: Session }) {
       {session.results && session.results.length > 1 && (
         <ZeroIntersectionsCard data={zeroIntersections} />
       )}
+      {/* Tranche P — Mini-graphique trajectoire avec marqueurs NZ/FZ. */}
+      {session.results && session.results.length > 1 && (
+        <TrajectoryMiniChart
+          rows={session.results}
+          nearZeroDistance={zeroIntersections.nearZeroDistance}
+          farZeroDistance={zeroIntersections.farZeroDistance}
+        />
+      )}
       <BallisticTable
         rows={session.results}
         clickUnit={session.input.clickUnit ?? 'MRAD'}

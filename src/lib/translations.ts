@@ -1388,6 +1388,15 @@ const en: Record<keyof typeof fr, string> = {
   'engine.calculatedAtSource.frozen': 'Frozen at save time',
   'engine.calculatedAtSource.inferredFromUpdated': 'Approximated from last update',
   'engine.calculatedAtSource.inferredFromCreated': 'Approximated from creation date',
+  // Tranche F.5 — import origin surfaced in the EngineBadge tooltip
+  'engine.importedFrom': 'Imported from',
+  'engine.importedFrom.projectile': 'Projectile',
+  'engine.importedFrom.optic': 'Optic',
+  'import.source.jsonUser': 'User JSON',
+  'import.source.presetInternal': 'Internal preset',
+  'import.source.strelok': 'Strelok',
+  'import.source.chairgun': 'ChairGun',
+  'import.source.airballistik': 'AirBallistik',
   'compare.profilesMixedWarning': 'Comparison across different profiles — results are not strictly comparable.',
 
   // Recalculation (Tranche C)

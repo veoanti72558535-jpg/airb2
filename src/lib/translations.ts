@@ -685,6 +685,10 @@ const fr = {
   'compare.tableA': 'Tableau A',
   'compare.tableB': 'Tableau B',
 
+  // Compare — Tranche S : lecture comparative zero / near / far / PBR
+  'compare.pbrZeroTitle': 'Zéro & PBR',
+  'compare.zeroRange': 'Zéro',
+
   // Compare — diff group labels
   'compare.groupProjectile': 'Projectile',
   'compare.groupWeapon': 'Arme',

@@ -31,6 +31,7 @@ import {
   isPublicDragLaw,
   sanitizePublicDragLaw,
 } from './drag-law-policy';
+import { deriveCaliber } from './caliber-derive';
 import type {
   DragModel,
   ImportSource,
@@ -50,7 +51,9 @@ export interface ImportSanitizationNote {
   code:
     | 'drag-law-replaced'
     | 'reticle-unit-canonicalised'
-    | 'unknown-field-stripped';
+    | 'unknown-field-stripped'
+    | 'caliber-derived-from-diameter'
+    | 'imported-from-remapped';
   /** Message lisible (FR) — non i18n pour l'instant, factorisable plus tard. */
   message: string;
   /** Champ touché. */
@@ -139,8 +142,8 @@ export interface ExistingForDedup {
 // Clés de dédup
 // ---------------------------------------------------------------------------
 
-function projectileKey(p: { brand: string; model: string; weight: number; caliber: string }): string {
-  return `${p.brand.toLowerCase()}|${p.model.toLowerCase()}|${p.weight}|${p.caliber.toLowerCase()}`;
+function projectileKey(p: { brand: string; model: string; weight: number; caliber?: string }): string {
+  return `${p.brand.toLowerCase()}|${p.model.toLowerCase()}|${p.weight}|${(p.caliber ?? '').toLowerCase()}`;
 }
 
 /**
@@ -188,13 +191,52 @@ function normaliseProjectile(
     }
   }
 
+  // Caliber : si absent, on tente une dérivation depuis diameterIn / diameterMm.
+  let caliber: string | undefined = parsed.caliber;
+  if (!caliber || caliber.trim() === '') {
+    const derived = deriveCaliber({
+      diameterIn: parsed.diameterIn,
+      diameterMm: parsed.diameterMm,
+    });
+    if (derived) {
+      caliber = derived;
+      notes.push({
+        code: 'caliber-derived-from-diameter',
+        message: `Caliber dérivé depuis le diamètre : « ${derived} ».`,
+        field: 'caliber',
+        originalValue: parsed.caliber ?? null,
+        appliedValue: derived,
+      });
+    }
+  }
+
+  // Provenance : si la source utilisateur indique `bullets4-db` (ou si le
+  // payload lui-même est tagué ainsi), on remappe vers `json-user` pour
+  // garder le marqueur publique stable côté UI tout en notant la trace.
+  let importedFrom: ImportSource = source;
+  const incomingMark = parsed.importedFrom;
+  if (source === 'bullets4-db' || incomingMark === 'bullets4-db') {
+    importedFrom = 'json-user';
+    notes.push({
+      code: 'imported-from-remapped',
+      message: 'Provenance « bullets4-db » remappée vers « json-user ».',
+      field: 'importedFrom',
+      originalValue: 'bullets4-db',
+      appliedValue: 'json-user',
+    });
+  }
+
+  // `caliber` est obligatoire côté domaine (`Projectile.caliber: string`) ;
+  // on tombe sur '' si la dérivation a échoué — la pipeline ne rejette
+  // PAS pour autant : la donnée reste exploitable côté catalogue, l'UI
+  // pourra demander à l'utilisateur de compléter.
   const data: NormalisedProjectile = {
     brand: parsed.brand,
     model: parsed.model,
     weight: parsed.weight,
     bc: parsed.bc,
-    caliber: parsed.caliber,
-    importedFrom: source,
+    caliber: caliber ?? '',
+    importedFrom,
     ...(bcModel !== undefined ? { bcModel } : {}),
     ...(parsed.projectileType !== undefined ? { projectileType: parsed.projectileType } : {}),
     ...(parsed.shape !== undefined ? { shape: parsed.shape } : {}),
@@ -206,6 +248,21 @@ function normaliseProjectile(
     ...(parsed.customDragTable !== undefined
       ? { customDragTable: parsed.customDragTable as NormalisedProjectile['customDragTable'] }
       : {}),
+    // ----- Extension bullets4 (propagation explicite, aucun spread aveugle) -
+    ...(parsed.caliberLabel !== undefined ? { caliberLabel: parsed.caliberLabel } : {}),
+    ...(parsed.diameterMm !== undefined ? { diameterMm: parsed.diameterMm } : {}),
+    ...(parsed.diameterIn !== undefined ? { diameterIn: parsed.diameterIn } : {}),
+    ...(parsed.weightUnit !== undefined ? { weightUnit: parsed.weightUnit } : {}),
+    ...(parsed.weightGrains !== undefined ? { weightGrains: parsed.weightGrains } : {}),
+    ...(parsed.weightGrams !== undefined ? { weightGrams: parsed.weightGrams } : {}),
+    ...(parsed.bcG1 !== undefined ? { bcG1: parsed.bcG1 } : {}),
+    ...(parsed.bcG7 !== undefined ? { bcG7: parsed.bcG7 } : {}),
+    // bcZones : on conserve `null` (distinct de "absent") tel quel.
+    ...(parsed.bcZones !== undefined ? { bcZones: parsed.bcZones as NormalisedProjectile['bcZones'] } : {}),
+    ...(parsed.lengthMm !== undefined ? { lengthMm: parsed.lengthMm } : {}),
+    ...(parsed.lengthIn !== undefined ? { lengthIn: parsed.lengthIn } : {}),
+    ...(parsed.sourceDbId !== undefined ? { sourceDbId: parsed.sourceDbId } : {}),
+    ...(parsed.sourceTable !== undefined ? { sourceTable: parsed.sourceTable } : {}),
   };
 
   return { data, notes };

@@ -8,7 +8,30 @@
  * by any selector and remain engine-only until validated.
  */
 export type DragModel = 'G1' | 'G7' | 'GA' | 'GS' | 'RA4' | 'GA2' | 'SLG0' | 'SLG1';
-export type ProjectileType = 'pellet' | 'slug' | 'other';
+/**
+ * Catégorie projectile. Étendu pour accepter la taxonomie bullets4 :
+ * `bb` (billes acier) et `dart` (fléchettes), en plus de `pellet`/`slug`/`other`.
+ * Rétrocompatible : les valeurs existantes restent valides.
+ */
+export type ProjectileType = 'pellet' | 'slug' | 'bb' | 'dart' | 'other';
+/**
+ * Forme normalisée du projectile. Reste optionnelle ; le modèle continue
+ * d'accepter `shape?: string` pour les valeurs libres historiques (cf.
+ * `Projectile.shape`). Cette union sert surtout à documenter la taxonomie
+ * cible importée depuis bullets4.
+ */
+export type ProjectileShape =
+  | 'domed'
+  | 'pointed'
+  | 'hollow-point'
+  | 'wadcutter'
+  | 'round-nose'
+  | 'semi-wadcutter'
+  | 'flat-nose'
+  | 'hybrid'
+  | 'other';
+/** Unité d'expression du poids du projectile (grains ou grammes). */
+export type ProjectileWeightUnit = 'gr' | 'g';
 export type OpticFocalPlane = 'FFP' | 'SFP';
 
 /**

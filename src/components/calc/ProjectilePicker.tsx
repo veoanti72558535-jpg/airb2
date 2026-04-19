@@ -310,6 +310,31 @@ export function ProjectilePicker({
 
   const isEmptyLibrary = projectiles.length === 0;
 
+  /**
+   * Quick-access sections (favorites + recents) are only shown when no
+   * search/filter is active — otherwise they would compete with the user's
+   * own filtering intent. We resolve ids → projectiles via the lookup map
+   * and skip orphaned ids (deleted from library).
+   */
+  const hasActiveQuery = tokens.length > 0 || activeFilterCount > 0;
+  const favoriteProjectiles = useMemo(
+    () =>
+      hasActiveQuery
+        ? []
+        : favorites.map(id => byId.get(id)).filter((p): p is Projectile => !!p),
+    [hasActiveQuery, favorites, byId],
+  );
+  const recentProjectiles = useMemo(() => {
+    if (hasActiveQuery) return [];
+    const favSet = new Set(favorites);
+    return recents
+      .filter(id => !favSet.has(id))
+      .map(id => byId.get(id))
+      .filter((p): p is Projectile => !!p);
+  }, [hasActiveQuery, recents, favorites, byId]);
+  const showQuickAccess =
+    !hasActiveQuery && (favoriteProjectiles.length > 0 || recentProjectiles.length > 0);
+
   // Compute the slice to render.
   const visibleSlice = useVirtual
     ? filtered.slice(virtual.startIndex, virtual.endIndex)

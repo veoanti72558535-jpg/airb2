@@ -5,6 +5,10 @@ import { cn } from '@/lib/utils';
 import type { Session, CdProvenance } from '@/lib/types';
 import type { TranslationKey } from '@/lib/translations';
 import { isPublicDragLaw as isPublicDragLawPolicy } from '@/lib/drag-law-policy';
+import {
+  importSourceLabelKey,
+  resolveSessionImportedFrom,
+} from '@/lib/imported-from';
 
 /**
  * Tranche B — EngineBadge
@@ -116,6 +120,10 @@ export function EngineBadge({ session, size = 'sm', className }: Props) {
   const sourceKey = calcSourceKey(session.calculatedAtSource);
   const isInferred = !!session.metadataInferred;
 
+  // Tranche F.5 — origine d'import des entités liées (projectile, optique).
+  // Ne lit PAS le réticule : pas de lien session ↔ réticule en V1.
+  const importedFrom = resolveSessionImportedFrom(session);
+
   return (
     <TooltipProvider delayDuration={150}>
       <Tooltip>
@@ -153,6 +161,25 @@ export function EngineBadge({ session, size = 'sm', className }: Props) {
               {sourceKey && sourceKey !== 'engine.calculatedAtSource.frozen' && (
                 <div className="text-[10px] mt-0.5 opacity-90">
                   {t('engine.label.dateApproximated')}
+                </div>
+              )}
+            </div>
+          )}
+          {(importedFrom.projectile || importedFrom.optic) && (
+            <div
+              className="pt-0.5 border-t border-border/40 text-muted-foreground space-y-0.5"
+              data-testid="engine-badge-imported-from"
+            >
+              {importedFrom.projectile && (
+                <div data-testid="imported-from-projectile">
+                  {t('engine.importedFrom')} : {t('engine.importedFrom.projectile')} —{' '}
+                  {t(importSourceLabelKey(importedFrom.projectile))}
+                </div>
+              )}
+              {importedFrom.optic && (
+                <div data-testid="imported-from-optic">
+                  {t('engine.importedFrom')} : {t('engine.importedFrom.optic')} —{' '}
+                  {t(importSourceLabelKey(importedFrom.optic))}
                 </div>
               )}
             </div>

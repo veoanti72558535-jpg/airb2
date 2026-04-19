@@ -1,8 +1,9 @@
-import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { afterEach, beforeEach, describe, it, expect } from 'vitest';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { I18nProvider } from '@/lib/i18n';
 import { EngineBadge, resolveBadgeState } from '@/components/sessions/EngineBadge';
+import { projectileStore, opticStore } from '@/lib/storage';
 import type { Session } from '@/lib/types';
 
 function makeSession(overrides: Partial<Session> = {}): Session {
@@ -41,6 +42,18 @@ function renderBadge(session: Session) {
       </TooltipProvider>
     </I18nProvider>,
   );
+}
+
+/**
+ * Radix Tooltip ne rend son contenu qu'à l'ouverture. En jsdom, on déclenche
+ * l'ouverture via `focus` sur le trigger (le pattern `pointerenter` n'est pas
+ * fiable sans pointer events). `act` autour pour les state updates.
+ */
+function openTooltip() {
+  const trigger = screen.getByLabelText(/Moteur:|Engine:/);
+  act(() => {
+    fireEvent.focus(trigger);
+  });
 }
 
 describe('EngineBadge — variants', () => {
@@ -82,5 +95,77 @@ describe('EngineBadge — resolveBadgeState (pure)', () => {
   });
   it('legacy by default', () => {
     expect(resolveBadgeState(makeSession()).variant).toBe('legacy');
+  });
+});
+
+// ──────────────────────────────────────────────────────────────────────────
+// Tranche F.5 — tooltip enrichi avec `Importé depuis : …` quand au moins
+// une entité liée (projectile / optique) porte un `importedFrom`. La
+// résolution lit les stores réels via `resolveSessionImportedFrom`.
+// ──────────────────────────────────────────────────────────────────────────
+describe('EngineBadge — Tranche F.5 imported-from tooltip', () => {
+  beforeEach(() => localStorage.clear());
+  afterEach(() => localStorage.clear());
+
+  it('does not render the imported-from line when no entity is imported', () => {
+    renderBadge(makeSession());
+    openTooltip();
+    expect(screen.queryAllByTestId('engine-badge-imported-from').length).toBe(0);
+  });
+
+  it('renders the projectile imported-from line when only the projectile is imported', () => {
+    const p = projectileStore.create({
+      brand: 'JSB', model: 'Hades', weight: 16.2, bc: 0.025, caliber: '.22',
+      importedFrom: 'strelok',
+    });
+    renderBadge(makeSession({ projectileId: p.id }));
+    openTooltip();
+    const projLines = screen.getAllByTestId('imported-from-projectile');
+    expect(projLines.length).toBeGreaterThan(0);
+    expect(screen.queryAllByTestId('imported-from-optic').length).toBe(0);
+    expect(projLines[0].textContent).toContain('Strelok');
+  });
+
+  it('renders the optic imported-from line when only the optic is imported', () => {
+    const o = opticStore.create({
+      name: 'Element Helix', clickUnit: 'MRAD', clickValue: 0.1,
+      importedFrom: 'json-user',
+    });
+    renderBadge(makeSession({ opticId: o.id }));
+    openTooltip();
+    const opticLines = screen.getAllByTestId('imported-from-optic');
+    expect(opticLines.length).toBeGreaterThan(0);
+    expect(screen.queryAllByTestId('imported-from-projectile').length).toBe(0);
+    expect(opticLines[0].textContent).toContain('JSON utilisateur');
+  });
+
+  it('renders BOTH lines when projectile + optic are both imported', () => {
+    const p = projectileStore.create({
+      brand: 'JSB', model: 'Hades', weight: 16.2, bc: 0.025, caliber: '.22',
+      importedFrom: 'chairgun',
+    });
+    const o = opticStore.create({
+      name: 'Athlon Helos', clickUnit: 'MRAD', clickValue: 0.1,
+      importedFrom: 'airballistik',
+    });
+    renderBadge(makeSession({ projectileId: p.id, opticId: o.id }));
+    openTooltip();
+    expect(screen.getAllByTestId('imported-from-projectile')[0].textContent).toContain('ChairGun');
+    expect(screen.getAllByTestId('imported-from-optic')[0].textContent).toContain('AirBallistik');
+  });
+
+  it('does not crash when the linked entities are missing from the stores', () => {
+    renderBadge(makeSession({ projectileId: 'ghost-1', opticId: 'ghost-2' }));
+    openTooltip();
+    expect(screen.queryAllByTestId('engine-badge-imported-from').length).toBe(0);
+  });
+
+  it('keeps the existing variant logic untouched (legacy → Legacy)', () => {
+    const p = projectileStore.create({
+      brand: 'JSB', model: 'Hades', weight: 16.2, bc: 0.025, caliber: '.22',
+      importedFrom: 'strelok',
+    });
+    renderBadge(makeSession({ projectileId: p.id }));
+    expect(screen.getByText('Legacy')).toBeInTheDocument();
   });
 });

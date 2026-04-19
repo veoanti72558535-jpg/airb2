@@ -855,6 +855,9 @@ const fr = {
   'ballisticTable.empty': 'Aucune ligne dans cette plage — élargissez la distance ou réduisez le pas.',
   'ballisticTable.compact': 'Compact',
   'ballisticTable.advanced': 'Avancé',
+  'ballisticTable.nearTag': 'NZ',
+  'ballisticTable.farTag': 'FZ',
+  'ballisticTable.zeroLegend': 'NZ = Near Zero · FZ = Far Zero (ligne approchée à ±½ pas)',
 
   // Reticle Assist (Tranche I) — aide de lecture, pas un nouveau moteur
   'reticleAssist.title': 'Assistant réticule',

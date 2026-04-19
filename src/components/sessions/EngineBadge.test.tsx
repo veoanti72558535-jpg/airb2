@@ -44,6 +44,18 @@ function renderBadge(session: Session) {
   );
 }
 
+/**
+ * Radix Tooltip ne rend son contenu qu'à l'ouverture. En jsdom, on déclenche
+ * l'ouverture via `focus` sur le trigger (le pattern `pointerenter` n'est pas
+ * fiable sans pointer events). `act` autour pour les state updates.
+ */
+function openTooltip() {
+  const trigger = screen.getByLabelText(/Moteur:|Engine:/);
+  act(() => {
+    fireEvent.focus(trigger);
+  });
+}
+
 describe('EngineBadge — variants', () => {
   it('renders Legacy badge for a modern legacy session', () => {
     renderBadge(makeSession({ profileId: 'legacy' }));

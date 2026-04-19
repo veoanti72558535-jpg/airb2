@@ -15,6 +15,8 @@ import {
   Layers,
   Database,
   Filter as FilterIcon,
+  Star,
+  Clock,
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
@@ -29,6 +31,7 @@ import { calToken, buildCaliberCounts } from '@/lib/caliber';
 import { Projectile, ProjectileType } from '@/lib/types';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import { useVirtualList } from '@/hooks/use-virtual-list';
+import { useProjectilePrefs } from '@/hooks/use-projectile-prefs';
 
 /**
  * Tranches L + M — sélecteur projectile avancé pour QuickCalc.

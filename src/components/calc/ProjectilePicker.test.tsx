@@ -1,16 +1,37 @@
 import React from 'react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { act, render, screen, fireEvent, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { I18nProvider } from '@/lib/i18n';
 import { ThemeProvider } from '@/lib/theme';
-import { ProjectilePicker, pickerHasBcZones, pickerIsImported } from './ProjectilePicker';
+import {
+  ProjectilePicker,
+  pickerHasBcZones,
+  pickerIsImported,
+  __PICKER_INTERNAL,
+} from './ProjectilePicker';
 import type { Projectile } from '@/lib/types';
 
 /**
- * Tranche L — tests for the advanced projectile picker.
- * No engine code is exercised here — purely UI selection behavior.
+ * Tranches L + M — tests for the advanced projectile picker.
+ * No engine code is exercised here — purely UI selection behavior + perf.
  */
+
+/** Type into the search input AND flush the internal debounce. */
+function typeSearch(value: string) {
+  fireEvent.change(screen.getByLabelText(/rechercher/i), { target: { value } });
+  act(() => {
+    vi.advanceTimersByTime(__PICKER_INTERNAL.SEARCH_DEBOUNCE_MS + 10);
+  });
+}
+
+beforeEach(() => {
+  vi.useFakeTimers({ shouldAdvanceTime: true });
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 function legacy(over: Partial<Projectile> = {}): Projectile {
   return {

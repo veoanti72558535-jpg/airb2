@@ -776,6 +776,23 @@ const fr = {
   'ballisticTable.empty': 'Aucune ligne dans cette plage — élargissez la distance ou réduisez le pas.',
   'ballisticTable.compact': 'Compact',
   'ballisticTable.advanced': 'Avancé',
+
+  // Reticle Assist (Tranche I) — aide de lecture, pas un nouveau moteur
+  'reticleAssist.title': 'Assistant réticule',
+  'reticleAssist.subtitle': 'Corrections lues dans l\'unité du réticule lié',
+  'reticleAssist.none': 'Aucune aide disponible',
+  'reticleAssist.noOptic': 'Sélectionnez une optique pour activer l\'assistant.',
+  'reticleAssist.noReticle': 'Aucun réticule lié à cette optique. Liez-en un depuis la fiche optique.',
+  'reticleAssist.reticleMissing': 'Le réticule lié est introuvable. Modifiez l\'optique pour le retirer ou en choisir un autre.',
+  'reticleAssist.unit': 'Unité',
+  'reticleAssist.vertical': 'Vertical',
+  'reticleAssist.wind': 'Vent',
+  'reticleAssist.nearestMark': 'Repère proche',
+  'reticleAssist.betweenMarks': 'Entre repères',
+  'reticleAssist.noMarks': 'Aucun repère défini sur ce réticule — affichage en {unit} uniquement.',
+  'reticleAssist.notAvailable': 'Aide repères indisponible pour ce réticule (SFP non calibré).',
+  'reticleAssist.moa': 'MOA',
+  'reticleAssist.mrad': 'MRAD',
 } as const;
 
 const en: Record<keyof typeof fr, string> = {
@@ -1535,6 +1552,23 @@ const en: Record<keyof typeof fr, string> = {
   'ballisticTable.empty': 'No rows in this range — widen the distance or shorten the step.',
   'ballisticTable.compact': 'Compact',
   'ballisticTable.advanced': 'Advanced',
+
+  // Reticle Assist (Tranche I)
+  'reticleAssist.title': 'Reticle assistant',
+  'reticleAssist.subtitle': 'Corrections shown in the linked reticle\'s unit',
+  'reticleAssist.none': 'No assistance available',
+  'reticleAssist.noOptic': 'Select an optic to enable the assistant.',
+  'reticleAssist.noReticle': 'No reticle linked to this optic. Link one from the optic page.',
+  'reticleAssist.reticleMissing': 'Linked reticle not found. Edit the optic to remove or replace it.',
+  'reticleAssist.unit': 'Unit',
+  'reticleAssist.vertical': 'Vertical',
+  'reticleAssist.wind': 'Wind',
+  'reticleAssist.nearestMark': 'Nearest mark',
+  'reticleAssist.betweenMarks': 'Between marks',
+  'reticleAssist.noMarks': 'No marks defined on this reticle — showing {unit} only.',
+  'reticleAssist.notAvailable': 'Mark assistance unavailable for this reticle (SFP not calibrated).',
+  'reticleAssist.moa': 'MOA',
+  'reticleAssist.mrad': 'MRAD',
 };
 
 export const translations = { fr, en } as const;

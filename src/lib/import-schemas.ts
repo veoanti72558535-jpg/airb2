@@ -115,13 +115,44 @@ export const projectileImportSchema = z
     bcModel: importedDragModel.optional(),
     projectileType: importedProjectileType.optional(),
     shape: optionalShortString,
-    caliber: shortString,
+    /**
+     * Caliber : libellé canonique court (ex: ".22", ".22 (5.5mm)"). Rendu
+     * optionnel pour accepter les sources bullets4 qui n'exposent que
+     * `diameterIn`/`diameterMm` — la pipeline dérivera alors le token
+     * canonique via `deriveCaliber()` et marquera l'item `sanitized`.
+     */
+    caliber: shortString.optional(),
     length: finiteNumber.positive().max(200).optional(),
     diameter: finiteNumber.positive().max(50).optional(),
     material: optionalShortString,
     notes: optionalShortString,
     dataSource: optionalShortString,
     customDragTable: dragTableSchema.optional(),
+    // ----- Extension bullets4 (tous optionnels, additifs) -------------------
+    caliberLabel: optionalShortString,
+    diameterMm: finiteNumber.positive().max(50).optional(),
+    diameterIn: finiteNumber.positive().max(2).optional(),
+    weightUnit: importedWeightUnit.optional(),
+    weightGrains: finiteNumber.positive().max(1000).optional(),
+    weightGrams: finiteNumber.positive().max(100).optional(),
+    bcG1: finiteNumber.positive().max(2).optional(),
+    bcG7: finiteNumber.positive().max(2).optional(),
+    /** `null` autorisé : on préserve la distinction "absent" / "vide". */
+    bcZones: z.array(bcZoneSchema).max(20).nullable().optional(),
+    lengthMm: finiteNumber.positive().max(200).nullable().optional(),
+    lengthIn: finiteNumber.positive().max(10).nullable().optional(),
+    sourceDbId: optionalShortString,
+    sourceTable: optionalShortString,
+    /**
+     * `importedFrom` peut être présent dans la source (ex: bullets4 export
+     * pré-tagué `"bullets4-db"`). La pipeline dispose alors d'une info
+     * fiable pour remapper la provenance avant write.
+     */
+    importedFrom: z
+      .enum(['json-user', 'preset-internal', 'strelok', 'chairgun', 'airballistik', 'bullets4-db'])
+      .optional(),
+    /** Forme normalisée bullets4 — accepté en plus de `shape` libre. */
+    shapeNormalised: importedProjectileShape.optional(),
   })
   .strict();
 

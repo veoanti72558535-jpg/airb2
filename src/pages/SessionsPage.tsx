@@ -355,6 +355,15 @@ export default function SessionsPage() {
                 {!selectionMode && (
                   <div className="mt-3 space-y-2">
                     <CalculationMetadataBlock session={s} />
+                    {/* Tranche H — Configurable ballistic table on saved sessions.
+                        Reads frozen results, never re-runs the engine. */}
+                    {s.results && s.results.length > 1 && (
+                      <BallisticTable
+                        rows={s.results}
+                        clickUnit={s.input.clickUnit ?? 'MRAD'}
+                        maxRangeHint={s.input.maxRange}
+                      />
+                    )}
                     <button
                       type="button"
                       onClick={() => setRecalcSource(s)}

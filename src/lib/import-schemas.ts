@@ -134,7 +134,11 @@ export const projectileImportSchema = z
      * `diameterIn`/`diameterMm` — la pipeline dérivera alors le token
      * canonique via `deriveCaliber()` et marquera l'item `sanitized`.
      */
-    caliber: shortString.optional(),
+    /**
+     * Accepte explicitement la chaîne vide `""` (cas bullets4) — la pipeline
+     * dérivera alors un caliber canonique depuis `diameterIn`/`diameterMm`.
+     */
+    caliber: z.string().trim().max(SHORT).optional(),
     length: finiteNumber.positive().max(200).optional(),
     diameter: finiteNumber.positive().max(50).optional(),
     material: optionalShortString,

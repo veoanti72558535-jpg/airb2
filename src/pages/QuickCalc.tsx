@@ -713,6 +713,11 @@ export default function QuickCalc() {
             energyThresholdJ={energyThresholdJ}
           />
 
+          {/* Tranche O — Near / Far Zero, dérivés de `results`. */}
+          {results.length > 1 && (
+            <ZeroIntersectionsCard data={computeZeroIntersections(results)} />
+          )}
+
           {/* Tranche H + J — Configurable ballistic table. Source de vérité
               de la grille d'affichage partagée avec ReticleAssistPanel. */}
           {results.length > 1 && (

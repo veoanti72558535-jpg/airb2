@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { I18nProvider } from '@/lib/i18n';
 import { ImportPreview } from './ImportPreview';
 import type { ProjectileImportPreview } from '@/lib/import-pipeline';

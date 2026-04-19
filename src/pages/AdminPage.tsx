@@ -1,11 +1,14 @@
-import React from 'react';
-import { Shield, Download, Upload, FileText, Database, Wrench, BarChart3 } from 'lucide-react';
+import React, { useState } from 'react';
+import { Shield, Download, Upload, FileText, Database, Wrench, BarChart3, Crosshair, Telescope, Target } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { airgunStore, projectileStore, opticStore, sessionStore, exportAllData } from '@/lib/storage';
 import { motion } from 'framer-motion';
+import { ImportJsonModal } from '@/components/import/ImportJsonModal';
+import type { ImportEntityType } from '@/lib/import-schemas';
 
 export default function AdminPage() {
   const { t } = useI18n();
+  const [importType, setImportType] = useState<ImportEntityType | null>(null);
   const totalItems =
     airgunStore.getAll().length +
     projectileStore.getAll().length +
@@ -57,6 +60,48 @@ export default function AdminPage() {
         </div>
       </div>
 
+      {/* Imports JSON (Tranche F.3) */}
+      <div className="surface-elevated p-4 space-y-2">
+        <div className="flex items-start gap-3">
+          <div className="p-2 rounded-md bg-primary/10 text-primary shrink-0">
+            <Upload className="h-5 w-5" />
+          </div>
+          <div className="flex-1">
+            <div className="text-sm font-medium">{t('admin.import.section')}</div>
+            <div className="text-xs text-muted-foreground mt-0.5">{t('admin.import.sectionDesc')}</div>
+          </div>
+        </div>
+        <div className="flex flex-col gap-2 pt-1">
+          <button
+            type="button"
+            data-testid="admin-import-projectiles"
+            onClick={() => setImportType('projectile')}
+            className="px-3 py-2 bg-primary/10 text-primary rounded-md text-xs font-medium hover:bg-primary/20 transition-colors flex items-center gap-2"
+          >
+            <Target className="h-3.5 w-3.5" />
+            {t('admin.import.projectiles')}
+          </button>
+          <button
+            type="button"
+            data-testid="admin-import-optics"
+            onClick={() => setImportType('optic')}
+            className="px-3 py-2 bg-primary/10 text-primary rounded-md text-xs font-medium hover:bg-primary/20 transition-colors flex items-center gap-2"
+          >
+            <Telescope className="h-3.5 w-3.5" />
+            {t('admin.import.optics')}
+          </button>
+          <button
+            type="button"
+            data-testid="admin-import-reticles"
+            onClick={() => setImportType('reticle')}
+            className="px-3 py-2 bg-primary/10 text-primary rounded-md text-xs font-medium hover:bg-primary/20 transition-colors flex items-center gap-2"
+          >
+            <Crosshair className="h-3.5 w-3.5" />
+            {t('admin.import.reticles')}
+          </button>
+        </div>
+      </div>
+
       {/* Sections */}
       <div className="space-y-3">
         {sections.map((section, i) => (
@@ -82,6 +127,15 @@ export default function AdminPage() {
           </div>
         ))}
       </div>
+
+      {importType !== null && (
+        <ImportJsonModal
+          entityType={importType}
+          source="json-user"
+          open={importType !== null}
+          onClose={() => setImportType(null)}
+        />
+      )}
     </motion.div>
   );
 }

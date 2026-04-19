@@ -40,6 +40,8 @@ import { ZeroingSection } from '@/components/calc/ZeroingSection';
 import { ResultsCard } from '@/components/calc/ResultsCard';
 import { BallisticTable } from '@/components/calc/BallisticTable';
 import { ReticleAssistPanel } from '@/components/calc/ReticleAssistPanel';
+import { ZeroIntersectionsCard } from '@/components/calc/ZeroIntersectionsCard';
+import { computeZeroIntersections } from '@/lib/zero-intersections';
 import {
   buildDistanceList,
   defaultConfig,

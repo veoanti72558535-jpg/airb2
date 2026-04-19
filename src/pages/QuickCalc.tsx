@@ -711,28 +711,27 @@ export default function QuickCalc() {
             energyThresholdJ={energyThresholdJ}
           />
 
-          {/* Tranche H — Configurable ballistic table. Reads the same engine
-              results, no recomputation. Collapsed by default to keep mobile
-              tidy. */}
+          {/* Tranche H + J — Configurable ballistic table. Source de vérité
+              de la grille d'affichage partagée avec ReticleAssistPanel. */}
           {results.length > 1 && (
             <BallisticTable
               rows={results}
               clickUnit={form.clickUnit}
               maxRangeHint={form.useRange ? form.maxRange : form.targetDistance}
               energyThresholdJ={energyThresholdJ}
+              initialConfig={tableConfig}
+              onConfigChange={setTableConfig}
             />
           )}
 
-          {/* Tranche I — Assistant de correction réticule. Aide de lecture
-              dans l'unité du réticule lié à l'optique. Aucun recalcul moteur,
-              aucune subtension dynamique. Replié par défaut. */}
+          {/* Tranche I + J — Assistant de correction réticule. Consomme
+              exactement la même grille de distances que la BallisticTable
+              ci-dessus afin d'éviter toute divergence silencieuse. */}
           {results.length > 1 && (
             <ReticleAssistPanel
               optic={form.opticId ? optics.find(o => o.id === form.opticId) ?? null : null}
               results={results}
-              distances={buildDistanceList(
-                defaultConfig(form.useRange ? form.maxRange : form.targetDistance),
-              ).filter(d => d > 0)}
+              distances={buildDistanceList(tableConfig).filter(d => d > 0)}
             />
           )}
 

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { I18nProvider } from '@/lib/i18n';
 import { EngineBadge, resolveBadgeState } from '@/components/sessions/EngineBadge';

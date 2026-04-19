@@ -5,6 +5,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { I18nProvider } from '@/lib/i18n';
 import { ThemeProvider } from '@/lib/theme';
 import ProjectilesPage, { hasBcZones, isEnrichedProjectile } from '@/pages/ProjectilesPage';
+import { projectileStore } from '@/lib/storage';
 import type { Projectile } from '@/lib/types';
 
 /**
@@ -71,8 +72,19 @@ function makeEnrichedProjectile(over: Partial<Projectile> = {}): Projectile {
   };
 }
 
+/**
+ * Seed direct du cache mémoire du `projectileStore` (Tranche IDB).
+ *
+ * Avant la migration vers IndexedDB, le store relisait `localStorage` à
+ * chaque `getAll()` — il suffisait donc de poser la clé `pcp-projectiles`.
+ * Désormais le store s'appuie sur un cache mémoire hydraté au bootstrap ;
+ * en test on by-pass le bootstrap async et on hydrate directement, ce qui
+ * reste cohérent : ces tests valident la couche présentation, pas la
+ * persistance (couverte par projectile-repo.test.ts).
+ */
 function seed(projectiles: Projectile[]) {
-  localStorage.setItem('pcp-projectiles', JSON.stringify(projectiles));
+  (projectileStore as unknown as { __hydrate: (items: Projectile[]) => void })
+    .__hydrate(projectiles);
 }
 
 function renderApp() {

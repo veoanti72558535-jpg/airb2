@@ -183,6 +183,13 @@ export default function QuickCalc() {
     () => computeZeroIntersections(results),
     [results],
   );
+  // Tranche R — Overlay PBR pour le mini-graphe : on réutilise la zone vitale
+  // persistée localement et le helper pur. Aucune duplication de physique.
+  const { vitalZoneM } = usePbrPrefs();
+  const pbrOverlay = useMemo(
+    () => computePointBlankRange(results, vitalZoneM),
+    [results, vitalZoneM],
+  );
   useEffect(() => {
     const refresh = () => {
       const s = getSettings();

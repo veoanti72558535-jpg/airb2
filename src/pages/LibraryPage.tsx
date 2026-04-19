@@ -1,11 +1,12 @@
 import React from 'react';
-import { BookOpen, Target, Zap, Eye, Music } from 'lucide-react';
+import { BookOpen, Target, Zap, Eye, Music, Crosshair } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { motion } from 'framer-motion';
 import AirgunsPage from './AirgunsPage';
 import ProjectilesPage from './ProjectilesPage';
 import OpticsPage from './OpticsPage';
 import TunesPage from './TunesPage';
+import ReticlesPage from './ReticlesPage';
 import { cn } from '@/lib/utils';
 import { useUrlFilter } from '@/hooks/use-url-filter';
 
@@ -14,6 +15,7 @@ const tabs = [
   { key: 'tunes', icon: Music, labelKey: 'library.tabs.tunes' as const },
   { key: 'projectiles', icon: Zap, labelKey: 'library.tabs.projectiles' as const },
   { key: 'optics', icon: Eye, labelKey: 'library.tabs.optics' as const },
+  { key: 'reticles', icon: Crosshair, labelKey: 'library.tabs.reticles' as const },
 ] as const;
 
 type TabKey = typeof tabs[number]['key'];
@@ -58,6 +60,7 @@ export default function LibraryPage() {
       {activeTab === 'tunes' && <TunesPage />}
       {activeTab === 'projectiles' && <ProjectilesPage />}
       {activeTab === 'optics' && <OpticsPage />}
+      {activeTab === 'reticles' && <ReticlesPage />}
     </motion.div>
   );
 }

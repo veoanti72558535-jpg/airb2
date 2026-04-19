@@ -253,7 +253,10 @@ describe('ProjectilePicker — sort', () => {
   ];
 
   function rowsInOrder() {
-    return screen.getAllByRole('option').map(el => el.getAttribute('data-projectile-id'));
+    return screen
+      .getAllByRole('option')
+      .filter(el => el.getAttribute('data-projectile-id') !== null)
+      .map(el => el.getAttribute('data-projectile-id'));
   }
 
   it('sorts by brand alphabetically', () => {

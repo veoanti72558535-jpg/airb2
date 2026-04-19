@@ -6,6 +6,7 @@ import { useUnits } from '@/hooks/use-units';
 import { DetailLayout, DetailRow, DetailSection } from '@/components/library/DetailLayout';
 import { LinkedSessions } from '@/components/library/LinkedSessions';
 import { NotFoundDetail } from '@/components/library/NotFoundDetail';
+import { Bullets4ProjectileDetails } from '@/components/projectiles/Bullets4ProjectileDetails';
 
 export default function ProjectileDetailPage() {
   const { id = '' } = useParams<{ id: string }>();
@@ -81,6 +82,8 @@ export default function ProjectileDetailPage() {
           </p>
         </DetailSection>
       )}
+
+      <Bullets4ProjectileDetails projectile={p} />
 
       <LinkedSessions field="projectileId" id={p.id} />
 

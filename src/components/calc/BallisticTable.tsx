@@ -43,6 +43,12 @@ interface Props {
   defaultOpen?: boolean;
   /** Optional title override; falls back to `ballisticTable.title`. */
   title?: string;
+  /**
+   * Tranche O — Optional Near/Far Zero distances (in metres) to highlight
+   * the corresponding rows in the table. Purely visual; never recomputed.
+   */
+  nearZeroDistance?: number | null;
+  farZeroDistance?: number | null;
 }
 
 const COLUMN_LABEL_KEYS: Record<BallisticTableColumn, TranslationKey> = {

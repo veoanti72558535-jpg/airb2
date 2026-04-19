@@ -50,7 +50,9 @@ export interface ImportSanitizationNote {
   code:
     | 'drag-law-replaced'
     | 'reticle-unit-canonicalised'
-    | 'unknown-field-stripped';
+    | 'unknown-field-stripped'
+    | 'caliber-derived-from-diameter'
+    | 'imported-from-remapped';
   /** Message lisible (FR) — non i18n pour l'instant, factorisable plus tard. */
   message: string;
   /** Champ touché. */

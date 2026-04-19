@@ -1713,6 +1713,9 @@ const en: Record<keyof typeof fr, string> = {
   'ballisticTable.empty': 'No rows in this range — widen the distance or shorten the step.',
   'ballisticTable.compact': 'Compact',
   'ballisticTable.advanced': 'Advanced',
+  'ballisticTable.nearTag': 'NZ',
+  'ballisticTable.farTag': 'FZ',
+  'ballisticTable.zeroLegend': 'NZ = Near Zero · FZ = Far Zero (snapped to closest row within ±½ step)',
 
   // Reticle Assist (Tranche I)
   'reticleAssist.title': 'Reticle assistant',

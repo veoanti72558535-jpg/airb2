@@ -1427,6 +1427,32 @@ const en: Record<keyof typeof fr, string> = {
   'admin.import.reticles': 'Import reticles (JSON)',
   'admin.import.section': 'JSON imports',
   'admin.import.sectionDesc': 'Preview is mandatory. Duplicates and rejects are never written.',
+
+  // Reticles (Tranche F.4)
+  'reticles.title': 'Reticles Library',
+  'reticles.add': 'Add Reticle',
+  'reticles.empty': 'No reticles yet. Import some from Admin or add one manually.',
+  'reticles.open': 'Open reticle',
+  'reticles.brand': 'Brand',
+  'reticles.model': 'Model',
+  'reticles.type': 'Type',
+  'reticles.unit': 'Unit',
+  'reticles.subtension': 'Subtension',
+  'reticles.focalPlane': 'Focal plane',
+  'reticles.marks': 'Marks',
+  'reticles.importedFrom': 'Imported from',
+  'reticles.placeholder': 'No image',
+  'reticles.backToList': 'Back to reticles',
+  'reticles.detail.title': 'Reticle detail',
+  'reticles.image': 'Main image',
+  'reticles.image.none': 'No image — use the button below.',
+  'reticles.image.upload': 'Add image',
+  'reticles.image.replace': 'Replace image',
+  'reticles.image.remove': 'Remove image',
+  'reticles.image.invalidType': 'Unsupported format (PNG, JPG or WebP only).',
+  'reticles.image.tooLarge': 'Image too large (max 5 MB).',
+  'reticles.image.processError': 'Failed to process the image.',
+  'library.tabs.reticles': 'Reticles',
 };
 
 export const translations = { fr, en } as const;

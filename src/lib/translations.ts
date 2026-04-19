@@ -745,6 +745,7 @@ const fr = {
   'import.fileTooLarge': 'Fichier trop volumineux (> 1 Mo).',
   'import.writeCount': 'Importer {count}',
   'import.previewRequired': 'Sélectionnez un fichier puis cliquez sur Aperçu pour valider avant import.',
+  'import.moreItems': 'autres (non affichés)',
   'admin.import.projectiles': 'Importer des projectiles (JSON)',
   'admin.import.optics': 'Importer des optiques (JSON)',
   'admin.import.reticles': 'Importer des réticules (JSON)',

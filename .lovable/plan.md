@@ -1,75 +1,58 @@
 
+L'utilisateur a fourni le 5ème APK manquant : `Chairgun.Elite.v.4.7.2.b.172.minSDK23.orig_resigned.apks`. Le périmètre APK.A1 + APK.A2 est désormais complet avec les 5 artefacts.
 
-## Analyse de la demande
+## Plan d'exécution Tranche APK.A1 + APK.A2
 
-L'utilisateur a uploadé `chairgun-elite-2.apk` et demande d'extraire les bases de données projectiles, optiques et réticules au format JSON spécifié précédemment.
+### Artefacts (5 APK / bundles)
+1. `Chairgun.Elite.v.4.7.2.b.172.minSDK23.orig_resigned.apks` (nouveau — bundle .apks)
+2. `ChairGun-1.3.7-2.apk`
+3. `com.jetlab.chairgunelite.apk`
+4. `MERO_1.2.5_APKPure-2.xapk`
+5. `strelok-pro-v6.8.8-mod-lenov.ru.apk`
 
-## Faisabilité technique
+### Étape 1 — Extraction & préparation
+- `lov-copy` les 5 fichiers vers `/tmp/apk-analysis/`
+- Décompresser `.apks` (split bundle) et `.xapk` (zip multi-APK + OBB) → identifier APK base
+- `unzip -l` sur chaque APK pour vue d'ensemble structurelle
 
-L'extraction APK nécessite :
-1. Décompression ZIP de l'APK
-2. Inspection de `assets/`, `res/raw/`, `databases/`
-3. Lecture des bases SQLite (`sqlite3` CLI ou Python `sqlite3`)
-4. Parsing JSON/XML embarqués
-5. Normalisation vers les schémas définis (Tranche D — sanitisation `bcModel`)
-6. Conversions d'unités (grains, mm, m/s)
-7. Génération des fichiers JSON + rapport markdown
+### Étape 2 — Inventaire APK.A1
+Pour chaque APK :
+- `aapt2 dump badging` (via `nix run nixpkgs#aapt`) → package, version, versionCode, minSdk, targetSdk, permissions, ABIs
+- `aapt2 dump xmltree` sur AndroidManifest.xml → activités, services, providers significatifs
+- Liste `lib/<abi>/*.so` + `strings` ciblés balistique
+- Identification assets/raw (`.db`, `.json`, `.csv`, `.xml`)
+- Détection obfuscation (R8/ProGuard via classes `a.class`, `b.class`)
 
-Tous ces outils sont disponibles dans le sandbox Lovable (`unzip`, `python3` avec `sqlite3`, `jq`). C'est exactement le cas d'usage "non-build task" couvert par `code--exec`.
+### Étape 3 — Cartographie APK.A2
+Pour chaque APK :
+- `strings classes*.dex | grep -iE "ballist|drag|bc|G1|G7|zero|PBR|wind|atmos|reticle|click|MOA|MIL|mrad|projectile|scope|turret"`
+- Identification SQLite embarquées (schemas via `sqlite3 .schema`, sans dump propriétaire)
+- Distinction certitudes / hypothèses / incertitudes
+- Découpage logique : UI / métier / tables / natif
 
-## Mode actuel
+### Étape 4 — Lecture comparative AirBallistik
+Tableau markdown synthétique des écarts.
 
-Je suis en mode plan (read-only). Je ne peux pas exécuter `code--exec` ni `lov-copy`. Une fois ce plan approuvé, je bascule en mode default et j'exécute la chaîne d'extraction.
+### Étape 5 — Documentation
+Création dans `docs/apk-analysis/` :
+- `README.md` — vue d'ensemble, niveau de confiance global
+- `inventory.md` — APK.A1 par APK
+- `ballistic-mapping.md` — APK.A2 par APK
+- `comparison-airballistik.md` — tableau comparatif
+- `limits-and-recommendations.md` — limites, risques, suites APK.A3/A4
 
-## Plan d'exécution
+### Garanties de périmètre
+- **Aucune** modification de `src/` (code produit AirBallistik)
+- **Aucun** changement moteur, EngineBadge, QuickCalc, Sessions, Compare, Routes, MERO
+- Tests AirBallistik restent à 786/786
+- Tous artefacts dans `docs/apk-analysis/` uniquement
 
-### Étape 1 — Copie & inspection structurelle
-- `lov-copy user-uploads://chairgun-elite-2.apk /tmp/chairgun.apk`
-- `unzip -l` pour lister le contenu
-- `unzip -d /tmp/chairgun_extracted/` pour décompresser
-- Lister `assets/`, `res/raw/`, `databases/`, identifier `.db`, `.json`, `.xml`, `.csv`
+### Points sensibles
+1. **Légal** : ChairGun (Hawke), MERO, Strelok Pro = propriétaires. Cartographie structurelle seulement, pas d'extraction massive de code/données protégées. Mention "analyse interne, usage personnel".
+2. **Strelok Pro modé** : version non officielle — fiabilité d'analyse réduite, signalée explicitement.
+3. **Obfuscation** : ChairGun Elite et Strelok Pro probablement obfusqués (R8). Cartographie partielle attendue.
+4. **Bundle .apks** : peut contenir plusieurs splits (base + config + locale). Analyse focalisée sur le split base.
+5. **Fichiers chiffrés / SQLCipher** : signalés sans tentative de déchiffrement.
 
-### Étape 2 — Analyse des bases de données
-- Pour chaque `.db` / `.sqlite` trouvé : `sqlite3 file.db ".schema"` puis `.tables`
-- Identifier les tables candidates : projectiles (pellets/slugs), optiques (scopes), réticules
-- Compter les lignes par table
-- Si fichiers JSON/XML : `head` + `jq`/`xmllint`
-
-### Étape 3 — Extraction & normalisation (Python)
-Script `/tmp/extract_chairgun.py` qui :
-- Lit les tables identifiées via `sqlite3`
-- Mappe les colonnes vers les schémas cibles (`Projectile`, `Optic`, `Reticle`)
-- Convertit les unités (fps→m/s, inch→mm, gram→grain si nécessaire)
-- Applique la politique Tranche D : `bcModel` non-whitelisté → remap `G1` + note
-- Normalise les calibres au format `.NNN`
-- Dédoublonne (brand+model+caliber+weight pour projectiles ; name pour optiques)
-- Omet les champs vides (pas de `null`/`""`)
-
-### Étape 4 — Génération des livrables
-Écriture dans `/mnt/documents/chairgun-elite-2/` :
-- `projectiles.json`
-- `optics.json`
-- `reticles.json` (si table réticules trouvée, sinon documenter l'absence dans le rapport)
-- `extraction-report.md` (méthode, comptes, rejets, remappings, conversions, mentions copyright)
-
-### Étape 5 — QA & livraison
-- Validation JSON (`jq empty`)
-- Comptage final par catégorie
-- `<lov-artifact>` pour chaque fichier
-- Compte rendu technique détaillé au format strict habituel
-
-## Points sensibles à signaler
-
-1. **Copyright** : la base de données ChairGun Elite est propriétaire (Hawke Optics). Les données extraites seront signalées dans le rapport comme "potentiellement protégées" — usage personnel uniquement.
-2. **Réticules** : ChairGun stocke généralement les subtensions de réticules dans des tables dédiées. Si trouvées, livrées dans `reticles.json` (entité non encore créée dans AirBallistik V1).
-3. **Chiffrement** : si l'APK utilise une base SQLCipher ou un format propriétaire, je le signalerai et n'inventerai aucune donnée.
-4. **Aucun changement code AirBallistik** : extraction pure, zéro modification du repo.
-
-## Périmètre strict
-
-- Tâche de data extraction (`exec-non-build`), pas une tranche fonctionnelle
-- Aucune modification de `src/`
-- Aucun test ajouté
-- Aucun changement UI, aucun sélecteur moteur, aucune refonte solver
-- Tests verts restent à 430/430
-
+### Livrable final
+5 fichiers markdown dans `docs/apk-analysis/` + compte rendu technique détaillé en fin de réponse, avec confirmation explicite qu'aucun code produit n'a été modifié et que les tests restent à 786/786.

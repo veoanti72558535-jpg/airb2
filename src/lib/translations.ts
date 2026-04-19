@@ -1566,6 +1566,10 @@ const en: Record<keyof typeof fr, string> = {
   'compare.tableA': 'Table A',
   'compare.tableB': 'Table B',
 
+  // Compare — Tranche S: comparative zero / near / far / PBR readout
+  'compare.pbrZeroTitle': 'Zero & PBR',
+  'compare.zeroRange': 'Zero',
+
   'compare.groupProjectile': 'Projectile',
   'compare.groupWeapon': 'Weapon',
   'compare.groupOptic': 'Optic',

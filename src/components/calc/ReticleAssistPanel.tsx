@@ -117,7 +117,7 @@ export function ReticleAssistPanel({
               {assist.degraded === 'sfp-unsupported' && (
                 <div
                   data-testid="ra-degraded-sfp"
-                  className="flex items-start gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 p-2 text-[11px] text-amber-700 dark:text-amber-400"
+                  className="flex items-start gap-2 rounded-md border border-warning/40 bg-warning/10 p-2 text-[11px] text-warning"
                 >
                   <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
                   <span>{t('reticleAssist.notAvailable')}</span>
@@ -214,7 +214,7 @@ function EmptyState({
       className={cn(
         'rounded-md border p-3 text-[11px]',
         tone === 'warning'
-          ? 'border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400'
+          ? 'border-warning/40 bg-warning/10 text-warning'
           : 'border-dashed border-border bg-muted/20 text-muted-foreground italic',
       )}
     >

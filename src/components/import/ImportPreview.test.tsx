@@ -93,15 +93,16 @@ describe('ImportPreview', () => {
     expect(values).toEqual(expect.arrayContaining(['4', '1']));
   });
 
-  it('renders the sanitisation note for sanitized items', async () => {
-    const { default: userEvent } = await import('@testing-library/user-event');
+  it('renders the sanitisation note for sanitized items', () => {
     render(
       <I18nProvider>
         <ImportPreview preview={makePreview()} />
       </I18nProvider>,
     );
     // Sections are collapsed by default (except `rejected`) — open it first.
-    await userEvent.setup().click(screen.getByTestId('section-sanitized').querySelector('button')!);
+    fireEvent.click(
+      screen.getByTestId('section-sanitized').querySelector('button')!,
+    );
     expect(
       screen.getByText(/Drag law .* SLG1 .* non publique/i),
     ).toBeTruthy();

@@ -142,8 +142,8 @@ export interface ExistingForDedup {
 // Clés de dédup
 // ---------------------------------------------------------------------------
 
-function projectileKey(p: { brand: string; model: string; weight: number; caliber: string }): string {
-  return `${p.brand.toLowerCase()}|${p.model.toLowerCase()}|${p.weight}|${p.caliber.toLowerCase()}`;
+function projectileKey(p: { brand: string; model: string; weight: number; caliber?: string }): string {
+  return `${p.brand.toLowerCase()}|${p.model.toLowerCase()}|${p.weight}|${(p.caliber ?? '').toLowerCase()}`;
 }
 
 /**

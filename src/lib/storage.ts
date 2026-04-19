@@ -25,6 +25,30 @@ function save<T>(key: string, data: T[]) {
   localStorage.setItem(key, JSON.stringify(data));
 }
 
+/**
+ * Erreur dédiée au dépassement du quota localStorage. Permet aux
+ * consommateurs (modal d'import notamment) d'afficher un message
+ * actionnable plutôt qu'un simple "fileInvalid".
+ */
+export class StorageQuotaExceededError extends Error {
+  constructor(public readonly storeKey: string, cause?: unknown) {
+    super(`Storage quota exceeded while writing "${storeKey}".`);
+    this.name = 'StorageQuotaExceededError';
+    if (cause !== undefined) (this as { cause?: unknown }).cause = cause;
+  }
+}
+
+function isQuotaError(e: unknown): boolean {
+  if (!e || typeof e !== 'object') return false;
+  const err = e as { name?: string; code?: number };
+  return (
+    err.name === 'QuotaExceededError' ||
+    err.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
+    err.code === 22 ||
+    err.code === 1014
+  );
+}
+
 function generateId(): string {
   return crypto.randomUUID?.() ?? Date.now().toString(36) + Math.random().toString(36).slice(2);
 }
@@ -39,7 +63,12 @@ function createCRUD<T extends { id: string; createdAt: string; updatedAt: string
       const newItem = { ...item, id: generateId(), createdAt: now, updatedAt: now } as T;
       const items = load<T>(key);
       items.push(newItem);
-      save(key, items);
+      try {
+        save(key, items);
+      } catch (e) {
+        if (isQuotaError(e)) throw new StorageQuotaExceededError(key, e);
+        throw e;
+      }
       return newItem;
     },
     /**
@@ -58,7 +87,12 @@ function createCRUD<T extends { id: string; createdAt: string; updatedAt: string
         items.push(fresh);
         created.push(fresh);
       }
-      save(key, items);
+      try {
+        save(key, items);
+      } catch (e) {
+        if (isQuotaError(e)) throw new StorageQuotaExceededError(key, e);
+        throw e;
+      }
       return created;
     },
     update: (id: string, updates: Partial<T>): T | undefined => {

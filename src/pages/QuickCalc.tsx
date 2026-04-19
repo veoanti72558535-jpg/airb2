@@ -156,6 +156,13 @@ export default function QuickCalc() {
    */
   const [previewOriginId, setPreviewOriginId] = useState<string | null>(null);
   const [comparePickerOpen, setComparePickerOpen] = useState(false);
+  // Tranche J — Source de vérité partagée pour la grille d'affichage
+  // (BallisticTable + ReticleAssistPanel). Initialisée paresseusement à
+  // partir de la portée par défaut ; recalibrée à chaque calcul / chargement
+  // de session via l'effet plus bas.
+  const [tableConfig, setTableConfig] = useState<BallisticTableConfig>(() =>
+    defaultConfig(100),
+  );
   // Live mirror of the configured energy threshold so the header chip refreshes
   // when the user changes it in Settings (cross-tab via 'storage' event, or
   // intra-tab via window focus / re-mount).

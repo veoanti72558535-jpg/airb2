@@ -144,7 +144,7 @@ export function ImportPreview({ preview }: ImportPreviewProps) {
         testId="section-ok"
         title={t('import.section.ok')}
         count={ok.length}
-        icon={<CheckCircle2 className="h-3.5 w-3.5 text-success" />}
+        icon={<CheckCircle2 className="h-3.5 w-3.5 text-primary" />}
       >
         {ok.map(item => (
           <li key={`o-${item.index}`} className="text-xs">

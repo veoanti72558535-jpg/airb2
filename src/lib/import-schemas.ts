@@ -127,6 +127,13 @@ export const projectileImportSchema = z
     bc: finiteNumber.positive().max(2).optional(),
     bcModel: importedDragModel.optional(),
     projectileType: importedProjectileType.optional(),
+    /**
+     * Alias bullets4 de `projectileType`. Beaucoup d'exports tiers (et le
+     * normaliseur bullets4) émettent simplement `type`. La pipeline le
+     * remappera vers `projectileType` (sans note de sanitisation : c'est
+     * un alias documenté, pas une correction).
+     */
+    type: importedProjectileType.optional(),
     shape: optionalShortString,
     /**
      * Caliber : libellé canonique court (ex: ".22", ".22 (5.5mm)"). Rendu

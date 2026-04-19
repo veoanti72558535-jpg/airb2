@@ -689,6 +689,18 @@ export default function QuickCalc() {
             energyThresholdJ={energyThresholdJ}
           />
 
+          {/* Tranche H — Configurable ballistic table. Reads the same engine
+              results, no recomputation. Collapsed by default to keep mobile
+              tidy. */}
+          {results.length > 1 && (
+            <BallisticTable
+              rows={results}
+              clickUnit={form.clickUnit}
+              maxRangeHint={form.useRange ? form.maxRange : form.targetDistance}
+              energyThresholdJ={energyThresholdJ}
+            />
+          )}
+
           <div className="rounded-xl border border-border bg-card/60 p-3 space-y-2">
             <label className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium">
               {t('calc.saveSession')}

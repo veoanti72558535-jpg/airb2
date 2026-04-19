@@ -289,15 +289,24 @@ export function ProjectilePicker({
 
   // Stable click handler — does not re-create per row, so memoized rows skip
   // re-rendering when other rows' selection state changes.
+  // Tranche N — sélectionner un projectile pousse aussi son id dans les récents.
   const pickRef = useRef<(id: string) => void>(() => {});
   useEffect(() => {
     pickRef.current = (id: string) => {
+      if (id) pushRecent(id);
       onSelect(id);
       onOpenChange(false);
     };
-  }, [onSelect, onOpenChange]);
+  }, [onSelect, onOpenChange, pushRecent]);
 
   const handleRowPick = useCallback((id: string) => pickRef.current(id), []);
+
+  // Stable favorite toggle — same pattern as pick, keeps rows memoized.
+  const toggleFavRef = useRef<(id: string) => void>(() => {});
+  useEffect(() => {
+    toggleFavRef.current = toggleFavorite;
+  }, [toggleFavorite]);
+  const handleToggleFav = useCallback((id: string) => toggleFavRef.current(id), []);
 
   const isEmptyLibrary = projectiles.length === 0;
 

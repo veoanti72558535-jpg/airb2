@@ -39,6 +39,8 @@ import { DistanceSection } from '@/components/calc/DistanceSection';
 import { ZeroingSection } from '@/components/calc/ZeroingSection';
 import { ResultsCard } from '@/components/calc/ResultsCard';
 import { BallisticTable } from '@/components/calc/BallisticTable';
+import { ReticleAssistPanel } from '@/components/calc/ReticleAssistPanel';
+import { buildDistanceList, defaultConfig } from '@/lib/ballistic-table';
 
 interface FormState {
   // Projectile
@@ -698,6 +700,19 @@ export default function QuickCalc() {
               clickUnit={form.clickUnit}
               maxRangeHint={form.useRange ? form.maxRange : form.targetDistance}
               energyThresholdJ={energyThresholdJ}
+            />
+          )}
+
+          {/* Tranche I — Assistant de correction réticule. Aide de lecture
+              dans l'unité du réticule lié à l'optique. Aucun recalcul moteur,
+              aucune subtension dynamique. Replié par défaut. */}
+          {results.length > 1 && (
+            <ReticleAssistPanel
+              optic={form.opticId ? optics.find(o => o.id === form.opticId) ?? null : null}
+              results={results}
+              distances={buildDistanceList(
+                defaultConfig(form.useRange ? form.maxRange : form.targetDistance),
+              ).filter(d => d > 0)}
             />
           )}
 

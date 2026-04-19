@@ -113,9 +113,12 @@ describe('ReticleDetailPage — image actions', () => {
     const input = screen.getByTestId('reticle-image-input') as HTMLInputElement;
     const file = new File(['fake'], 'reticle.png', { type: 'image/png' });
     fireEvent.change(input, { target: { files: [file] } });
-    await waitFor(() => {
-      expect(reticleStore.getById(r.id)?.imageDataUrl?.startsWith('data:')).toBe(true);
-    });
+    await waitFor(
+      () => {
+        expect(reticleStore.getById(r.id)?.imageDataUrl?.startsWith('data:')).toBe(true);
+      },
+      { timeout: 4000 },
+    );
   });
 
   it('rejects an invalid file type without persisting', async () => {

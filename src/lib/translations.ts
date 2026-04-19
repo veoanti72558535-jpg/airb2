@@ -661,6 +661,15 @@ const fr = {
   'engine.calculatedAtSource.frozen': 'Figée à la sauvegarde',
   'engine.calculatedAtSource.inferredFromUpdated': 'Approximée depuis la dernière modification',
   'engine.calculatedAtSource.inferredFromCreated': 'Approximée depuis la création',
+  // Tranche F.5 — origine d'import affichée dans le tooltip EngineBadge
+  'engine.importedFrom': 'Importé depuis',
+  'engine.importedFrom.projectile': 'Projectile',
+  'engine.importedFrom.optic': 'Optique',
+  'import.source.jsonUser': 'JSON utilisateur',
+  'import.source.presetInternal': 'Preset interne',
+  'import.source.strelok': 'Strelok',
+  'import.source.chairgun': 'ChairGun',
+  'import.source.airballistik': 'AirBallistik',
   'compare.profilesMixedWarning': 'Comparaison entre profils différents — résultats non strictement comparables.',
 
   // Recalculation (Tranche C) — explicit recalc creates a NEW linked copy.

@@ -120,7 +120,7 @@ function createCRUD<T extends { id: string; createdAt: string; updatedAt: string
 
 export const airgunStore = createCRUD<Airgun>(KEYS.airguns);
 export const tuneStore = createCRUD<Tune>(KEYS.tunes);
-export const projectileStore = createCRUD<Projectile>(KEYS.projectiles);
+export const projectileStore = createProjectileStore();
 export const opticStore = createCRUD<Optic>(KEYS.optics);
 /**
  * Tranche F.1 — store CRUD pour l'entité `Reticle`. Suit strictement le

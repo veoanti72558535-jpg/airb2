@@ -135,6 +135,8 @@ export default function ProjectilesPage() {
       if (bf && (p.brand ?? '').toLowerCase() !== bf) return false;
       if (cf && calToken(p.caliber) !== cf) return false;
       if (typeFilter !== 'all' && (p.projectileType ?? 'pellet') !== typeFilter) return false;
+      if (importedFilter && !p.importedFrom) return false;
+      if (bcZonesFilter && !hasBcZones(p)) return false;
       if (tokens.length) {
         const hay = `${p.brand} ${p.model} ${p.notes ?? ''} ${p.caliber} ${p.weight} ${p.bc}`.toLowerCase();
         if (!tokens.every(tok => hay.includes(tok))) return false;
@@ -144,12 +146,16 @@ export default function ProjectilesPage() {
     const sorted = [...list];
     if (sortKey === 'weight') sorted.sort((a, b) => a.weight - b.weight);
     else if (sortKey === 'bc') sorted.sort((a, b) => b.bc - a.bc);
+    else if (sortKey === 'caliber') sorted.sort((a, b) => calToken(a.caliber).localeCompare(calToken(b.caliber)) || `${a.brand} ${a.model}`.localeCompare(`${b.brand} ${b.model}`));
     else sorted.sort((a, b) => `${a.brand} ${a.model}`.localeCompare(`${b.brand} ${b.model}`));
     return sorted;
-  }, [projectiles, searchQuery, brandFilter, caliberFilter, typeFilter, sortKey]);
+  }, [projectiles, searchQuery, brandFilter, caliberFilter, typeFilter, importedFilter, bcZonesFilter, sortKey]);
 
-  const hasAnyFilter = (brandFilter !== null && brandFilter !== '') || (caliberFilter !== null && caliberFilter !== '') || typeFilter !== 'all' || searchQuery.trim() !== '';
-  const resetAllFilters = () => { setBrandFilter(null); setCaliberFilter(null); setSearchQuery(''); setTypeFilter('all'); };
+  const hasAnyFilter = (brandFilter !== null && brandFilter !== '') || (caliberFilter !== null && caliberFilter !== '') || typeFilter !== 'all' || importedFilter || bcZonesFilter || searchQuery.trim() !== '';
+  const resetAllFilters = () => { setBrandFilter(null); setCaliberFilter(null); setSearchQuery(''); setTypeFilter('all'); setImportedFilter(false); setBcZonesFilter(false); };
+
+  const importedCount = useMemo(() => projectiles.filter(p => Boolean(p.importedFrom)).length, [projectiles]);
+  const bcZonesCount = useMemo(() => projectiles.filter(hasBcZones).length, [projectiles]);
 
   const refresh = () => setProjectiles(projectileStore.getAll());
 

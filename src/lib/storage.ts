@@ -183,3 +183,111 @@ export function exportAllData(): string {
     exportedAt: new Date().toISOString(),
   }, null, 2);
 }
+
+// ───────────────────────────────────────────────────────────────────────────
+// Projectile store — cache mémoire write-through vers IndexedDB
+// (Tranche IDB — voir projectile-repo.ts pour les détails de migration).
+// ───────────────────────────────────────────────────────────────────────────
+
+interface ProjectileStoreInternal {
+  getAll: () => Projectile[];
+  getById: (id: string) => Projectile | undefined;
+  create: (item: Omit<Projectile, 'id' | 'createdAt' | 'updatedAt'>) => Projectile;
+  createMany: (
+    items: ReadonlyArray<Omit<Projectile, 'id' | 'createdAt' | 'updatedAt'>>,
+  ) => Projectile[];
+  update: (id: string, updates: Partial<Projectile>) => Projectile | undefined;
+  delete: (id: string) => boolean;
+  /** Hydrate the in-memory cache (called once at boot, see bootstrapStorage). */
+  __hydrate: (items: Projectile[]) => void;
+  /** Test-only — reset the cache to empty. */
+  __resetForTests: () => void;
+}
+
+function createProjectileStore(): ProjectileStoreInternal {
+  let cache: Projectile[] = [];
+
+  const persist = () => {
+    // Snapshot to avoid the writer seeing a later mutation.
+    const snapshot = cache.slice();
+    void writeProjectilesToIdb(snapshot).catch((e) => {
+      console.error('[projectileStore] IDB persist failed', e);
+    });
+  };
+
+  return {
+    getAll: () => cache.slice(),
+    getById: (id) => cache.find((p) => p.id === id),
+    create: (item) => {
+      const now = new Date().toISOString();
+      const fresh = {
+        ...item,
+        id: generateId(),
+        createdAt: now,
+        updatedAt: now,
+      } as Projectile;
+      cache = [...cache, fresh];
+      persist();
+      return fresh;
+    },
+    createMany: (items) => {
+      if (items.length === 0) return [];
+      const now = new Date().toISOString();
+      const created: Projectile[] = items.map((it) => ({
+        ...it,
+        id: generateId(),
+        createdAt: now,
+        updatedAt: now,
+      } as Projectile));
+      cache = [...cache, ...created];
+      persist();
+      return created;
+    },
+    update: (id, updates) => {
+      const idx = cache.findIndex((p) => p.id === id);
+      if (idx === -1) return undefined;
+      const next = {
+        ...cache[idx],
+        ...updates,
+        updatedAt: new Date().toISOString(),
+      } as Projectile;
+      cache = [...cache.slice(0, idx), next, ...cache.slice(idx + 1)];
+      persist();
+      return next;
+    },
+    delete: (id) => {
+      const before = cache.length;
+      cache = cache.filter((p) => p.id !== id);
+      if (cache.length === before) return false;
+      persist();
+      return true;
+    },
+    __hydrate: (items) => {
+      cache = Array.isArray(items) ? items.slice() : [];
+    },
+    __resetForTests: () => {
+      cache = [];
+    },
+  };
+}
+
+/**
+ * Bootstrap à appeler **une seule fois** au démarrage de l'app, AVANT le
+ * premier render. Migre les projectiles localStorage → IDB si nécessaire,
+ * puis hydrate le cache mémoire de `projectileStore`.
+ *
+ * Idempotent : peut être appelé plusieurs fois sans dommage (utile pour
+ * les tests qui réinitialisent l'état).
+ */
+export async function bootstrapStorage(): Promise<void> {
+  try {
+    const items = await migrateProjectilesFromLocalStorageIfNeeded();
+    projectileStore.__hydrate(items);
+  } catch (e) {
+    console.error('[storage] bootstrap failed — projectile store left empty', e);
+    projectileStore.__hydrate([]);
+  }
+}
+
+// Keep IDB key referenced for tooling/debug; not consumed directly here.
+void IDB_PROJECTILES_KEY;

@@ -3,6 +3,11 @@ import {
   sanitizeProjectileForPublic,
   sanitizeSessionForPublic,
 } from './drag-law-policy';
+import {
+  IDB_PROJECTILES_KEY,
+  migrateProjectilesFromLocalStorageIfNeeded,
+  writeProjectilesToIdb,
+} from './projectile-repo';
 
 const KEYS = {
   airguns: 'pcp-airguns',

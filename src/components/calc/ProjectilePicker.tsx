@@ -128,6 +128,8 @@ export function ProjectilePicker({
   addHref = '/library',
 }: Props) {
   const { t } = useI18n();
+  const { favorites, recents, isFavorite, toggleFavorite, pushRecent, clearRecents } =
+    useProjectilePrefs();
 
   const [query, setQuery] = useState('');
   const [caliberFilter, setCaliberFilter] = useState<string>(''); // '' = all
@@ -153,6 +155,13 @@ export function ProjectilePicker({
 
   /** Pre-compute haystacks once per projectiles reference. */
   const searchIndex = useMemo(() => buildIndex(projectiles), [projectiles]);
+
+  /** Lookup map id → projectile, used to resolve favorite/recent ids fast. */
+  const byId = useMemo(() => {
+    const map = new Map<string, Projectile>();
+    for (const p of projectiles) map.set(p.id, p);
+    return map;
+  }, [projectiles]);
 
   /** Caliber availability — only show calibers actually present in the data. */
   const caliberCounts = useMemo(

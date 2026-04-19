@@ -140,3 +140,73 @@ describe('BallisticTable — non-régression engine', () => {
     }
   });
 });
+
+describe('BallisticTable — Tranche P : marqueurs Near/Far Zero', () => {
+  it('marque la ligne la plus proche de nearZeroDistance avec data-zero-marker="near"', () => {
+    renderTable({ nearZeroDistance: 22 });
+    // step=10 → tol=5 → ligne 20 doit être marquée
+    const row = screen.getByTestId('bt-row-20');
+    expect(row.getAttribute('data-zero-marker')).toBe('near');
+  });
+
+  it('marque la ligne la plus proche de farZeroDistance avec data-zero-marker="far"', () => {
+    renderTable({ farZeroDistance: 78 });
+    const row = screen.getByTestId('bt-row-80');
+    expect(row.getAttribute('data-zero-marker')).toBe('far');
+  });
+
+  it('marque deux lignes distinctes pour Near et Far', () => {
+    renderTable({ nearZeroDistance: 18, farZeroDistance: 72 });
+    expect(screen.getByTestId('bt-row-20').getAttribute('data-zero-marker')).toBe('near');
+    expect(screen.getByTestId('bt-row-70').getAttribute('data-zero-marker')).toBe('far');
+  });
+
+  it("n'attribue aucun marqueur lorsque rien n'est fourni", () => {
+    renderTable();
+    const marked = screen
+      .getAllByTestId(/bt-row-/)
+      .filter(r => r.getAttribute('data-zero-marker') != null);
+    expect(marked.length).toBe(0);
+  });
+
+  it("n'attribue aucun marqueur si la distance est hors tolérance ±step/2", () => {
+    renderTable({ nearZeroDistance: 200 });
+    const marked = screen
+      .getAllByTestId(/bt-row-/)
+      .filter(r => r.getAttribute('data-zero-marker') != null);
+    expect(marked.length).toBe(0);
+  });
+
+  it('affiche la légende NZ/FZ uniquement si au moins un marqueur est présent', () => {
+    const { rerender } = renderTable();
+    expect(screen.queryByTestId('bt-zero-legend')).toBeNull();
+    rerender(
+      <I18nProvider>
+        <BallisticTable
+          rows={ROWS}
+          clickUnit="MRAD"
+          maxRangeHint={100}
+          defaultOpen
+          nearZeroDistance={20}
+        />
+      </I18nProvider>,
+    );
+    expect(screen.getByTestId('bt-zero-legend')).toBeInTheDocument();
+  });
+
+  it('ignore null / undefined / NaN sans crasher', () => {
+    renderTable({ nearZeroDistance: null, farZeroDistance: undefined });
+    const marked = screen
+      .getAllByTestId(/bt-row-/)
+      .filter(r => r.getAttribute('data-zero-marker') != null);
+    expect(marked.length).toBe(0);
+  });
+
+  it('expose le marqueur même si la ligne est aussi au-dessus du seuil énergie', () => {
+    // La classe destructive l'emporte visuellement, mais data-zero-marker
+    // reste défini pour permettre aux tests / a11y de tracer l'origine.
+    renderTable({ nearZeroDistance: 20, energyThresholdJ: 0.001 });
+    const row = screen.getByTestId('bt-row-20');
+    expect(row.getAttribute('data-zero-marker')).toBe('near');
+  });
+});

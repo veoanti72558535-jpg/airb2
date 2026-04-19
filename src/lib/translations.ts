@@ -776,6 +776,23 @@ const fr = {
   'ballisticTable.empty': 'Aucune ligne dans cette plage — élargissez la distance ou réduisez le pas.',
   'ballisticTable.compact': 'Compact',
   'ballisticTable.advanced': 'Avancé',
+
+  // Reticle Assist (Tranche I) — aide de lecture, pas un nouveau moteur
+  'reticleAssist.title': 'Assistant réticule',
+  'reticleAssist.subtitle': 'Corrections lues dans l\'unité du réticule lié',
+  'reticleAssist.none': 'Aucune aide disponible',
+  'reticleAssist.noOptic': 'Sélectionnez une optique pour activer l\'assistant.',
+  'reticleAssist.noReticle': 'Aucun réticule lié à cette optique. Liez-en un depuis la fiche optique.',
+  'reticleAssist.reticleMissing': 'Le réticule lié est introuvable. Modifiez l\'optique pour le retirer ou en choisir un autre.',
+  'reticleAssist.unit': 'Unité',
+  'reticleAssist.vertical': 'Vertical',
+  'reticleAssist.wind': 'Vent',
+  'reticleAssist.nearestMark': 'Repère proche',
+  'reticleAssist.betweenMarks': 'Entre repères',
+  'reticleAssist.noMarks': 'Aucun repère défini sur ce réticule — affichage en {unit} uniquement.',
+  'reticleAssist.notAvailable': 'Aide repères indisponible pour ce réticule (SFP non calibré).',
+  'reticleAssist.moa': 'MOA',
+  'reticleAssist.mrad': 'MRAD',
 } as const;
 
 const en: Record<keyof typeof fr, string> = {

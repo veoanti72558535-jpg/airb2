@@ -1721,6 +1721,11 @@ const en: Record<keyof typeof fr, string> = {
   'ballisticTable.nearTag': 'NZ',
   'ballisticTable.farTag': 'FZ',
   'ballisticTable.zeroLegend': 'NZ = Near Zero · FZ = Far Zero (snapped to closest row within ±½ step)',
+  'trajectoryChart.title': 'Trajectory',
+  'trajectoryChart.ariaLabel': 'Mini chart of trajectory and line of sight',
+  'trajectoryChart.los': 'Line of sight',
+  'trajectoryChart.legend': 'Trajectory (—) vs line of sight (- -)',
+  'trajectoryChart.empty': 'Not enough points to plot the trajectory.',
 
   // Reticle Assist (Tranche I)
   'reticleAssist.title': 'Reticle assistant',

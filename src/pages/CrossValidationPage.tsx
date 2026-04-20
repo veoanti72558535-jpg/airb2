@@ -12,6 +12,7 @@ import {
   AlertCircle,
   ChevronLeft,
   FileJson,
+  ClipboardPaste,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -53,6 +54,8 @@ import { runCaseComparison } from '@/lib/cross-validation';
 import type { CaseComparisonResult } from '@/lib/cross-validation';
 import { CrossValidationResults } from '@/components/cross-validation/CrossValidationResults';
 import { TemplatesAndGuides } from '@/components/cross-validation/TemplatesAndGuides';
+import { PasteRowsModal } from '@/components/cross-validation/PasteRowsModal';
+import type { ExternalReferenceRow } from '@/lib/cross-validation/types';
 
 /**
  * BUILD-C bis — Onglet "Validation externe".
@@ -860,6 +863,7 @@ interface ReferenceEditorProps {
 function ReferenceEditor({ index, reference, onChange, onRemove }: ReferenceEditorProps) {
   const { t } = useI18n();
   const meta = reference.meta;
+  const [pasteOpen, setPasteOpen] = useState(false);
 
   const updateMeta = (patch: Partial<UserReference['meta']>) =>
     onChange({ ...reference, meta: { ...reference.meta, ...patch } });
@@ -884,6 +888,17 @@ function ReferenceEditor({ index, reference, onChange, onRemove }: ReferenceEdit
       return;
     }
     onChange({ ...reference, rows: reference.rows.filter((_, i) => i !== idx) });
+  };
+
+  const handlePasteConfirm = (mergedRows: ExternalReferenceRow[]) => {
+    if (mergedRows.length === 0) return;
+    // Map ExternalReferenceRow → UserReferenceRow (same shape, but the
+    // user schema allows an optional `note` field). We strip undefined
+    // metrics implicitly — the schema accepts missing fields.
+    onChange({ ...reference, rows: mergedRows.map((r) => ({ ...r })) });
+    toast.success(
+      t('crossValidation.paste.recognised', { n: mergedRows.length }),
+    );
   };
 
   return (
@@ -1008,10 +1023,22 @@ function ReferenceEditor({ index, reference, onChange, onRemove }: ReferenceEdit
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label className="text-xs">{t('crossValidation.field.rows')}</Label>
-            <Button size="sm" variant="ghost" className="h-7" onClick={addRow}>
-              <Plus className="h-3.5 w-3.5 mr-1" />
-              {t('crossValidation.addRow')}
-            </Button>
+            <div className="flex gap-1">
+              <Button
+                size="sm"
+                variant="secondary"
+                className="h-7"
+                onClick={() => setPasteOpen(true)}
+                data-testid={`cv-paste-${index}`}
+              >
+                <ClipboardPaste className="h-3.5 w-3.5 mr-1" />
+                {t('crossValidation.paste.action')}
+              </Button>
+              <Button size="sm" variant="ghost" className="h-7" onClick={addRow}>
+                <Plus className="h-3.5 w-3.5 mr-1" />
+                {t('crossValidation.addRow')}
+              </Button>
+            </div>
           </div>
           <div className="overflow-x-auto -mx-3 px-3">
             <table className="w-full text-xs">
@@ -1079,6 +1106,16 @@ function ReferenceEditor({ index, reference, onChange, onRemove }: ReferenceEdit
           </p>
         </div>
       </CardContent>
+      <PasteRowsModal
+        open={pasteOpen}
+        onOpenChange={setPasteOpen}
+        existingRows={
+          reference.rows.filter(
+            (r): r is ExternalReferenceRow => typeof r.range === 'number',
+          )
+        }
+        onConfirm={handlePasteConfirm}
+      />
     </Card>
   );
 }

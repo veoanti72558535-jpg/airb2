@@ -74,6 +74,14 @@ export {
   type StoredUserCase,
 } from './user-case-repo';
 
+// BUILD — Quick paste import helper (TSV / CSV / SCSV).
+export {
+  mergeRows,
+  parsePastedRows,
+  type PasteImportResult,
+  type PasteSeparator,
+} from './paste-import';
+
 // BUILD — Templates JSON + guides de saisie source-spécifiques.
 export {
   SOURCE_GUIDES,

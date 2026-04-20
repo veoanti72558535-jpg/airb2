@@ -1093,6 +1093,26 @@ const fr = {
   'crossValidation.templates.use': 'Nouveau cas',
   'crossValidation.templates.opened': 'Template ouvert — édite avant d\'enregistrer.',
 
+  // Paste / quick CSV-TSV import inside a reference editor.
+  'crossValidation.paste.action': 'Coller des lignes',
+  'crossValidation.paste.title': 'Coller des lignes (CSV / TSV)',
+  'crossValidation.paste.subtitle':
+    'Colle un tableau brut depuis ChairGun, Strelok, MERO, un tableur ou une transcription propre. Aucun chiffre n’est inventé.',
+  'crossValidation.paste.inputLabel': 'Texte tabulaire collé',
+  'crossValidation.paste.formats':
+    'Séparateurs acceptés : tabulation, virgule, point-virgule. Header obligatoire (range, drop, velocity, tof, windDrift, energy ou alias).',
+  'crossValidation.paste.errorEmpty': 'Texte vide.',
+  'crossValidation.paste.errorPrefix': 'Parsing impossible :',
+  'crossValidation.paste.recognised': '{{n}} ligne(s) reconnue(s)',
+  'crossValidation.paste.separator': 'Séparateur',
+  'crossValidation.paste.rejected': '{{n}} rejetée(s)',
+  'crossValidation.paste.unknownCols': '{{n}} colonne(s) ignorée(s)',
+  'crossValidation.paste.modeLabel': 'Comportement',
+  'crossValidation.paste.modeAppend': 'Ajouter à la suite',
+  'crossValidation.paste.modeReplace': 'Remplacer les lignes existantes',
+  'crossValidation.paste.cancel': 'Annuler',
+  'crossValidation.paste.confirm': 'Importer',
+
   'crossValidation.guide.title': 'Guides de saisie',
   'crossValidation.guide.intro':
     'Quoi relever, quels pièges éviter, par source. Ne complète pas ce que la source ne montre pas.',
@@ -2299,7 +2319,30 @@ const en: Record<keyof typeof fr, string> = {
     'MERO is NOT exposed as an AirBallistik engine profile (gate active). Comparison = inspection only, no calibration.',
   'crossValidation.guide.mero.limits.assumptions':
     'All MERO assumptions must be listed in `assumptions`.',
+
+  // Paste / quick CSV-TSV import inside a reference editor.
+  'crossValidation.paste.action': 'Paste rows',
+  'crossValidation.paste.title': 'Paste rows (CSV / TSV)',
+  'crossValidation.paste.subtitle':
+    'Paste a raw table from ChairGun, Strelok, MERO, a spreadsheet or a clean transcription. No values are invented.',
+  'crossValidation.paste.inputLabel': 'Pasted tabular text',
+  'crossValidation.paste.formats':
+    'Accepted separators: tab, comma, semicolon. Header required (range, drop, velocity, tof, windDrift, energy or aliases).',
+  'crossValidation.paste.errorEmpty': 'Empty text.',
+  'crossValidation.paste.errorPrefix': 'Cannot parse:',
+  'crossValidation.paste.recognised': '{{n}} row(s) recognised',
+  'crossValidation.paste.separator': 'Separator',
+  'crossValidation.paste.rejected': '{{n}} rejected',
+  'crossValidation.paste.unknownCols': '{{n}} column(s) ignored',
+  'crossValidation.paste.modeLabel': 'Behaviour',
+  'crossValidation.paste.modeAppend': 'Append to existing',
+  'crossValidation.paste.modeReplace': 'Replace existing rows',
+  'crossValidation.paste.cancel': 'Cancel',
+  'crossValidation.paste.confirm': 'Import',
 };
+
+// Append paste-import keys (EN) — kept after object literal would be a TS
+// error, so we inject them inline above. (No-op marker.)
 
 export const translations = { fr, en } as const;
 export type TranslationKey = keyof typeof fr;

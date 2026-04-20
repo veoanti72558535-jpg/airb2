@@ -102,8 +102,8 @@ describe('userCaseRepo', () => {
   });
 
   it('clear() empties the repo', () => {
-    userCaseRepo.create(validCase('a'));
-    userCaseRepo.create(validCase('b'));
+    userCaseRepo.create(validCase('case-a'));
+    userCaseRepo.create(validCase('case-b'));
     expect(userCaseRepo.getAll()).toHaveLength(2);
     userCaseRepo.clear();
     expect(userCaseRepo.getAll()).toEqual([]);

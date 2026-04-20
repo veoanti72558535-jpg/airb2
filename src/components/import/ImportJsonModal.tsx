@@ -243,6 +243,20 @@ export function ImportJsonModal({
               {t('import.previewRequired')}
             </div>
           )}
+
+          {/* Étape 3 — bandeau d'échec persistance IDB (preview conservée). */}
+          {phase === 'error' && (
+            <div
+              data-testid="import-persist-error"
+              className="rounded-md border border-destructive/40 bg-destructive/10 p-2 text-[11px] text-destructive space-y-1"
+              role="alert"
+            >
+              <div className="font-medium">{t('import.persistErrorBanner')}</div>
+              {persistError && (
+                <div className="text-[10px] opacity-80 break-all">{persistError}</div>
+              )}
+            </div>
+          )}
         </div>
 
         <DialogFooter className="gap-2 flex-row sm:justify-between">

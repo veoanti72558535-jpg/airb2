@@ -227,9 +227,17 @@ export interface ValidationIssue {
   message: string;
 }
 
-export type ValidationResult =
-  | { ok: true; case: UserCrossValidationCase }
-  | { ok: false; issues: ValidationIssue[] };
+export interface ValidationSuccess {
+  ok: true;
+  case: UserCrossValidationCase;
+}
+
+export interface ValidationFailure {
+  ok: false;
+  issues: ValidationIssue[];
+}
+
+export type ValidationResult = ValidationSuccess | ValidationFailure;
 
 /**
  * Valide un payload arbitraire (typiquement un parse JSON). Renvoie un

@@ -108,7 +108,7 @@ export default function AdminPage() {
       </div>
 
       {/* Diagnostic stockage projectiles (Tranche Admin Storage Diagnostic) */}
-      <ProjectileStorageDiagnosticCard />
+      <ProjectileStorageDiagnosticCard refreshKey={diagRefreshKey} />
 
       {/* Sections */}
       <div className="space-y-3">

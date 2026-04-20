@@ -50,6 +50,8 @@ import {
   type StoredUserCase,
 } from '@/lib/cross-validation/user-case-repo';
 import { runCaseComparison } from '@/lib/cross-validation';
+import type { CaseComparisonResult } from '@/lib/cross-validation';
+import { CrossValidationResults } from '@/components/cross-validation/CrossValidationResults';
 
 /**
  * BUILD-C bis — Onglet "Validation externe".
@@ -73,6 +75,11 @@ export default function CrossValidationPage() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [draft, setDraft] = useState<UserCrossValidationCase | null>(null);
   const [issues, setIssues] = useState<ValidationIssue[]>([]);
+  const [lastResult, setLastResult] = useState<{
+    result: CaseComparisonResult;
+    title: string;
+    runAt: string;
+  } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const refresh = useCallback(() => {
@@ -186,10 +193,30 @@ export default function CrossValidationPage() {
         }),
         { duration: 6000 },
       );
+      setLastResult({
+        result,
+        title: stored.case.title || stored.case.caseId,
+        runAt: new Date().toLocaleString(),
+      });
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       toast.error(`${t('crossValidation.compareFailed')}: ${msg}`);
     }
+  };
+
+  const handleExportResult = () => {
+    if (!lastResult) return;
+    const blob = new Blob([JSON.stringify(lastResult.result, null, 2)], {
+      type: 'application/json',
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${lastResult.result.caseId || 'case'}.comparison.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -229,6 +256,16 @@ export default function CrossValidationPage() {
           onExport={handleExport}
           onCompare={handleCompare}
           onImportClick={() => fileInputRef.current?.click()}
+        />
+      )}
+
+      {view === 'list' && lastResult && (
+        <CrossValidationResults
+          result={lastResult.result}
+          caseTitle={lastResult.title}
+          runAt={lastResult.runAt}
+          onClose={() => setLastResult(null)}
+          onExportJson={handleExportResult}
         />
       )}
 

@@ -340,6 +340,7 @@ export default function CrossValidationPage() {
             onExport={handleExport}
             onCompare={handleCompare}
             onImportClick={() => fileInputRef.current?.click()}
+            onAiImportClick={aiAvailable ? () => setAiOpen(true) : undefined}
           />
         </>
       )}

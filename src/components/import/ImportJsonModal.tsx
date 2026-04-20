@@ -27,6 +27,7 @@ import {
   reticleStore,
   StorageQuotaExceededError,
   flushProjectilePersistence,
+  retryProjectilePersistence,
 } from '@/lib/storage';
 import type { ImportSource } from '@/lib/types';
 
@@ -72,6 +73,10 @@ export function ImportJsonModal({
   const [phase, setPhase] = useState<Phase>('idle');
   const [persistError, setPersistError] = useState<string | null>(null);
   const isCommitting = phase === 'writing' || phase === 'persisting';
+  // Tranche Import UX — compteur d'items déjà persistés par le `createMany()`
+  // initial. Sert au retry-only-persist et au toast final, qui doit refléter
+  // ce qui a réellement été inséré au cache (et non un nouveau commit).
+  const [committedCount, setCommittedCount] = useState<number>(0);
   // Tranche Import UX — ref miroir de `phase` lisible dans le catch async
   // (où la valeur du closure est figée au moment du await).
   const phaseRef = useRef<Phase>('idle');
@@ -86,6 +91,7 @@ export function ImportJsonModal({
     setPreview(null);
     setPhaseSafe('idle');
     setPersistError(null);
+    setCommittedCount(0);
     if (fileInputRef.current) fileInputRef.current.value = '';
   }, [setPhaseSafe]);
 
@@ -147,6 +153,7 @@ export function ImportJsonModal({
       if (preview.entityType === 'projectile') {
         const data = writable.map((i) => i.data as NormalisedProjectile);
         written = projectileStore.createMany(data).length;
+        setCommittedCount(written);
         // Tranche Import UX — pour les projectiles, on attend la confirmation
         // réelle d'écriture IDB AVANT de déclarer succès. Sans cela, un import
         // massif (~8700 projectiles) annoncerait un succès alors que le write
@@ -182,6 +189,31 @@ export function ImportJsonModal({
       }
     }
   }, [handleClose, isCommitting, onSuccess, preview, setPhaseSafe, t, writableCount]);
+
+  /**
+   * Tranche Import UX — Réessaie UNIQUEMENT la persistance IDB du snapshot
+   * mémoire courant. Ne rejoue PAS le parsing, la sanitisation, la dédup,
+   * ni `createMany()` : les items déjà insérés au cache restent uniques.
+   *
+   * Visible uniquement quand `phase === 'error'` (échec persistance IDB),
+   * jamais en cas d'erreur de validation/import.
+   */
+  const handleRetryPersist = useCallback(async () => {
+    if (phase !== 'error') return;
+    setPersistError(null);
+    setPhaseSafe('persisting');
+    try {
+      await retryProjectilePersistence();
+      toast.success(t('import.success', { count: committedCount }));
+      onSuccess?.(committedCount);
+      handleClose();
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      setPersistError(msg);
+      setPhaseSafe('error');
+      toast.error(t('import.persistFailed'), { duration: 8000 });
+    }
+  }, [committedCount, handleClose, onSuccess, phase, setPhaseSafe, t]);
 
   const titleKey = useMemo(() => {
     if (entityType === 'projectile') return 'import.title.projectiles';
@@ -255,6 +287,35 @@ export function ImportJsonModal({
               {persistError && (
                 <div className="text-[10px] opacity-80 break-all">{persistError}</div>
               )}
+              <div className="text-[10px] opacity-80">
+                {t('import.persistRetryHint')}
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="mt-1 h-7 text-[11px]"
+                data-testid="import-retry-persist-btn"
+                onClick={handleRetryPersist}
+                disabled={isCommitting}
+              >
+                {phase === 'error' && phaseRef.current === 'persisting' ? (
+                  <span className="inline-flex items-center gap-1.5">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    {t('import.persisting')}
+                  </span>
+                ) : (
+                  t('import.retryPersist')
+                )}
+              </Button>
+            </div>
+          )}
+          {phase === 'persisting' && committedCount > 0 && (
+            <div className="text-[10px] text-muted-foreground italic px-1" data-testid="import-retry-in-flight">
+              <span className="inline-flex items-center gap-1.5">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                {t('import.persisting')}
+              </span>
             </div>
           )}
         </div>

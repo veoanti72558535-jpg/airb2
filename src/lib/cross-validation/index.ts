@@ -47,3 +47,8 @@ export {
   type MetricSummary,
   type ReferenceComparisonResult,
 } from './compare';
+
+// NOTE: `fixture-discovery` n'est PAS ré-exporté ici. Il importe
+// `node:fs` et n'est utilisable que côté tests / runner Node. L'importer
+// ici casserait le bundle navigateur. Les consommateurs Node l'importent
+// directement : `import { loadAllCases } from '@/lib/cross-validation/fixture-discovery'`.

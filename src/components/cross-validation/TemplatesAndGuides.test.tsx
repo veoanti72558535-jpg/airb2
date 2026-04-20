@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { I18nProvider } from '@/lib/i18n';
 import { TemplatesAndGuides } from './TemplatesAndGuides';
 import { validateUserCase } from '@/lib/cross-validation';
@@ -39,16 +39,13 @@ describe('TemplatesAndGuides', () => {
   });
 
   it('shows the "Use" button only when onUseTemplate is provided', () => {
-    const { rerender } = renderWithI18n(<TemplatesAndGuides />);
+    renderWithI18n(<TemplatesAndGuides />);
     fireEvent.click(screen.getByTestId('cv-templates-toggle'));
     expect(screen.queryByTestId('cv-template-chairgun-elite-use')).toBeNull();
     expect(screen.getByTestId('cv-template-chairgun-elite-download')).toBeInTheDocument();
 
-    rerender(
-      <I18nProvider>
-        <TemplatesAndGuides onUseTemplate={() => {}} />
-      </I18nProvider>,
-    );
+    cleanup();
+    renderWithI18n(<TemplatesAndGuides onUseTemplate={() => {}} />);
     fireEvent.click(screen.getByTestId('cv-templates-toggle'));
     expect(screen.getByTestId('cv-template-chairgun-elite-use')).toBeInTheDocument();
   });

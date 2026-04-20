@@ -376,6 +376,25 @@ export default function CrossValidationPage() {
           if (fileInputRef.current) fileInputRef.current.value = '';
         }}
       />
+
+      {/* IA-1 — modale d'import screenshot. Montée seulement si Supabase
+          self-hosted est configuré côté frontend. */}
+      {aiAvailable && (
+        <AIImportModal
+          open={aiOpen}
+          onOpenChange={setAiOpen}
+          onConfirm={handleAiConfirm}
+        />
+      )}
+
+      {/* IA-1 — étape d'attache (cas existant ou nouveau cas vide). */}
+      <AttachAiDialog
+        pending={pendingAi}
+        items={items}
+        onCancel={() => setPendingAi(null)}
+        onAttachExisting={handleAttachToExisting}
+        onAttachNew={handleAttachToNew}
+      />
     </div>
   );
 }

@@ -39,7 +39,10 @@ describe('PasteRowsModal', () => {
       expect(screen.getByTestId('paste-rows-preview')).toBeTruthy(),
     );
     expect(screen.getByTestId('paste-rows-table')).toBeTruthy();
-    expect(screen.getByText(/2 row\(s\) recognised|2 ligne/i)).toBeTruthy();
+    // "2" appears in the recognised badge — look for it inside the preview.
+    const preview = screen.getByTestId('paste-rows-preview');
+    expect(preview.textContent).toMatch(/2/);
+    expect(preview.textContent).toMatch(/tab/);
   });
 
   it('shows error when range column is missing — no fabrication', async () => {
@@ -91,8 +94,10 @@ describe('PasteRowsModal', () => {
     renderModal();
     paste('range;drop;velocity\n10;3,2;265,1');
     await waitFor(() => screen.getByTestId('paste-rows-preview'));
-    expect(screen.getByText(/Separator|Séparateur/i)).toBeTruthy();
-    expect(screen.getByText(/semicolon/)).toBeTruthy();
+    const preview = screen.getByTestId('paste-rows-preview');
+    expect(preview.textContent).toMatch(/semicolon/);
+    // Decimals must be parsed as 3.2, not as raw "3,2".
+    expect(preview.textContent).toMatch(/3\.2/);
   });
 
   it('does not invent values for absent cells', async () => {

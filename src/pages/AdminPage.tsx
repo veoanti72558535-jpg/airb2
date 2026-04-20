@@ -10,6 +10,10 @@ import { ProjectileStorageDiagnosticCard } from '@/components/admin/ProjectileSt
 export default function AdminPage() {
   const { t } = useI18n();
   const [importType, setImportType] = useState<ImportEntityType | null>(null);
+  // Tranche Admin Storage UX — bump local pour forcer un refresh du
+  // diagnostic après un import projectile réussi. Pas d'event global,
+  // pas de polling : juste un compteur opaque passé à la carte.
+  const [diagRefreshKey, setDiagRefreshKey] = useState(0);
   const totalItems =
     airgunStore.getAll().length +
     projectileStore.getAll().length +
@@ -104,7 +108,7 @@ export default function AdminPage() {
       </div>
 
       {/* Diagnostic stockage projectiles (Tranche Admin Storage Diagnostic) */}
-      <ProjectileStorageDiagnosticCard />
+      <ProjectileStorageDiagnosticCard refreshKey={diagRefreshKey} />
 
       {/* Sections */}
       <div className="space-y-3">
@@ -138,6 +142,13 @@ export default function AdminPage() {
           source="json-user"
           open={importType !== null}
           onClose={() => setImportType(null)}
+          onSuccess={() => {
+            // Refresh ciblé : seulement pour les imports projectile, car
+            // la carte de diagnostic est strictement centrée sur ce backend.
+            if (importType === 'projectile') {
+              setDiagRefreshKey((k) => k + 1);
+            }
+          }}
         />
       )}
     </motion.div>

@@ -836,6 +836,7 @@ const fr = {
   'admin.diag.yes': 'Oui',
   'admin.diag.no': 'Non',
   'admin.diag.unknown': 'Inconnu',
+  'admin.diag.refreshing': 'Mise à jour…',
 
   // Reticles (Tranche F.4)
   'reticles.title': 'Bibliothèque de réticules',
@@ -1739,6 +1740,7 @@ const en: Record<keyof typeof fr, string> = {
   'admin.diag.yes': 'Yes',
   'admin.diag.no': 'No',
   'admin.diag.unknown': 'Unknown',
+  'admin.diag.refreshing': 'Updating…',
 
   // Reticles (Tranche F.4)
   'reticles.title': 'Reticles Library',

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { HardDrive, AlertTriangle, CheckCircle2, Database, Loader2 } from 'lucide-react';
+import { HardDrive, AlertTriangle, CheckCircle2, Database, Loader2, RefreshCw } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import {
   getProjectileStorageDiagnostic,
@@ -12,28 +12,53 @@ import {
  *
  * S'intègre dans la zone admin/import projectile, mobile-first, libellés
  * compréhensibles pour un usage non-développeur (support self-host).
+ *
+ * Tranche Admin Storage UX — la carte se rafraîchit automatiquement quand
+ * la prop `refreshKey` change (callback opt-in côté parent, par ex. après
+ * un import projectile réellement persisté). Aucun polling : un effet
+ * unique réagit aux changements de cette clé numérique.
  */
-export function ProjectileStorageDiagnosticCard() {
+export interface ProjectileStorageDiagnosticCardProps {
+  /**
+   * Compteur opaque incrémenté par le parent pour forcer une relecture
+   * du diagnostic. Toute valeur différente déclenche un refresh local.
+   */
+  refreshKey?: number;
+}
+
+export function ProjectileStorageDiagnosticCard({
+  refreshKey = 0,
+}: ProjectileStorageDiagnosticCardProps = {}) {
   const { t } = useI18n();
   const [diag, setDiag] = useState<ProjectileStorageDiagnostic | null>(null);
   const [loading, setLoading] = useState(true);
+  // Indicateur visuel discret quand un refresh post-mount est en cours
+  // (le rendu précédent reste affiché pour éviter un flash de "loading…").
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     let alive = true;
+    const isInitial = diag == null;
+    if (!isInitial) setRefreshing(true);
     getProjectileStorageDiagnostic()
       .then((d) => {
-        if (alive) {
-          setDiag(d);
-          setLoading(false);
-        }
+        if (!alive) return;
+        setDiag(d);
+        setLoading(false);
+        setRefreshing(false);
       })
       .catch(() => {
-        if (alive) setLoading(false);
+        if (!alive) return;
+        setLoading(false);
+        setRefreshing(false);
       });
     return () => {
       alive = false;
     };
-  }, []);
+    // `diag` exclu volontairement : on ne reboucle PAS à chaque setDiag,
+    // uniquement quand le parent change `refreshKey`.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshKey]);
 
   const triLabel = (v: 'yes' | 'no' | 'unknown') =>
     v === 'yes' ? t('admin.diag.yes') : v === 'no' ? t('admin.diag.no') : t('admin.diag.unknown');
@@ -48,7 +73,18 @@ export function ProjectileStorageDiagnosticCard() {
           <HardDrive className="h-5 w-5" />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-sm font-medium">{t('admin.diag.title')}</div>
+          <div className="text-sm font-medium flex items-center gap-2 flex-wrap">
+            {t('admin.diag.title')}
+            {refreshing && (
+              <span
+                data-testid="diag-refreshing"
+                className="inline-flex items-center gap-1 text-[10px] font-normal text-muted-foreground"
+              >
+                <RefreshCw className="h-3 w-3 animate-spin" />
+                {t('admin.diag.refreshing')}
+              </span>
+            )}
+          </div>
           <div className="text-xs text-muted-foreground mt-0.5">
             {t('admin.diag.subtitle')}
           </div>

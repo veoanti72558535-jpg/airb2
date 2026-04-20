@@ -47,8 +47,9 @@ describe('CrossValidationResults — global summary', () => {
     // Statut consolidé
     expect(screen.getAllByTestId('cv-status-PASS').length).toBeGreaterThan(0);
     expect(screen.getByText(/My case/)).toBeInTheDocument();
-    // Compteurs
-    expect(screen.getByText('PASS').nextSibling?.textContent ?? '').toMatch(/1/);
+    // Compteurs : la pastille PASS de stat (sibling du label) doit valoir "1"
+    const passLabel = screen.getAllByText('PASS').find((n) => n.tagName === 'DIV');
+    expect(passLabel?.nextElementSibling?.textContent).toBe('1');
   });
 
   it('shows zero references state honestly', () => {

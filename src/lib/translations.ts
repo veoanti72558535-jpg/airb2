@@ -1718,6 +1718,8 @@ const en: Record<keyof typeof fr, string> = {
   'import.persistFailed': 'IndexedDB write failed. No import was confirmed. Retry or check your browser storage.',
   'import.persistRetry': 'Retry save',
   'import.persistErrorBanner': 'IndexedDB write failed. The preview is kept — you can retry.',
+  'import.persistRetryHint': 'Retry only re-runs the IndexedDB save. The import is not replayed and no duplicates are created.',
+  'import.retryPersist': 'Retry save',
   'admin.import.projectiles': 'Import projectiles (JSON)',
   'admin.import.optics': 'Import optics (JSON)',
   'admin.import.reticles': 'Import reticles (JSON)',

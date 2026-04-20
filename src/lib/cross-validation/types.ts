@@ -50,13 +50,23 @@ export type CrossValidationConfidence = 'A' | 'B' | 'C';
 /**
  * Méthode d'extraction de la donnée. Documentaire — aide à juger
  * la reproductibilité plus tard.
+ *
+ * IA-1 (BUILD additif) : ajout `'screenshot-ai'` pour tracer une
+ * extraction issue d'un brouillon IA RELU MANUELLEMENT par un opérateur
+ * (pipeline `ai-extract-rows` Strelok Pro). Strictement additif :
+ *  - aucune valeur existante n'est renommée ni supprimée ;
+ *  - les fixtures sérialisés en `screenshot-retyped` / `manual-entry` /
+ *    `export-csv` / `export-json` / `published-table` restent valides ;
+ *  - l'UI doit afficher cette méthode comme « brouillon IA validé »,
+ *    et la confiance associée est forcée à `'C'` côté schéma utilisateur.
  */
 export type CrossValidationExtractionMethod =
   | 'export-csv'
   | 'export-json'
   | 'screenshot-retyped'
   | 'manual-entry'
-  | 'published-table';
+  | 'published-table'
+  | 'screenshot-ai';
 
 /**
  * Une ligne de sortie d'une référence externe à une distance donnée.

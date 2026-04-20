@@ -863,6 +863,7 @@ interface ReferenceEditorProps {
 function ReferenceEditor({ index, reference, onChange, onRemove }: ReferenceEditorProps) {
   const { t } = useI18n();
   const meta = reference.meta;
+  const [pasteOpen, setPasteOpen] = useState(false);
 
   const updateMeta = (patch: Partial<UserReference['meta']>) =>
     onChange({ ...reference, meta: { ...reference.meta, ...patch } });
@@ -887,6 +888,17 @@ function ReferenceEditor({ index, reference, onChange, onRemove }: ReferenceEdit
       return;
     }
     onChange({ ...reference, rows: reference.rows.filter((_, i) => i !== idx) });
+  };
+
+  const handlePasteConfirm = (mergedRows: ExternalReferenceRow[]) => {
+    if (mergedRows.length === 0) return;
+    // Map ExternalReferenceRow → UserReferenceRow (same shape, but the
+    // user schema allows an optional `note` field). We strip undefined
+    // metrics implicitly — the schema accepts missing fields.
+    onChange({ ...reference, rows: mergedRows.map((r) => ({ ...r })) });
+    toast.success(
+      t('crossValidation.paste.recognised', { n: mergedRows.length }),
+    );
   };
 
   return (

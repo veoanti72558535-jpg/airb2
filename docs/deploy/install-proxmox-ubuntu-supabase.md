@@ -233,11 +233,11 @@ npm -v    # 10.x
 ## 8. Étape 6 — Cloner AirBallistik (build plus tard)
 
 ```bash
-sudo mkdir -p /opt/airballistik
-sudo chown airadmin:airadmin /opt/airballistik
+sudo mkdir -p /home/airadmin/airballistik
+sudo chown airadmin:airadmin /home/airadmin/airballistik
 cd /opt
 git clone https://github.com/<user>/<repo>.git airballistik
-cd /opt/airballistik
+cd /home/airadmin/airballistik
 npm ci
 ```
 
@@ -304,7 +304,7 @@ PY
 ### 9.4 Éditer `.env`
 
 ```bash
-cd /opt/supabase-stack/docker
+cd /home/airadmin/supabase-stack/docker
 nano .env
 ```
 
@@ -333,7 +333,7 @@ GOOGLE_AI_API_KEY=AIza...
 ### 9.5 Lancer la stack
 
 ```bash
-cd /opt/supabase-stack/docker
+cd /home/airadmin/supabase-stack/docker
 docker compose pull
 docker compose up -d
 docker compose ps
@@ -358,15 +358,15 @@ Accès :
 ## 10. Étape 8 — Appliquer les migrations IA-1
 
 Les migrations du repo AirBallistik se trouvent dans
-`/opt/airballistik/supabase/migrations/`. La plus importante est
+`/home/airadmin/airballistik/supabase/migrations/`. La plus importante est
 `20260420000000_ia1_init.sql` (crée `user_roles`, `has_role`,
 `app_settings`, `ai_agent_configs`, `ai_agent_runs`, `ai_usage_events`).
 
 On utilise `psql` directement dans le conteneur `db` :
 
 ```bash
-cd /opt/supabase-stack/docker
-for f in /opt/airballistik/supabase/migrations/*.sql; do
+cd /home/airadmin/supabase-stack/docker
+for f in /home/airadmin/airballistik/supabase/migrations/*.sql; do
   echo "==> Applying $f"
   docker compose exec -T db psql -U postgres -d postgres < "$f"
 done
@@ -396,12 +396,12 @@ select slug, provider, model, enabled
 ## 11. Étape 9 — Déployer les Edge Functions IA-1
 
 Les Edge Functions sont deux fichiers TypeScript dans
-`/opt/airballistik/supabase/functions/`. On les monte dans le volume
+`/home/airadmin/airballistik/supabase/functions/`. On les monte dans le volume
 attendu par le conteneur `functions` de la stack Supabase.
 
 ```bash
-STACK=/opt/supabase-stack/docker
-SRC=/opt/airballistik/supabase/functions
+STACK=/home/airadmin/supabase-stack/docker
+SRC=/home/airadmin/airballistik/supabase/functions
 
 sudo mkdir -p $STACK/volumes/functions/ai-extract-rows
 sudo mkdir -p $STACK/volumes/functions/ai-providers-test
@@ -415,7 +415,7 @@ sudo cp $SRC/_shared/*.ts                $STACK/volumes/functions/_shared/
 Recharger la stack pour embarquer les nouveaux secrets providers et les
 nouvelles fonctions :
 ```bash
-cd /opt/supabase-stack/docker
+cd /home/airadmin/supabase-stack/docker
 docker compose up -d functions
 docker compose logs -f functions
 ```
@@ -448,10 +448,10 @@ select public.has_role('<UUID>', 'admin'::public.app_role);
 
 ## 13. Étape 11 — Builder AirBallistik avec les clés Supabase
 
-Récupérer `ANON_KEY` depuis `/opt/supabase-stack/docker/.env`, puis :
+Récupérer `ANON_KEY` depuis `/home/airadmin/supabase-stack/docker/.env`, puis :
 
 ```bash
-cd /opt/airballistik
+cd /home/airadmin/airballistik
 cat > .env.production <<EOF
 VITE_SUPABASE_URL=http://192.168.1.150:8000
 VITE_SUPABASE_ANON_KEY=<COLLER ANON_KEY ICI>
@@ -460,7 +460,7 @@ EOF
 npm run build
 ```
 
-Artefact produit : `/opt/airballistik/dist/` (fichiers statiques
+Artefact produit : `/home/airadmin/airballistik/dist/` (fichiers statiques
 servables par n'importe quel reverse proxy).
 
 **Contrôle rapide** que les variables sont bien embarquées :
@@ -481,11 +481,11 @@ Unifie AirBallistik + Supabase sous un proxy commun, gère TLS si vous
 exposez plus tard sur Internet.
 
 ```bash
-sudo mkdir -p /opt/traefik
-cd /opt/traefik
+sudo mkdir -p /home/airadmin/traefik
+cd /home/airadmin/traefik
 ```
 
-`/opt/traefik/traefik.yml` :
+`/home/airadmin/traefik/traefik.yml` :
 ```yaml
 entryPoints:
   web:
@@ -501,7 +501,7 @@ api:
   insecure: true  # LAN uniquement
 ```
 
-`/opt/traefik/docker-compose.yml` :
+`/home/airadmin/traefik/docker-compose.yml` :
 ```yaml
 services:
   traefik:
@@ -522,7 +522,7 @@ services:
     container_name: airballistik-web
     restart: unless-stopped
     volumes:
-      - /opt/airballistik/dist:/usr/share/nginx/html:ro
+      - /home/airadmin/airballistik/dist:/usr/share/nginx/html:ro
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.airballistik.rule=Host(`airballistik.lan`)"
@@ -536,7 +536,7 @@ networks:
 ```
 
 Nginx interne du conteneur `airballistik-web` a besoin d'un fallback
-SPA. Créer `/opt/airballistik/nginx-spa.conf` :
+SPA. Créer `/home/airadmin/airballistik/nginx-spa.conf` :
 ```nginx
 server {
   listen 80;
@@ -547,11 +547,11 @@ server {
 ```
 Et monter le fichier dans le service `airballistik` :
 ```yaml
-      - /opt/airballistik/nginx-spa.conf:/etc/nginx/conf.d/default.conf:ro
+      - /home/airadmin/airballistik/nginx-spa.conf:/etc/nginx/conf.d/default.conf:ro
 ```
 
 **Rattacher Supabase Kong à Traefik** : éditer
-`/opt/supabase-stack/docker/docker-compose.yml`, dans le service
+`/home/airadmin/supabase-stack/docker/docker-compose.yml`, dans le service
 `kong`, ajouter :
 ```yaml
     labels:
@@ -571,8 +571,8 @@ networks:
 ```
 Relancer :
 ```bash
-cd /opt/traefik && docker compose up -d
-cd /opt/supabase-stack/docker && docker compose up -d
+cd /home/airadmin/traefik && docker compose up -d
+cd /home/airadmin/supabase-stack/docker && docker compose up -d
 ```
 
 **Côté poste client**, éditer `/etc/hosts` (macOS/Linux) ou
@@ -583,7 +583,7 @@ cd /opt/supabase-stack/docker && docker compose up -d
 
 N'oubliez pas de **re-builder AirBallistik** avec la bonne URL Supabase :
 ```bash
-cd /opt/airballistik
+cd /home/airadmin/airballistik
 sed -i 's#VITE_SUPABASE_URL=.*#VITE_SUPABASE_URL=http://supabase.lan#' .env.production
 npm run build
 ```
@@ -598,7 +598,7 @@ sudo tee /etc/nginx/sites-available/airballistik > /dev/null <<'EOF'
 server {
   listen 80 default_server;
   server_name _;
-  root /opt/airballistik/dist;
+  root /home/airadmin/airballistik/dist;
   index index.html;
   location / { try_files $uri $uri/ /index.html; }
 }
@@ -612,7 +612,7 @@ Accès : <http://192.168.1.150>.
 ### Option 3 — `vite preview` (test jetable uniquement)
 
 ```bash
-cd /opt/airballistik
+cd /home/airadmin/airballistik
 sudo ufw allow 4173/tcp
 npm run preview -- --host 0.0.0.0 --port 4173
 ```
@@ -674,7 +674,7 @@ par GitHub.
 
 Mise à jour normale :
 ```bash
-cd /opt/airballistik
+cd /home/airadmin/airballistik
 git fetch
 git pull origin main
 npm ci
@@ -726,7 +726,7 @@ git stash drop   # on jette la modif locale
 | Studio renvoie 502 Bad Gateway | `kong` pas encore prêt | `docker compose logs kong`, attendre 30–60 s |
 | Toutes les requêtes Supabase : `Invalid JWT` | `ANON_KEY` / `JWT_SECRET` incohérents | Régénérer `ANON_KEY` avec le `JWT_SECRET` du `.env` actuel (§9.3) |
 | `401` sur `/functions/v1/...` sans header | normal, c'est la vérif JWT | rien à faire côté infra |
-| `404` sur `/functions/v1/ai-extract-rows` | volume mal monté | vérifier `ls /opt/supabase-stack/docker/volumes/functions/ai-extract-rows/index.ts` |
+| `404` sur `/functions/v1/ai-extract-rows` | volume mal monté | vérifier `ls /home/airadmin/supabase-stack/docker/volumes/functions/ai-extract-rows/index.ts` |
 | App renvoie `403 not-admin` | ligne `user_roles` manquante | re-exécuter §12 avec le bon UUID |
 | Build OK mais page blanche | mauvais base path ou `try_files` absent | vérifier la conf Nginx / nginx-spa.conf |
 | Bouton IA absent (alors que configuré) | `.env.production` pas lu au build | refaire `cat .env.production && npm run build` |
@@ -768,29 +768,29 @@ Valeurs **obligatoirement** personnalisées avant `docker compose up` :
 
 ```bash
 # Dump complet (tous les schémas + rôles)
-docker compose -f /opt/supabase-stack/docker/docker-compose.yml \
-  exec -T db pg_dumpall -U postgres > /opt/backups/supabase-$(date +%F).sql
+docker compose -f /home/airadmin/supabase-stack/docker/docker-compose.yml \
+  exec -T db pg_dumpall -U postgres > /home/airadmin/backups/supabase-$(date +%F).sql
 
 # Restore (sur instance vierge)
-docker compose -f /opt/supabase-stack/docker/docker-compose.yml \
-  exec -T db psql -U postgres < /opt/backups/supabase-YYYY-MM-DD.sql
+docker compose -f /home/airadmin/supabase-stack/docker/docker-compose.yml \
+  exec -T db psql -U postgres < /home/airadmin/backups/supabase-YYYY-MM-DD.sql
 ```
 
 Automatiser via cron :
 ```bash
-sudo mkdir -p /opt/backups
-(crontab -l 2>/dev/null; echo "0 3 * * * cd /opt/supabase-stack/docker && docker compose exec -T db pg_dumpall -U postgres > /opt/backups/supabase-\$(date +\\%F).sql") | crontab -
+sudo mkdir -p /home/airadmin/backups
+(crontab -l 2>/dev/null; echo "0 3 * * * cd /home/airadmin/supabase-stack/docker && docker compose exec -T db pg_dumpall -U postgres > /home/airadmin/backups/supabase-\$(date +\\%F).sql") | crontab -
 ```
 
 ### 21.3 Arrêt / redémarrage propres
 
 ```bash
 # Arrêt
-cd /opt/traefik && docker compose stop
-cd /opt/supabase-stack/docker && docker compose stop
+cd /home/airadmin/traefik && docker compose stop
+cd /home/airadmin/supabase-stack/docker && docker compose stop
 # Redémarrage
-cd /opt/supabase-stack/docker && docker compose up -d
-cd /opt/traefik && docker compose up -d
+cd /home/airadmin/supabase-stack/docker && docker compose up -d
+cd /home/airadmin/traefik && docker compose up -d
 ```
 
 ---
@@ -804,7 +804,7 @@ cd /opt/traefik && docker compose up -d
 5. **Rôle du changement** : doc-only, aucune modification moteur / harness / tests / UI. Fournit un runbook débutant complet pour la mise en service IA-1 sur `192.168.1.100:8006`.
 6. **Points sensibles** :
    - Génération `ANON_KEY` / `SERVICE_ROLE_KEY` avec le bon `JWT_SECRET` = erreur n°1 des débutants ; procédure détaillée fournie (outil officiel + fallback Python local).
-   - Montage volumes Edge Functions (`/opt/supabase-stack/docker/volumes/functions/...`) : oublier un fichier = 404 côté client.
+   - Montage volumes Edge Functions (`/home/airadmin/supabase-stack/docker/volumes/functions/...`) : oublier un fichier = 404 côté client.
    - `.env.production` **avant** `npm run build` sinon `isSupabaseConfigured()` renvoie `false` et le bouton IA reste masqué.
    - Traefik nécessite un réseau Docker externe partagé + labels côté Kong Supabase ; explication fournie mais à suivre précisément.
    - UFW : penser à `allow 8000/tcp` (Kong direct) ou 80/443 (Traefik/Nginx).

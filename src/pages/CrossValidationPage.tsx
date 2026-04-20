@@ -50,6 +50,8 @@ import {
   type StoredUserCase,
 } from '@/lib/cross-validation/user-case-repo';
 import { runCaseComparison } from '@/lib/cross-validation';
+import type { CaseComparisonResult } from '@/lib/cross-validation';
+import { CrossValidationResults } from '@/components/cross-validation/CrossValidationResults';
 
 /**
  * BUILD-C bis — Onglet "Validation externe".
@@ -73,6 +75,11 @@ export default function CrossValidationPage() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [draft, setDraft] = useState<UserCrossValidationCase | null>(null);
   const [issues, setIssues] = useState<ValidationIssue[]>([]);
+  const [lastResult, setLastResult] = useState<{
+    result: CaseComparisonResult;
+    title: string;
+    runAt: string;
+  } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const refresh = useCallback(() => {

@@ -1776,6 +1776,13 @@ const en: Record<keyof typeof fr, string> = {
   'admin.cleanup.confirmHint': 'Irreversible action. Keeps only pellet- and slug-type projectiles.',
   'admin.cleanup.success': '{count} non-airgun projectile(s) removed.',
   'admin.cleanup.error': 'Removal failed. Please retry.',
+  'admin.cleanup.brand.title': 'Brand cleanup (airgun whitelist)',
+  'admin.cleanup.brand.subtitle': 'Removes any projectile whose brand is not in the known airgun maker whitelist (JSB, H&N, FX, Air Arms, Crosman, NSA, Patriot, Hasler, RWS, Daystate, Air Venturi, ZAN, Norma, Rainier, Sako, Geco…). Useful to purge powder brands imported by mistake (Hornady, Nosler, Barnes, Speer, Sierra…).',
+  'admin.cleanup.brand.scan': 'Scan powder brands',
+  'admin.cleanup.brand.preview': '{count} off-whitelist projectile(s) to remove out of {total}.',
+  'admin.cleanup.brand.empty': 'No powder brands detected. Database already clean.',
+  'admin.cleanup.brand.confirm': 'Remove powder brands',
+  'admin.cleanup.brand.confirmHint': 'Irreversible action. Keeps only the listed airgun brands.',
 
   // Reticles (Tranche F.4)
   'reticles.title': 'Reticles Library',

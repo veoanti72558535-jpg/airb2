@@ -1109,7 +1109,11 @@ function ReferenceEditor({ index, reference, onChange, onRemove }: ReferenceEdit
       <PasteRowsModal
         open={pasteOpen}
         onOpenChange={setPasteOpen}
-        existingRows={reference.rows}
+        existingRows={
+          reference.rows.filter(
+            (r): r is ExternalReferenceRow => typeof r.range === 'number',
+          )
+        }
         onConfirm={handlePasteConfirm}
       />
     </Card>

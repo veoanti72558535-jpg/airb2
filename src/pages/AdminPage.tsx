@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { ImportJsonModal } from '@/components/import/ImportJsonModal';
 import type { ImportEntityType } from '@/lib/import-schemas';
 import { ProjectileStorageDiagnosticCard } from '@/components/admin/ProjectileStorageDiagnosticCard';
+import { ProjectileCleanupCard } from '@/components/admin/ProjectileCleanupCard';
 
 export default function AdminPage() {
   const { t } = useI18n();
@@ -109,6 +110,9 @@ export default function AdminPage() {
 
       {/* Diagnostic stockage projectiles (Tranche Admin Storage Diagnostic) */}
       <ProjectileStorageDiagnosticCard refreshKey={diagRefreshKey} />
+
+      {/* Nettoyage projectiles non-airgun (Tranche Cleanup) */}
+      <ProjectileCleanupCard onCleaned={() => setDiagRefreshKey((k) => k + 1)} />
 
       {/* Sections */}
       <div className="space-y-3">

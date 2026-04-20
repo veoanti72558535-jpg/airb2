@@ -3,12 +3,13 @@ import "@testing-library/jest-dom";
 // (write-through to IDB) and the migration helper can be exercised in tests.
 import "fake-indexeddb/auto";
 import { beforeEach } from "vitest";
-import { projectileStore } from "@/lib/storage";
+import { projectileStore, sessionStore } from "@/lib/storage";
 import { __resetProjectileRepoForTests } from "@/lib/projectile-repo";
+import { __resetSessionRepoForTests } from "@/lib/session-repo";
 
 /**
  * Tranche IDB — réinitialisation systématique du cache mémoire du
- * `projectileStore` et de la couche IDB entre chaque test.
+ * `projectileStore` / `sessionStore` et de leurs couches IDB entre chaque test.
  *
  * Avant la migration, les tests s'appuyaient sur `localStorage.clear()`
  * pour repartir d'un store vide. Désormais le store a un cache mémoire
@@ -18,6 +19,8 @@ import { __resetProjectileRepoForTests } from "@/lib/projectile-repo";
 beforeEach(async () => {
   (projectileStore as unknown as { __resetForTests?: () => void }).__resetForTests?.();
   await __resetProjectileRepoForTests();
+  (sessionStore as unknown as { __resetForTests?: () => void }).__resetForTests?.();
+  await __resetSessionRepoForTests();
 });
 
 Object.defineProperty(window, "matchMedia", {

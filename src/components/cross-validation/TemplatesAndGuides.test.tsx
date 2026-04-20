@@ -81,14 +81,15 @@ describe('TemplatesAndGuides', () => {
   });
 
   it('triggers a download (createObjectURL + click) on Download', () => {
-    const createSpy = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:mock');
-    const revokeSpy = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+    const createFn = vi.fn(() => 'blob:mock');
+    const revokeFn = vi.fn();
+    // jsdom does not implement these — define them before spying.
+    Object.defineProperty(URL, 'createObjectURL', { value: createFn, configurable: true });
+    Object.defineProperty(URL, 'revokeObjectURL', { value: revokeFn, configurable: true });
     renderWithI18n(<TemplatesAndGuides />);
     fireEvent.click(screen.getByTestId('cv-templates-toggle'));
     fireEvent.click(screen.getByTestId('cv-template-mero-download'));
-    expect(createSpy).toHaveBeenCalled();
-    expect(revokeSpy).toHaveBeenCalled();
-    createSpy.mockRestore();
-    revokeSpy.mockRestore();
+    expect(createFn).toHaveBeenCalled();
+    expect(revokeFn).toHaveBeenCalled();
   });
 });

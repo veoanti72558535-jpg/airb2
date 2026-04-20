@@ -17,8 +17,10 @@ function fakeSession(i: number): Session {
     name: `Session ${i}`,
     createdAt: '2024-01-01T00:00:00.000Z',
     updatedAt: '2024-01-01T00:00:00.000Z',
-    inputs: {} as Session['inputs'],
+    input: {} as Session['input'],
     results: [],
+    tags: [],
+    favorite: false,
   } as Session;
 }
 

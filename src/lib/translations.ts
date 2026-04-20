@@ -859,6 +859,15 @@ const fr = {
   'admin.cleanup.brand.confirm': 'Supprimer les marques powder',
   'admin.cleanup.brand.confirmHint': 'Action irréversible. Conserve uniquement les marques airgun listées.',
 
+  // Tranche Admin Storage — Diagnostic stockage sessions (lecture seule)
+  'admin.sessionDiag.title': 'Stockage sessions',
+  'admin.sessionDiag.subtitle': 'État local du backend de persistance des sessions.',
+  'admin.sessionDiag.localCount': 'Sessions locales',
+  'admin.sessionDiag.degradedHint':
+    'IndexedDB indisponible : les sessions enregistrées seront volatiles et perdues à la fermeture de l\'onglet.',
+  'admin.sessionDiag.healthyHint':
+    'Stockage sessions sain : IndexedDB actif, migration locale effectuée, pas de clé legacy résiduelle.',
+
   // Reticles (Tranche F.4)
   'reticles.title': 'Bibliothèque de réticules',
   'reticles.add': 'Ajouter un réticule',

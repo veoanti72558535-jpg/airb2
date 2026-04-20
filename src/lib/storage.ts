@@ -202,6 +202,8 @@ interface ProjectileStoreInternal {
   __hydrate: (items: Projectile[]) => void;
   /** Test-only — reset the cache to empty. */
   __resetForTests: () => void;
+  /** Internal — returns the in-flight chain of IDB writes (for flushProjectilePersistence). */
+  __getPendingPersist: () => Promise<void>;
 }
 
 function createProjectileStore(): ProjectileStoreInternal {

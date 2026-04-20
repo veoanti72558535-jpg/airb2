@@ -65,10 +65,10 @@ vi.mock('sonner', () => ({
 // rendu dans ce fichier.
 vi.mock('@/components/ui/select', () => {
   const React = require('react');
-  const SelectCtx = React.createContext<{
-    value: string;
-    onChange: (v: string) => void;
-  }>({ value: '', onChange: () => {} });
+  const SelectCtx = (React.createContext as any)({
+    value: '',
+    onChange: (_v: string) => {},
+  });
 
   function Select({
     value,

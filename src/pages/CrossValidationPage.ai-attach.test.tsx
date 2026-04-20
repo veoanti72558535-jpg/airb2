@@ -196,9 +196,25 @@ describe('CrossValidationPage — IA-1 attach to existing case', () => {
     expect(stillStored?.case.references).toHaveLength(1);
 
     // 4. Sélection du cas existant via le Select Radix.
-    //    Radix expose un trigger natif click — on cible l'item via son texte.
-    fireEvent.click(screen.getByTestId('ai-attach-select'));
+    //    Radix réagit à pointerDown (pas au click seul) pour ouvrir le menu.
+    const trigger = screen.getByTestId('ai-attach-select');
+    fireEvent.pointerDown(trigger, {
+      button: 0,
+      ctrlKey: false,
+      pointerType: 'mouse',
+    });
+    fireEvent.click(trigger);
     const item = await screen.findByText('Seed case 22 cal');
+    fireEvent.pointerDown(item, {
+      button: 0,
+      ctrlKey: false,
+      pointerType: 'mouse',
+    });
+    fireEvent.pointerUp(item, {
+      button: 0,
+      ctrlKey: false,
+      pointerType: 'mouse',
+    });
     fireEvent.click(item);
 
     // 5. Le bouton confirmer doit s'activer — on clique.

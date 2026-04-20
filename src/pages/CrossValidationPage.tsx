@@ -392,6 +392,8 @@ interface ListViewProps {
   onExport: (s: StoredUserCase) => void;
   onCompare: (s: StoredUserCase) => void;
   onImportClick: () => void;
+  /** undefined → bouton IA caché (Supabase non configuré). */
+  onAiImportClick?: () => void;
 }
 
 function ListView({
@@ -402,6 +404,7 @@ function ListView({
   onExport,
   onCompare,
   onImportClick,
+  onAiImportClick,
 }: ListViewProps) {
   const { t } = useI18n();
   return (
@@ -415,6 +418,17 @@ function ListView({
           <Upload className="h-4 w-4 mr-1" />
           {t('crossValidation.importJson')}
         </Button>
+        {onAiImportClick && (
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={onAiImportClick}
+            data-testid="cv-ai-import-btn"
+          >
+            <Bot className="h-4 w-4 mr-1" />
+            {t('crossValidation.ai.button')}
+          </Button>
+        )}
         <Button asChild size="sm" variant="ghost">
           <Link to="/docs">
             <FileJson className="h-4 w-4 mr-1" />

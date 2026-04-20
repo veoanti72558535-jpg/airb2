@@ -22,10 +22,17 @@ const HISTORICAL_METHODS = [
 
 function caseWithMethod(m: string): UserCrossValidationCase {
   const c = makeEmptyUserCase();
-  // `version` est requis (min 1 char) — `makeEmptyUserCase()` laisse
-  // une chaîne vide volontairement pour forcer la saisie côté UI.
   c.references[0].meta.version = 'v-test';
   c.references[0].meta.extractionMethod = m as never;
+  // `makeEmptyUserCase()` laisse les champs balistiques à 0 / '' pour
+  // forcer la saisie utilisateur. On les remplit ici pour que le seul
+  // axe testé reste `extractionMethod`.
+  c.inputs.projectileName = 'JSB Exact';
+  c.inputs.caliber = '.22';
+  c.inputs.weightGrains = 18.13;
+  c.inputs.bc = 0.035;
+  c.inputs.muzzleVelocity = 280;
+  c.inputs.zeroDistance = 30;
   return c;
 }
 

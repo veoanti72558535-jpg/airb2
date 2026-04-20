@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { useI18n } from '@/lib/i18n';
-import { Upload, X } from 'lucide-react';
+import { Upload, X, Loader2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -26,6 +26,7 @@ import {
   opticStore,
   reticleStore,
   StorageQuotaExceededError,
+  flushProjectilePersistence,
 } from '@/lib/storage';
 import type { ImportSource } from '@/lib/types';
 
@@ -62,20 +63,32 @@ export function ImportJsonModal({
   const [fileName, setFileName] = useState<string | null>(null);
   const [rawText, setRawText] = useState<string | null>(null);
   const [preview, setPreview] = useState<ImportPreviewType | null>(null);
-  const [isWriting, setIsWriting] = useState(false);
+  // Tranche Import UX — états distincts pour rendre l'UX honnête :
+  //  - idle      : preview prête, en attente de clic
+  //  - writing   : createMany() en cours (cache mémoire)
+  //  - persisting: write IDB en cours (write-through async)
+  //  - error     : la persistance a échoué — preview CONSERVÉE, retry possible
+  type Phase = 'idle' | 'writing' | 'persisting' | 'error';
+  const [phase, setPhase] = useState<Phase>('idle');
+  const [persistError, setPersistError] = useState<string | null>(null);
+  const isCommitting = phase === 'writing' || phase === 'persisting';
 
   const reset = useCallback(() => {
     setFileName(null);
     setRawText(null);
     setPreview(null);
-    setIsWriting(false);
+    setPhase('idle');
+    setPersistError(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   }, []);
 
   const handleClose = useCallback(() => {
+    // Garde-fou : pendant la persistance, on ne ferme pas (évite double commit
+    // + perte de la preview avant confirmation IDB).
+    if (isCommitting) return;
     reset();
     onClose();
-  }, [onClose, reset]);
+  }, [isCommitting, onClose, reset]);
 
   const handleFile = useCallback((file: File) => {
     setPreview(null);
@@ -110,9 +123,11 @@ export function ImportJsonModal({
     ? preview.okCount + preview.sanitizedCount
     : 0;
 
-  const handleConfirm = useCallback(() => {
+  const handleConfirm = useCallback(async () => {
     if (!preview || writableCount === 0) return;
-    setIsWriting(true);
+    if (isCommitting) return; // double-submit guard
+    setPersistError(null);
+    setPhase('writing');
     try {
       // Bulk insert : un seul localStorage write quel que soit N. Sans cela,
       // un import massif (ex. bullets4 ~8700 projectiles) effectue O(N²)
@@ -125,6 +140,12 @@ export function ImportJsonModal({
       if (preview.entityType === 'projectile') {
         const data = writable.map((i) => i.data as NormalisedProjectile);
         written = projectileStore.createMany(data).length;
+        // Tranche Import UX — pour les projectiles, on attend la confirmation
+        // réelle d'écriture IDB AVANT de déclarer succès. Sans cela, un import
+        // massif (~8700 projectiles) annoncerait un succès alors que le write
+        // IDB peut encore échouer (quota, IDB indisponible, …).
+        setPhase('persisting');
+        await flushProjectilePersistence();
       } else if (preview.entityType === 'optic') {
         const data = writable.map((i) => i.data as NormalisedOptic);
         written = opticStore.createMany(data).length;
@@ -140,12 +161,20 @@ export function ImportJsonModal({
         // Message actionnable : l'utilisateur doit purger ou exporter avant
         // de réessayer. Ne pas perdre la preview pour qu'il puisse retenter.
         toast.error(t('import.quotaExceeded'), { duration: 8000 });
+        setPhase('idle');
+      } else if (phaseRef.current === 'persisting' || phase === 'persisting') {
+        // Échec IDB : on NE déclare PAS de succès, on conserve la preview,
+        // et on affiche un message actionnable. L'utilisateur peut réessayer.
+        const msg = e instanceof Error ? e.message : String(e);
+        setPersistError(msg);
+        setPhase('error');
+        toast.error(t('import.persistFailed'), { duration: 8000 });
       } else {
         toast.error(e instanceof Error ? e.message : t('import.fileInvalid'));
+        setPhase('idle');
       }
-      setIsWriting(false);
     }
-  }, [handleClose, onSuccess, preview, t, writableCount]);
+  }, [handleClose, isCommitting, onSuccess, phase, preview, t, writableCount]);
 
   const titleKey = useMemo(() => {
     if (entityType === 'projectile') return 'import.title.projectiles';

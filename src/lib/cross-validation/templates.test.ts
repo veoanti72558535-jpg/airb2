@@ -20,7 +20,7 @@ describe('cross-validation/templates — schema validity', () => {
     it(`template "${kind}" passes the Zod schema`, () => {
       const tpl = makeTemplate(kind);
       const result = validateUserCase(tpl);
-      if (!result.ok) {
+      if (result.ok === false) {
         // Expose les issues en clair pour debug si jamais le schéma change.
         // eslint-disable-next-line no-console
         console.error(`[${kind}] issues:`, result.issues);

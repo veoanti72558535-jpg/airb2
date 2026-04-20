@@ -282,7 +282,6 @@ function createProjectileStore(): ProjectileStoreInternal {
       cache = [];
       pendingPersist = Promise.resolve();
     },
-    // @ts-expect-error — exposé via type helper ci-dessous, pas dans l'interface publique.
     __getPendingPersist: () => pendingPersist,
   };
 }

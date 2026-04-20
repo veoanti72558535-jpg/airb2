@@ -953,6 +953,7 @@ const EXTRACTION_OPTIONS = [
   'export-csv',
   'export-json',
   'published-table',
+  'screenshot-ai',
 ] as const;
 
 interface ReferenceEditorProps {

@@ -298,11 +298,7 @@ function createProjectileStore(): ProjectileStoreInternal {
  * (UI : ne pas afficher de faux succès, conserver la preview).
  */
 export async function flushProjectilePersistence(): Promise<void> {
-  const internal = projectileStore as unknown as {
-    __getPendingPersist?: () => Promise<void>;
-  };
-  const p = internal.__getPendingPersist?.();
-  if (p) await p;
+  await projectileStore.__getPendingPersist();
 }
 
 /**

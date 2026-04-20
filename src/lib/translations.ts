@@ -2457,6 +2457,11 @@ const en: Record<keyof typeof fr, string> = {
   'crossValidation.ai.attachToCaseChoose': 'Choose existing case',
   'crossValidation.ai.attachToCaseNew': 'Create new case',
   'crossValidation.ai.attached': 'Draft attached to case.',
+  'crossValidation.ai.attachedNew': 'New draft case created — review and save.',
+  'crossValidation.ai.attachFailed': 'Could not attach the AI draft to the selected case.',
+  'crossValidation.ai.attachExistingPlaceholder': 'Select a case…',
+  'crossValidation.ai.attachConfirm': 'Attach to selected case',
+  'crossValidation.ai.attachLater': 'Later',
   'crossValidation.ai.unavailable':
     'IA-1 disabled — self-hosted Supabase not configured (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY missing).',
 

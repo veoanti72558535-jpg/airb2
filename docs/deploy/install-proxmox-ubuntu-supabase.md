@@ -233,9 +233,7 @@ npm -v    # 10.x
 ## 8. Étape 6 — Cloner AirBallistik (build plus tard)
 
 ```bash
-sudo mkdir -p /home/airadmin/airballistik
-sudo chown airadmin:airadmin /home/airadmin/airballistik
-cd /opt
+cd /home/airadmin
 git clone https://github.com/<user>/<repo>.git airballistik
 cd /home/airadmin/airballistik
 npm ci
@@ -254,7 +252,7 @@ npm ci
 ### 9.1 Récupérer la stack
 
 ```bash
-cd /opt
+cd /home/airadmin
 git clone --depth 1 https://github.com/supabase/supabase.git supabase-stack
 cd supabase-stack/docker
 cp .env.example .env
@@ -481,7 +479,7 @@ Unifie AirBallistik + Supabase sous un proxy commun, gère TLS si vous
 exposez plus tard sur Internet.
 
 ```bash
-sudo mkdir -p /home/airadmin/traefik
+mkdir -p /home/airadmin/traefik
 cd /home/airadmin/traefik
 ```
 

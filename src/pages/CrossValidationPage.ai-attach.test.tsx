@@ -56,6 +56,71 @@ vi.mock('sonner', () => ({
   toast: { success: vi.fn(), error: vi.fn() },
 }));
 
+// --- 2b. Stub UI Select (Radix) ---------------------------------------------
+// Radix Select est notoirement difficile à piloter sous jsdom (pointer
+// capture, scrollIntoView, portails). On le remplace par un <select>
+// natif, strictement local à ce test : on garde le contrat
+// (`onValueChange`, `value`, item.value) et on évite toute dépendance à
+// l'implémentation Radix. Aucun autre composant utilisant `Select` n'est
+// rendu dans ce fichier.
+vi.mock('@/components/ui/select', () => {
+  const React = require('react');
+  const SelectCtx = React.createContext<{
+    value: string;
+    onChange: (v: string) => void;
+  }>({ value: '', onChange: () => {} });
+
+  function Select({
+    value,
+    onValueChange,
+    children,
+  }: {
+    value: string;
+    onValueChange: (v: string) => void;
+    children: React.ReactNode;
+  }) {
+    return (
+      <SelectCtx.Provider value={{ value, onChange: onValueChange }}>
+        {children}
+      </SelectCtx.Provider>
+    );
+  }
+  function SelectTrigger({
+    children,
+    ...rest
+  }: React.HTMLAttributes<HTMLDivElement>) {
+    return <div {...rest}>{children}</div>;
+  }
+  function SelectValue({ placeholder }: { placeholder?: string }) {
+    return <span data-stub-placeholder>{placeholder}</span>;
+  }
+  function SelectContent({ children }: { children: React.ReactNode }) {
+    const { value, onChange } = React.useContext(SelectCtx);
+    return (
+      <select
+        data-testid="ai-attach-native-select"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      >
+        <option value="" disabled>
+          —
+        </option>
+        {children}
+      </select>
+    );
+  }
+  function SelectItem({
+    value,
+    children,
+  }: {
+    value: string;
+    children: React.ReactNode;
+  }) {
+    return <option value={value}>{children}</option>;
+  }
+  return { Select, SelectTrigger, SelectValue, SelectContent, SelectItem };
+});
+
 // --- 3. Stub d'AIImportModal -----------------------------------------------
 // On expose un bouton qui injecte directement un payload `screenshot-ai`
 // via `onConfirm`. On ne re-teste pas la pipeline IA ici : on valide que
@@ -195,27 +260,11 @@ describe('CrossValidationPage — IA-1 attach to existing case', () => {
     const stillStored = userCaseRepo.getById(seeded.id);
     expect(stillStored?.case.references).toHaveLength(1);
 
-    // 4. Sélection du cas existant via le Select Radix.
-    //    Radix réagit à pointerDown (pas au click seul) pour ouvrir le menu.
-    const trigger = screen.getByTestId('ai-attach-select');
-    fireEvent.pointerDown(trigger, {
-      button: 0,
-      ctrlKey: false,
-      pointerType: 'mouse',
-    });
-    fireEvent.click(trigger);
-    const item = await screen.findByText('Seed case 22 cal');
-    fireEvent.pointerDown(item, {
-      button: 0,
-      ctrlKey: false,
-      pointerType: 'mouse',
-    });
-    fireEvent.pointerUp(item, {
-      button: 0,
-      ctrlKey: false,
-      pointerType: 'mouse',
-    });
-    fireEvent.click(item);
+    // 4. Sélection du cas existant via le Select stubbé en <select> natif.
+    const nativeSelect = screen.getByTestId(
+      'ai-attach-native-select',
+    ) as HTMLSelectElement;
+    fireEvent.change(nativeSelect, { target: { value: seeded.id } });
 
     // 5. Le bouton confirmer doit s'activer — on clique.
     const confirmExisting = screen.getByTestId(

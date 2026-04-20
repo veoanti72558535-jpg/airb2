@@ -317,6 +317,25 @@ export async function flushProjectilePersistence(): Promise<void> {
 }
 
 /**
+ * Tranche Import UX — Réessaie uniquement la PERSISTANCE IDB du snapshot
+ * mémoire courant du `projectileStore`, sans rejouer aucun `create()` /
+ * `createMany()`. Awaitable : résout dès que l'écriture IDB est confirmée
+ * (ou throw si elle échoue à nouveau).
+ *
+ * Contrat :
+ *  - aucun nouvel item n'est créé,
+ *  - aucun doublon n'est introduit,
+ *  - le cache mémoire est inchangé,
+ *  - on tente strictement de re-pousser ce que le cache contient déjà.
+ *
+ * Utilisé par l'UI d'import quand `flushProjectilePersistence()` a rejeté.
+ */
+export async function retryProjectilePersistence(): Promise<void> {
+  projectileStore.__retryPersist();
+  await projectileStore.__getPendingPersist();
+}
+
+/**
  * Bootstrap à appeler **une seule fois** au démarrage de l'app, AVANT le
  * premier render. Migre les projectiles localStorage → IDB si nécessaire,
  * puis hydrate le cache mémoire de `projectileStore`.

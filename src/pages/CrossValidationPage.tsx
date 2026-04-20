@@ -52,6 +52,7 @@ import {
 import { runCaseComparison } from '@/lib/cross-validation';
 import type { CaseComparisonResult } from '@/lib/cross-validation';
 import { CrossValidationResults } from '@/components/cross-validation/CrossValidationResults';
+import { TemplatesAndGuides } from '@/components/cross-validation/TemplatesAndGuides';
 
 /**
  * BUILD-C bis — Onglet "Validation externe".
@@ -95,6 +96,16 @@ export default function CrossValidationPage() {
     setDraft(makeEmptyUserCase());
     setIssues([]);
     setView('edit');
+  };
+
+  const openFromTemplate = (template: UserCrossValidationCase) => {
+    setActiveId(null);
+    // Le template porte un caseId préfixé `template-…` — on le rend
+    // éditable mais on garde une valeur valide vis-à-vis du schéma.
+    setDraft(structuredClone(template));
+    setIssues([]);
+    setView('edit');
+    toast.success(t('crossValidation.templates.opened'));
   };
 
   const openEdit = (stored: StoredUserCase) => {
@@ -248,15 +259,18 @@ export default function CrossValidationPage() {
       </header>
 
       {view === 'list' && (
-        <ListView
-          items={items}
-          onNew={openNew}
-          onEdit={openEdit}
-          onDelete={handleDelete}
-          onExport={handleExport}
-          onCompare={handleCompare}
-          onImportClick={() => fileInputRef.current?.click()}
-        />
+        <>
+          <TemplatesAndGuides onUseTemplate={openFromTemplate} />
+          <ListView
+            items={items}
+            onNew={openNew}
+            onEdit={openEdit}
+            onDelete={handleDelete}
+            onExport={handleExport}
+            onCompare={handleCompare}
+            onImportClick={() => fileInputRef.current?.click()}
+          />
+        </>
       )}
 
       {view === 'list' && lastResult && (

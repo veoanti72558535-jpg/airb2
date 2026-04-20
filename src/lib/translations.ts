@@ -1091,6 +1091,7 @@ const fr = {
     'Squelettes JSON valides — aucune valeur externe inventée. Édite avant comparaison.',
   'crossValidation.templates.download': 'Télécharger',
   'crossValidation.templates.use': 'Nouveau cas',
+  'crossValidation.templates.opened': 'Template ouvert — édite avant d\'enregistrer.',
 
   'crossValidation.guide.title': 'Guides de saisie',
   'crossValidation.guide.intro':
@@ -2230,6 +2231,7 @@ const en: Record<keyof typeof fr, string> = {
     'Schema-valid skeletons — no external value invented. Edit before comparing.',
   'crossValidation.templates.download': 'Download',
   'crossValidation.templates.use': 'New case',
+  'crossValidation.templates.opened': 'Template loaded — edit before saving.',
 
   'crossValidation.guide.title': 'Entry guides',
   'crossValidation.guide.intro':

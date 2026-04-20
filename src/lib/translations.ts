@@ -1093,6 +1093,26 @@ const fr = {
   'crossValidation.templates.use': 'Nouveau cas',
   'crossValidation.templates.opened': 'Template ouvert — édite avant d\'enregistrer.',
 
+  // Paste / quick CSV-TSV import inside a reference editor.
+  'crossValidation.paste.action': 'Coller des lignes',
+  'crossValidation.paste.title': 'Coller des lignes (CSV / TSV)',
+  'crossValidation.paste.subtitle':
+    'Colle un tableau brut depuis ChairGun, Strelok, MERO, un tableur ou une transcription propre. Aucun chiffre n’est inventé.',
+  'crossValidation.paste.inputLabel': 'Texte tabulaire collé',
+  'crossValidation.paste.formats':
+    'Séparateurs acceptés : tabulation, virgule, point-virgule. Header obligatoire (range, drop, velocity, tof, windDrift, energy ou alias).',
+  'crossValidation.paste.errorEmpty': 'Texte vide.',
+  'crossValidation.paste.errorPrefix': 'Parsing impossible :',
+  'crossValidation.paste.recognised': '{{n}} ligne(s) reconnue(s)',
+  'crossValidation.paste.separator': 'Séparateur',
+  'crossValidation.paste.rejected': '{{n}} rejetée(s)',
+  'crossValidation.paste.unknownCols': '{{n}} colonne(s) ignorée(s)',
+  'crossValidation.paste.modeLabel': 'Comportement',
+  'crossValidation.paste.modeAppend': 'Ajouter à la suite',
+  'crossValidation.paste.modeReplace': 'Remplacer les lignes existantes',
+  'crossValidation.paste.cancel': 'Annuler',
+  'crossValidation.paste.confirm': 'Importer',
+
   'crossValidation.guide.title': 'Guides de saisie',
   'crossValidation.guide.intro':
     'Quoi relever, quels pièges éviter, par source. Ne complète pas ce que la source ne montre pas.',

@@ -1052,6 +1052,37 @@ const fr = {
   'crossValidation.input.windConventionHint': 'Documentaire — pas exploité par le moteur',
   'crossValidation.input.sourceUnitsNote': 'Unités source',
   'crossValidation.input.comment': 'Commentaire',
+
+  // Cross-validation — panneau résultats détaillés
+  'crossValidation.results.title': 'Résultat de comparaison',
+  'crossValidation.results.exportJson': 'Exporter le résultat en JSON',
+  'crossValidation.results.close': 'Fermer le panneau',
+  'crossValidation.results.refsCount': 'Références',
+  'crossValidation.results.warningsCount': '{n} warning(s) levé(s) — voir détails par référence.',
+  'crossValidation.results.noReferences': 'Aucune référence dans le résultat.',
+  'crossValidation.results.confidence': 'Confiance',
+  'crossValidation.results.linesCompared': '{n} ligne(s) comparée(s)',
+  'crossValidation.results.metricsCompared': '{n} métrique(s) comparée(s)',
+  'crossValidation.results.warnings': 'warnings',
+  'crossValidation.results.confCNote': 'Source confiance C — résultat indicatif uniquement, jamais déclaré PASS.',
+  'crossValidation.results.noMetricsComparable': 'Aucune métrique comparable côté référence.',
+  'crossValidation.results.metricSummary': 'Résumé par métrique',
+  'crossValidation.results.someEngineRowsMissing':
+    'Certaines distances de référence n\'ont pas de ligne moteur correspondante (rangeStep incompatible).',
+  'crossValidation.results.noEngineRow': 'Pas de ligne moteur à cette distance',
+  'crossValidation.results.metricMissing': 'Métrique absente côté référence',
+  'crossValidation.results.col.metric': 'Métrique',
+  'crossValidation.results.col.count': 'N',
+  'crossValidation.results.col.failures': 'KO',
+  'crossValidation.results.col.maxAbs': 'Pire Δ abs',
+  'crossValidation.results.col.maxRel': 'Pire Δ rel',
+  'crossValidation.results.col.range': 'Distance',
+  'crossValidation.results.col.engine': 'Moteur',
+  'crossValidation.results.col.reference': 'Référence',
+  'crossValidation.results.col.status': 'OK',
+  'crossValidation.warn.noEngineRow': 'Pas de ligne moteur à cette distance',
+  'crossValidation.warn.noComparableMetrics': 'Aucune métrique comparable',
+  'crossValidation.warn.noComparableRows': 'Aucune ligne comparable',
 } as const;
 
 const en: Record<keyof typeof fr, string> = {

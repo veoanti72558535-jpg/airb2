@@ -2412,6 +2412,76 @@ const en: Record<keyof typeof fr, string> = {
   'crossValidation.paste.modeReplace': 'Replace existing rows',
   'crossValidation.paste.cancel': 'Cancel',
   'crossValidation.paste.confirm': 'Import',
+
+  // IA-1 — Strelok Pro screenshot → rows (BUILD)
+  'crossValidation.ai.button': 'Import from screenshot (Strelok Pro)',
+  'crossValidation.ai.title': 'AI draft — Strelok Pro',
+  'crossValidation.ai.step.consent': 'Step 1 / 4 — Consent',
+  'crossValidation.ai.step.upload': 'Step 2 / 4 — Upload screenshot',
+  'crossValidation.ai.step.analyzing': 'Step 3 / 4 — Analysis',
+  'crossValidation.ai.step.review': 'Step 4 / 4 — Manual review (mandatory)',
+  'crossValidation.ai.consent.body':
+    'The image will be sent to a third-party AI provider configured by the admin (Quatarly with Google fallback). No keys are stored client-side.',
+  'crossValidation.ai.consent.bullet1':
+    'No persistence until you validate row by row.',
+  'crossValidation.ai.consent.bullet2':
+    'Confidence is capped at C — the output is never treated as truth.',
+  'crossValidation.ai.consent.bullet3':
+    'No ballistic inputs are extracted (MV, BC, zero, atmosphere) — rows only.',
+  'crossValidation.ai.consent.accept': 'I accept, continue',
+  'crossValidation.ai.uploadHint':
+    'PNG, JPEG or WEBP, ≤ 4 MB. One screenshot per call.',
+  'crossValidation.ai.startAnalysis': 'Start analysis',
+  'crossValidation.ai.analyzing': 'Analyzing screenshot…',
+  'crossValidation.ai.banner.title': 'Unverified AI draft.',
+  'crossValidation.ai.banner.body':
+    'Review every row before confirming. Nothing is persisted until you click Confirm.',
+  'crossValidation.ai.providerUsed': 'Provider used',
+  'crossValidation.ai.strelokVersion': 'Strelok Pro version (required)',
+  'crossValidation.ai.review.empty':
+    'No usable rows extracted. Cancel and use the manual paste path instead.',
+  'crossValidation.ai.review.unreadable': 'Unreadable cells reported by the AI',
+  'crossValidation.ai.review.assumptions': 'Assumptions reported by the AI',
+  'crossValidation.ai.abandon': 'Abandon (draft will be lost)',
+  'crossValidation.ai.confirm': 'Confirm and create reference',
+  'crossValidation.ai.confirmed': 'Strelok Pro reference added (AI draft validated).',
+  'crossValidation.ai.errorTooLarge': 'Image too large (max 4 MB).',
+  'crossValidation.ai.attachToCaseTitle': 'Attach to case',
+  'crossValidation.ai.attachToCaseDesc':
+    'The validated draft will be added as a new Strelok Pro reference.',
+  'crossValidation.ai.attachToCaseChoose': 'Choose existing case',
+  'crossValidation.ai.attachToCaseNew': 'Create new case',
+  'crossValidation.ai.attached': 'Draft attached to case.',
+  'crossValidation.ai.unavailable':
+    'IA-1 disabled — self-hosted Supabase not configured (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY missing).',
+
+  'admin.ai.title': 'AI — Configuration',
+  'admin.ai.subtitle':
+    'AI settings persisted in DB (self-hosted Supabase). No provider keys are stored here — they are injected as Edge Function secrets.',
+  'admin.ai.unavailable':
+    'Supabase not configured in this build. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY then rebuild to access this page.',
+  'admin.ai.notAdmin': 'Admin sign-in required for this page.',
+  'admin.ai.signIn': 'Sign in (Supabase)',
+  'admin.ai.signInEmail': 'Email',
+  'admin.ai.signInPassword': 'Password',
+  'admin.ai.signInSubmit': 'Sign in',
+  'admin.ai.signOut': 'Sign out',
+  'admin.ai.refresh': 'Reload',
+  'admin.ai.testProviders': 'Test providers',
+  'admin.ai.testRunning': 'Testing…',
+  'admin.ai.testQuatarly': 'Quatarly',
+  'admin.ai.testGoogle': 'Google Direct',
+  'admin.ai.keyPresent': 'Key present',
+  'admin.ai.keyMissing': 'Key missing',
+  'admin.ai.settings.providerPrimary': 'Primary provider',
+  'admin.ai.settings.modelPrimary': 'Primary model',
+  'admin.ai.settings.quatarlyApiUrl': 'Quatarly API URL',
+  'admin.ai.settings.allowGoogleFallback': 'Allow Google fallback',
+  'admin.ai.settings.googleDirectEnabled': 'Enable Google Direct',
+  'admin.ai.settings.googleDirectModel': 'Google model',
+  'admin.ai.settings.maxImageBytes': 'Max image size (bytes)',
+  'admin.ai.settings.saved': 'Settings saved',
+  'admin.ai.settings.saveFailed': 'Save failed',
 };
 
 // Append paste-import keys (EN) — kept after object literal would be a TS

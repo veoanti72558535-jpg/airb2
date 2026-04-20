@@ -252,6 +252,55 @@ export default function CrossValidationPage() {
     URL.revokeObjectURL(url);
   };
 
+  // -----------------------------------------------------------------
+  // IA-1 handlers — JAMAIS de persistance avant l'étape d'attache.
+  // -----------------------------------------------------------------
+  const handleAiConfirm = (payload: AIImportConfirmPayload) => {
+    // La modale a déjà fermé : on stocke en RAM uniquement et on ouvre
+    // le sélecteur de cas.
+    setPendingAi(payload);
+  };
+
+  const handleAttachToExisting = (caseId: string) => {
+    if (!pendingAi) return;
+    const stored = items.find((s) => s.id === caseId);
+    if (!stored) {
+      toast.error(t('crossValidation.ai.attachFailed'));
+      return;
+    }
+    const nextCase: UserCrossValidationCase = {
+      ...stored.case,
+      references: [...stored.case.references, pendingAi.reference],
+    };
+    const result = userCaseRepo.update(stored.id, nextCase);
+    if (!result.ok) {
+      toast.error(t('crossValidation.ai.attachFailed'));
+      return;
+    }
+    refresh();
+    toast.success(t('crossValidation.ai.attached'));
+    setPendingAi(null);
+  };
+
+  const handleAttachToNew = () => {
+    if (!pendingAi) return;
+    const empty = makeEmptyUserCase();
+    // On remplace la 1re référence vide du modèle par le brouillon IA
+    // validé pour éviter d'avoir une référence "manual-entry" fantôme
+    // à côté.
+    const nextCase: UserCrossValidationCase = {
+      ...empty,
+      title: empty.title || `Strelok Pro draft — ${new Date().toLocaleDateString()}`,
+      references: [pendingAi.reference],
+    };
+    setActiveId(null);
+    setDraft(nextCase);
+    setIssues([]);
+    setView('edit');
+    setPendingAi(null);
+    toast.success(t('crossValidation.ai.attachedNew'));
+  };
+
   return (
     <div className="space-y-4">
       <header className="flex flex-col gap-1">

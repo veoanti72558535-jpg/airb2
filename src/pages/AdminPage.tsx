@@ -8,6 +8,7 @@ import type { ImportEntityType } from '@/lib/import-schemas';
 import { ProjectileStorageDiagnosticCard } from '@/components/admin/ProjectileStorageDiagnosticCard';
 import { ProjectileCleanupCard } from '@/components/admin/ProjectileCleanupCard';
 import { SessionStorageDiagnosticCard } from '@/components/admin/SessionStorageDiagnosticCard';
+import { StorageQuotaDiagnosticCard } from '@/components/admin/StorageQuotaDiagnosticCard';
 
 export default function AdminPage() {
   const { t } = useI18n();
@@ -114,6 +115,9 @@ export default function AdminPage() {
 
       {/* Diagnostic stockage sessions (Tranche Admin Storage Sessions) */}
       <SessionStorageDiagnosticCard />
+
+      {/* Diagnostic global capacité navigateur (Tranche Admin Storage Quota) */}
+      <StorageQuotaDiagnosticCard />
 
       {/* Nettoyage projectiles non-airgun (Tranche Cleanup) */}
       <ProjectileCleanupCard onCleaned={() => setDiagRefreshKey((k) => k + 1)} />

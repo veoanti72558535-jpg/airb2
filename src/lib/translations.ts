@@ -868,6 +868,23 @@ const fr = {
   'admin.sessionDiag.healthyHint':
     'Stockage sessions sain : IndexedDB actif, migration locale effectuée, pas de clé legacy résiduelle.',
 
+  // Tranche Admin Storage — Diagnostic global de capacité navigateur (lecture seule)
+  'admin.quotaDiag.title': 'Capacité de stockage',
+  'admin.quotaDiag.subtitle': 'Estimation globale fournie par le navigateur (lecture seule).',
+  'admin.quotaDiag.supported': 'Estimation disponible',
+  'admin.quotaDiag.usage': 'Utilisé',
+  'admin.quotaDiag.quota': 'Quota estimé',
+  'admin.quotaDiag.percent': 'Utilisation',
+  'admin.quotaDiag.normalHint': 'Capacité normale. Aucune action requise.',
+  'admin.quotaDiag.watchHint':
+    'À surveiller : usage élevé. Pensez à exporter vos données régulièrement.',
+  'admin.quotaDiag.criticalHint':
+    'Quota presque atteint : risque de blocage des écritures. Exportez puis nettoyez.',
+  'admin.quotaDiag.unsupportedHint':
+    'Estimation non disponible sur ce navigateur. Aucune mesure fiable de quota possible ici.',
+  'admin.quotaDiag.estimateDisclaimer':
+    'Valeurs approximatives fournies par le navigateur, pas une mesure exacte.',
+
   // Reticles (Tranche F.4)
   'reticles.title': 'Bibliothèque de réticules',
   'reticles.add': 'Ajouter un réticule',
@@ -1801,6 +1818,23 @@ const en: Record<keyof typeof fr, string> = {
     'IndexedDB unavailable: saved sessions will be volatile and lost when the tab closes.',
   'admin.sessionDiag.healthyHint':
     'Sessions storage healthy: IndexedDB active, local migration done, no residual legacy key.',
+
+  // Tranche Admin Storage — global browser storage quota diagnostic (read-only)
+  'admin.quotaDiag.title': 'Storage capacity',
+  'admin.quotaDiag.subtitle': 'Global estimate provided by the browser (read-only).',
+  'admin.quotaDiag.supported': 'Estimate available',
+  'admin.quotaDiag.usage': 'Used',
+  'admin.quotaDiag.quota': 'Estimated quota',
+  'admin.quotaDiag.percent': 'Usage',
+  'admin.quotaDiag.normalHint': 'Capacity is healthy. No action needed.',
+  'admin.quotaDiag.watchHint':
+    'Worth watching: high usage. Consider exporting your data regularly.',
+  'admin.quotaDiag.criticalHint':
+    'Quota nearly reached: writes may start failing. Export then clean up.',
+  'admin.quotaDiag.unsupportedHint':
+    'Estimate not available on this browser. No reliable quota measurement possible here.',
+  'admin.quotaDiag.estimateDisclaimer':
+    'Approximate values provided by the browser, not an exact measurement.',
 
   // Reticles (Tranche F.4)
   'reticles.title': 'Reticles Library',

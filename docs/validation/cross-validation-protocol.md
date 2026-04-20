@@ -1,8 +1,10 @@
 # Cross-validation protocol — Engine vs External References
 
-> **Statut** : tranche BUILD-A livrée — socle technique en place, pas
-> encore de comparaison numérique. Synthèse exécutable de la tranche
-> PLAN précédente (`/.lovable/plan.md`).
+> **Statut** : BUILD-A + BUILD-B livrés. **BUILD-C reporté** : aucune
+> donnée externe réelle (ChairGun / Strelok / MERO) n'a encore été
+> fournie sous forme exploitable (capture, export ou relevé). Le socle
+> technique est prêt à les accueillir dès qu'elles seront disponibles.
+> Synthèse exécutable de la tranche PLAN (`/.lovable/plan.md`).
 
 ## 1. Objectif
 
@@ -75,16 +77,48 @@ remplacer dès BUILD-C par des sources réelles.
 
 ## 6. Ce que ce socle ne fait PAS encore
 
-- ❌ Pas de calcul moteur sur les cas (BUILD-B)
-- ❌ Pas d'application de tolérances (BUILD-B)
-- ❌ Pas de saisie de masse multi-cas (BUILD-C)
-- ❌ Pas de génération `engine-cross-validation-report.md` (BUILD-D)
-- ❌ Pas d'exposition UI (jamais — restera hors-UI)
+## 6. Ce que ce socle ne fait PAS encore
 
-## 7. Suite (BUILD-B)
+- ✅ Calcul moteur sur les cas (BUILD-B livré — `compare.ts`)
+- ✅ Application de tolérances (BUILD-B livré — `tolerances.ts`)
+- ✅ Découverte filesystem des fixtures (BUILD-C — `fixture-discovery.ts`)
+- ❌ Saisie de cas réels avec sources externes A/B (BUILD-C — bloqué sur données utilisateur)
+- ❌ Génération `engine-cross-validation-report.md` (BUILD-D)
+- ❌ Exposition UI (jamais — restera hors-UI)
 
-- Runner test qui pour chaque cas exécute `calculateTrajectory(inputs)`,
-  charge les `references[]`, calcule deltas par grandeur, applique les
-  tolérances de `PROFILE_TOLERANCE`, classe PASS / INDICATIVE / FAIL.
-- Sortie console structurée, pas encore de markdown.
-- Aucun changement moteur.
+## 7. Statut BUILD-C (saisie réelle)
+
+**Décision** : la saisie de cas réels n'est lancée que lorsque
+l'utilisateur fournit des données externes traçables (capture,
+screenshot, export). **Aucune valeur externe n'est inventée**, même pour
+atteindre un quota de cas.
+
+**Cas réels actuellement saisis** : 0.
+
+**Cas bootstrap (synthétique, NON validation)** : 1 —
+`case-22-pellet-18gr-270-zero30` (source `auxiliary`, confiance C).
+Marqué INDICATIVE par construction via le harness ; un test garde-fou
+(`fixture-discovery.test.ts`) empêche qu'il soit promu en validation
+forte par mégarde.
+
+**Pour débloquer BUILD-C** l'utilisateur doit fournir, par cas visé :
+
+1. l'`inputs.json` (paramètres figés du tir),
+2. ≥1 source externe avec : capture/export, version logicielle,
+   méthode d'extraction, et confiance honnête (A/B/C).
+
+**Pipeline d'intégration** une fois les données fournies :
+
+1. Créer `src/lib/__fixtures__/cross-validation/<case-id>/`
+2. Ajouter `case.json`, `inputs.json`, `source-<src>.csv`,
+   `source-<src>.meta.json`, `notes.md`
+3. Le test `fixture-discovery.test.ts` les comparera automatiquement
+   via `loadAllCases()` + `runCaseComparison()` — aucun ajout de code.
+
+## 8. Suite (BUILD-D)
+
+- Générateur de rapport markdown + `summary.json` à partir des
+  `CaseComparisonResult[]`.
+- Section dédiée MERO-vs-MERO-APK pour le gate
+  `mem://constraints/mero-exposure-gates`.
+- Aucun changement moteur. Aucune exposition UI.

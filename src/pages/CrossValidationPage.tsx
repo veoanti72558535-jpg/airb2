@@ -1023,10 +1023,22 @@ function ReferenceEditor({ index, reference, onChange, onRemove }: ReferenceEdit
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label className="text-xs">{t('crossValidation.field.rows')}</Label>
-            <Button size="sm" variant="ghost" className="h-7" onClick={addRow}>
-              <Plus className="h-3.5 w-3.5 mr-1" />
-              {t('crossValidation.addRow')}
-            </Button>
+            <div className="flex gap-1">
+              <Button
+                size="sm"
+                variant="secondary"
+                className="h-7"
+                onClick={() => setPasteOpen(true)}
+                data-testid={`cv-paste-${index}`}
+              >
+                <ClipboardPaste className="h-3.5 w-3.5 mr-1" />
+                {t('crossValidation.paste.action')}
+              </Button>
+              <Button size="sm" variant="ghost" className="h-7" onClick={addRow}>
+                <Plus className="h-3.5 w-3.5 mr-1" />
+                {t('crossValidation.addRow')}
+              </Button>
+            </div>
           </div>
           <div className="overflow-x-auto -mx-3 px-3">
             <table className="w-full text-xs">
@@ -1094,6 +1106,12 @@ function ReferenceEditor({ index, reference, onChange, onRemove }: ReferenceEdit
           </p>
         </div>
       </CardContent>
+      <PasteRowsModal
+        open={pasteOpen}
+        onOpenChange={setPasteOpen}
+        existingRows={reference.rows}
+        onConfirm={handlePasteConfirm}
+      />
     </Card>
   );
 }

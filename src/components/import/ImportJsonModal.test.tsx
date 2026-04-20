@@ -223,3 +223,85 @@ describe('ImportJsonModal — Tranche Import UX (IDB persist confirmation)', () 
     spy.mockRestore();
   });
 });
+
+describe('ImportJsonModal — Tranche Import UX (explicit retry persist)', () => {
+  it('shows an explicit retry button only on persist failure', async () => {
+    const spy = vi.spyOn(repo, 'writeProjectilesToIdb').mockRejectedValueOnce(
+      new Error('IDB exploded'),
+    );
+    renderModal('projectile');
+    await uploadFile('import-file-input', [
+      { brand: 'R', model: '1', weight: 18, bc: 0.025, caliber: '.22' },
+    ]);
+    fireEvent.click(screen.getByTestId('import-preview-btn'));
+    await waitFor(() => screen.getByTestId('import-preview'));
+    fireEvent.click(screen.getByTestId('import-confirm-btn'));
+    await waitFor(() => screen.getByTestId('import-persist-error'));
+    // Retry button is visible inside the persist error banner.
+    expect(screen.getByTestId('import-retry-persist-btn')).toBeTruthy();
+    spy.mockRestore();
+  });
+
+  it('retry-only re-runs persistence (no duplicate items in cache or IDB)', async () => {
+    const spy = vi.spyOn(repo, 'writeProjectilesToIdb')
+      .mockRejectedValueOnce(new Error('IDB exploded'))
+      // 2nd call (retry) must succeed and is delegated to the real impl
+      .mockImplementationOnce(async (items) => {
+        // Mirror real behaviour : just remember the snapshot.
+        (globalThis as { __lastIdbSnapshot?: unknown }).__lastIdbSnapshot = items;
+      });
+    renderModal('projectile');
+    await uploadFile('import-file-input', [
+      { brand: 'A', model: '1', weight: 18, bc: 0.025, caliber: '.22' },
+      { brand: 'B', model: '2', weight: 20, bc: 0.03, caliber: '.25' },
+    ]);
+    fireEvent.click(screen.getByTestId('import-preview-btn'));
+    await waitFor(() => screen.getByTestId('import-preview'));
+    fireEvent.click(screen.getByTestId('import-confirm-btn'));
+    await waitFor(() => screen.getByTestId('import-persist-error'));
+
+    // Cache already holds the 2 items from the initial createMany().
+    expect(projectileStore.getAll()).toHaveLength(2);
+
+    fireEvent.click(screen.getByTestId('import-retry-persist-btn'));
+    // Wait for modal to close on success.
+    await waitFor(() => expect(screen.queryByTestId('import-persist-error')).toBeNull());
+
+    // Cache MUST still contain exactly 2 items — no duplicate insert.
+    expect(projectileStore.getAll()).toHaveLength(2);
+    // The 2nd writeProjectilesToIdb call received the same 2-item snapshot.
+    const snap = (globalThis as { __lastIdbSnapshot?: Array<{ brand: string }> }).__lastIdbSnapshot;
+    expect(snap).toHaveLength(2);
+    spy.mockRestore();
+  });
+
+  it('preserves the preview during the persistence error', async () => {
+    const spy = vi.spyOn(repo, 'writeProjectilesToIdb').mockRejectedValueOnce(
+      new Error('IDB exploded'),
+    );
+    renderModal('projectile');
+    await uploadFile('import-file-input', [
+      { brand: 'P', model: 'p', weight: 18, bc: 0.025, caliber: '.22' },
+    ]);
+    fireEvent.click(screen.getByTestId('import-preview-btn'));
+    await waitFor(() => screen.getByTestId('import-preview'));
+    fireEvent.click(screen.getByTestId('import-confirm-btn'));
+    await waitFor(() => screen.getByTestId('import-persist-error'));
+    // Preview is still rendered.
+    expect(screen.getByTestId('import-preview')).toBeTruthy();
+    spy.mockRestore();
+  });
+
+  it('does NOT show the retry button when there is no persist error', async () => {
+    renderModal('projectile');
+    await uploadFile('import-file-input', [
+      { brand: 'X', model: 'Y', weight: 18, bc: 0.025, caliber: '.22' },
+    ]);
+    fireEvent.click(screen.getByTestId('import-preview-btn'));
+    await waitFor(() => screen.getByTestId('import-preview'));
+    expect(screen.queryByTestId('import-retry-persist-btn')).toBeNull();
+  });
+});
+
+// Reference flushProjectilePersistence to keep the import used.
+void flushProjectilePersistence;

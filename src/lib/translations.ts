@@ -2321,5 +2321,8 @@ const en: Record<keyof typeof fr, string> = {
     'All MERO assumptions must be listed in `assumptions`.',
 };
 
+// Append paste-import keys (EN) — kept after object literal would be a TS
+// error, so we inject them inline above. (No-op marker.)
+
 export const translations = { fr, en } as const;
 export type TranslationKey = keyof typeof fr;

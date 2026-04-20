@@ -22,6 +22,9 @@ const HISTORICAL_METHODS = [
 
 function caseWithMethod(m: string): UserCrossValidationCase {
   const c = makeEmptyUserCase();
+  // `version` est requis (min 1 char) — `makeEmptyUserCase()` laisse
+  // une chaîne vide volontairement pour forcer la saisie côté UI.
+  c.references[0].meta.version = 'v-test';
   c.references[0].meta.extractionMethod = m as never;
   return c;
 }

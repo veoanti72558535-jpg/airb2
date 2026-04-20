@@ -29,18 +29,27 @@ function fakeSession(id: string): Session {
       },
     },
     results: [
-      { range: 30, drop: 0, velocity: 270, energy: 18, time: 0.11, drift: 0 },
+      {
+        range: 30,
+        drop: 0,
+        holdover: 0,
+        holdoverMRAD: 0,
+        velocity: 270,
+        energy: 18,
+        tof: 0.11,
+        windDrift: 0,
+        windDriftMOA: 0,
+        windDriftMRAD: 0,
+      },
     ],
     tags: ['hunt', 'pcp'],
     favorite: true,
     createdAt: '2026-01-01T00:00:00Z',
     updatedAt: '2026-01-02T00:00:00Z',
-    parentId: id === 'child' ? 'parent' : undefined,
-    calculationMetadata: {
-      engineVersion: 'p1',
-      calculatedAt: '2026-01-01T00:00:00Z',
-      calculatedAtSource: 'frozen',
-    },
+    derivedFromSessionId: id === 'child' ? 'parent' : undefined,
+    engineVersion: 1,
+    calculatedAt: '2026-01-01T00:00:00Z',
+    calculatedAtSource: 'frozen',
   } as Session;
 }
 
@@ -64,7 +73,7 @@ describe('session-repo — IDB persistence', () => {
     // Round-trip preserves results, tags, favorite, parentId, metadata.
     expect(back[0]).toEqual(a);
     expect(back[1]).toEqual(b);
-    expect(back[1].parentId).toBe('parent');
+    expect(back[1].derivedFromSessionId).toBe('parent');
     expect(back[0].results[0].velocity).toBe(270);
   });
 });

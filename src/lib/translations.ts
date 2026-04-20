@@ -840,6 +840,18 @@ const fr = {
   'admin.diag.unknown': 'Inconnu',
   'admin.diag.refreshing': 'Mise à jour…',
 
+  // Tranche Cleanup — purge des projectiles non-airgun (powder/firearm)
+  'admin.cleanup.title': 'Nettoyage projectiles non-airgun',
+  'admin.cleanup.subtitle': 'Supprime les projectiles à poudre (autres que pellets et slugs).',
+  'admin.cleanup.scan': 'Scanner',
+  'admin.cleanup.preview': '{count} projectile(s) à supprimer sur {total}.',
+  'admin.cleanup.empty': 'Aucun projectile non-airgun trouvé. Base déjà propre.',
+  'admin.cleanup.confirm': 'Supprimer définitivement',
+  'admin.cleanup.cancel': 'Annuler',
+  'admin.cleanup.confirmHint': 'Action irréversible. Conserve uniquement les projectiles de type pellet ou slug.',
+  'admin.cleanup.success': '{count} projectile(s) non-airgun supprimé(s).',
+  'admin.cleanup.error': 'Échec de la suppression. Réessayez.',
+
   // Reticles (Tranche F.4)
   'reticles.title': 'Bibliothèque de réticules',
   'reticles.add': 'Ajouter un réticule',

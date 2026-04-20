@@ -26,24 +26,6 @@ import {
 } from '@/lib/cross-validation/user-case-schema';
 import type { AIImportConfirmPayload } from '@/components/cross-validation/AIImportModal';
 
-// --- 0. Polyfills jsdom requis par Radix Select ----------------------------
-// Radix Select utilise `scrollIntoView`, `hasPointerCapture`,
-// `setPointerCapture` et `releasePointerCapture` que jsdom n'implémente
-// pas. On les stub ici pour que `SelectContent` puisse s'ouvrir et que
-// `SelectItem` reste cliquable. C'est strictement local au fichier.
-if (!(window.HTMLElement.prototype as any).scrollIntoView) {
-  (window.HTMLElement.prototype as any).scrollIntoView = () => {};
-}
-if (!(window.HTMLElement.prototype as any).hasPointerCapture) {
-  (window.HTMLElement.prototype as any).hasPointerCapture = () => false;
-}
-if (!(window.HTMLElement.prototype as any).setPointerCapture) {
-  (window.HTMLElement.prototype as any).setPointerCapture = () => {};
-}
-if (!(window.HTMLElement.prototype as any).releasePointerCapture) {
-  (window.HTMLElement.prototype as any).releasePointerCapture = () => {};
-}
-
 // --- 1. Supabase doit être "configuré" pour exposer le bouton IA -----------
 vi.mock('@/integrations/supabase/client', () => ({
   isSupabaseConfigured: () => true,

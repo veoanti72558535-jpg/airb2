@@ -236,8 +236,14 @@ npm -v    # 10.x
 cd /home/airadmin
 git clone https://github.com/<user>/<repo>.git airballistik
 cd /home/airadmin/airballistik
-npm ci
+npm install
 ```
+
+> ℹ️ **Pourquoi `npm install` et pas `npm ci` ?** Le projet utilise **bun**
+> en interne (Lovable). Le fichier `package-lock.json` peut être
+> désynchronisé de `package.json`. `npm install` régénère le lock file,
+> tandis que `npm ci` exige une synchronisation parfaite et échouera.
+> Si vous préférez bun : `curl -fsSL https://bun.sh/install | bash && bun install`.
 
 > ⚠️ **Ne faites pas `npm run build` tout de suite.** Vite inclut les
 > variables `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` **au moment
@@ -675,7 +681,7 @@ Mise à jour normale :
 cd /home/airadmin/airballistik
 git fetch
 git pull origin main
-npm ci
+npm install
 npm run build
 # Si Nginx natif :
 sudo systemctl reload nginx

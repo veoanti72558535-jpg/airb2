@@ -1,0 +1,15 @@
+{
+  "source": "auxiliary",
+  "version": "bootstrap-synthetic-2026-04",
+  "confidence": "C",
+  "extractionMethod": "manual-entry",
+  "extractedAt": "2026-04-20",
+  "operator": "build-a-bootstrap",
+  "assumptions": [
+    "Données synthétiques d'amorçage du pipeline — NON issues d'une référence externe réelle",
+    "Convention drop : négatif = sous la ligne de visée",
+    "Atmosphère ICAO standard, vent nul",
+    "BC interprété comme G1 (pas multi-BC)"
+  ],
+  "notes": "À remplacer dès BUILD-C par une vraie source ChairGun / Strelok / MERO."
+}

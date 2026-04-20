@@ -1,0 +1,12 @@
+{
+  "id": "case-22-pellet-18gr-270-zero30",
+  "description": ".22 pellet 18gr @ 270 m/s, zero 30m, ICAO standard, vent nul — cas pilote BUILD-A",
+  "tags": [".22", "pellet", "zero-30", "bootstrap"],
+  "inputsFile": "inputs.json",
+  "references": [
+    {
+      "metaFile": "source-auxiliary.meta.json",
+      "csvFile": "source-auxiliary.csv"
+    }
+  ]
+}

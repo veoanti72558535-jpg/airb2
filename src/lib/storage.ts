@@ -202,15 +202,28 @@ interface ProjectileStoreInternal {
   __hydrate: (items: Projectile[]) => void;
   /** Test-only — reset the cache to empty. */
   __resetForTests: () => void;
+  /** Internal — returns the in-flight chain of IDB writes (for flushProjectilePersistence). */
+  __getPendingPersist: () => Promise<void>;
 }
 
 function createProjectileStore(): ProjectileStoreInternal {
   let cache: Projectile[] = [];
+  // Tranche Import UX — chaîne des writes IDB en cours. `flushProjectilePersistence()`
+  // permet à un appelant (ex. modal d'import admin) d'attendre la confirmation
+  // réelle d'écriture IDB avant de déclarer un succès. Toutes les writes sont
+  // sérialisées sur cette chaîne pour garantir un ordre déterministe.
+  let pendingPersist: Promise<void> = Promise.resolve();
 
   const persist = () => {
     // Snapshot to avoid the writer seeing a later mutation.
     const snapshot = cache.slice();
-    void writeProjectilesToIdb(snapshot).catch((e) => {
+    // Chaîne sur la précédente write : un éventuel flush attendra TOUTES
+    // les writes empilées, pas seulement la dernière.
+    pendingPersist = pendingPersist
+      .catch(() => undefined) // une erreur passée ne bloque pas la suivante
+      .then(() => writeProjectilesToIdb(snapshot));
+    // Évite "unhandled rejection" si personne ne flush (call sites historiques).
+    pendingPersist.catch((e) => {
       console.error('[projectileStore] IDB persist failed', e);
     });
   };
@@ -267,8 +280,25 @@ function createProjectileStore(): ProjectileStoreInternal {
     },
     __resetForTests: () => {
       cache = [];
+      pendingPersist = Promise.resolve();
     },
+    __getPendingPersist: () => pendingPersist,
   };
+}
+
+/**
+ * Tranche Import UX — attend explicitement la fin de toutes les writes IDB
+ * du `projectileStore` empilées jusqu'à présent.
+ *
+ * Utilisé par le workflow d'import admin pour ne déclarer un succès qu'après
+ * confirmation réelle de la persistance IndexedDB. Pour les call sites
+ * historiques, c'est purement opt-in : ne pas l'appeler ne change rien.
+ *
+ * Throw si la dernière write a échoué — l'appelant doit catch et gérer
+ * (UI : ne pas afficher de faux succès, conserver la preview).
+ */
+export async function flushProjectilePersistence(): Promise<void> {
+  await projectileStore.__getPendingPersist();
 }
 
 /**

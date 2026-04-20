@@ -15,7 +15,8 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { I18nProvider } from '@/lib/i18n';
 import { ImportJsonModal } from './ImportJsonModal';
-import { projectileStore, reticleStore, opticStore } from '@/lib/storage';
+import { projectileStore, reticleStore, opticStore, flushProjectilePersistence } from '@/lib/storage';
+import * as repo from '@/lib/projectile-repo';
 
 vi.mock('sonner', () => ({
   toast: {
@@ -162,5 +163,63 @@ describe('ImportJsonModal — workflow & invariants', () => {
     fireEvent.click(screen.getByTestId('import-cancel-btn'));
     expect(projectileStore.getAll()).toEqual([]);
     expect(onClose).toHaveBeenCalled();
+  });
+});
+
+describe('ImportJsonModal — Tranche Import UX (IDB persist confirmation)', () => {
+  it('awaits IDB persistence before reporting success on projectile import', async () => {
+    renderModal('projectile');
+    await uploadFile('import-file-input', [
+      { brand: 'A', model: '1', weight: 18, bc: 0.025, caliber: '.22' },
+    ]);
+    fireEvent.click(screen.getByTestId('import-preview-btn'));
+    await waitFor(() => screen.getByTestId('import-preview'));
+    fireEvent.click(screen.getByTestId('import-confirm-btn'));
+    // After the click resolves, both the cache AND IDB must contain the item.
+    await waitFor(() => expect(projectileStore.getAll()).toHaveLength(1));
+    await flushProjectilePersistence();
+    const persisted = await repo.readProjectilesFromIdb();
+    expect(persisted).toHaveLength(1);
+    expect(persisted[0].brand).toBe('A');
+  });
+
+  it('keeps the preview and shows an error banner when IDB persistence fails', async () => {
+    const spy = vi.spyOn(repo, 'writeProjectilesToIdb').mockRejectedValueOnce(
+      new Error('IDB exploded'),
+    );
+    renderModal('projectile');
+    await uploadFile('import-file-input', [
+      { brand: 'Z', model: '9', weight: 22, bc: 0.03, caliber: '.25' },
+    ]);
+    fireEvent.click(screen.getByTestId('import-preview-btn'));
+    await waitFor(() => screen.getByTestId('import-preview'));
+    fireEvent.click(screen.getByTestId('import-confirm-btn'));
+    await waitFor(() => screen.getByTestId('import-persist-error'));
+    // Preview is preserved → user can retry without re-uploading.
+    expect(screen.getByTestId('import-preview')).toBeTruthy();
+    // Confirm button is re-enabled (phase back to 'error', not committing).
+    expect((screen.getByTestId('import-confirm-btn') as HTMLButtonElement).disabled).toBe(false);
+    spy.mockRestore();
+  });
+
+  it('disables confirm + cancel during commit to block double-submit', async () => {
+    let resolveWrite: (() => void) | null = null;
+    const spy = vi.spyOn(repo, 'writeProjectilesToIdb').mockImplementationOnce(
+      () => new Promise((res) => { resolveWrite = () => res(); }),
+    );
+    renderModal('projectile');
+    await uploadFile('import-file-input', [
+      { brand: 'D', model: 'd', weight: 18, bc: 0.025, caliber: '.22' },
+    ]);
+    fireEvent.click(screen.getByTestId('import-preview-btn'));
+    await waitFor(() => screen.getByTestId('import-preview'));
+    fireEvent.click(screen.getByTestId('import-confirm-btn'));
+    // While persisting, both buttons must be disabled.
+    await waitFor(() => {
+      expect((screen.getByTestId('import-confirm-btn') as HTMLButtonElement).disabled).toBe(true);
+      expect((screen.getByTestId('import-cancel-btn') as HTMLButtonElement).disabled).toBe(true);
+    });
+    resolveWrite?.();
+    spy.mockRestore();
   });
 });

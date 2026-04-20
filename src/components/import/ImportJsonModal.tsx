@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { useI18n } from '@/lib/i18n';
-import { Upload, X } from 'lucide-react';
+import { Upload, X, Loader2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -26,6 +26,7 @@ import {
   opticStore,
   reticleStore,
   StorageQuotaExceededError,
+  flushProjectilePersistence,
 } from '@/lib/storage';
 import type { ImportSource } from '@/lib/types';
 
@@ -62,20 +63,39 @@ export function ImportJsonModal({
   const [fileName, setFileName] = useState<string | null>(null);
   const [rawText, setRawText] = useState<string | null>(null);
   const [preview, setPreview] = useState<ImportPreviewType | null>(null);
-  const [isWriting, setIsWriting] = useState(false);
+  // Tranche Import UX — états distincts pour rendre l'UX honnête :
+  //  - idle      : preview prête, en attente de clic
+  //  - writing   : createMany() en cours (cache mémoire)
+  //  - persisting: write IDB en cours (write-through async)
+  //  - error     : la persistance a échoué — preview CONSERVÉE, retry possible
+  type Phase = 'idle' | 'writing' | 'persisting' | 'error';
+  const [phase, setPhase] = useState<Phase>('idle');
+  const [persistError, setPersistError] = useState<string | null>(null);
+  const isCommitting = phase === 'writing' || phase === 'persisting';
+  // Tranche Import UX — ref miroir de `phase` lisible dans le catch async
+  // (où la valeur du closure est figée au moment du await).
+  const phaseRef = useRef<Phase>('idle');
+  const setPhaseSafe = useCallback((next: Phase) => {
+    phaseRef.current = next;
+    setPhase(next);
+  }, []);
 
   const reset = useCallback(() => {
     setFileName(null);
     setRawText(null);
     setPreview(null);
-    setIsWriting(false);
+    setPhaseSafe('idle');
+    setPersistError(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
-  }, []);
+  }, [setPhaseSafe]);
 
   const handleClose = useCallback(() => {
+    // Garde-fou : pendant la persistance, on ne ferme pas (évite double commit
+    // + perte de la preview avant confirmation IDB).
+    if (isCommitting) return;
     reset();
     onClose();
-  }, [onClose, reset]);
+  }, [isCommitting, onClose, reset]);
 
   const handleFile = useCallback((file: File) => {
     setPreview(null);
@@ -110,9 +130,11 @@ export function ImportJsonModal({
     ? preview.okCount + preview.sanitizedCount
     : 0;
 
-  const handleConfirm = useCallback(() => {
+  const handleConfirm = useCallback(async () => {
     if (!preview || writableCount === 0) return;
-    setIsWriting(true);
+    if (isCommitting) return; // double-submit guard
+    setPersistError(null);
+    setPhaseSafe('writing');
     try {
       // Bulk insert : un seul localStorage write quel que soit N. Sans cela,
       // un import massif (ex. bullets4 ~8700 projectiles) effectue O(N²)
@@ -125,6 +147,12 @@ export function ImportJsonModal({
       if (preview.entityType === 'projectile') {
         const data = writable.map((i) => i.data as NormalisedProjectile);
         written = projectileStore.createMany(data).length;
+        // Tranche Import UX — pour les projectiles, on attend la confirmation
+        // réelle d'écriture IDB AVANT de déclarer succès. Sans cela, un import
+        // massif (~8700 projectiles) annoncerait un succès alors que le write
+        // IDB peut encore échouer (quota, IDB indisponible, …).
+        setPhaseSafe('persisting');
+        await flushProjectilePersistence();
       } else if (preview.entityType === 'optic') {
         const data = writable.map((i) => i.data as NormalisedOptic);
         written = opticStore.createMany(data).length;
@@ -140,12 +168,20 @@ export function ImportJsonModal({
         // Message actionnable : l'utilisateur doit purger ou exporter avant
         // de réessayer. Ne pas perdre la preview pour qu'il puisse retenter.
         toast.error(t('import.quotaExceeded'), { duration: 8000 });
+        setPhaseSafe('idle');
+      } else if (phaseRef.current === 'persisting') {
+        // Échec IDB : on NE déclare PAS de succès, on conserve la preview,
+        // et on affiche un message actionnable. L'utilisateur peut réessayer.
+        const msg = e instanceof Error ? e.message : String(e);
+        setPersistError(msg);
+        setPhaseSafe('error');
+        toast.error(t('import.persistFailed'), { duration: 8000 });
       } else {
         toast.error(e instanceof Error ? e.message : t('import.fileInvalid'));
+        setPhaseSafe('idle');
       }
-      setIsWriting(false);
     }
-  }, [handleClose, onSuccess, preview, t, writableCount]);
+  }, [handleClose, isCommitting, onSuccess, preview, setPhaseSafe, t, writableCount]);
 
   const titleKey = useMemo(() => {
     if (entityType === 'projectile') return 'import.title.projectiles';
@@ -207,6 +243,20 @@ export function ImportJsonModal({
               {t('import.previewRequired')}
             </div>
           )}
+
+          {/* Étape 3 — bandeau d'échec persistance IDB (preview conservée). */}
+          {phase === 'error' && (
+            <div
+              data-testid="import-persist-error"
+              className="rounded-md border border-destructive/40 bg-destructive/10 p-2 text-[11px] text-destructive space-y-1"
+              role="alert"
+            >
+              <div className="font-medium">{t('import.persistErrorBanner')}</div>
+              {persistError && (
+                <div className="text-[10px] opacity-80 break-all">{persistError}</div>
+              )}
+            </div>
+          )}
         </div>
 
         <DialogFooter className="gap-2 flex-row sm:justify-between">
@@ -216,6 +266,7 @@ export function ImportJsonModal({
             size="sm"
             onClick={handleClose}
             data-testid="import-cancel-btn"
+            disabled={isCommitting}
           >
             <X className="h-3.5 w-3.5 mr-1" />
             {t('import.cancel')}
@@ -223,13 +274,25 @@ export function ImportJsonModal({
           <Button
             type="button"
             size="sm"
-            disabled={!preview || writableCount === 0 || isWriting}
+            disabled={!preview || writableCount === 0 || isCommitting}
             onClick={handleConfirm}
             data-testid="import-confirm-btn"
           >
-            {preview && writableCount > 0
-              ? t('import.writeCount', { count: writableCount })
-              : t('import.nothingToImport')}
+            {phase === 'writing' ? (
+              <span className="inline-flex items-center gap-1.5">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                {t('import.writing')}
+              </span>
+            ) : phase === 'persisting' ? (
+              <span className="inline-flex items-center gap-1.5">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                {t('import.persisting')}
+              </span>
+            ) : preview && writableCount > 0 ? (
+              t('import.writeCount', { count: writableCount })
+            ) : (
+              t('import.nothingToImport')
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

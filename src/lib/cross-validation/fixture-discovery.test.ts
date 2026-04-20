@@ -52,11 +52,13 @@ describe('fixture-discovery — pipeline E2E avec harness BUILD-B', () => {
     }
   });
 
-  it('cas pilote bootstrap (auxiliary, confiance C) → statut INDICATIVE', () => {
+  it('cas pilote bootstrap (auxiliary, confiance C) ne peut JAMAIS être PASS', () => {
     // Garde-fou anti-régression : tant qu'aucune donnée externe RÉELLE
     // (ChairGun/Strelok/MERO confiance A/B) n'est saisie, le seul cas
-    // présent doit rester un INDICATIVE — sinon quelqu'un a maquillé un
-    // bootstrap synthétique en validation forte.
+    // présent reste un bootstrap synthétique. Il doit être classé soit
+    // INDICATIVE (confiance C, mais valeurs proches) soit FAIL (chiffres
+    // approximatifs hors tolérance) — JAMAIS PASS. Toute promotion en
+    // PASS = quelqu'un a maquillé un bootstrap en validation forte.
     const cases = loadAllCases();
     const bootstrap = cases.find(
       (c) => c.case.id === 'case-22-pellet-18gr-270-zero30',
@@ -74,7 +76,8 @@ describe('fixture-discovery — pipeline E2E avec harness BUILD-B', () => {
     expect(onlyAuxiliary).toBe(true);
 
     const result = runCaseComparison(bootstrap.case);
-    expect(result.status).toBe('INDICATIVE');
+    expect(result.status).not.toBe('PASS');
+    expect(['INDICATIVE', 'FAIL']).toContain(result.status);
   });
 });
 

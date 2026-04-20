@@ -84,4 +84,41 @@ describe('ProjectileStorageDiagnosticCard', () => {
 
     spy.mockRestore();
   });
+
+  it('re-reads the diagnostic when refreshKey changes (no polling)', async () => {
+    // État initial : 1 projectile en cache + IDB.
+    localStorage.setItem(MIGRATION_FLAG_KEY, '2024-05-01T00:00:00.000Z');
+    await writeProjectilesToIdb([fakeProjectile(1)]);
+    projectileStore.__hydrate([fakeProjectile(1)]);
+
+    const { rerender } = render(
+      <I18nProvider>
+        <ProjectileStorageDiagnosticCard refreshKey={0} />
+      </I18nProvider>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('diag-count').textContent).toBe('1');
+    });
+
+    // Simule un import projectile : on grossit le cache + IDB, puis le
+    // parent bump refreshKey (ex. depuis ImportJsonModal.onSuccess).
+    const next = [fakeProjectile(1), fakeProjectile(2), fakeProjectile(3)];
+    await writeProjectilesToIdb(next);
+    projectileStore.__hydrate(next);
+
+    rerender(
+      <I18nProvider>
+        <ProjectileStorageDiagnosticCard refreshKey={1} />
+      </I18nProvider>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('diag-count').textContent).toBe('3');
+    });
+    // L'indicateur "refreshing" est transitoire, donc on ne peut pas
+    // garantir sa visibilité dans le test, mais le diagnostic doit
+    // refléter le nouvel état SANS rechargement de page.
+    expect(screen.getByTestId('diag-backend').textContent).toMatch(/IndexedDB/i);
+  });
 });

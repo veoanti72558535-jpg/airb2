@@ -27,3 +27,23 @@ export {
   type AssembleReferenceInput,
   type AssembledCase,
 } from './case-loader';
+
+export {
+  DEFAULT_TOLERANCES,
+  isWithinTolerance,
+  type ComparableMetric,
+  type MetricTolerance,
+} from './tolerances';
+
+export {
+  compareReference,
+  runCaseComparison,
+  type CaseComparisonResult,
+  type ComparisonStatus,
+  type ComparisonWarning,
+  type CompareOptions,
+  type LineComparison,
+  type MetricComparison,
+  type MetricSummary,
+  type ReferenceComparisonResult,
+} from './compare';

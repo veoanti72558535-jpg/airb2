@@ -3,6 +3,7 @@ import { Trash2, AlertTriangle, Loader2 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { projectileStore, flushProjectilePersistence } from '@/lib/storage';
 import { toast } from 'sonner';
+import { isAirgunBrand } from '@/lib/airgun-brands';
 import type { Projectile } from '@/lib/types';
 
 /**
@@ -28,9 +29,20 @@ export interface ProjectileCleanupCardProps {
 const isAirgunProjectile = (p: Projectile): boolean =>
   p.projectileType === 'pellet' || p.projectileType === 'slug';
 
+/**
+ * Mode "whitelist marque" — supprime tout projectile dont la marque ne
+ * figure pas dans `AIRGUN_BRANDS`. Conçu pour rattraper les imports
+ * bullets4-db où des balles à poudre (Hornady, Nosler, Barnes…) ont été
+ * stockées avec `projectileType = 'slug'` à tort. Indépendant du mode
+ * "type" historique : les deux peuvent être utilisés successivement.
+ */
+const isPowderBrandProjectile = (p: Projectile): boolean =>
+  !isAirgunBrand(p.brand);
+
 export function ProjectileCleanupCard({ onCleaned }: ProjectileCleanupCardProps = {}) {
   const { t } = useI18n();
   const [scanned, setScanned] = useState<{ toRemove: number; total: number } | null>(null);
+  const [scannedBrand, setScannedBrand] = useState<{ toRemove: number; total: number } | null>(null);
   const [busy, setBusy] = useState(false);
 
   const handleScan = () => {
@@ -50,6 +62,29 @@ export function ProjectileCleanupCard({ onCleaned }: ProjectileCleanupCardProps 
       onCleaned?.();
     } catch (e) {
       console.error('[cleanup] failed', e);
+      toast.error(t('admin.cleanup.error'));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleScanBrand = () => {
+    const all = projectileStore.getAll();
+    const toRemove = all.filter(isPowderBrandProjectile).length;
+    setScannedBrand({ toRemove, total: all.length });
+  };
+
+  const handleConfirmBrand = async () => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const removed = projectileStore.deleteWhere(isPowderBrandProjectile);
+      await flushProjectilePersistence();
+      toast.success(t('admin.cleanup.success').replace('{count}', String(removed)));
+      setScannedBrand(null);
+      onCleaned?.();
+    } catch (e) {
+      console.error('[cleanup-brand] failed', e);
       toast.error(t('admin.cleanup.error'));
     } finally {
       setBusy(false);

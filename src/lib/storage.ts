@@ -204,6 +204,14 @@ interface ProjectileStoreInternal {
   __resetForTests: () => void;
   /** Internal — returns the in-flight chain of IDB writes (for flushProjectilePersistence). */
   __getPendingPersist: () => Promise<void>;
+  /**
+   * Tranche Import UX — re-déclenche une persistance IDB du snapshot
+   * mémoire courant SANS re-jouer create/createMany. Utilisé exclusivement
+   * par le bouton « Réessayer l'enregistrement » du flow d'import admin
+   * en cas d'échec de persistance après un createMany() déjà appliqué au
+   * cache. N'introduit aucun doublon : on ré-écrit l'état exact du cache.
+   */
+  __retryPersist: () => void;
 }
 
 function createProjectileStore(): ProjectileStoreInternal {
@@ -283,6 +291,13 @@ function createProjectileStore(): ProjectileStoreInternal {
       pendingPersist = Promise.resolve();
     },
     __getPendingPersist: () => pendingPersist,
+    __retryPersist: () => {
+      // Réutilise le même mécanisme `persist()` (snapshot + chaînage) ;
+      // la chaîne `pendingPersist` est ré-amorcée avec une promesse résolue
+      // pour que le précédent rejet n'entraîne pas le retry.
+      pendingPersist = Promise.resolve();
+      persist();
+    },
   };
 }
 
@@ -298,6 +313,25 @@ function createProjectileStore(): ProjectileStoreInternal {
  * (UI : ne pas afficher de faux succès, conserver la preview).
  */
 export async function flushProjectilePersistence(): Promise<void> {
+  await projectileStore.__getPendingPersist();
+}
+
+/**
+ * Tranche Import UX — Réessaie uniquement la PERSISTANCE IDB du snapshot
+ * mémoire courant du `projectileStore`, sans rejouer aucun `create()` /
+ * `createMany()`. Awaitable : résout dès que l'écriture IDB est confirmée
+ * (ou throw si elle échoue à nouveau).
+ *
+ * Contrat :
+ *  - aucun nouvel item n'est créé,
+ *  - aucun doublon n'est introduit,
+ *  - le cache mémoire est inchangé,
+ *  - on tente strictement de re-pousser ce que le cache contient déjà.
+ *
+ * Utilisé par l'UI d'import quand `flushProjectilePersistence()` a rejeté.
+ */
+export async function retryProjectilePersistence(): Promise<void> {
+  projectileStore.__retryPersist();
   await projectileStore.__getPendingPersist();
 }
 

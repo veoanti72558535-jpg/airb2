@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   FileJson,
   ClipboardPaste,
+  Bot,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,6 +35,14 @@ import {
   TabsList,
   TabsTrigger,
 } from '@/components/ui/tabs';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { useI18n } from '@/lib/i18n';
 import {
   makeEmptyReferenceRow,
@@ -56,6 +65,8 @@ import { CrossValidationResults } from '@/components/cross-validation/CrossValid
 import { TemplatesAndGuides } from '@/components/cross-validation/TemplatesAndGuides';
 import { PasteRowsModal } from '@/components/cross-validation/PasteRowsModal';
 import type { ExternalReferenceRow } from '@/lib/cross-validation/types';
+import { AIImportModal, type AIImportConfirmPayload } from '@/components/cross-validation/AIImportModal';
+import { isSupabaseConfigured } from '@/integrations/supabase/client';
 
 /**
  * BUILD-C bis — Onglet "Validation externe".
@@ -85,6 +96,14 @@ export default function CrossValidationPage() {
     runAt: string;
   } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // IA-1 — modale d'import screenshot Strelok Pro. Le bouton n'apparaît
+  // que si Supabase self-hosted est configuré côté frontend (cf. plan).
+  const aiAvailable = isSupabaseConfigured();
+  const [aiOpen, setAiOpen] = useState(false);
+  // Quand un brouillon IA est validé, on demande à l'opérateur s'il
+  // veut l'attacher à un cas existant ou créer un nouveau cas. Aucune
+  // persistance avant ce choix explicite.
+  const [pendingAi, setPendingAi] = useState<AIImportConfirmPayload | null>(null);
 
   const refresh = useCallback(() => {
     setItems(userCaseRepo.getAll());
@@ -233,6 +252,55 @@ export default function CrossValidationPage() {
     URL.revokeObjectURL(url);
   };
 
+  // -----------------------------------------------------------------
+  // IA-1 handlers — JAMAIS de persistance avant l'étape d'attache.
+  // -----------------------------------------------------------------
+  const handleAiConfirm = (payload: AIImportConfirmPayload) => {
+    // La modale a déjà fermé : on stocke en RAM uniquement et on ouvre
+    // le sélecteur de cas.
+    setPendingAi(payload);
+  };
+
+  const handleAttachToExisting = (caseId: string) => {
+    if (!pendingAi) return;
+    const stored = items.find((s) => s.id === caseId);
+    if (!stored) {
+      toast.error(t('crossValidation.ai.attachFailed'));
+      return;
+    }
+    const nextCase: UserCrossValidationCase = {
+      ...stored.case,
+      references: [...stored.case.references, pendingAi.reference],
+    };
+    const result = userCaseRepo.update(stored.id, nextCase);
+    if (!result.ok) {
+      toast.error(t('crossValidation.ai.attachFailed'));
+      return;
+    }
+    refresh();
+    toast.success(t('crossValidation.ai.attached'));
+    setPendingAi(null);
+  };
+
+  const handleAttachToNew = () => {
+    if (!pendingAi) return;
+    const empty = makeEmptyUserCase();
+    // On remplace la 1re référence vide du modèle par le brouillon IA
+    // validé pour éviter d'avoir une référence "manual-entry" fantôme
+    // à côté.
+    const nextCase: UserCrossValidationCase = {
+      ...empty,
+      title: empty.title || `Strelok Pro draft — ${new Date().toLocaleDateString()}`,
+      references: [pendingAi.reference],
+    };
+    setActiveId(null);
+    setDraft(nextCase);
+    setIssues([]);
+    setView('edit');
+    setPendingAi(null);
+    toast.success(t('crossValidation.ai.attachedNew'));
+  };
+
   return (
     <div className="space-y-4">
       <header className="flex flex-col gap-1">
@@ -272,6 +340,7 @@ export default function CrossValidationPage() {
             onExport={handleExport}
             onCompare={handleCompare}
             onImportClick={() => fileInputRef.current?.click()}
+            onAiImportClick={aiAvailable ? () => setAiOpen(true) : undefined}
           />
         </>
       )}
@@ -307,6 +376,25 @@ export default function CrossValidationPage() {
           if (fileInputRef.current) fileInputRef.current.value = '';
         }}
       />
+
+      {/* IA-1 — modale d'import screenshot. Montée seulement si Supabase
+          self-hosted est configuré côté frontend. */}
+      {aiAvailable && (
+        <AIImportModal
+          open={aiOpen}
+          onOpenChange={setAiOpen}
+          onConfirm={handleAiConfirm}
+        />
+      )}
+
+      {/* IA-1 — étape d'attache (cas existant ou nouveau cas vide). */}
+      <AttachAiDialog
+        pending={pendingAi}
+        items={items}
+        onCancel={() => setPendingAi(null)}
+        onAttachExisting={handleAttachToExisting}
+        onAttachNew={handleAttachToNew}
+      />
     </div>
   );
 }
@@ -323,6 +411,8 @@ interface ListViewProps {
   onExport: (s: StoredUserCase) => void;
   onCompare: (s: StoredUserCase) => void;
   onImportClick: () => void;
+  /** undefined → bouton IA caché (Supabase non configuré). */
+  onAiImportClick?: () => void;
 }
 
 function ListView({
@@ -333,6 +423,7 @@ function ListView({
   onExport,
   onCompare,
   onImportClick,
+  onAiImportClick,
 }: ListViewProps) {
   const { t } = useI18n();
   return (
@@ -346,6 +437,17 @@ function ListView({
           <Upload className="h-4 w-4 mr-1" />
           {t('crossValidation.importJson')}
         </Button>
+        {onAiImportClick && (
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={onAiImportClick}
+            data-testid="cv-ai-import-btn"
+          >
+            <Bot className="h-4 w-4 mr-1" />
+            {t('crossValidation.ai.button')}
+          </Button>
+        )}
         <Button asChild size="sm" variant="ghost">
           <Link to="/docs">
             <FileJson className="h-4 w-4 mr-1" />
@@ -851,6 +953,7 @@ const EXTRACTION_OPTIONS = [
   'export-csv',
   'export-json',
   'published-table',
+  'screenshot-ai',
 ] as const;
 
 interface ReferenceEditorProps {
@@ -1117,5 +1220,91 @@ function ReferenceEditor({ index, reference, onChange, onRemove }: ReferenceEdit
         onConfirm={handlePasteConfirm}
       />
     </Card>
+  );
+}
+
+// -----------------------------------------------------------------------------
+// IA-1 — ATTACH DIALOG (after AI confirm, before any persistence)
+// -----------------------------------------------------------------------------
+
+interface AttachAiDialogProps {
+  pending: AIImportConfirmPayload | null;
+  items: StoredUserCase[];
+  onCancel: () => void;
+  onAttachExisting: (caseId: string) => void;
+  onAttachNew: () => void;
+}
+
+function AttachAiDialog({
+  pending,
+  items,
+  onCancel,
+  onAttachExisting,
+  onAttachNew,
+}: AttachAiDialogProps) {
+  const { t } = useI18n();
+  const [selected, setSelected] = useState<string>('');
+  const open = pending !== null;
+  // Reset selection whenever the dialog opens with a fresh payload.
+  useEffect(() => {
+    if (open) setSelected('');
+  }, [open]);
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) onCancel();
+      }}
+    >
+      <DialogContent data-testid="ai-attach-dialog">
+        <DialogHeader>
+          <DialogTitle>{t('crossValidation.ai.attachToCaseTitle')}</DialogTitle>
+          <DialogDescription>{t('crossValidation.ai.attachToCaseDesc')}</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <Label className="text-xs">{t('crossValidation.ai.attachToCaseChoose')}</Label>
+            <Select value={selected} onValueChange={setSelected}>
+              <SelectTrigger data-testid="ai-attach-select">
+                <SelectValue placeholder={t('crossValidation.ai.attachExistingPlaceholder')} />
+              </SelectTrigger>
+              <SelectContent>
+                {items.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>
+                    {s.case.title || s.case.caseId}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              size="sm"
+              variant="default"
+              disabled={!selected}
+              onClick={() => onAttachExisting(selected)}
+              data-testid="ai-attach-confirm-existing"
+            >
+              {t('crossValidation.ai.attachConfirm')}
+            </Button>
+          </div>
+          <div className="border-t border-border pt-3">
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={onAttachNew}
+              data-testid="ai-attach-new"
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              {t('crossValidation.ai.attachToCaseNew')}
+            </Button>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={onCancel} data-testid="ai-attach-cancel">
+            {t('crossValidation.ai.attachLater')}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

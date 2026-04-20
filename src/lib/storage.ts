@@ -8,6 +8,12 @@ import {
   migrateProjectilesFromLocalStorageIfNeeded,
   writeProjectilesToIdb,
 } from './projectile-repo';
+import {
+  IDB_SESSIONS_KEY,
+  LEGACY_SESSIONS_LOCALSTORAGE_KEY,
+  migrateSessionsFromLocalStorageIfNeeded,
+  writeSessionsToIdb,
+} from './session-repo';
 
 const KEYS = {
   airguns: 'pcp-airguns',
@@ -128,7 +134,12 @@ export const opticStore = createCRUD<Optic>(KEYS.optics);
  * normalisation/validation arrivera avec la pipeline d'import en F.2.
  */
 export const reticleStore = createCRUD<Reticle>(KEYS.reticles);
-export const sessionStore = createCRUD<Session>(KEYS.sessions);
+/**
+ * Tranche Sessions IDB — store sessions désormais adossé à IndexedDB,
+ * cache mémoire sync + write-through. Voir `createSessionStore()` ci-bas
+ * pour le contrat exact (incl. fallback localStorage legacy lazy).
+ */
+export const sessionStore = createSessionStore();
 
 export function getSettings(): AppSettings {
   try {
@@ -367,7 +378,152 @@ export async function bootstrapStorage(): Promise<void> {
     console.error('[storage] bootstrap failed — projectile store left empty', e);
     projectileStore.__hydrate([]);
   }
+  try {
+    const items = await migrateSessionsFromLocalStorageIfNeeded();
+    // On force l'hydratation IDB comme source de vérité après bootstrap
+    // (le fallback localStorage lazy ne sera plus consulté).
+    sessionStore.__hydrate(items);
+  } catch (e) {
+    console.error('[storage] bootstrap failed — session store left empty', e);
+    sessionStore.__hydrate([]);
+  }
 }
 
 // Keep IDB key referenced for tooling/debug; not consumed directly here.
 void IDB_PROJECTILES_KEY;
+void IDB_SESSIONS_KEY;
+
+// ───────────────────────────────────────────────────────────────────────────
+// Session store — cache mémoire write-through vers IndexedDB
+// (Tranche Sessions IDB — voir session-repo.ts pour les détails de migration).
+//
+// Particularité par rapport au projectile store : un fallback de lecture
+// LAZY depuis localStorage (clé legacy `pcp-sessions`) est consulté tant
+// que le bootstrap n'a pas encore hydraté le cache. Cela préserve les
+// très nombreux tests existants qui seedent les sessions via
+// `localStorage.setItem('pcp-sessions', …)` puis lisent immédiatement de
+// façon synchrone (sans appeler `bootstrapStorage`).
+//
+// En production, `bootstrapStorage()` est appelé avant le premier render,
+// l'hydratation IDB devient la source de vérité, et le fallback ne joue
+// plus aucun rôle.
+// ───────────────────────────────────────────────────────────────────────────
+
+interface SessionStoreInternal {
+  getAll: () => Session[];
+  getById: (id: string) => Session | undefined;
+  create: (item: Omit<Session, 'id' | 'createdAt' | 'updatedAt'>) => Session;
+  update: (id: string, updates: Partial<Session>) => Session | undefined;
+  delete: (id: string) => boolean;
+  /** Hydrate the in-memory cache from the bootstrap (or tests). */
+  __hydrate: (items: Session[]) => void;
+  /** Test-only — reset the cache and the lazy-hydrate latch. */
+  __resetForTests: () => void;
+  /** Internal — pending IDB write chain. */
+  __getPendingPersist: () => Promise<void>;
+}
+
+function createSessionStore(): SessionStoreInternal {
+  let cache: Session[] = [];
+  let hydrated = false;
+  let pendingPersist: Promise<void> = Promise.resolve();
+
+  /**
+   * Hydratation paresseuse au premier accès si `bootstrapStorage` n'a
+   * pas encore tourné (cas typique : tests legacy qui seedent
+   * `localStorage['pcp-sessions']` puis montent un composant directement).
+   *
+   * On ne lit JAMAIS IDB depuis ici — IDB est strictement asynchrone et
+   * réservé au chemin `bootstrapStorage()`. Le fallback se limite à la
+   * clé legacy localStorage.
+   */
+  const ensureHydrated = () => {
+    if (hydrated) return;
+    try {
+      const raw = localStorage.getItem(LEGACY_SESSIONS_LOCALSTORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) cache = parsed as Session[];
+      }
+    } catch {
+      // legacy illisible → cache vide, on continue
+    }
+    hydrated = true;
+  };
+
+  const persist = () => {
+    const snapshot = cache.slice();
+    pendingPersist = pendingPersist
+      .catch(() => undefined)
+      .then(() => writeSessionsToIdb(snapshot));
+    pendingPersist.catch((e) => {
+      console.error('[sessionStore] IDB persist failed', e);
+    });
+  };
+
+  return {
+    getAll: () => {
+      ensureHydrated();
+      return cache.slice();
+    },
+    getById: (id) => {
+      ensureHydrated();
+      return cache.find((s) => s.id === id);
+    },
+    create: (item) => {
+      ensureHydrated();
+      const now = new Date().toISOString();
+      const fresh = {
+        ...item,
+        id: generateId(),
+        createdAt: now,
+        updatedAt: now,
+      } as Session;
+      cache = [...cache, fresh];
+      persist();
+      return fresh;
+    },
+    update: (id, updates) => {
+      ensureHydrated();
+      const idx = cache.findIndex((s) => s.id === id);
+      if (idx === -1) return undefined;
+      const next = {
+        ...cache[idx],
+        ...updates,
+        updatedAt: new Date().toISOString(),
+      } as Session;
+      cache = [...cache.slice(0, idx), next, ...cache.slice(idx + 1)];
+      persist();
+      return next;
+    },
+    delete: (id) => {
+      ensureHydrated();
+      const before = cache.length;
+      cache = cache.filter((s) => s.id !== id);
+      if (cache.length === before) return false;
+      persist();
+      return true;
+    },
+    __hydrate: (items) => {
+      cache = Array.isArray(items) ? items.slice() : [];
+      hydrated = true;
+    },
+    __resetForTests: () => {
+      cache = [];
+      hydrated = false;
+      pendingPersist = Promise.resolve();
+    },
+    __getPendingPersist: () => pendingPersist,
+  };
+}
+
+/**
+ * Tranche Sessions IDB — équivalent de `flushProjectilePersistence` pour
+ * les sessions. Permet à un appelant d'attendre que toutes les writes IDB
+ * empilées sur le `sessionStore` soient confirmées (utile pour des
+ * scénarios d'export/snapshot où l'on veut garantir la durabilité avant
+ * d'annoncer un succès). Opt-in.
+ */
+export async function flushSessionPersistence(): Promise<void> {
+  await sessionStore.__getPendingPersist();
+}

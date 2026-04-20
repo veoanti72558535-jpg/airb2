@@ -87,7 +87,9 @@ export const userCaseRepo = {
    */
   create(payload: unknown): CreateResult {
     const v = validateUserCase(payload);
-    if (!v.ok) return { ok: false, issues: v.issues };
+    if (!v.ok) {
+      return { ok: false, issues: v.issues };
+    }
     const now = new Date().toISOString();
     const stored: StoredUserCase = {
       id: generateId(),
@@ -111,7 +113,9 @@ export const userCaseRepo = {
     const idx = items.findIndex((s) => s.id === id);
     if (idx === -1) return { ok: false };
     const v = validateUserCase(payload);
-    if (!v.ok) return { ok: false, issues: v.issues };
+    if (!v.ok) {
+      return { ok: false, issues: v.issues };
+    }
     const updated: StoredUserCase = {
       ...items[idx],
       case: v.case,

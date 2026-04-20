@@ -1758,6 +1758,18 @@ const en: Record<keyof typeof fr, string> = {
   'admin.diag.unknown': 'Unknown',
   'admin.diag.refreshing': 'Updating…',
 
+  // Tranche Cleanup — purge non-airgun projectiles (powder/firearm rows)
+  'admin.cleanup.title': 'Clean up non-airgun projectiles',
+  'admin.cleanup.subtitle': 'Removes powder projectiles (anything other than pellets and slugs).',
+  'admin.cleanup.scan': 'Scan',
+  'admin.cleanup.preview': '{count} projectile(s) to remove out of {total}.',
+  'admin.cleanup.empty': 'No non-airgun projectiles found. Database already clean.',
+  'admin.cleanup.confirm': 'Permanently delete',
+  'admin.cleanup.cancel': 'Cancel',
+  'admin.cleanup.confirmHint': 'Irreversible action. Keeps only pellet- and slug-type projectiles.',
+  'admin.cleanup.success': '{count} non-airgun projectile(s) removed.',
+  'admin.cleanup.error': 'Removal failed. Please retry.',
+
   // Reticles (Tranche F.4)
   'reticles.title': 'Reticles Library',
   'reticles.add': 'Add Reticle',

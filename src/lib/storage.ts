@@ -198,6 +198,15 @@ interface ProjectileStoreInternal {
   ) => Projectile[];
   update: (id: string, updates: Partial<Projectile>) => Projectile | undefined;
   delete: (id: string) => boolean;
+  /**
+   * Bulk delete by predicate. Filtre le cache mémoire en une passe puis
+   * persiste une seule fois — indispensable pour des nettoyages massifs
+   * (ex. retirer ~8000 projectiles non-airgun importés depuis bullets4)
+   * sans payer un coût O(N²) en write-through IDB.
+   *
+   * Retourne le nombre d'items effectivement supprimés.
+   */
+  deleteWhere: (predicate: (p: Projectile) => boolean) => number;
   /** Hydrate the in-memory cache (called once at boot, see bootstrapStorage). */
   __hydrate: (items: Projectile[]) => void;
   /** Test-only — reset the cache to empty. */
@@ -282,6 +291,13 @@ function createProjectileStore(): ProjectileStoreInternal {
       if (cache.length === before) return false;
       persist();
       return true;
+    },
+    deleteWhere: (predicate) => {
+      const before = cache.length;
+      cache = cache.filter((p) => !predicate(p));
+      const removed = before - cache.length;
+      if (removed > 0) persist();
+      return removed;
     },
     __hydrate: (items) => {
       cache = Array.isArray(items) ? items.slice() : [];

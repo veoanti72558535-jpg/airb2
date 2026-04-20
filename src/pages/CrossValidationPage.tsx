@@ -96,6 +96,14 @@ export default function CrossValidationPage() {
     runAt: string;
   } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // IA-1 — modale d'import screenshot Strelok Pro. Le bouton n'apparaît
+  // que si Supabase self-hosted est configuré côté frontend (cf. plan).
+  const aiAvailable = isSupabaseConfigured();
+  const [aiOpen, setAiOpen] = useState(false);
+  // Quand un brouillon IA est validé, on demande à l'opérateur s'il
+  // veut l'attacher à un cas existant ou créer un nouveau cas. Aucune
+  // persistance avant ce choix explicite.
+  const [pendingAi, setPendingAi] = useState<AIImportConfirmPayload | null>(null);
 
   const refresh = useCallback(() => {
     setItems(userCaseRepo.getAll());

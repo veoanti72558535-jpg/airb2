@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   FileJson,
   ClipboardPaste,
+  Bot,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,6 +35,14 @@ import {
   TabsList,
   TabsTrigger,
 } from '@/components/ui/tabs';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { useI18n } from '@/lib/i18n';
 import {
   makeEmptyReferenceRow,
@@ -56,6 +65,8 @@ import { CrossValidationResults } from '@/components/cross-validation/CrossValid
 import { TemplatesAndGuides } from '@/components/cross-validation/TemplatesAndGuides';
 import { PasteRowsModal } from '@/components/cross-validation/PasteRowsModal';
 import type { ExternalReferenceRow } from '@/lib/cross-validation/types';
+import { AIImportModal, type AIImportConfirmPayload } from '@/components/cross-validation/AIImportModal';
+import { isSupabaseConfigured } from '@/integrations/supabase/client';
 
 /**
  * BUILD-C bis — Onglet "Validation externe".

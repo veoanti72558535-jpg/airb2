@@ -72,15 +72,22 @@ export function ImportJsonModal({
   const [phase, setPhase] = useState<Phase>('idle');
   const [persistError, setPersistError] = useState<string | null>(null);
   const isCommitting = phase === 'writing' || phase === 'persisting';
+  // Tranche Import UX — ref miroir de `phase` lisible dans le catch async
+  // (où la valeur du closure est figée au moment du await).
+  const phaseRef = useRef<Phase>('idle');
+  const setPhaseSafe = useCallback((next: Phase) => {
+    phaseRef.current = next;
+    setPhase(next);
+  }, []);
 
   const reset = useCallback(() => {
     setFileName(null);
     setRawText(null);
     setPreview(null);
-    setPhase('idle');
+    setPhaseSafe('idle');
     setPersistError(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
-  }, []);
+  }, [setPhaseSafe]);
 
   const handleClose = useCallback(() => {
     // Garde-fou : pendant la persistance, on ne ferme pas (évite double commit
@@ -127,7 +134,7 @@ export function ImportJsonModal({
     if (!preview || writableCount === 0) return;
     if (isCommitting) return; // double-submit guard
     setPersistError(null);
-    setPhase('writing');
+    setPhaseSafe('writing');
     try {
       // Bulk insert : un seul localStorage write quel que soit N. Sans cela,
       // un import massif (ex. bullets4 ~8700 projectiles) effectue O(N²)
@@ -144,7 +151,7 @@ export function ImportJsonModal({
         // réelle d'écriture IDB AVANT de déclarer succès. Sans cela, un import
         // massif (~8700 projectiles) annoncerait un succès alors que le write
         // IDB peut encore échouer (quota, IDB indisponible, …).
-        setPhase('persisting');
+        setPhaseSafe('persisting');
         await flushProjectilePersistence();
       } else if (preview.entityType === 'optic') {
         const data = writable.map((i) => i.data as NormalisedOptic);
@@ -161,20 +168,20 @@ export function ImportJsonModal({
         // Message actionnable : l'utilisateur doit purger ou exporter avant
         // de réessayer. Ne pas perdre la preview pour qu'il puisse retenter.
         toast.error(t('import.quotaExceeded'), { duration: 8000 });
-        setPhase('idle');
-      } else if (phaseRef.current === 'persisting' || phase === 'persisting') {
+        setPhaseSafe('idle');
+      } else if (phaseRef.current === 'persisting') {
         // Échec IDB : on NE déclare PAS de succès, on conserve la preview,
         // et on affiche un message actionnable. L'utilisateur peut réessayer.
         const msg = e instanceof Error ? e.message : String(e);
         setPersistError(msg);
-        setPhase('error');
+        setPhaseSafe('error');
         toast.error(t('import.persistFailed'), { duration: 8000 });
       } else {
         toast.error(e instanceof Error ? e.message : t('import.fileInvalid'));
-        setPhase('idle');
+        setPhaseSafe('idle');
       }
     }
-  }, [handleClose, isCommitting, onSuccess, phase, preview, t, writableCount]);
+  }, [handleClose, isCommitting, onSuccess, preview, setPhaseSafe, t, writableCount]);
 
   const titleKey = useMemo(() => {
     if (entityType === 'projectile') return 'import.title.projectiles';
@@ -245,6 +252,7 @@ export function ImportJsonModal({
             size="sm"
             onClick={handleClose}
             data-testid="import-cancel-btn"
+            disabled={isCommitting}
           >
             <X className="h-3.5 w-3.5 mr-1" />
             {t('import.cancel')}
@@ -252,13 +260,25 @@ export function ImportJsonModal({
           <Button
             type="button"
             size="sm"
-            disabled={!preview || writableCount === 0 || isWriting}
+            disabled={!preview || writableCount === 0 || isCommitting}
             onClick={handleConfirm}
             data-testid="import-confirm-btn"
           >
-            {preview && writableCount > 0
-              ? t('import.writeCount', { count: writableCount })
-              : t('import.nothingToImport')}
+            {phase === 'writing' ? (
+              <span className="inline-flex items-center gap-1.5">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                {t('import.writing')}
+              </span>
+            ) : phase === 'persisting' ? (
+              <span className="inline-flex items-center gap-1.5">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                {t('import.persisting')}
+              </span>
+            ) : preview && writableCount > 0 ? (
+              t('import.writeCount', { count: writableCount })
+            ) : (
+              t('import.nothingToImport')
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

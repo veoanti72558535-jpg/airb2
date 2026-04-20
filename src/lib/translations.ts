@@ -859,6 +859,15 @@ const fr = {
   'admin.cleanup.brand.confirm': 'Supprimer les marques powder',
   'admin.cleanup.brand.confirmHint': 'Action irréversible. Conserve uniquement les marques airgun listées.',
 
+  // Tranche Admin Storage — Diagnostic stockage sessions (lecture seule)
+  'admin.sessionDiag.title': 'Stockage sessions',
+  'admin.sessionDiag.subtitle': 'État local du backend de persistance des sessions.',
+  'admin.sessionDiag.localCount': 'Sessions locales',
+  'admin.sessionDiag.degradedHint':
+    'IndexedDB indisponible : les sessions enregistrées seront volatiles et perdues à la fermeture de l\'onglet.',
+  'admin.sessionDiag.healthyHint':
+    'Stockage sessions sain : IndexedDB actif, migration locale effectuée, pas de clé legacy résiduelle.',
+
   // Reticles (Tranche F.4)
   'reticles.title': 'Bibliothèque de réticules',
   'reticles.add': 'Ajouter un réticule',
@@ -1783,6 +1792,15 @@ const en: Record<keyof typeof fr, string> = {
   'admin.cleanup.brand.empty': 'No powder brands detected. Database already clean.',
   'admin.cleanup.brand.confirm': 'Remove powder brands',
   'admin.cleanup.brand.confirmHint': 'Irreversible action. Keeps only the listed airgun brands.',
+
+  // Tranche Admin Storage — session storage diagnostic (read-only)
+  'admin.sessionDiag.title': 'Sessions storage',
+  'admin.sessionDiag.subtitle': 'Local state of the sessions persistence backend.',
+  'admin.sessionDiag.localCount': 'Local sessions',
+  'admin.sessionDiag.degradedHint':
+    'IndexedDB unavailable: saved sessions will be volatile and lost when the tab closes.',
+  'admin.sessionDiag.healthyHint':
+    'Sessions storage healthy: IndexedDB active, local migration done, no residual legacy key.',
 
   // Reticles (Tranche F.4)
   'reticles.title': 'Reticles Library',

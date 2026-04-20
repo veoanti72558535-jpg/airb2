@@ -127,7 +127,11 @@ describe('AIImportModal — flux & garde-fous IA-1', () => {
     const input = screen.getByTestId('ai-import-file-input') as HTMLInputElement;
     // > 4 Mo
     fireEvent.change(input, { target: { files: [makeImageFile('huge.png', 5 * 1024 * 1024)] } });
-    expect(screen.getByText(/4 ?Mo|4 ?MB/i)).toBeInTheDocument();
+    // Le message d'erreur utilise "trop volumineuse / too large" — on
+    // cible le bandeau d'erreur, pas l'astuce "≤ 4 Mo" du formulaire.
+    expect(
+      screen.getByText(/trop volumineuse|too large/i),
+    ).toBeInTheDocument();
     expect(extractMock).not.toHaveBeenCalled();
   });
 

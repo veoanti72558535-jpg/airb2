@@ -74,6 +74,22 @@ export {
   type StoredUserCase,
 } from './user-case-repo';
 
+// BUILD — Templates JSON + guides de saisie source-spécifiques.
+export {
+  SOURCE_GUIDES,
+  TEMPLATE_DESCRIPTORS,
+  makeChairgunEliteTemplate,
+  makeGenericTemplate,
+  makeMeroTemplate,
+  makeStrelokProTemplate,
+  makeTemplate,
+  templateToJson,
+  type SourceGuide,
+  type SourceGuideSection,
+  type TemplateDescriptor,
+  type TemplateKind,
+} from './templates';
+
 // NOTE: `fixture-discovery` n'est PAS ré-exporté ici. Il importe
 // `node:fs` et n'est utilisable que côté tests / runner Node. L'importer
 // ici casserait le bundle navigateur. Les consommateurs Node l'importent

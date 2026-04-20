@@ -1179,6 +1179,79 @@ const fr = {
     'MERO n\'est PAS exposé comme profil moteur AirBallistik (gate actif). Comparaison = inspection, pas calibrage.',
   'crossValidation.guide.mero.limits.assumptions':
     'Toutes les hypothèses MERO doivent être listées dans `assumptions`.',
+
+  // -------------------------------------------------------------------------
+  // IA-1 — Strelok Pro screenshot → rows (BUILD)
+  // -------------------------------------------------------------------------
+  'crossValidation.ai.button': 'Importer depuis screenshot (Strelok Pro)',
+  'crossValidation.ai.title': 'Brouillon IA — Strelok Pro',
+  'crossValidation.ai.step.consent': 'Étape 1 / 4 — Consentement',
+  'crossValidation.ai.step.upload': 'Étape 2 / 4 — Upload du screenshot',
+  'crossValidation.ai.step.analyzing': 'Étape 3 / 4 — Analyse',
+  'crossValidation.ai.step.review': 'Étape 4 / 4 — Revue manuelle (obligatoire)',
+  'crossValidation.ai.consent.body':
+    'L\'image sera transmise à un fournisseur IA tiers configuré par l\'admin (Quatarly puis fallback Google). Aucune clé n\'est stockée côté navigateur.',
+  'crossValidation.ai.consent.bullet1':
+    'Aucune persistance avant validation manuelle ligne par ligne.',
+  'crossValidation.ai.consent.bullet2':
+    'Confiance plafonnée à C — la sortie n\'est jamais traitée comme une vérité.',
+  'crossValidation.ai.consent.bullet3':
+    'Aucune extraction d\'inputs balistiques (MV, BC, zéro, atmosphère) — uniquement les lignes de table.',
+  'crossValidation.ai.consent.accept': 'J\'accepte, continuer',
+  'crossValidation.ai.uploadHint':
+    'PNG, JPEG ou WEBP, ≤ 4 Mo. 1 seul screenshot par appel.',
+  'crossValidation.ai.startAnalysis': 'Lancer l\'analyse',
+  'crossValidation.ai.analyzing': 'Analyse du screenshot en cours…',
+  'crossValidation.ai.banner.title': 'Brouillon IA non vérifié.',
+  'crossValidation.ai.banner.body':
+    'À relire ligne par ligne avant validation. Aucune sortie n\'est conservée tant que tu n\'as pas confirmé.',
+  'crossValidation.ai.providerUsed': 'Fournisseur utilisé',
+  'crossValidation.ai.strelokVersion': 'Version Strelok Pro (obligatoire)',
+  'crossValidation.ai.review.empty':
+    'Aucune ligne exploitable extraite. Annule et utilise la voie manuelle (collage TSV/CSV).',
+  'crossValidation.ai.review.unreadable': 'Cellules illisibles signalées par l\'IA',
+  'crossValidation.ai.review.assumptions': 'Hypothèses signalées par l\'IA',
+  'crossValidation.ai.abandon': 'Abandonner (le brouillon sera perdu)',
+  'crossValidation.ai.confirm': 'Confirmer et créer la référence',
+  'crossValidation.ai.confirmed': 'Référence Strelok Pro ajoutée (brouillon IA validé).',
+  'crossValidation.ai.errorTooLarge': 'Image trop volumineuse (max 4 Mo).',
+  'crossValidation.ai.attachToCaseTitle': 'Attacher au cas',
+  'crossValidation.ai.attachToCaseDesc':
+    'Le brouillon validé sera ajouté comme nouvelle référence Strelok Pro.',
+  'crossValidation.ai.attachToCaseChoose': 'Choisir un cas existant',
+  'crossValidation.ai.attachToCaseNew': 'Créer un nouveau cas',
+  'crossValidation.ai.attached': 'Brouillon attaché au cas.',
+  'crossValidation.ai.unavailable':
+    'IA-1 désactivée — Supabase self-hosted non configuré (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY absents).',
+
+  // Page admin /admin/ai (settings IA + ping providers)
+  'admin.ai.title': 'IA — Configuration',
+  'admin.ai.subtitle':
+    'Settings IA persistés en base (Supabase self-hosted). Aucune clé provider n\'est stockée ici — elles sont injectées comme secrets côté Edge Functions.',
+  'admin.ai.unavailable':
+    'Supabase non configuré dans ce build. Définis VITE_SUPABASE_URL et VITE_SUPABASE_ANON_KEY puis rebuild pour accéder à cette page.',
+  'admin.ai.notAdmin': 'Connexion admin requise pour cette page.',
+  'admin.ai.signIn': 'Se connecter (Supabase)',
+  'admin.ai.signInEmail': 'Email',
+  'admin.ai.signInPassword': 'Mot de passe',
+  'admin.ai.signInSubmit': 'Se connecter',
+  'admin.ai.signOut': 'Se déconnecter',
+  'admin.ai.refresh': 'Recharger',
+  'admin.ai.testProviders': 'Tester les providers',
+  'admin.ai.testRunning': 'Test en cours…',
+  'admin.ai.testQuatarly': 'Quatarly',
+  'admin.ai.testGoogle': 'Google Direct',
+  'admin.ai.keyPresent': 'Clé présente',
+  'admin.ai.keyMissing': 'Clé manquante',
+  'admin.ai.settings.providerPrimary': 'Provider primaire',
+  'admin.ai.settings.modelPrimary': 'Modèle primaire',
+  'admin.ai.settings.quatarlyApiUrl': 'URL API Quatarly',
+  'admin.ai.settings.allowGoogleFallback': 'Autoriser fallback Google',
+  'admin.ai.settings.googleDirectEnabled': 'Activer Google Direct',
+  'admin.ai.settings.googleDirectModel': 'Modèle Google',
+  'admin.ai.settings.maxImageBytes': 'Taille max image (octets)',
+  'admin.ai.settings.saved': 'Settings sauvegardés',
+  'admin.ai.settings.saveFailed': 'Échec de la sauvegarde',
 } as const;
 
 const en: Record<keyof typeof fr, string> = {

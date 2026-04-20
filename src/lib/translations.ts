@@ -1793,6 +1793,15 @@ const en: Record<keyof typeof fr, string> = {
   'admin.cleanup.brand.confirm': 'Remove powder brands',
   'admin.cleanup.brand.confirmHint': 'Irreversible action. Keeps only the listed airgun brands.',
 
+  // Tranche Admin Storage — session storage diagnostic (read-only)
+  'admin.sessionDiag.title': 'Sessions storage',
+  'admin.sessionDiag.subtitle': 'Local state of the sessions persistence backend.',
+  'admin.sessionDiag.localCount': 'Local sessions',
+  'admin.sessionDiag.degradedHint':
+    'IndexedDB unavailable: saved sessions will be volatile and lost when the tab closes.',
+  'admin.sessionDiag.healthyHint':
+    'Sessions storage healthy: IndexedDB active, local migration done, no residual legacy key.',
+
   // Reticles (Tranche F.4)
   'reticles.title': 'Reticles Library',
   'reticles.add': 'Add Reticle',

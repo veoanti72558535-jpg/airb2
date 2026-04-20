@@ -7,6 +7,7 @@ import { ImportJsonModal } from '@/components/import/ImportJsonModal';
 import type { ImportEntityType } from '@/lib/import-schemas';
 import { ProjectileStorageDiagnosticCard } from '@/components/admin/ProjectileStorageDiagnosticCard';
 import { ProjectileCleanupCard } from '@/components/admin/ProjectileCleanupCard';
+import { SessionStorageDiagnosticCard } from '@/components/admin/SessionStorageDiagnosticCard';
 
 export default function AdminPage() {
   const { t } = useI18n();
@@ -110,6 +111,9 @@ export default function AdminPage() {
 
       {/* Diagnostic stockage projectiles (Tranche Admin Storage Diagnostic) */}
       <ProjectileStorageDiagnosticCard refreshKey={diagRefreshKey} />
+
+      {/* Diagnostic stockage sessions (Tranche Admin Storage Sessions) */}
+      <SessionStorageDiagnosticCard />
 
       {/* Nettoyage projectiles non-airgun (Tranche Cleanup) */}
       <ProjectileCleanupCard onCleaned={() => setDiagRefreshKey((k) => k + 1)} />

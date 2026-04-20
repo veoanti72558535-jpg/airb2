@@ -1,37 +1,57 @@
 
 
-# Fix: Guide d'installation — remplacer `npm ci` par `npm install`
+# Fix : Génération JWT — Ubuntu 24.04 PEP 668 + variable manquante
 
 ## Problème
 
-Le repo contient `bun.lock` / `bun.lockb` (gestionnaire utilisé par Lovable) mais le `package-lock.json` est désynchronisé de `package.json`. La commande `npm ci` exige une synchronisation parfaite et échoue.
+Deux erreurs à l'étape §9.3 du guide :
+
+1. **`pip3 install` échoue** sur Ubuntu 24.04 à cause de PEP 668 (« externally-managed-environment »). Le système interdit les `pip install` globaux.
+2. **`KeyError: 'JWT_SECRET'`** — le script Python lit `os.environ["JWT_SECRET"]` mais le guide ne montre le `export` qu'**après** le bloc de code. Un débutant ne le voit pas.
 
 ## Solution
 
-Modifier `docs/deploy/install-proxmox-ubuntu-supabase.md` à deux endroits :
+Réécrire le bloc CLI de §9.3 (lignes ~289-306) dans `docs/deploy/install-proxmox-ubuntu-supabase.md` :
 
-### 1. Section 8 (Étape 6 — Cloner AirBallistik), ligne ~239
+### Changements
 
-Remplacer `npm ci` par `npm install` et ajouter un encadré expliquant pourquoi :
+1. **Remplacer `pip3 install pyjwt`** par un venv jetable ou, mieux, par `python3 -c` utilisant `hmac`+`base64` natifs (zéro dépendance externe). Le plus simple et robuste pour un débutant : utiliser le module `jwt` dans un venv temporaire :
 
 ```bash
-cd /home/airadmin
-git clone https://github.com/<user>/<repo>.git airballistik
-cd /home/airadmin/airballistik
-npm install
+# 1. Exporter JWT_SECRET AVANT de lancer le script
+export JWT_SECRET="<coller la valeur générée au §9.2>"
+
+# 2. Créer un venv temporaire + installer pyjwt
+python3 -m venv /tmp/jwt-venv
+/tmp/jwt-venv/bin/pip install pyjwt
+/tmp/jwt-venv/bin/python3 - <<'PY'
+import jwt, time, os
+secret = os.environ["JWT_SECRET"]
+now = int(time.time())
+exp = now + 60*60*24*365*10  # 10 ans
+print("ANON_KEY=" + jwt.encode(
+    {"role": "anon", "iss": "supabase", "iat": now, "exp": exp},
+    secret, algorithm="HS256"))
+print("SERVICE_ROLE_KEY=" + jwt.encode(
+    {"role": "service_role", "iss": "supabase", "iat": now, "exp": exp},
+    secret, algorithm="HS256"))
+PY
+
+# 3. Nettoyer le venv temporaire
+rm -rf /tmp/jwt-venv
 ```
 
-Ajouter une note :
+2. **Déplacer l'instruction `export JWT_SECRET=...`** en première ligne du bloc (pas après). Ajouter un encadré d'avertissement :
 
-> Le projet utilise `bun` en interne (Lovable). Le fichier `package-lock.json` peut être désynchronisé. Utilisez `npm install` (qui régénère le lock file) au lieu de `npm ci` (qui exige un lock file parfait). Si vous préférez bun : `curl -fsSL https://bun.sh/install | bash && bun install`.
+> ⚠️ **Important** : la commande `export JWT_SECRET="..."` doit être exécutée **avant** le script Python, dans le même terminal. Sans elle, le script échoue avec `KeyError: 'JWT_SECRET'`.
 
-### 2. Section 18 (Workflow GitHub), ligne ~678
+3. **Supprimer** `sudo apt install -y python3-pip` et `pip3 install --user pyjwt` (incompatibles PEP 668 sur Ubuntu 24.04+).
 
-Remplacer `npm ci` par `npm install` dans la séquence de mise à jour.
+4. **Supprimer** la note orpheline après le bloc (ligne 306 `(Exportez d'abord...)`) puisque l'export est maintenant intégré dans le bloc.
 
-## Fichiers modifiés
+## Fichier modifié
 
-- `docs/deploy/install-proxmox-ubuntu-supabase.md` — 2 occurrences de `npm ci` → `npm install` + note explicative sur bun vs npm.
+- `docs/deploy/install-proxmox-ubuntu-supabase.md` — section §9.3, lignes ~289-306 : réécriture du bloc CLI avec venv + export en tête.
 
 ## Aucun changement moteur, aucun fichier créé/supprimé.
 

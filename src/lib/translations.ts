@@ -1221,6 +1221,11 @@ const fr = {
   'crossValidation.ai.attachToCaseChoose': 'Choisir un cas existant',
   'crossValidation.ai.attachToCaseNew': 'Créer un nouveau cas',
   'crossValidation.ai.attached': 'Brouillon attaché au cas.',
+  'crossValidation.ai.attachedNew': 'Nouveau brouillon de cas créé — relis et enregistre.',
+  'crossValidation.ai.attachFailed': 'Impossible d\'attacher le brouillon IA au cas sélectionné.',
+  'crossValidation.ai.attachExistingPlaceholder': 'Sélectionner un cas…',
+  'crossValidation.ai.attachConfirm': 'Attacher au cas sélectionné',
+  'crossValidation.ai.attachLater': 'Plus tard',
   'crossValidation.ai.unavailable':
     'IA-1 désactivée — Supabase self-hosted non configuré (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY absents).',
 

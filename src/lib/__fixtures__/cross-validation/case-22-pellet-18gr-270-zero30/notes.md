@@ -37,3 +37,15 @@ BUILD-C.
 - Pas de tolérance appliquée (BUILD-B).
 - Pas de plusieurs sources concordantes (BUILD-C).
 - Pas de génération de rapport (BUILD-D).
+
+## Statut harness BUILD-B/C
+
+Depuis BUILD-B, ce cas est **comparé** par le harness (`runCaseComparison`).
+Ses chiffres synthétiques étant approximatifs, le statut consolidé est
+attendu en **`FAIL`** (ou `INDICATIVE` si jamais les chiffres tombent par
+hasard dans les tolérances). C'est **normal et voulu** : ce cas n'est
+pas une référence externe réelle. Le test
+`fixture-discovery.test.ts` interdit explicitement qu'il soit jamais
+classé `PASS` — garde-fou contre toute promotion silencieuse en
+validation forte. Il sera **supprimé ou requalifié** dès qu'un vrai cas
+ChairGun/Strelok/MERO sera saisi en BUILD-C.

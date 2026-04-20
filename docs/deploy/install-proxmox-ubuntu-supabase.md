@@ -287,10 +287,17 @@ Utilisez l'outil officiel :
   `service_role`). Copier-coller les dans `.env`.
 
 **Alternative CLI** (100% local) :
+
+> ⚠️ **Important** : la commande `export JWT_SECRET="..."` doit être exécutée **avant** le script Python, dans le même terminal. Sans elle, le script échoue avec `KeyError: 'JWT_SECRET'`.
+
 ```bash
-sudo apt install -y python3-pip
-pip3 install --user pyjwt
-python3 - <<'PY'
+# 1. Exporter JWT_SECRET AVANT de lancer le script
+export JWT_SECRET="<coller la valeur générée au §9.2>"
+
+# 2. Créer un venv temporaire + installer pyjwt (Ubuntu 24.04 interdit pip global — PEP 668)
+python3 -m venv /tmp/jwt-venv
+/tmp/jwt-venv/bin/pip install pyjwt
+/tmp/jwt-venv/bin/python3 - <<'PY'
 import jwt, time, os
 secret = os.environ["JWT_SECRET"]
 now = int(time.time())
@@ -302,8 +309,10 @@ print("SERVICE_ROLE_KEY=" + jwt.encode(
     {"role": "service_role", "iss": "supabase", "iat": now, "exp": exp},
     secret, algorithm="HS256"))
 PY
+
+# 3. Nettoyer le venv temporaire
+rm -rf /tmp/jwt-venv
 ```
-(Exportez d'abord `export JWT_SECRET=<valeur>` avant de lancer le script.)
 
 ### 9.4 Éditer `.env`
 

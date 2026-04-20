@@ -12,6 +12,7 @@ import {
   AlertCircle,
   ChevronLeft,
   FileJson,
+  ClipboardPaste,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -53,6 +54,8 @@ import { runCaseComparison } from '@/lib/cross-validation';
 import type { CaseComparisonResult } from '@/lib/cross-validation';
 import { CrossValidationResults } from '@/components/cross-validation/CrossValidationResults';
 import { TemplatesAndGuides } from '@/components/cross-validation/TemplatesAndGuides';
+import { PasteRowsModal } from '@/components/cross-validation/PasteRowsModal';
+import type { ExternalReferenceRow } from '@/lib/cross-validation/types';
 
 /**
  * BUILD-C bis — Onglet "Validation externe".

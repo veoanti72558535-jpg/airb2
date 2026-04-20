@@ -1,0 +1,20 @@
+{
+  "muzzleVelocity": 270,
+  "bc": 0.035,
+  "projectileWeight": 18,
+  "sightHeight": 50,
+  "zeroRange": 30,
+  "maxRange": 150,
+  "rangeStep": 5,
+  "dragModel": "G1",
+  "weather": {
+    "temperature": 15,
+    "humidity": 50,
+    "pressure": 1013.25,
+    "altitude": 0,
+    "windSpeed": 0,
+    "windAngle": 0,
+    "source": "manual",
+    "timestamp": ""
+  }
+}

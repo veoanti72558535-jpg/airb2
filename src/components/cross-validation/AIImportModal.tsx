@@ -69,8 +69,10 @@ const MAX_BYTES = 4 * 1024 * 1024;
 
 function confidenceColor(score: number | undefined): string {
   if (score === undefined) return 'bg-muted text-muted-foreground';
-  if (score >= 0.85) return 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400';
-  if (score >= 0.6) return 'bg-amber-500/15 text-amber-700 dark:text-amber-400';
+  // Tokens sémantiques uniquement — voir index.css : --primary (haute
+  // confiance), --warning (moyenne), --destructive (basse).
+  if (score >= 0.85) return 'bg-primary/10 text-foreground';
+  if (score >= 0.6) return 'bg-warning/15 text-warning-foreground dark:text-warning';
   return 'bg-destructive/15 text-destructive';
 }
 
@@ -297,8 +299,8 @@ export function AIImportModal({
         {/* Step 4 — review */}
         {step === 'review' && draftMeta && aiMeta && (
           <div className="space-y-3">
-            <Alert variant="default" className="border-amber-500/40 bg-amber-500/5">
-              <AlertTriangle className="h-4 w-4 text-amber-500" />
+            <Alert variant="default" className="border-warning/40 bg-warning/10">
+              <AlertTriangle className="h-4 w-4 text-warning" />
               <AlertDescription className="text-xs">
                 <strong>{t('crossValidation.ai.banner.title')}</strong>
                 <span className="ml-1">{t('crossValidation.ai.banner.body')}</span>

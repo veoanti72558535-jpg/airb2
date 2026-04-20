@@ -1083,6 +1083,81 @@ const fr = {
   'crossValidation.warn.noEngineRow': 'Pas de ligne moteur à cette distance',
   'crossValidation.warn.noComparableMetrics': 'Aucune métrique comparable',
   'crossValidation.warn.noComparableRows': 'Aucune ligne comparable',
+
+  // Cross-validation — templates JSON + guides de saisie
+  'crossValidation.templates.title': 'Templates & guides de saisie',
+  'crossValidation.templates.subtitle': 'ChairGun Elite · Strelok Pro · MERO',
+  'crossValidation.templates.intro':
+    'Squelettes JSON valides — aucune valeur externe inventée. Édite avant comparaison.',
+  'crossValidation.templates.download': 'Télécharger',
+  'crossValidation.templates.use': 'Nouveau cas',
+
+  'crossValidation.guide.title': 'Guides de saisie',
+  'crossValidation.guide.intro':
+    'Quoi relever, quels pièges éviter, par source. Ne complète pas ce que la source ne montre pas.',
+  'crossValidation.guide.section.inputs': 'Inputs à relever',
+  'crossValidation.guide.section.outputs': 'Outputs à relever',
+  'crossValidation.guide.section.units': 'Unités',
+  'crossValidation.guide.section.limits': 'Limites & pièges',
+
+  'crossValidation.guide.chairgun.label': 'ChairGun Elite',
+  'crossValidation.guide.chairgun.inputs.projectile':
+    'Nom du projectile, calibre, poids (gr), diamètre si visible.',
+  'crossValidation.guide.chairgun.inputs.bc': 'BC + drag model exact (G1, GA, etc.).',
+  'crossValidation.guide.chairgun.inputs.velocity':
+    'Vitesse initiale exacte (m/s ou fps — convertir si besoin).',
+  'crossValidation.guide.chairgun.inputs.zeroSight':
+    'Hauteur de visée (mm) et distance de zéro (m).',
+  'crossValidation.guide.chairgun.inputs.atmosphere':
+    'Atmosphère uniquement si ChairGun l\'affiche — sinon laisser vide.',
+  'crossValidation.guide.chairgun.outputs.tableRows':
+    'Une ligne par distance réellement affichée par ChairGun.',
+  'crossValidation.guide.chairgun.outputs.noFill':
+    'Ne PAS combler les colonnes invisibles (drop, vel, tof, etc.).',
+  'crossValidation.guide.chairgun.units':
+    'Vérifier mm vs cm, m/s vs fps, hPa absolu vs station.',
+  'crossValidation.guide.chairgun.limits.captureSource':
+    'Indiquer si la source est une capture d\'écran ou une saisie directe.',
+  'crossValidation.guide.chairgun.limits.rangeStep':
+    'rangeStep doit couvrir toutes les distances de la table — sinon des warnings « no engine row » apparaîtront.',
+
+  'crossValidation.guide.strelok.label': 'Strelok Pro',
+  'crossValidation.guide.strelok.inputs.projectile':
+    'Nom EXACT du projectile dans la base Strelok (BC inclus).',
+  'crossValidation.guide.strelok.inputs.bcModel':
+    'Modèle BC effectivement utilisé (G1/G7/GA/SLG…).',
+  'crossValidation.guide.strelok.inputs.modVersion':
+    'Build officiel ou modé : à noter dans `version` + `assumptions`.',
+  'crossValidation.guide.strelok.inputs.windAtmo':
+    'Vent + atmosphère : relever exactement les valeurs entrées.',
+  'crossValidation.guide.strelok.outputs.columns':
+    'Relever les colonnes effectivement affichées (drop, vel, tof, drift…).',
+  'crossValidation.guide.strelok.outputs.noColumn':
+    'Ne PAS supposer une colonne absente — la laisser vide.',
+  'crossValidation.guide.strelok.units':
+    'Strelok mélange souvent cm / MOA / MIL — convertir en mm pour `windDrift` et `drop`.',
+  'crossValidation.guide.strelok.limits.windAngle':
+    'Convention vent (clock vs degrés) : préciser dans `windConvention` + `assumptions`.',
+  'crossValidation.guide.strelok.limits.assumptions':
+    'Documenter toute hypothèse implicite (atmosphère par défaut, etc.).',
+
+  'crossValidation.guide.mero.label': 'MERO',
+  'crossValidation.guide.mero.inputs.dragLaw':
+    'Drag law / loi de traînée sélectionnée (à relever explicitement).',
+  'crossValidation.guide.mero.inputs.profile':
+    'Profil utilisé : nom + identifiant si visible.',
+  'crossValidation.guide.mero.inputs.atmosphere':
+    'Atmosphère + référence pression (station vs niveau mer).',
+  'crossValidation.guide.mero.outputs.displayed':
+    'Relever uniquement les sorties effectivement affichées.',
+  'crossValidation.guide.mero.outputs.noInfer':
+    'Ne PAS déduire de coefficients ou tables non visibles.',
+  'crossValidation.guide.mero.units':
+    'Vérifier unités drop (mm/cm) et windDrift — pas d\'unité par défaut implicite.',
+  'crossValidation.guide.mero.limits.gate':
+    'MERO n\'est PAS exposé comme profil moteur AirBallistik (gate actif). Comparaison = inspection, pas calibrage.',
+  'crossValidation.guide.mero.limits.assumptions':
+    'Toutes les hypothèses MERO doivent être listées dans `assumptions`.',
 } as const;
 
 const en: Record<keyof typeof fr, string> = {
@@ -2148,6 +2223,80 @@ const en: Record<keyof typeof fr, string> = {
   'crossValidation.warn.noEngineRow': 'No engine row at this range',
   'crossValidation.warn.noComparableMetrics': 'No comparable metric',
   'crossValidation.warn.noComparableRows': 'No comparable row',
+
+  'crossValidation.templates.title': 'Templates & entry guides',
+  'crossValidation.templates.subtitle': 'ChairGun Elite · Strelok Pro · MERO',
+  'crossValidation.templates.intro':
+    'Schema-valid skeletons — no external value invented. Edit before comparing.',
+  'crossValidation.templates.download': 'Download',
+  'crossValidation.templates.use': 'New case',
+
+  'crossValidation.guide.title': 'Entry guides',
+  'crossValidation.guide.intro':
+    'What to capture and pitfalls to avoid, per source. Never fill what the source does not show.',
+  'crossValidation.guide.section.inputs': 'Inputs to capture',
+  'crossValidation.guide.section.outputs': 'Outputs to capture',
+  'crossValidation.guide.section.units': 'Units',
+  'crossValidation.guide.section.limits': 'Limits & pitfalls',
+
+  'crossValidation.guide.chairgun.label': 'ChairGun Elite',
+  'crossValidation.guide.chairgun.inputs.projectile':
+    'Projectile name, caliber, weight (gr), diameter if shown.',
+  'crossValidation.guide.chairgun.inputs.bc': 'Exact BC + drag model (G1, GA, etc.).',
+  'crossValidation.guide.chairgun.inputs.velocity':
+    'Exact muzzle velocity (m/s or fps — convert if needed).',
+  'crossValidation.guide.chairgun.inputs.zeroSight':
+    'Sight height (mm) and zero distance (m).',
+  'crossValidation.guide.chairgun.inputs.atmosphere':
+    'Atmosphere only if ChairGun shows it — otherwise leave blank.',
+  'crossValidation.guide.chairgun.outputs.tableRows':
+    'One row per distance ChairGun actually displays.',
+  'crossValidation.guide.chairgun.outputs.noFill':
+    'Do NOT fill columns ChairGun does not show (drop, vel, tof, etc.).',
+  'crossValidation.guide.chairgun.units':
+    'Check mm vs cm, m/s vs fps, hPa absolute vs station.',
+  'crossValidation.guide.chairgun.limits.captureSource':
+    'Note whether the source is a screenshot or a direct entry.',
+  'crossValidation.guide.chairgun.limits.rangeStep':
+    'rangeStep must cover every table distance — otherwise "no engine row" warnings appear.',
+
+  'crossValidation.guide.strelok.label': 'Strelok Pro',
+  'crossValidation.guide.strelok.inputs.projectile':
+    'EXACT projectile name in Strelok library (BC included).',
+  'crossValidation.guide.strelok.inputs.bcModel':
+    'BC model actually used (G1/G7/GA/SLG…).',
+  'crossValidation.guide.strelok.inputs.modVersion':
+    'Official build vs modded: record in `version` + `assumptions`.',
+  'crossValidation.guide.strelok.inputs.windAtmo':
+    'Wind + atmosphere: capture exactly the values entered.',
+  'crossValidation.guide.strelok.outputs.columns':
+    'Record only columns actually shown (drop, vel, tof, drift…).',
+  'crossValidation.guide.strelok.outputs.noColumn':
+    'Do NOT assume an absent column — leave it empty.',
+  'crossValidation.guide.strelok.units':
+    'Strelok mixes cm / MOA / MIL — convert to mm for `windDrift` and `drop`.',
+  'crossValidation.guide.strelok.limits.windAngle':
+    'Wind convention (clock vs degrees): document in `windConvention` + `assumptions`.',
+  'crossValidation.guide.strelok.limits.assumptions':
+    'Document every implicit assumption (default atmosphere, etc.).',
+
+  'crossValidation.guide.mero.label': 'MERO',
+  'crossValidation.guide.mero.inputs.dragLaw':
+    'Selected drag law (capture explicitly).',
+  'crossValidation.guide.mero.inputs.profile':
+    'Profile in use: name + ID if visible.',
+  'crossValidation.guide.mero.inputs.atmosphere':
+    'Atmosphere + pressure reference (station vs sea level).',
+  'crossValidation.guide.mero.outputs.displayed':
+    'Capture only outputs MERO actually displays.',
+  'crossValidation.guide.mero.outputs.noInfer':
+    'Do NOT infer coefficients or tables that are not visible.',
+  'crossValidation.guide.mero.units':
+    'Verify drop (mm/cm) and windDrift units — no implicit defaults.',
+  'crossValidation.guide.mero.limits.gate':
+    'MERO is NOT exposed as an AirBallistik engine profile (gate active). Comparison = inspection only, no calibration.',
+  'crossValidation.guide.mero.limits.assumptions':
+    'All MERO assumptions must be listed in `assumptions`.',
 };
 
 export const translations = { fr, en } as const;

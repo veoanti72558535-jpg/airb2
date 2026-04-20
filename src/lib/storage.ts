@@ -8,6 +8,12 @@ import {
   migrateProjectilesFromLocalStorageIfNeeded,
   writeProjectilesToIdb,
 } from './projectile-repo';
+import {
+  IDB_SESSIONS_KEY,
+  LEGACY_SESSIONS_LOCALSTORAGE_KEY,
+  migrateSessionsFromLocalStorageIfNeeded,
+  writeSessionsToIdb,
+} from './session-repo';
 
 const KEYS = {
   airguns: 'pcp-airguns',
@@ -128,7 +134,12 @@ export const opticStore = createCRUD<Optic>(KEYS.optics);
  * normalisation/validation arrivera avec la pipeline d'import en F.2.
  */
 export const reticleStore = createCRUD<Reticle>(KEYS.reticles);
-export const sessionStore = createCRUD<Session>(KEYS.sessions);
+/**
+ * Tranche Sessions IDB — store sessions désormais adossé à IndexedDB,
+ * cache mémoire sync + write-through. Voir `createSessionStore()` ci-bas
+ * pour le contrat exact (incl. fallback localStorage legacy lazy).
+ */
+export const sessionStore = createSessionStore();
 
 export function getSettings(): AppSettings {
   try {

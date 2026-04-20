@@ -818,6 +818,25 @@ const fr = {
   'admin.import.section': 'Imports JSON',
   'admin.import.sectionDesc': 'Aperçu obligatoire avant tout import. Les doublons et rejets ne sont jamais écrits.',
 
+  // Admin — Diagnostic stockage projectiles (Tranche Admin Storage Diagnostic)
+  'admin.diag.title': 'Stockage projectiles',
+  'admin.diag.subtitle': 'État local du backend de persistance (lecture seule).',
+  'admin.diag.loading': 'Lecture du diagnostic…',
+  'admin.diag.backend': 'Backend',
+  'admin.diag.backendIdb': 'IndexedDB',
+  'admin.diag.backendDegraded': 'Mode dégradé',
+  'admin.diag.migration': 'Migration legacy',
+  'admin.diag.migrationDone': 'Oui',
+  'admin.diag.migrationPending': 'En attente',
+  'admin.diag.legacyKey': 'Ancienne clé locale détectée',
+  'admin.diag.localCount': 'Projectiles locaux',
+  'admin.diag.persistedCount': 'Persistés en IndexedDB',
+  'admin.diag.degradedHint': 'IndexedDB indisponible : les écritures projectiles ne survivront pas au rechargement de la page.',
+  'admin.diag.healthyHint': 'Stockage opérationnel. Les imports massifs sont supportés.',
+  'admin.diag.yes': 'Oui',
+  'admin.diag.no': 'Non',
+  'admin.diag.unknown': 'Inconnu',
+
   // Reticles (Tranche F.4)
   'reticles.title': 'Bibliothèque de réticules',
   'reticles.add': 'Ajouter un réticule',
@@ -1701,6 +1720,25 @@ const en: Record<keyof typeof fr, string> = {
   'admin.import.reticles': 'Import reticles (JSON)',
   'admin.import.section': 'JSON imports',
   'admin.import.sectionDesc': 'Preview is mandatory. Duplicates and rejects are never written.',
+
+  // Admin — Projectile storage diagnostic (Tranche Admin Storage Diagnostic)
+  'admin.diag.title': 'Projectile storage',
+  'admin.diag.subtitle': 'Local persistence backend status (read-only).',
+  'admin.diag.loading': 'Reading diagnostic…',
+  'admin.diag.backend': 'Backend',
+  'admin.diag.backendIdb': 'IndexedDB',
+  'admin.diag.backendDegraded': 'Degraded mode',
+  'admin.diag.migration': 'Legacy migration',
+  'admin.diag.migrationDone': 'Yes',
+  'admin.diag.migrationPending': 'Pending',
+  'admin.diag.legacyKey': 'Legacy local key detected',
+  'admin.diag.localCount': 'Local projectiles',
+  'admin.diag.persistedCount': 'Persisted in IndexedDB',
+  'admin.diag.degradedHint': 'IndexedDB unavailable: projectile writes will not survive a page reload.',
+  'admin.diag.healthyHint': 'Storage is healthy. Massive imports are supported.',
+  'admin.diag.yes': 'Yes',
+  'admin.diag.no': 'No',
+  'admin.diag.unknown': 'Unknown',
 
   // Reticles (Tranche F.4)
   'reticles.title': 'Reticles Library',

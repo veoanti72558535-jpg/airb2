@@ -401,13 +401,13 @@ attendu par le conteneur `functions` de la stack Supabase.
 STACK=/home/airadmin/supabase-stack/docker
 SRC=/home/airadmin/airballistik/supabase/functions
 
-sudo mkdir -p $STACK/volumes/functions/ai-extract-rows
-sudo mkdir -p $STACK/volumes/functions/ai-providers-test
-sudo mkdir -p $STACK/volumes/functions/_shared
+mkdir -p $STACK/volumes/functions/ai-extract-rows
+mkdir -p $STACK/volumes/functions/ai-providers-test
+mkdir -p $STACK/volumes/functions/_shared
 
-sudo cp $SRC/ai-extract-rows/index.ts    $STACK/volumes/functions/ai-extract-rows/
-sudo cp $SRC/ai-providers-test/index.ts  $STACK/volumes/functions/ai-providers-test/
-sudo cp $SRC/_shared/*.ts                $STACK/volumes/functions/_shared/
+cp $SRC/ai-extract-rows/index.ts    $STACK/volumes/functions/ai-extract-rows/
+cp $SRC/ai-providers-test/index.ts  $STACK/volumes/functions/ai-providers-test/
+cp $SRC/_shared/*.ts                $STACK/volumes/functions/_shared/
 ```
 
 Recharger la stack pour embarquer les nouveaux secrets providers et les
@@ -776,7 +776,7 @@ docker compose -f /home/airadmin/supabase-stack/docker/docker-compose.yml \
 
 Automatiser via cron :
 ```bash
-sudo mkdir -p /home/airadmin/backups
+mkdir -p /home/airadmin/backups
 (crontab -l 2>/dev/null; echo "0 3 * * * cd /home/airadmin/supabase-stack/docker && docker compose exec -T db pg_dumpall -U postgres > /home/airadmin/backups/supabase-\$(date +\\%F).sql") | crontab -
 ```
 

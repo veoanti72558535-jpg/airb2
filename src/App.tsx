@@ -21,6 +21,7 @@ import DocsPage from "@/pages/DocsPage";
 import SearchPage from "@/pages/SearchPage";
 import SettingsPage from "@/pages/SettingsPage";
 import AdminPage from "@/pages/AdminPage";
+import CrossValidationPage from "@/pages/CrossValidationPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -50,6 +51,7 @@ const App = () => (
                 <Route path="/search" element={<SearchPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/admin" element={<AdminPage />} />
+                <Route path="/cross-validation" element={<CrossValidationPage />} />
                 {/* Legacy routes */}
                 <Route path="/airguns" element={<LibraryPage />} />
                 <Route path="/projectiles" element={<LibraryPage />} />

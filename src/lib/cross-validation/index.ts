@@ -48,6 +48,32 @@ export {
   type ReferenceComparisonResult,
 } from './compare';
 
+// BUILD-C bis — schéma utilisateur + persistance locale (UI-friendly).
+export {
+  makeEmptyReferenceRow,
+  makeEmptyUserCase,
+  makeEmptyUserReference,
+  mapUserCaseToCrossValidationCase,
+  parseUserCaseJson,
+  validateUserCase,
+  type UserCrossValidationCase,
+  type UserInputs,
+  type UserReference,
+  type UserReferenceMeta,
+  type UserReferenceRow,
+  type ValidationFailure,
+  type ValidationIssue,
+  type ValidationResult,
+  type ValidationSuccess,
+} from './user-case-schema';
+
+export {
+  USER_CASES_STORAGE_KEY,
+  userCaseRepo,
+  type CreateResult,
+  type StoredUserCase,
+} from './user-case-repo';
+
 // NOTE: `fixture-discovery` n'est PAS ré-exporté ici. Il importe
 // `node:fs` et n'est utilisable que côté tests / runner Node. L'importer
 // ici casserait le bundle navigateur. Les consommateurs Node l'importent

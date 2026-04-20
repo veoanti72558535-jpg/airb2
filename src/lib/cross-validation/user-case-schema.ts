@@ -63,6 +63,10 @@ const EXTRACTION_VALUES = [
   'screenshot-retyped',
   'manual-entry',
   'published-table',
+  // IA-1 — additif. Confiance forcée à 'C' côté code applicatif (pas
+  // refused par Zod ici car le schéma reste générique : c'est l'UI/import
+  // IA qui plafonne avant insertion).
+  'screenshot-ai',
 ] as const satisfies ReadonlyArray<CrossValidationExtractionMethod>;
 
 const DRAG_MODEL_VALUES = ['G1', 'G7', 'GA', 'GS', 'RA4', 'GA2', 'SLG0', 'SLG1'] as const;

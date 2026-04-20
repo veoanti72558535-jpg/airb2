@@ -1,0 +1,19 @@
+# AirBallistik — Supabase self-hosted config (IA-1).
+#
+# Ce fichier est destiné à être déployé sur une instance Supabase
+# self-hosted (`supabase start` local ou stack auto-hébergée). Il N'est
+# JAMAIS lu par Lovable Cloud (non utilisé dans ce projet).
+#
+# Les fonctions edge IA-1 valident le JWT *en code* (cf. _shared/auth.ts),
+# donc `verify_jwt = false` ici : on évite que le proxy Supabase rejette
+# silencieusement les requêtes avant même d'atteindre le code de
+# vérification de rôle (la chaîne d'autorisation reste : JWT obligatoire
+# en header → vérif Supabase auth.getUser → check role 'admin').
+
+project_id = "airballistik-self-hosted"
+
+[functions.ai-extract-rows]
+verify_jwt = false
+
+[functions.ai-providers-test]
+verify_jwt = false

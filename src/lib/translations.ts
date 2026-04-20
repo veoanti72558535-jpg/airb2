@@ -812,6 +812,8 @@ const fr = {
   'import.persistFailed': 'Échec d\'enregistrement IndexedDB. Aucun import n\'a été confirmé. Réessayez ou vérifiez le stockage de votre navigateur.',
   'import.persistRetry': 'Réessayer l\'enregistrement',
   'import.persistErrorBanner': 'L\'écriture IndexedDB a échoué. La preview est conservée — vous pouvez réessayer.',
+  'import.persistRetryHint': 'Le réessai relance uniquement l\'enregistrement IndexedDB. L\'import n\'est pas rejoué et aucun doublon n\'est créé.',
+  'import.retryPersist': 'Réessayer l\'enregistrement',
   'admin.import.projectiles': 'Importer des projectiles (JSON)',
   'admin.import.optics': 'Importer des optiques (JSON)',
   'admin.import.reticles': 'Importer des réticules (JSON)',

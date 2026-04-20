@@ -5,6 +5,7 @@ import { airgunStore, projectileStore, opticStore, sessionStore, exportAllData }
 import { motion } from 'framer-motion';
 import { ImportJsonModal } from '@/components/import/ImportJsonModal';
 import type { ImportEntityType } from '@/lib/import-schemas';
+import { ProjectileStorageDiagnosticCard } from '@/components/admin/ProjectileStorageDiagnosticCard';
 
 export default function AdminPage() {
   const { t } = useI18n();
@@ -101,6 +102,9 @@ export default function AdminPage() {
           </button>
         </div>
       </div>
+
+      {/* Diagnostic stockage projectiles (Tranche Admin Storage Diagnostic) */}
+      <ProjectileStorageDiagnosticCard />
 
       {/* Sections */}
       <div className="space-y-3">

@@ -1721,6 +1721,25 @@ const en: Record<keyof typeof fr, string> = {
   'admin.import.section': 'JSON imports',
   'admin.import.sectionDesc': 'Preview is mandatory. Duplicates and rejects are never written.',
 
+  // Admin — Projectile storage diagnostic (Tranche Admin Storage Diagnostic)
+  'admin.diag.title': 'Projectile storage',
+  'admin.diag.subtitle': 'Local persistence backend status (read-only).',
+  'admin.diag.loading': 'Reading diagnostic…',
+  'admin.diag.backend': 'Backend',
+  'admin.diag.backendIdb': 'IndexedDB',
+  'admin.diag.backendDegraded': 'Degraded mode',
+  'admin.diag.migration': 'Legacy migration',
+  'admin.diag.migrationDone': 'Yes',
+  'admin.diag.migrationPending': 'Pending',
+  'admin.diag.legacyKey': 'Legacy local key detected',
+  'admin.diag.localCount': 'Local projectiles',
+  'admin.diag.persistedCount': 'Persisted in IndexedDB',
+  'admin.diag.degradedHint': 'IndexedDB unavailable: projectile writes will not survive a page reload.',
+  'admin.diag.healthyHint': 'Storage is healthy. Massive imports are supported.',
+  'admin.diag.yes': 'Yes',
+  'admin.diag.no': 'No',
+  'admin.diag.unknown': 'Unknown',
+
   // Reticles (Tranche F.4)
   'reticles.title': 'Reticles Library',
   'reticles.add': 'Add Reticle',

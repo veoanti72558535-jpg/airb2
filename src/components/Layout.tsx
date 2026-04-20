@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import {
   Home, Crosshair, History, BookOpen, MoreHorizontal,
   ArrowLeftRight, FileText, Search, Settings, Shield,
-  Sun, Moon, Globe, X, ChevronRight,
+  Sun, Moon, Globe, X, ChevronRight, FlaskConical,
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { useTheme } from '@/lib/theme';
@@ -20,6 +20,7 @@ const moreNav = [
   { path: '/conversions', icon: ArrowLeftRight, labelKey: 'nav.conversions' as const },
   { path: '/docs', icon: FileText, labelKey: 'nav.docs' as const },
   { path: '/search', icon: Search, labelKey: 'nav.search' as const },
+  { path: '/cross-validation', icon: FlaskConical, labelKey: 'nav.crossValidation' as const },
   { path: '/settings', icon: Settings, labelKey: 'nav.settings' as const },
   { path: '/admin', icon: Shield, labelKey: 'nav.admin' as const },
 ];

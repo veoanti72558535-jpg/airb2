@@ -2319,6 +2319,26 @@ const en: Record<keyof typeof fr, string> = {
     'MERO is NOT exposed as an AirBallistik engine profile (gate active). Comparison = inspection only, no calibration.',
   'crossValidation.guide.mero.limits.assumptions':
     'All MERO assumptions must be listed in `assumptions`.',
+
+  // Paste / quick CSV-TSV import inside a reference editor.
+  'crossValidation.paste.action': 'Paste rows',
+  'crossValidation.paste.title': 'Paste rows (CSV / TSV)',
+  'crossValidation.paste.subtitle':
+    'Paste a raw table from ChairGun, Strelok, MERO, a spreadsheet or a clean transcription. No values are invented.',
+  'crossValidation.paste.inputLabel': 'Pasted tabular text',
+  'crossValidation.paste.formats':
+    'Accepted separators: tab, comma, semicolon. Header required (range, drop, velocity, tof, windDrift, energy or aliases).',
+  'crossValidation.paste.errorEmpty': 'Empty text.',
+  'crossValidation.paste.errorPrefix': 'Cannot parse:',
+  'crossValidation.paste.recognised': '{{n}} row(s) recognised',
+  'crossValidation.paste.separator': 'Separator',
+  'crossValidation.paste.rejected': '{{n}} rejected',
+  'crossValidation.paste.unknownCols': '{{n}} column(s) ignored',
+  'crossValidation.paste.modeLabel': 'Behaviour',
+  'crossValidation.paste.modeAppend': 'Append to existing',
+  'crossValidation.paste.modeReplace': 'Replace existing rows',
+  'crossValidation.paste.cancel': 'Cancel',
+  'crossValidation.paste.confirm': 'Import',
 };
 
 // Append paste-import keys (EN) — kept after object literal would be a TS

@@ -145,7 +145,7 @@ export default function CrossValidationPage() {
     reader.onload = () => {
       const text = typeof reader.result === 'string' ? reader.result : '';
       const result = parseUserCaseJson(text);
-      if (!result.ok) {
+      if (result.ok === false) {
         setIssues(result.issues);
         toast.error(t('crossValidation.importFailed'));
         return;
@@ -166,7 +166,7 @@ export default function CrossValidationPage() {
 
   const handleCompare = (stored: StoredUserCase) => {
     const v = validateUserCase(stored.case);
-    if (!v.ok) {
+    if (v.ok === false) {
       setIssues(v.issues);
       toast.error(t('crossValidation.compareInvalid'));
       return;

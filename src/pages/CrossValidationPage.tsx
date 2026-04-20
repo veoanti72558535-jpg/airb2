@@ -1222,3 +1222,89 @@ function ReferenceEditor({ index, reference, onChange, onRemove }: ReferenceEdit
     </Card>
   );
 }
+
+// -----------------------------------------------------------------------------
+// IA-1 — ATTACH DIALOG (after AI confirm, before any persistence)
+// -----------------------------------------------------------------------------
+
+interface AttachAiDialogProps {
+  pending: AIImportConfirmPayload | null;
+  items: StoredUserCase[];
+  onCancel: () => void;
+  onAttachExisting: (caseId: string) => void;
+  onAttachNew: () => void;
+}
+
+function AttachAiDialog({
+  pending,
+  items,
+  onCancel,
+  onAttachExisting,
+  onAttachNew,
+}: AttachAiDialogProps) {
+  const { t } = useI18n();
+  const [selected, setSelected] = useState<string>('');
+  const open = pending !== null;
+  // Reset selection whenever the dialog opens with a fresh payload.
+  useEffect(() => {
+    if (open) setSelected('');
+  }, [open]);
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) onCancel();
+      }}
+    >
+      <DialogContent data-testid="ai-attach-dialog">
+        <DialogHeader>
+          <DialogTitle>{t('crossValidation.ai.attachToCaseTitle')}</DialogTitle>
+          <DialogDescription>{t('crossValidation.ai.attachToCaseDesc')}</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <Label className="text-xs">{t('crossValidation.ai.attachToCaseChoose')}</Label>
+            <Select value={selected} onValueChange={setSelected}>
+              <SelectTrigger data-testid="ai-attach-select">
+                <SelectValue placeholder={t('crossValidation.ai.attachExistingPlaceholder')} />
+              </SelectTrigger>
+              <SelectContent>
+                {items.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>
+                    {s.case.title || s.case.caseId}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              size="sm"
+              variant="default"
+              disabled={!selected}
+              onClick={() => onAttachExisting(selected)}
+              data-testid="ai-attach-confirm-existing"
+            >
+              {t('crossValidation.ai.attachConfirm')}
+            </Button>
+          </div>
+          <div className="border-t border-border pt-3">
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={onAttachNew}
+              data-testid="ai-attach-new"
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              {t('crossValidation.ai.attachToCaseNew')}
+            </Button>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={onCancel} data-testid="ai-attach-cancel">
+            {t('crossValidation.ai.attachLater')}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

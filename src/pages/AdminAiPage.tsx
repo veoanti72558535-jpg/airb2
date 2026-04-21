@@ -27,6 +27,9 @@ import { Switch } from '@/components/ui/switch';
 import { useI18n } from '@/lib/i18n';
 import { isSupabaseConfigured, supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { AiQuotaCard, type GoogleQuotaData } from '@/components/admin/AiQuotaCard';
+import { AiOllamaCard, type OllamaTestResult } from '@/components/admin/AiOllamaCard';
+import { AiAgentsCard } from '@/components/admin/AiAgentsCard';
 
 interface AiSettingsForm {
   providerPrimary: string;

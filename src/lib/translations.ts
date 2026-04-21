@@ -2598,6 +2598,36 @@ const en: Record<keyof typeof fr, string> = {
   // IA2 — Quatarly models
   'admin.ai.quatarly.models': 'Quatarly models',
   'admin.ai.quatarly.noModels': 'No models available',
+
+  // IA2f — Runbook dispatcher validation
+  'admin.ai.runbook.sectionTitle': 'Dispatcher validation',
+  'admin.ai.runbook.checklistTitle': 'Validation checklist (13/13)',
+  'admin.ai.runbook.reset': 'Reset',
+  'admin.ai.runbook.hasFailures': 'Failures detected — corrective tranche needed before IA2f.',
+  'admin.ai.runbook.item.authAdmin': 'Admin auth accepted (JWT + role)',
+  'admin.ai.runbook.item.authNoJwt': 'Auth rejected without JWT (401)',
+  'admin.ai.runbook.item.authNoRole': 'Auth rejected without admin role (403)',
+  'admin.ai.runbook.item.providersTest': 'ai-providers-test returns 3 sections',
+  'admin.ai.runbook.item.dispatchQuatarly': 'Text-only dispatch Quatarly (200)',
+  'admin.ai.runbook.item.dispatchGoogle': 'Text-only dispatch Google override (200)',
+  'admin.ai.runbook.item.fallbackGoogle': 'Google fallback triggered',
+  'admin.ai.runbook.item.agentMissing': 'Missing agent → 503',
+  'admin.ai.runbook.item.bodyInvalid': 'Invalid body → 400',
+  'admin.ai.runbook.item.ollamaCloud': 'Ollama disabled → 503 in Cloud',
+  'admin.ai.runbook.item.quotaGoogle': 'Google quota incremented correctly',
+  'admin.ai.runbook.item.logsRuns': 'ai_agent_runs consistent',
+  'admin.ai.runbook.item.logsEvents': 'ai_usage_events consistent',
+  'admin.ai.runbook.payloadsTitle': 'Sample payloads (copiable)',
+  'admin.ai.runbook.payload.dispatchQuatarly': 'Dispatch Quatarly',
+  'admin.ai.runbook.payload.dispatchGoogle': 'Dispatch Google (override)',
+  'admin.ai.runbook.payload.agentMissing': 'Missing agent',
+  'admin.ai.runbook.payload.ollamaOverride': 'Ollama override',
+  'admin.ai.runbook.payload.bodyInvalid': 'Invalid body (no agent_slug)',
+  'admin.ai.runbook.logViewerTitle': 'Logs by run_id',
+  'admin.ai.runbook.logSearch': 'Search',
+  'admin.ai.runbook.logNoResult': 'No run found for this ID.',
+  'admin.ai.runbook.logRun': 'Run',
+  'admin.ai.runbook.logEvents': 'Events',
 };
 
 // Append paste-import keys (EN) — kept after object literal would be a TS

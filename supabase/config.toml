@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.ai-providers-test]
 verify_jwt = false
+
+[functions.ai-provider-dispatch]
+verify_jwt = false

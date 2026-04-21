@@ -13,7 +13,20 @@ vi.mock('sonner', () => ({
   toast: { success: vi.fn(), error: vi.fn() },
 }));
 
+vi.mock('@/integrations/supabase/client', () => ({
+  isSupabaseConfigured: vi.fn(() => false),
+  supabase: null,
+}));
+
+const mockNavigate = vi.fn();
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return { ...actual, useNavigate: () => mockNavigate };
+});
+
 beforeEach(() => localStorage.clear());
+
+import { isSupabaseConfigured } from '@/integrations/supabase/client';
 
 function renderPage() {
   render(
@@ -60,5 +73,22 @@ describe('AdminPage — Tranche F.3 import actions', () => {
         screen.getAllByText(/Importer des optiques|Import optics/).length,
       ).toBeGreaterThanOrEqual(2);
     });
+  });
+});
+
+describe('AdminPage — /admin/ai link', () => {
+  it('shows disabled AI card when Supabase is not configured', () => {
+    vi.mocked(isSupabaseConfigured).mockReturnValue(false);
+    renderPage();
+    expect(screen.queryByTestId('admin-link-ai')).toBeNull();
+  });
+
+  it('shows AI link button when Supabase is configured', () => {
+    vi.mocked(isSupabaseConfigured).mockReturnValue(true);
+    renderPage();
+    const btn = screen.getByTestId('admin-link-ai');
+    expect(btn).toBeTruthy();
+    fireEvent.click(btn);
+    expect(mockNavigate).toHaveBeenCalledWith('/admin/ai');
   });
 });

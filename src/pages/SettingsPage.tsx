@@ -23,6 +23,7 @@ export default function SettingsPage() {
   const { theme, toggleTheme } = useTheme();
   const settings = getSettings();
   const { prefs, setUnitPref } = useUnits();
+  const navigate = useNavigate();
 
   // Identify which preset matches the stored value (null/7.5/16.27 → preset; anything else → custom).
   const currentThreshold = settings.energyThresholdJ === undefined ? 16.27 : settings.energyThresholdJ;

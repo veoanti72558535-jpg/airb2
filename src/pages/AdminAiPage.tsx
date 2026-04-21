@@ -152,7 +152,7 @@ function AdminAiInner() {
   if (!bootstrapped) {
     return (
       <div className="space-y-4">
-        <PageHeader />
+        <PageHeaderWithSubtitle />
         <Card>
           <CardContent className="p-4 text-sm text-muted-foreground">…</CardContent>
         </Card>
@@ -162,7 +162,7 @@ function AdminAiInner() {
 
   return (
     <div className="space-y-4">
-      <PageHeader />
+      <PageHeaderWithSubtitle />
       {!session ? <SignInCard /> : <AdminAiAuthenticated />}
     </div>
   );

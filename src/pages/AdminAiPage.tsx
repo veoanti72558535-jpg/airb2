@@ -253,6 +253,10 @@ function AdminAiAuthenticated() {
       googleDirectEnabled: (map.get(SETTINGS_KEYS.googleDirectEnabled) as boolean) ?? DEFAULT_FORM.googleDirectEnabled,
       googleDirectModel: (map.get(SETTINGS_KEYS.googleDirectModel) as string) ?? DEFAULT_FORM.googleDirectModel,
       maxImageBytes: (map.get(SETTINGS_KEYS.maxImageBytes) as number) ?? DEFAULT_FORM.maxImageBytes,
+      googleMaxRequestsPerDay: (map.get(SETTINGS_KEYS.googleMaxRequestsPerDay) as number) ?? DEFAULT_FORM.googleMaxRequestsPerDay,
+      ollamaEnabled: (map.get(SETTINGS_KEYS.ollamaEnabled) as boolean) ?? DEFAULT_FORM.ollamaEnabled,
+      ollamaBaseUrl: (map.get(SETTINGS_KEYS.ollamaBaseUrl) as string) ?? DEFAULT_FORM.ollamaBaseUrl,
+      ollamaDefaultModel: (map.get(SETTINGS_KEYS.ollamaDefaultModel) as string) ?? DEFAULT_FORM.ollamaDefaultModel,
     });
   }, [sb]);
 

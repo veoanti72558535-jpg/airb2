@@ -67,7 +67,7 @@ const nextStatus: Record<CheckStatus, CheckStatus> = {
 
 const statusIcon: Record<CheckStatus, React.ReactNode> = {
   untested: <CircleDashed className="h-4 w-4 text-muted-foreground" />,
-  ok: <CheckCircle2 className="h-4 w-4 text-green-500" />,
+  ok: <CheckCircle2 className="h-4 w-4 text-primary" />,
   ko: <XCircle className="h-4 w-4 text-destructive" />,
 };
 

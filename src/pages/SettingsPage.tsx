@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Settings, Globe, Sun, Moon, Gauge, ToggleLeft, Cloud, Bot, Ruler, Zap } from 'lucide-react';
+import { Settings, Globe, Sun, Moon, Gauge, ToggleLeft, Cloud, Bot, Ruler, Zap, Shield } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { useTheme } from '@/lib/theme';
 import { getSettings, saveSettings } from '@/lib/storage';
@@ -7,6 +7,8 @@ import { useUnits } from '@/hooks/use-units';
 import { unitCategories } from '@/lib/units';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { isSupabaseConfigured } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
 
 /** Preset thresholds (J) — covers the most common airgun regulations. */
 const ENERGY_PRESETS: { key: string; value: number | null; labelKey: string }[] = [
@@ -225,17 +227,27 @@ export default function SettingsPage() {
           )}
         </div>
 
-        {/* AI - disabled placeholder */}
-        <div className="surface-elevated p-4 opacity-50">
+        {/* AI — état conditionnel */}
+        <div className="surface-elevated p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Bot className="h-4 w-4 text-muted-foreground" />
+              <Bot className="h-4 w-4 text-primary" />
               <div>
                 <div className="text-sm font-medium">{t('settings.ai')}</div>
                 <div className="text-[11px] text-muted-foreground">{t('settings.aiDesc')}</div>
               </div>
             </div>
-            <span className="text-xs text-muted-foreground">{t('settings.comingSoon')}</span>
+            {isSupabaseConfigured() ? (
+              <button
+                onClick={() => navigate('/admin/ai')}
+                className="px-3 py-1 rounded-md text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors flex items-center gap-1"
+              >
+                <Shield className="h-3 w-3" />
+                {t('settings.aiConfigure')}
+              </button>
+            ) : (
+              <span className="text-xs text-muted-foreground italic">{t('settings.aiRequiresSupabase')}</span>
+            )}
           </div>
         </div>
       </div>

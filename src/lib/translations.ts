@@ -542,6 +542,8 @@ const fr = {
   'settings.aiDesc': 'Aide contextuelle et suggestions',
   'settings.comingSoon': 'Bientôt disponible',
   'settings.disabled': 'Désactivé',
+  'settings.aiConfigure': 'Configurer',
+  'settings.aiRequiresSupabase': 'Requiert Supabase',
 
   // Admin
   'admin.title': 'Administration',
@@ -1825,6 +1827,8 @@ const en: Record<keyof typeof fr, string> = {
   'settings.aiDesc': 'Contextual help and suggestions',
   'settings.comingSoon': 'Coming soon',
   'settings.disabled': 'Disabled',
+  'settings.aiConfigure': 'Configure',
+  'settings.aiRequiresSupabase': 'Requires Supabase',
 
   'admin.title': 'Administration',
   'admin.imports': 'Imports / Exports',

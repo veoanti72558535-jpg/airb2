@@ -110,6 +110,18 @@ function PageHeader() {
         <Bot className="h-5 w-5 text-primary" />
         <h1 className="text-xl font-heading font-bold">{t('admin.ai.title')}</h1>
       </div>
+    </header>
+  );
+}
+
+function PageHeaderWithSubtitle() {
+  const { t } = useI18n();
+  return (
+    <header className="space-y-1">
+      <div className="flex items-center gap-2">
+        <Bot className="h-5 w-5 text-primary" />
+        <h1 className="text-xl font-heading font-bold">{t('admin.ai.title')}</h1>
+      </div>
       <p className="text-xs text-muted-foreground">{t('admin.ai.subtitle')}</p>
     </header>
   );
@@ -140,7 +152,7 @@ function AdminAiInner() {
   if (!bootstrapped) {
     return (
       <div className="space-y-4">
-        <PageHeader />
+        <PageHeaderWithSubtitle />
         <Card>
           <CardContent className="p-4 text-sm text-muted-foreground">…</CardContent>
         </Card>
@@ -150,7 +162,7 @@ function AdminAiInner() {
 
   return (
     <div className="space-y-4">
-      <PageHeader />
+      <PageHeaderWithSubtitle />
       {!session ? <SignInCard /> : <AdminAiAuthenticated />}
     </div>
   );

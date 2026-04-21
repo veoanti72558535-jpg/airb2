@@ -1,16 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// Mock supabase before importing the module
-const invokeMock = vi.fn();
 vi.mock('@/integrations/supabase/client', () => ({
   isSupabaseConfigured: vi.fn(() => true),
-  supabase: { functions: { invoke: invokeMock } },
+  supabase: { functions: { invoke: vi.fn() } },
 }));
 
 import { queryAIViaEdge } from './edge-client';
-import { isSupabaseConfigured } from '@/integrations/supabase/client';
+import { isSupabaseConfigured, supabase } from '@/integrations/supabase/client';
 
 const BASE_REQ = { agent_slug: 'test-agent', prompt: 'Hello' };
+const invokeMock = vi.mocked(supabase!.functions.invoke);
 
 beforeEach(() => {
   vi.clearAllMocks();

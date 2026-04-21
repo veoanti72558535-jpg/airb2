@@ -1260,6 +1260,39 @@ const fr = {
   'admin.ai.link': 'Configuration IA',
   'admin.ai.linkDesc': 'Gérer les providers IA et les paramètres d\'extraction (Supabase requis).',
   'admin.ai.linkDisabled': 'Supabase non configuré — configuration IA indisponible.',
+
+  // IA2 — Quota Google
+  'admin.ai.quota.title': 'Quota Google du jour',
+  'admin.ai.quota.used': 'Utilisé',
+  'admin.ai.quota.max': 'Maximum',
+  'admin.ai.quota.remaining': 'Restant',
+  'admin.ai.quota.unlimited': 'Illimité',
+  'admin.ai.settings.googleMaxRequestsPerDay': 'Max requêtes Google / jour',
+
+  // IA2 — Ollama
+  'admin.ai.ollama.title': 'Ollama (LAN)',
+  'admin.ai.ollama.enabled': 'Activer Ollama',
+  'admin.ai.ollama.baseUrl': 'URL de base Ollama',
+  'admin.ai.ollama.model': 'Modèle Ollama par défaut',
+  'admin.ai.ollama.testConnection': 'Tester la connexion',
+  'admin.ai.ollama.testRunning': 'Test en cours…',
+  'admin.ai.ollama.reachable': 'Joignable',
+  'admin.ai.ollama.unreachable': 'Injoignable',
+  'admin.ai.ollama.models': 'Modèles détectés',
+
+  // IA2 — Agents
+  'admin.ai.agents.title': 'Agents configurés',
+  'admin.ai.agents.empty': 'Aucun agent configuré',
+  'admin.ai.agents.provider': 'Provider',
+  'admin.ai.agents.model': 'Modèle',
+  'admin.ai.agents.fallback': 'Fallback',
+  'admin.ai.agents.enabled': 'Actif',
+  'admin.ai.agents.disabled': 'Désactivé',
+  'admin.ai.agents.loadError': 'Erreur de chargement des agents',
+
+  // IA2 — Quatarly models
+  'admin.ai.quatarly.models': 'Modèles Quatarly',
+  'admin.ai.quatarly.noModels': 'Aucun modèle disponible',
 } as const;
 
 const en: Record<keyof typeof fr, string> = {

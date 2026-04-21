@@ -1260,6 +1260,39 @@ const fr = {
   'admin.ai.link': 'Configuration IA',
   'admin.ai.linkDesc': 'Gérer les providers IA et les paramètres d\'extraction (Supabase requis).',
   'admin.ai.linkDisabled': 'Supabase non configuré — configuration IA indisponible.',
+
+  // IA2 — Quota Google
+  'admin.ai.quota.title': 'Quota Google du jour',
+  'admin.ai.quota.used': 'Utilisé',
+  'admin.ai.quota.max': 'Maximum',
+  'admin.ai.quota.remaining': 'Restant',
+  'admin.ai.quota.unlimited': 'Illimité',
+  'admin.ai.settings.googleMaxRequestsPerDay': 'Max requêtes Google / jour',
+
+  // IA2 — Ollama
+  'admin.ai.ollama.title': 'Ollama (LAN)',
+  'admin.ai.ollama.enabled': 'Activer Ollama',
+  'admin.ai.ollama.baseUrl': 'URL de base Ollama',
+  'admin.ai.ollama.model': 'Modèle Ollama par défaut',
+  'admin.ai.ollama.testConnection': 'Tester la connexion',
+  'admin.ai.ollama.testRunning': 'Test en cours…',
+  'admin.ai.ollama.reachable': 'Joignable',
+  'admin.ai.ollama.unreachable': 'Injoignable',
+  'admin.ai.ollama.models': 'Modèles détectés',
+
+  // IA2 — Agents
+  'admin.ai.agents.title': 'Agents configurés',
+  'admin.ai.agents.empty': 'Aucun agent configuré',
+  'admin.ai.agents.provider': 'Provider',
+  'admin.ai.agents.model': 'Modèle',
+  'admin.ai.agents.fallback': 'Fallback',
+  'admin.ai.agents.enabled': 'Actif',
+  'admin.ai.agents.disabled': 'Désactivé',
+  'admin.ai.agents.loadError': 'Erreur de chargement des agents',
+
+  // IA2 — Quatarly models
+  'admin.ai.quatarly.models': 'Modèles Quatarly',
+  'admin.ai.quatarly.noModels': 'Aucun modèle disponible',
 } as const;
 
 const en: Record<keyof typeof fr, string> = {
@@ -2498,6 +2531,39 @@ const en: Record<keyof typeof fr, string> = {
   'admin.ai.link': 'AI Configuration',
   'admin.ai.linkDesc': 'Manage AI providers and extraction settings (requires Supabase).',
   'admin.ai.linkDisabled': 'Supabase not configured — AI configuration unavailable.',
+
+  // IA2 — Google quota
+  'admin.ai.quota.title': 'Google quota today',
+  'admin.ai.quota.used': 'Used',
+  'admin.ai.quota.max': 'Maximum',
+  'admin.ai.quota.remaining': 'Remaining',
+  'admin.ai.quota.unlimited': 'Unlimited',
+  'admin.ai.settings.googleMaxRequestsPerDay': 'Max Google requests / day',
+
+  // IA2 — Ollama
+  'admin.ai.ollama.title': 'Ollama (LAN)',
+  'admin.ai.ollama.enabled': 'Enable Ollama',
+  'admin.ai.ollama.baseUrl': 'Ollama base URL',
+  'admin.ai.ollama.model': 'Default Ollama model',
+  'admin.ai.ollama.testConnection': 'Test connection',
+  'admin.ai.ollama.testRunning': 'Testing…',
+  'admin.ai.ollama.reachable': 'Reachable',
+  'admin.ai.ollama.unreachable': 'Unreachable',
+  'admin.ai.ollama.models': 'Detected models',
+
+  // IA2 — Agents
+  'admin.ai.agents.title': 'Configured agents',
+  'admin.ai.agents.empty': 'No agents configured',
+  'admin.ai.agents.provider': 'Provider',
+  'admin.ai.agents.model': 'Model',
+  'admin.ai.agents.fallback': 'Fallback',
+  'admin.ai.agents.enabled': 'Enabled',
+  'admin.ai.agents.disabled': 'Disabled',
+  'admin.ai.agents.loadError': 'Failed to load agents',
+
+  // IA2 — Quatarly models
+  'admin.ai.quatarly.models': 'Quatarly models',
+  'admin.ai.quatarly.noModels': 'No models available',
 };
 
 // Append paste-import keys (EN) — kept after object literal would be a TS

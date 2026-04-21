@@ -15,7 +15,7 @@
  * d'indisponibilité et NE TENTE AUCUN appel.
  */
 import React, { useCallback, useEffect, useState } from 'react';
-import { Bot, KeyRound, RefreshCw, ShieldAlert, LogOut } from 'lucide-react';
+import { Bot, KeyRound, RefreshCw, ShieldAlert, LogOut, Server } from 'lucide-react';
 import type { Session } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,6 +27,9 @@ import { Switch } from '@/components/ui/switch';
 import { useI18n } from '@/lib/i18n';
 import { isSupabaseConfigured, supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { AiQuotaCard, type GoogleQuotaData } from '@/components/admin/AiQuotaCard';
+import { AiOllamaCard, type OllamaTestResult } from '@/components/admin/AiOllamaCard';
+import { AiAgentsCard } from '@/components/admin/AiAgentsCard';
 
 interface AiSettingsForm {
   providerPrimary: string;
@@ -36,6 +39,10 @@ interface AiSettingsForm {
   googleDirectEnabled: boolean;
   googleDirectModel: string;
   maxImageBytes: number;
+  googleMaxRequestsPerDay: number;
+  ollamaEnabled: boolean;
+  ollamaBaseUrl: string;
+  ollamaDefaultModel: string;
 }
 
 interface ProvidersTestResult {
@@ -43,6 +50,9 @@ interface ProvidersTestResult {
   google: { keyPresent: boolean; enabled: boolean; allowedAsFallback: boolean; model: string };
   primaryProvider: string;
   maxImageBytes: number;
+  ollama?: { reachable: boolean; models: string[]; error?: string };
+  googleQuota?: { used: number; max: number; remaining: number; allowed: boolean };
+  quatarlyModels?: string[];
 }
 
 const SETTINGS_KEYS: Record<keyof AiSettingsForm, string> = {
@@ -53,6 +63,10 @@ const SETTINGS_KEYS: Record<keyof AiSettingsForm, string> = {
   googleDirectEnabled: 'ai.google_direct_enabled',
   googleDirectModel: 'ai.google_direct_model',
   maxImageBytes: 'ai.max_image_bytes',
+  googleMaxRequestsPerDay: 'ai.google_direct_max_requests_per_day',
+  ollamaEnabled: 'ai.ollama_enabled',
+  ollamaBaseUrl: 'ai.ollama_base_url',
+  ollamaDefaultModel: 'ai.ollama_default_model',
 };
 
 const DEFAULT_FORM: AiSettingsForm = {
@@ -63,6 +77,10 @@ const DEFAULT_FORM: AiSettingsForm = {
   googleDirectEnabled: true,
   googleDirectModel: 'gemini-2.5-flash',
   maxImageBytes: 4_194_304,
+  googleMaxRequestsPerDay: 20,
+  ollamaEnabled: false,
+  ollamaBaseUrl: 'http://localhost:11434',
+  ollamaDefaultModel: 'qwen3:14b',
 };
 
 export default function AdminAiPage() {
@@ -238,6 +256,10 @@ function AdminAiAuthenticated() {
       googleDirectEnabled: (map.get(SETTINGS_KEYS.googleDirectEnabled) as boolean) ?? DEFAULT_FORM.googleDirectEnabled,
       googleDirectModel: (map.get(SETTINGS_KEYS.googleDirectModel) as string) ?? DEFAULT_FORM.googleDirectModel,
       maxImageBytes: (map.get(SETTINGS_KEYS.maxImageBytes) as number) ?? DEFAULT_FORM.maxImageBytes,
+      googleMaxRequestsPerDay: (map.get(SETTINGS_KEYS.googleMaxRequestsPerDay) as number) ?? DEFAULT_FORM.googleMaxRequestsPerDay,
+      ollamaEnabled: (map.get(SETTINGS_KEYS.ollamaEnabled) as boolean) ?? DEFAULT_FORM.ollamaEnabled,
+      ollamaBaseUrl: (map.get(SETTINGS_KEYS.ollamaBaseUrl) as string) ?? DEFAULT_FORM.ollamaBaseUrl,
+      ollamaDefaultModel: (map.get(SETTINGS_KEYS.ollamaDefaultModel) as string) ?? DEFAULT_FORM.ollamaDefaultModel,
     });
   }, [sb]);
 
@@ -372,6 +394,13 @@ function AdminAiAuthenticated() {
             disabled={loading}
             testId="ai-set-googleDirectEnabled"
           />
+          <SettingNumber
+            label={t('admin.ai.settings.googleMaxRequestsPerDay')}
+            value={form.googleMaxRequestsPerDay}
+            onChange={(v) => update('googleMaxRequestsPerDay', v)}
+            disabled={loading}
+            testId="ai-set-googleMaxRequestsPerDay"
+          />
           <div className="sm:col-span-2 pt-1">
             <Button onClick={() => void save()} disabled={saving || loading} data-testid="ai-admin-save">
               {t('common.save')}
@@ -379,6 +408,42 @@ function AdminAiAuthenticated() {
           </div>
         </CardContent>
       </Card>
+
+      {/* IA2 — Quota Google */}
+      <AiQuotaCard quota={testResult?.googleQuota as GoogleQuotaData ?? null} />
+
+      {/* IA2 — Ollama */}
+      <AiOllamaCard
+        enabled={form.ollamaEnabled}
+        baseUrl={form.ollamaBaseUrl}
+        model={form.ollamaDefaultModel}
+        onEnabledChange={(v) => update('ollamaEnabled', v)}
+        onBaseUrlChange={(v) => update('ollamaBaseUrl', v)}
+        onModelChange={(v) => update('ollamaDefaultModel', v)}
+        disabled={loading}
+        testResult={testResult?.ollama as OllamaTestResult ?? null}
+        onTest={() => void test()}
+        testing={testing}
+      />
+
+      {/* IA2 — Quatarly models (from test result) */}
+      {testResult?.quatarlyModels && testResult.quatarlyModels.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">{t('admin.ai.quatarly.models')}</CardTitle>
+          </CardHeader>
+          <CardContent className="p-3 pt-0">
+            <div className="flex flex-wrap gap-1">
+              {testResult.quatarlyModels.map((m) => (
+                <Badge key={m} variant="secondary" className="font-mono text-[11px]">{m}</Badge>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* IA2 — Agents */}
+      <AiAgentsCard />
     </div>
   );
 }

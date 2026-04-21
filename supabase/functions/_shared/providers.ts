@@ -260,3 +260,139 @@ export async function callGoogleDirect(input: ProviderCallInput): Promise<Provid
     };
   }
 }
+
+// ----------------------------------------------------------------------------
+// Ollama (LAN — pas de clé API, pas de fallback depuis Ollama)
+// ----------------------------------------------------------------------------
+
+export interface OllamaCallInput {
+  systemPrompt: string;
+  /** Prompt utilisateur texte (Ollama ne supporte pas tous les formats vision). */
+  userPrompt: string;
+  model: string;
+  /** ex. 'http://192.168.1.10:11434' */
+  baseUrl: string;
+  /** Timeout en ms pour l'appel chat (défaut 60 000). */
+  timeoutMs?: number;
+  /** Image base64 optionnelle (pour les modèles vision Ollama). */
+  imageBase64?: string;
+}
+
+export async function callOllama(input: OllamaCallInput): Promise<ProviderCallResult> {
+  const url = `${input.baseUrl.replace(/\/+$/, '')}/api/chat`;
+  const timeoutMs = input.timeoutMs ?? 60_000;
+
+  const messages: Array<{ role: string; content: string; images?: string[] }> = [
+    { role: 'system', content: input.systemPrompt },
+  ];
+  const userMsg: { role: string; content: string; images?: string[] } = {
+    role: 'user',
+    content: input.userPrompt,
+  };
+  if (input.imageBase64) {
+    userMsg.images = [input.imageBase64];
+  }
+  messages.push(userMsg);
+
+  const body = {
+    model: input.model,
+    messages,
+    stream: false,
+    format: 'json',
+  };
+
+  const t0 = Date.now();
+  let resp: Response;
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    resp = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    return {
+      ok: false,
+      errorCode: msg.includes('abort') ? 'timeout' : 'network',
+      errorMessage: msg,
+      latencyMs: Date.now() - t0,
+      retryable: false,
+    };
+  }
+  const latencyMs = Date.now() - t0;
+
+  if (!resp.ok) {
+    const txt = await resp.text().catch(() => '');
+    return {
+      ok: false,
+      errorCode: `http-${resp.status}`,
+      errorMessage: txt.slice(0, 500),
+      latencyMs,
+      retryable: false,
+    };
+  }
+
+  type OllamaResponse = { message?: { content?: string } };
+  let payload: OllamaResponse;
+  try {
+    payload = await resp.json();
+  } catch (e) {
+    return {
+      ok: false,
+      errorCode: 'invalid-response',
+      errorMessage: e instanceof Error ? e.message : 'unparseable Ollama response',
+      latencyMs,
+      retryable: false,
+    };
+  }
+
+  const raw = payload.message?.content;
+  if (typeof raw !== 'string' || raw.trim().length === 0) {
+    return {
+      ok: false,
+      errorCode: 'empty-content',
+      errorMessage: 'Ollama returned empty content',
+      latencyMs,
+      retryable: false,
+    };
+  }
+
+  try {
+    return { ok: true, data: safeParseJson(raw), latencyMs };
+  } catch (e) {
+    return {
+      ok: false,
+      errorCode: 'invalid-json',
+      errorMessage: e instanceof Error ? e.message : 'JSON parse failed',
+      latencyMs,
+      retryable: false,
+    };
+  }
+}
+
+/**
+ * Health check Ollama — GET /api/tags.
+ * Retourne true si le serveur répond en moins de `timeoutMs` (défaut 5 s).
+ */
+export async function ollamaHealthCheck(
+  baseUrl: string,
+  timeoutMs = 5_000,
+): Promise<{ ok: boolean; models?: string[]; errorMessage?: string }> {
+  const url = `${baseUrl.replace(/\/+$/, '')}/api/tags`;
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    const resp = await fetch(url, { signal: controller.signal });
+    clearTimeout(timer);
+    if (!resp.ok) return { ok: false, errorMessage: `HTTP ${resp.status}` };
+    const data = await resp.json() as { models?: Array<{ name?: string }> };
+    const models = (data.models ?? []).map((m) => m.name).filter(Boolean) as string[];
+    return { ok: true, models };
+  } catch (e) {
+    return { ok: false, errorMessage: e instanceof Error ? e.message : String(e) };
+  }
+}

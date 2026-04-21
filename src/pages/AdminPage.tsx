@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { Shield, Download, Upload, FileText, Database, Wrench, BarChart3, Crosshair, Telescope, Target } from 'lucide-react';
+import { Shield, Download, Upload, FileText, Database, Wrench, BarChart3, Crosshair, Telescope, Target, BrainCircuit } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { airgunStore, projectileStore, opticStore, sessionStore, exportAllData } from '@/lib/storage';
+import { isSupabaseConfigured } from '@/integrations/supabase/client';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { ImportJsonModal } from '@/components/import/ImportJsonModal';
 import type { ImportEntityType } from '@/lib/import-schemas';
 import { ProjectileStorageDiagnosticCard } from '@/components/admin/ProjectileStorageDiagnosticCard';
@@ -12,6 +14,8 @@ import { StorageQuotaDiagnosticCard } from '@/components/admin/StorageQuotaDiagn
 
 export default function AdminPage() {
   const { t } = useI18n();
+  const navigate = useNavigate();
+  const supabaseReady = isSupabaseConfigured();
   const [importType, setImportType] = useState<ImportEntityType | null>(null);
   // Tranche Admin Storage UX — bump local pour forcer un refresh du
   // diagnostic après un import projectile réussi. Pas d'event global,
@@ -121,6 +125,33 @@ export default function AdminPage() {
 
       {/* Nettoyage projectiles non-airgun (Tranche Cleanup) */}
       <ProjectileCleanupCard onCleaned={() => setDiagRefreshKey((k) => k + 1)} />
+
+      {/* Lien vers /admin/ai — conditionnel à Supabase */}
+      <div className="surface-elevated p-4 flex items-start gap-3">
+        <div className={`p-2 rounded-md shrink-0 ${supabaseReady ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
+          <BrainCircuit className="h-5 w-5" />
+        </div>
+        <div className="flex-1">
+          <div className="text-sm font-medium">{t('admin.ai.link')}</div>
+          <div className="text-xs text-muted-foreground mt-0.5">
+            {supabaseReady ? t('admin.ai.linkDesc') : t('admin.ai.linkDisabled')}
+          </div>
+          {supabaseReady ? (
+            <button
+              type="button"
+              data-testid="admin-link-ai"
+              onClick={() => navigate('/admin/ai')}
+              className="mt-2 px-3 py-1 bg-primary/10 text-primary rounded-md text-xs font-medium hover:bg-primary/20 transition-colors"
+            >
+              {t('admin.ai.link')}
+            </button>
+          ) : (
+            <span className="mt-2 inline-block text-[11px] text-muted-foreground italic">
+              {t('admin.ai.linkDisabled')}
+            </span>
+          )}
+        </div>
+      </div>
 
       {/* Sections */}
       <div className="space-y-3">

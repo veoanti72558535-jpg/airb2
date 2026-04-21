@@ -1257,6 +1257,9 @@ const fr = {
   'admin.ai.settings.maxImageBytes': 'Taille max image (octets)',
   'admin.ai.settings.saved': 'Settings sauvegardés',
   'admin.ai.settings.saveFailed': 'Échec de la sauvegarde',
+  'admin.ai.link': 'Configuration IA',
+  'admin.ai.linkDesc': 'Gérer les providers IA et les paramètres d\'extraction (Supabase requis).',
+  'admin.ai.linkDisabled': 'Supabase non configuré — configuration IA indisponible.',
 } as const;
 
 const en: Record<keyof typeof fr, string> = {
@@ -2492,6 +2495,9 @@ const en: Record<keyof typeof fr, string> = {
   'admin.ai.settings.maxImageBytes': 'Max image size (bytes)',
   'admin.ai.settings.saved': 'Settings saved',
   'admin.ai.settings.saveFailed': 'Save failed',
+  'admin.ai.link': 'AI Configuration',
+  'admin.ai.linkDesc': 'Manage AI providers and extraction settings (requires Supabase).',
+  'admin.ai.linkDisabled': 'Supabase not configured — AI configuration unavailable.',
 };
 
 // Append paste-import keys (EN) — kept after object literal would be a TS

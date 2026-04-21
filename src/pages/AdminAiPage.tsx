@@ -394,6 +394,13 @@ function AdminAiAuthenticated() {
             disabled={loading}
             testId="ai-set-googleDirectEnabled"
           />
+          <SettingNumber
+            label={t('admin.ai.settings.googleMaxRequestsPerDay')}
+            value={form.googleMaxRequestsPerDay}
+            onChange={(v) => update('googleMaxRequestsPerDay', v)}
+            disabled={loading}
+            testId="ai-set-googleMaxRequestsPerDay"
+          />
           <div className="sm:col-span-2 pt-1">
             <Button onClick={() => void save()} disabled={saving || loading} data-testid="ai-admin-save">
               {t('common.save')}
@@ -401,6 +408,42 @@ function AdminAiAuthenticated() {
           </div>
         </CardContent>
       </Card>
+
+      {/* IA2 — Quota Google */}
+      <AiQuotaCard quota={testResult?.googleQuota as GoogleQuotaData ?? null} />
+
+      {/* IA2 — Ollama */}
+      <AiOllamaCard
+        enabled={form.ollamaEnabled}
+        baseUrl={form.ollamaBaseUrl}
+        model={form.ollamaDefaultModel}
+        onEnabledChange={(v) => update('ollamaEnabled', v)}
+        onBaseUrlChange={(v) => update('ollamaBaseUrl', v)}
+        onModelChange={(v) => update('ollamaDefaultModel', v)}
+        disabled={loading}
+        testResult={testResult?.ollama as OllamaTestResult ?? null}
+        onTest={() => void test()}
+        testing={testing}
+      />
+
+      {/* IA2 — Quatarly models (from test result) */}
+      {testResult?.quatarlyModels && testResult.quatarlyModels.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">{t('admin.ai.quatarly.models')}</CardTitle>
+          </CardHeader>
+          <CardContent className="p-3 pt-0">
+            <div className="flex flex-wrap gap-1">
+              {testResult.quatarlyModels.map((m) => (
+                <Badge key={m} variant="secondary" className="font-mono text-[11px]">{m}</Badge>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* IA2 — Agents */}
+      <AiAgentsCard />
     </div>
   );
 }

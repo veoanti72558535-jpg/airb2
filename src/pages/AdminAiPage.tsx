@@ -30,6 +30,10 @@ import { toast } from 'sonner';
 import { AiQuotaCard, type GoogleQuotaData } from '@/components/admin/AiQuotaCard';
 import { AiOllamaCard, type OllamaTestResult } from '@/components/admin/AiOllamaCard';
 import { AiAgentsCard } from '@/components/admin/AiAgentsCard';
+import RunbookChecklist from '@/components/admin/RunbookChecklist';
+import RunbookPayloads from '@/components/admin/RunbookPayloads';
+import RunbookLogViewer from '@/components/admin/RunbookLogViewer';
+import { ClipboardCheck } from 'lucide-react';
 
 interface AiSettingsForm {
   providerPrimary: string;
@@ -456,6 +460,17 @@ function AdminAiAuthenticated() {
 
       {/* IA2 — Agents */}
       <AiAgentsCard />
+
+      {/* IA2f — Runbook validation dispatcher */}
+      <div className="pt-4 border-t border-border space-y-4">
+        <div className="flex items-center gap-2">
+          <ClipboardCheck className="h-4 w-4 text-primary" />
+          <h2 className="text-sm font-semibold">{t('admin.ai.runbook.sectionTitle')}</h2>
+        </div>
+        <RunbookChecklist />
+        <RunbookPayloads />
+        <RunbookLogViewer />
+      </div>
     </div>
   );
 }

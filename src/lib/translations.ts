@@ -1295,6 +1295,36 @@ const fr = {
   // IA2 — Quatarly models
   'admin.ai.quatarly.models': 'Modèles Quatarly',
   'admin.ai.quatarly.noModels': 'Aucun modèle disponible',
+
+  // IA2f — Runbook validation dispatcher
+  'admin.ai.runbook.sectionTitle': 'Validation dispatcher',
+  'admin.ai.runbook.checklistTitle': 'Checklist de validation (13/13)',
+  'admin.ai.runbook.reset': 'Réinitialiser',
+  'admin.ai.runbook.hasFailures': 'Des échecs ont été constatés — tranche corrective nécessaire avant IA2f.',
+  'admin.ai.runbook.item.authAdmin': 'Auth admin acceptée (JWT + rôle)',
+  'admin.ai.runbook.item.authNoJwt': 'Auth refusée sans JWT (401)',
+  'admin.ai.runbook.item.authNoRole': 'Auth refusée sans rôle admin (403)',
+  'admin.ai.runbook.item.providersTest': 'ai-providers-test retourne 3 sections',
+  'admin.ai.runbook.item.dispatchQuatarly': 'Dispatch texte-only Quatarly (200)',
+  'admin.ai.runbook.item.dispatchGoogle': 'Dispatch texte-only Google override (200)',
+  'admin.ai.runbook.item.fallbackGoogle': 'Fallback Google déclenché',
+  'admin.ai.runbook.item.agentMissing': 'Agent inexistant → 503',
+  'admin.ai.runbook.item.bodyInvalid': 'Body invalide → 400',
+  'admin.ai.runbook.item.ollamaCloud': 'Ollama disabled → 503 en Cloud',
+  'admin.ai.runbook.item.quotaGoogle': 'Quota Google incrémenté correctement',
+  'admin.ai.runbook.item.logsRuns': 'ai_agent_runs cohérent',
+  'admin.ai.runbook.item.logsEvents': 'ai_usage_events cohérent',
+  'admin.ai.runbook.payloadsTitle': 'Payloads types (copiables)',
+  'admin.ai.runbook.payload.dispatchQuatarly': 'Dispatch Quatarly',
+  'admin.ai.runbook.payload.dispatchGoogle': 'Dispatch Google (override)',
+  'admin.ai.runbook.payload.agentMissing': 'Agent inexistant',
+  'admin.ai.runbook.payload.ollamaOverride': 'Ollama override',
+  'admin.ai.runbook.payload.bodyInvalid': 'Body invalide (sans agent_slug)',
+  'admin.ai.runbook.logViewerTitle': 'Logs par run_id',
+  'admin.ai.runbook.logSearch': 'Chercher',
+  'admin.ai.runbook.logNoResult': 'Aucun run trouvé pour cet ID.',
+  'admin.ai.runbook.logRun': 'Run',
+  'admin.ai.runbook.logEvents': 'Events',
 } as const;
 
 const en: Record<keyof typeof fr, string> = {

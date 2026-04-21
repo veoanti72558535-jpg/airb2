@@ -2531,6 +2531,39 @@ const en: Record<keyof typeof fr, string> = {
   'admin.ai.link': 'AI Configuration',
   'admin.ai.linkDesc': 'Manage AI providers and extraction settings (requires Supabase).',
   'admin.ai.linkDisabled': 'Supabase not configured — AI configuration unavailable.',
+
+  // IA2 — Google quota
+  'admin.ai.quota.title': 'Google quota today',
+  'admin.ai.quota.used': 'Used',
+  'admin.ai.quota.max': 'Maximum',
+  'admin.ai.quota.remaining': 'Remaining',
+  'admin.ai.quota.unlimited': 'Unlimited',
+  'admin.ai.settings.googleMaxRequestsPerDay': 'Max Google requests / day',
+
+  // IA2 — Ollama
+  'admin.ai.ollama.title': 'Ollama (LAN)',
+  'admin.ai.ollama.enabled': 'Enable Ollama',
+  'admin.ai.ollama.baseUrl': 'Ollama base URL',
+  'admin.ai.ollama.model': 'Default Ollama model',
+  'admin.ai.ollama.testConnection': 'Test connection',
+  'admin.ai.ollama.testRunning': 'Testing…',
+  'admin.ai.ollama.reachable': 'Reachable',
+  'admin.ai.ollama.unreachable': 'Unreachable',
+  'admin.ai.ollama.models': 'Detected models',
+
+  // IA2 — Agents
+  'admin.ai.agents.title': 'Configured agents',
+  'admin.ai.agents.empty': 'No agents configured',
+  'admin.ai.agents.provider': 'Provider',
+  'admin.ai.agents.model': 'Model',
+  'admin.ai.agents.fallback': 'Fallback',
+  'admin.ai.agents.enabled': 'Enabled',
+  'admin.ai.agents.disabled': 'Disabled',
+  'admin.ai.agents.loadError': 'Failed to load agents',
+
+  // IA2 — Quatarly models
+  'admin.ai.quatarly.models': 'Quatarly models',
+  'admin.ai.quatarly.noModels': 'No models available',
 };
 
 // Append paste-import keys (EN) — kept after object literal would be a TS

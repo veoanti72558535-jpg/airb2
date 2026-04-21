@@ -145,11 +145,7 @@ export default function AdminPage() {
             >
               {t('admin.ai.link')}
             </button>
-          ) : (
-            <span className="mt-2 inline-block text-[11px] text-muted-foreground italic">
-              {t('admin.ai.linkDisabled')}
-            </span>
-          )}
+          ) : null}
         </div>
       </div>
 

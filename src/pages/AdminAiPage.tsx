@@ -15,7 +15,7 @@
  * d'indisponibilité et NE TENTE AUCUN appel.
  */
 import React, { useCallback, useEffect, useState } from 'react';
-import { Bot, KeyRound, RefreshCw, ShieldAlert, LogOut } from 'lucide-react';
+import { Bot, KeyRound, RefreshCw, ShieldAlert, LogOut, Server } from 'lucide-react';
 import type { Session } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,6 +36,10 @@ interface AiSettingsForm {
   googleDirectEnabled: boolean;
   googleDirectModel: string;
   maxImageBytes: number;
+  googleMaxRequestsPerDay: number;
+  ollamaEnabled: boolean;
+  ollamaBaseUrl: string;
+  ollamaDefaultModel: string;
 }
 
 interface ProvidersTestResult {
@@ -43,6 +47,9 @@ interface ProvidersTestResult {
   google: { keyPresent: boolean; enabled: boolean; allowedAsFallback: boolean; model: string };
   primaryProvider: string;
   maxImageBytes: number;
+  ollama?: { reachable: boolean; models: string[]; error?: string };
+  googleQuota?: { used: number; max: number; remaining: number; allowed: boolean };
+  quatarlyModels?: string[];
 }
 
 const SETTINGS_KEYS: Record<keyof AiSettingsForm, string> = {
@@ -53,6 +60,10 @@ const SETTINGS_KEYS: Record<keyof AiSettingsForm, string> = {
   googleDirectEnabled: 'ai.google_direct_enabled',
   googleDirectModel: 'ai.google_direct_model',
   maxImageBytes: 'ai.max_image_bytes',
+  googleMaxRequestsPerDay: 'ai.google_direct_max_requests_per_day',
+  ollamaEnabled: 'ai.ollama_enabled',
+  ollamaBaseUrl: 'ai.ollama_base_url',
+  ollamaDefaultModel: 'ai.ollama_default_model',
 };
 
 const DEFAULT_FORM: AiSettingsForm = {
@@ -63,6 +74,10 @@ const DEFAULT_FORM: AiSettingsForm = {
   googleDirectEnabled: true,
   googleDirectModel: 'gemini-2.5-flash',
   maxImageBytes: 4_194_304,
+  googleMaxRequestsPerDay: 20,
+  ollamaEnabled: false,
+  ollamaBaseUrl: 'http://localhost:11434',
+  ollamaDefaultModel: 'qwen3:14b',
 };
 
 export default function AdminAiPage() {

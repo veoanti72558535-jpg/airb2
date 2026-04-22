@@ -598,27 +598,92 @@ function SettingSwitch({
   return (
     <div className="flex items-center justify-between gap-3 border border-border rounded px-3 py-2">
       <Label className="text-xs">{label}</Label>
-  label,
-  value,
-  onChange,
-  disabled,
-  testId,
-}: {
-  label: string;
-  value: boolean;
-  onChange: (v: boolean) => void;
-  disabled?: boolean;
-  testId?: string;
-}) {
-  return (
-    <div className="flex items-center justify-between gap-3 border border-border rounded px-3 py-2">
-      <Label className="text-xs">{label}</Label>
       <Switch
         checked={value}
         disabled={disabled}
         onCheckedChange={onChange}
         data-testid={testId}
       />
+    </div>
+  );
+}
+
+function ModelSelectCard({
+  label,
+  value,
+  options,
+  onChange,
+  disabled,
+  modelsLoading,
+  onRefresh,
+  cacheFetchedAt,
+  testId,
+}: {
+  label: string;
+  value: string;
+  options: string[];
+  onChange: (v: string) => void;
+  disabled?: boolean;
+  modelsLoading?: boolean;
+  onRefresh?: () => void;
+  cacheFetchedAt?: number | null;
+  testId?: string;
+}) {
+  const { t } = useI18n();
+
+  const ageText = cacheFetchedAt
+    ? (() => {
+        const mins = Math.round((Date.now() - cacheFetchedAt) / 60_000);
+        if (mins < 1) return `${t('admin.ai.models.lastUpdated' as any)} < 1 min`;
+        if (mins < 60) return `${t('admin.ai.models.lastUpdated' as any)} ${mins} min ${t('admin.ai.models.cacheAge' as any)}`;
+        const hrs = Math.round(mins / 60);
+        return `${t('admin.ai.models.lastUpdated' as any)} ${hrs}h ${t('admin.ai.models.cacheAge' as any)}`;
+      })()
+    : null;
+
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center gap-2">
+        <Label className="text-xs">{label}</Label>
+        {onRefresh && (
+          <button
+            onClick={onRefresh}
+            disabled={modelsLoading}
+            className="text-muted-foreground hover:text-primary transition-colors"
+            title={t('admin.ai.models.refresh' as any)}
+          >
+            <RefreshCw className={`h-3 w-3 ${modelsLoading ? 'animate-spin' : ''}`} />
+          </button>
+        )}
+      </div>
+      {modelsLoading && options.length === 0 ? (
+        <div className="text-xs text-muted-foreground py-1">{t('admin.ai.models.loading' as any)}</div>
+      ) : (
+        <Select value={value} onValueChange={onChange} disabled={disabled}>
+          <SelectTrigger data-testid={testId} className="h-9 text-xs font-mono">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {options.map((m) => (
+              <SelectItem key={m} value={m} className="text-xs font-mono">
+                {m}
+              </SelectItem>
+            ))}
+            {/* Keep current value selectable even if not in list */}
+            {value && !options.includes(value) && (
+              <SelectItem value={value} className="text-xs font-mono text-muted-foreground">
+                {value} (current)
+              </SelectItem>
+            )}
+          </SelectContent>
+        </Select>
+      )}
+      {ageText && (
+        <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+          <Clock className="h-2.5 w-2.5" />
+          {ageText}
+        </div>
+      )}
     </div>
   );
 }

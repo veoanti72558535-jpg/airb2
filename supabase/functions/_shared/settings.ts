@@ -14,7 +14,6 @@ export interface AiSettings {
   googleDirectModel: string;
   preferredLanguage: string;
   maxImageBytes: number;
-}
   // IA2 additions
   googleDirectMaxRequestsPerDay: number;
   ollamaEnabled: boolean;

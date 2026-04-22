@@ -13,7 +13,7 @@ export function SessionSummarizer({ session }: Props) {
   const { locale, t } = useI18n();
   const s = session;
   const lang = locale === 'fr' ? 'fr' : 'en';
-  const prompt = `Arme: ${s.input.airgunId ?? 'N/A'} | Projectile: ${s.input.projectileWeight}gr BC ${s.input.bc} | Zéro: ${s.input.zeroRange}m | Distance max: ${s.input.maxRange}m | V0: ${s.input.muzzleVelocity}m/s | Langue: ${lang}`;
+  const prompt = `Arme: ${s.airgunId ?? 'N/A'} | Projectile: ${s.input.projectileWeight}gr BC ${s.input.bc} | Zéro: ${s.input.zeroRange}m | Distance max: ${s.input.maxRange}m | V0: ${s.input.muzzleVelocity}m/s | Langue: ${lang}`;
   return (
     <AgentButton
       agentSlug="session-summarizer"

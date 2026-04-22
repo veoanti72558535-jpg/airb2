@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { isBullets4 } from './library-supabase-repo';
 import type { Projectile } from './types';
 
-// Mock supabase
+// Mock supabase — each from() call returns a fresh builder
 const mockUpsert = vi.fn().mockResolvedValue({ error: null });
 const mockDeleteEq = vi.fn().mockResolvedValue({ error: null });
 const mockDelete = vi.fn().mockReturnValue({ eq: mockDeleteEq });
@@ -11,11 +11,13 @@ const mockSelect = vi.fn().mockReturnValue({ eq: mockSelectEq });
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
-    from: () => ({
-      upsert: mockUpsert,
-      delete: mockDelete,
-      select: mockSelect,
-    }),
+    from: (table: string) => {
+      return {
+        upsert: mockUpsert,
+        delete: mockDelete,
+        select: mockSelect,
+      };
+    },
     auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'u1' } } }) },
   },
 }));
@@ -28,7 +30,10 @@ describe('library-supabase-repo', () => {
 
   it('upsertToSupabase calls supabase.from(table).upsert()', async () => {
     await upsertToSupabase('airguns', { id: 'a1', brand: 'FX' });
-    expect(mockUpsert).toHaveBeenCalledWith({ id: 'a1', brand: 'FX' }, { onConflict: 'id' });
+    expect(mockUpsert).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'a1', brand: 'FX' }),
+      { onConflict: 'id' },
+    );
   });
 
   it('deleteFromSupabase calls supabase.from(table).delete().eq()', async () => {

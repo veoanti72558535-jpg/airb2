@@ -14,10 +14,10 @@ const mockSelectEq = vi.fn().mockResolvedValue({ data: [], error: null });
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
-    from: (table: string) => ({
-      upsert: (...args: any[]) => mockUpsert(...args),
-      delete: () => ({ eq: (...args: any[]) => mockDeleteEq(...args) }),
-      select: () => ({ eq: (...args: any[]) => mockSelectEq(...args) }),
+    from: () => ({
+      upsert: mockUpsert,
+      delete: () => ({ eq: mockDeleteEq }),
+      select: () => ({ eq: mockSelectEq }),
     }),
     auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'u1' } } }) },
   },

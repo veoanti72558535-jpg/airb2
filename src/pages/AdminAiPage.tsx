@@ -598,6 +598,21 @@ function SettingSwitch({
   return (
     <div className="flex items-center justify-between gap-3 border border-border rounded px-3 py-2">
       <Label className="text-xs">{label}</Label>
+  label,
+  value,
+  onChange,
+  disabled,
+  testId,
+}: {
+  label: string;
+  value: boolean;
+  onChange: (v: boolean) => void;
+  disabled?: boolean;
+  testId?: string;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3 border border-border rounded px-3 py-2">
+      <Label className="text-xs">{label}</Label>
       <Switch
         checked={value}
         disabled={disabled}

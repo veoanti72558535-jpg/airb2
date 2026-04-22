@@ -1,41 +1,20 @@
 
 
-# Fix: Syntax error in `supabase/functions/_shared/settings.ts`
+# Fix: Invalid integer syntax in shot-line-explainer migration
 
 ## Problem
-The `AiSettings` interface is split in two — the closing brace `}` on line 17 ends the interface prematurely, leaving the IA2 fields (lines 18-22) as orphaned statements outside any block. The second `}` on line 23 is then unexpected, causing the Deno bundler to fail with "Expression expected at line 23".
+The `prompt_version` column in `ai_agent_configs` is typed `integer`. The SQL INSERT for `shot-line-explainer` passes `'1.0'` — a decimal string that PostgreSQL cannot cast to integer.
 
-## Fix (single file, single change)
+## Fix
+Change `'1.0'` to `1` in the migration file `supabase/migrations/20260422000001_ia2f1_shot_line_explainer.sql`.
 
-**File:** `supabase/functions/_shared/settings.ts`
-
-Remove the premature closing brace on line 17 and the comment on line 18, merging both halves into one interface:
-
-```typescript
-export interface AiSettings {
-  providerPrimary: string;
-  modelPrimary: string;
-  quatarlyApiUrl: string;
-  allowGoogleFallback: boolean;
-  googleDirectEnabled: boolean;
-  googleDirectModel: string;
-  preferredLanguage: string;
-  maxImageBytes: number;
-  // IA2 additions
-  googleDirectMaxRequestsPerDay: number;
-  ollamaEnabled: boolean;
-  ollamaBaseUrl: string;
-  ollamaDefaultModel: string;
-}
-```
-
-## After the fix
-Re-run on the VM:
-```
-supabase functions deploy ai-provider-dispatch --debug --project-ref iqfmxyyrgqnlvfyvrxph
-```
+**Before:** `'1.0',`
+**After:** `1,`
 
 ## Scope
-- Only `settings.ts` is modified (1 line removed).
-- No change to `ai-extract-rows`, `ai-provider-dispatch`, or the ballistic engine.
+- Single value change in one migration file
+- No other files affected
+
+## After the fix
+Re-run the INSERT in the Supabase Cloud SQL Editor with the corrected value.
 

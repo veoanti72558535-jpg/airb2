@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { syncPreferencesOnLogin } from './preferences-sync';
 import { syncSessionsOnLogin } from './session-supabase-repo';
 import { syncLibraryOnLogin } from './library-supabase-repo';
+import { syncCrossValidationOnLogin } from './cross-validation-supabase-repo';
 
 interface AuthContextType {
   user: User | null;
@@ -49,6 +50,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         );
         syncLibraryOnLogin(s.user.id).catch(e =>
           console.error('[auth] library sync failed', e)
+        );
+        syncCrossValidationOnLogin(s.user.id).catch(e =>
+          console.error('[auth] cross-validation sync failed', e)
         );
       }
     });

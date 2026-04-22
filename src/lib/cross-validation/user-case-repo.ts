@@ -19,6 +19,11 @@ import {
   type UserCrossValidationCase,
   type ValidationIssue,
 } from './user-case-schema';
+import {
+  upsertCaseToSupabase,
+  deleteCaseFromSupabase,
+} from '../cross-validation-supabase-repo';
+import { supabase } from '@/integrations/supabase/client';
 
 export const USER_CASES_STORAGE_KEY = 'pcp-cross-validation-cases';
 
@@ -100,6 +105,12 @@ export const userCaseRepo = {
     const items = read();
     items.push(stored);
     write(items);
+    // Dual-write fire-and-forget
+    if (supabase) {
+      supabase.auth.getUser().then(({ data }) => {
+        if (data?.user) upsertCaseToSupabase(stored, data.user.id).catch(() => {});
+      }).catch(() => {});
+    }
     return { ok: true, stored };
   },
 
@@ -123,6 +134,12 @@ export const userCaseRepo = {
     };
     items[idx] = updated;
     write(items);
+    // Dual-write fire-and-forget
+    if (supabase) {
+      supabase.auth.getUser().then(({ data }) => {
+        if (data?.user) upsertCaseToSupabase(updated, data.user.id).catch(() => {});
+      }).catch(() => {});
+    }
     return { ok: true, stored: updated };
   },
 
@@ -131,11 +148,21 @@ export const userCaseRepo = {
     const next = items.filter((s) => s.id !== id);
     if (next.length === items.length) return false;
     write(next);
+    // Dual-write fire-and-forget
+    deleteCaseFromSupabase(id).catch(() => {});
     return true;
   },
 
   /** Reset complet — utile en tests. */
   clear(): void {
     write([]);
+  },
+
+  /**
+   * Internal — replace all items (used by sync).
+   * Skips validation since items were already validated on creation.
+   */
+  _replaceAll(items: StoredUserCase[]): void {
+    write(items);
   },
 };

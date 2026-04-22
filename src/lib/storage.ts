@@ -18,6 +18,13 @@ import {
   upsertSessionToSupabase,
   deleteSessionFromSupabase,
 } from './session-supabase-repo';
+import {
+  getUserId,
+  upsertToSupabase,
+  deleteFromSupabase,
+  toRow,
+  isBullets4,
+} from './library-supabase-repo';
 import { supabase } from '@/integrations/supabase/client';
 
 const KEYS = {
@@ -137,16 +144,55 @@ function createCRUD<T extends { id: string; createdAt: string; updatedAt: string
   };
 }
 
-export const airgunStore = createCRUD<Airgun>(KEYS.airguns);
-export const tuneStore = createCRUD<Tune>(KEYS.tunes);
-export const projectileStore = createProjectileStore();
-export const opticStore = createCRUD<Optic>(KEYS.optics);
-/**
- * Tranche F.1 — store CRUD pour l'entité `Reticle`. Suit strictement le
- * pattern des autres stores (createCRUD) : pas de logique métier ici, la
- * normalisation/validation arrivera avec la pipeline d'import en F.2.
- */
-export const reticleStore = createCRUD<Reticle>(KEYS.reticles);
+// ── Dual-write wrapper ───────────────────────────────────────────────────
+// Wraps a CRUD store so every mutation also fire-and-forgets to Supabase.
+// createCRUD() itself is NOT modified.
+
+type LibTable = 'airguns' | 'tunes' | 'projectiles' | 'optics' | 'reticles';
+
+function withLibraryDualWrite<T extends { id: string; createdAt: string; updatedAt: string }>(
+  store: ReturnType<typeof createCRUD<T>>,
+  table: LibTable,
+) {
+  const push = (item: T) => {
+    getUserId().then((uid) => {
+      if (uid) upsertToSupabase(table, toRow(table, item as any, uid)).catch(() => {});
+    }).catch(() => {});
+  };
+  const pushDel = (id: string) => {
+    deleteFromSupabase(table, id).catch(() => {});
+  };
+
+  return {
+    ...store,
+    create: (item: Omit<T, 'id' | 'createdAt' | 'updatedAt'>): T => {
+      const result = store.create(item);
+      push(result);
+      return result;
+    },
+    createMany: (items: ReadonlyArray<Omit<T, 'id' | 'createdAt' | 'updatedAt'>>): T[] => {
+      const results = store.createMany(items);
+      for (const r of results) push(r);
+      return results;
+    },
+    update: (id: string, updates: Partial<T>): T | undefined => {
+      const result = store.update(id, updates);
+      if (result) push(result);
+      return result;
+    },
+    delete: (id: string): boolean => {
+      const result = store.delete(id);
+      if (result) pushDel(id);
+      return result;
+    },
+  };
+}
+
+export const airgunStore = withLibraryDualWrite(createCRUD<Airgun>(KEYS.airguns), 'airguns');
+export const tuneStore = withLibraryDualWrite(createCRUD<Tune>(KEYS.tunes), 'tunes');
+export const projectileStore = createProjectileStoreWithDualWrite();
+export const opticStore = withLibraryDualWrite(createCRUD<Optic>(KEYS.optics), 'optics');
+export const reticleStore = withLibraryDualWrite(createCRUD<Reticle>(KEYS.reticles), 'reticles');
 /**
  * Tranche Sessions IDB — store sessions désormais adossé à IndexedDB,
  * cache mémoire sync + write-through. Voir `createSessionStore()` ci-bas

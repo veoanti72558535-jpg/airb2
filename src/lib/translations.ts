@@ -1295,6 +1295,13 @@ const fr = {
   // IA2 — Quatarly models
   'admin.ai.quatarly.models': 'Modèles Quatarly',
   'admin.ai.quatarly.noModels': 'Aucun modèle disponible',
+  'admin.ai.models.quatarlyPrimary': 'Modèle Quatarly principal',
+  'admin.ai.models.googleFallback': 'Modèle Google Direct (fallback)',
+  'admin.ai.models.refresh': 'Rafraîchir la liste',
+  'admin.ai.models.loading': 'Chargement des modèles…',
+  'admin.ai.models.lastUpdated': 'Mis à jour',
+  'admin.ai.models.updateFailed': 'Impossible de mettre à jour le modèle',
+  'admin.ai.models.cacheAge': 'il y a',
 
   // IA2f — Runbook validation dispatcher
   'admin.ai.runbook.sectionTitle': 'Validation dispatcher',
@@ -2622,6 +2629,13 @@ const en: Record<keyof typeof fr, string> = {
   // IA2 — Quatarly models
   'admin.ai.quatarly.models': 'Quatarly models',
   'admin.ai.quatarly.noModels': 'No models available',
+  'admin.ai.models.quatarlyPrimary': 'Primary Quatarly model',
+  'admin.ai.models.googleFallback': 'Google Direct model (fallback)',
+  'admin.ai.models.refresh': 'Refresh list',
+  'admin.ai.models.loading': 'Loading models…',
+  'admin.ai.models.lastUpdated': 'Updated',
+  'admin.ai.models.updateFailed': 'Failed to update model',
+  'admin.ai.models.cacheAge': 'ago',
 
   // IA2f — Runbook dispatcher validation
   'admin.ai.runbook.sectionTitle': 'Dispatcher validation',

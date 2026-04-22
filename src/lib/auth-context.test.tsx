@@ -2,39 +2,35 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import React from 'react';
 
-// Mock supabase client before importing auth-context
-const mockSignIn = vi.fn();
-const mockSignUp = vi.fn();
-const mockSignOut = vi.fn();
-const mockGetSession = vi.fn().mockResolvedValue({ data: { session: null } });
-const mockOnAuthStateChange = vi.fn().mockReturnValue({
-  data: { subscription: { unsubscribe: vi.fn() } },
-});
-
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     auth: {
-      signInWithPassword: mockSignIn,
-      signUp: mockSignUp,
-      signOut: mockSignOut,
-      getSession: mockGetSession,
-      onAuthStateChange: mockOnAuthStateChange,
+      signInWithPassword: vi.fn(),
+      signUp: vi.fn(),
+      signOut: vi.fn(),
+      getSession: vi.fn().mockResolvedValue({ data: { session: null } }),
+      onAuthStateChange: vi.fn().mockReturnValue({
+        data: { subscription: { unsubscribe: vi.fn() } },
+      }),
     },
   },
   isSupabaseConfigured: () => true,
 }));
 
 import { AuthProvider, useAuth } from './auth-context';
+import { supabase } from '@/integrations/supabase/client';
 
 function wrapper({ children }: { children: React.ReactNode }) {
   return <AuthProvider>{children}</AuthProvider>;
 }
 
+const mockAuth = supabase!.auth as any;
+
 describe('useAuth', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockGetSession.mockResolvedValue({ data: { session: null } });
-    mockOnAuthStateChange.mockReturnValue({
+    mockAuth.getSession.mockResolvedValue({ data: { session: null } });
+    mockAuth.onAuthStateChange.mockReturnValue({
       data: { subscription: { unsubscribe: vi.fn() } },
     });
   });
@@ -48,25 +44,25 @@ describe('useAuth', () => {
   });
 
   it('signIn calls supabase.auth.signInWithPassword', async () => {
-    mockSignIn.mockResolvedValue({ error: null });
+    mockAuth.signInWithPassword.mockResolvedValue({ error: null });
     const { result } = renderHook(() => useAuth(), { wrapper });
     await act(async () => {
       await result.current.signIn('a@b.com', 'pass123');
     });
-    expect(mockSignIn).toHaveBeenCalledWith({ email: 'a@b.com', password: 'pass123' });
+    expect(mockAuth.signInWithPassword).toHaveBeenCalledWith({ email: 'a@b.com', password: 'pass123' });
   });
 
   it('signOut calls supabase.auth.signOut', async () => {
-    mockSignOut.mockResolvedValue({ error: null });
+    mockAuth.signOut.mockResolvedValue({ error: null });
     const { result } = renderHook(() => useAuth(), { wrapper });
     await act(async () => {
       await result.current.signOut();
     });
-    expect(mockSignOut).toHaveBeenCalled();
+    expect(mockAuth.signOut).toHaveBeenCalled();
   });
 
   it('signIn throws on error', async () => {
-    mockSignIn.mockResolvedValue({ error: new Error('Invalid login') });
+    mockAuth.signInWithPassword.mockResolvedValue({ error: new Error('Invalid login') });
     const { result } = renderHook(() => useAuth(), { wrapper });
     await expect(
       act(async () => {

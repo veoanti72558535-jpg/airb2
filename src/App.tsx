@@ -6,6 +6,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { I18nProvider } from "@/lib/i18n";
 import { ThemeProvider } from "@/lib/theme";
 import { AuthProvider } from "@/lib/auth-context";
+import { warnIfNotConfigured } from "@/lib/supabase-check";
+import AuthPage from "@/pages/AuthPage";
+import { useAuth } from "@/lib/auth-context";
 import Layout from "@/components/Layout";
 import Dashboard from "@/pages/Dashboard";
 import QuickCalc from "@/pages/QuickCalc";
@@ -28,11 +31,27 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+function AuthGuard({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+  if (!user) return <AuthPage />;
+  return <>{children}</>;
+}
+
+warnIfNotConfigured();
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
       <I18nProvider>
         <AuthProvider>
+          <AuthGuard>
           <TooltipProvider>
           <Toaster />
           <Sonner />
@@ -65,6 +84,7 @@ const App = () => (
             </Layout>
           </BrowserRouter>
           </TooltipProvider>
+          </AuthGuard>
         </AuthProvider>
       </I18nProvider>
     </ThemeProvider>

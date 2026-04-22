@@ -521,7 +521,6 @@ function createSessionStore(): SessionStoreInternal {
       return next;
     },
     delete: (id) => {
-    delete: (id) => {
       ensureHydrated();
       const before = cache.length;
       const target = cache.find((s) => s.id === id);

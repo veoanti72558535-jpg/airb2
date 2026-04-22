@@ -300,6 +300,7 @@ export function BallisticTable({
                         {t('ballisticTable.timeOfFlight')} (s)
                       </th>
                     )}
+                    <th className="py-1.5 pl-2 w-0" />
                   </tr>
                 </thead>
                 <tbody>
@@ -388,6 +389,15 @@ export function BallisticTable({
                         {isColumnVisible(cfg, 'tof') && (
                           <td className="text-right py-1.5 pl-2">{r.tof.toFixed(3)}</td>
                         )}
+                        <td className="py-1.5 pl-2">
+                          <ShotLineExplainer
+                            row={r}
+                            distUnit={distUnit}
+                            lengthUnit={lengthUnit}
+                            velUnit={velUnit}
+                            energyUnit={energyUnit}
+                          />
+                        </td>
                       </tr>
                     );
                   })}

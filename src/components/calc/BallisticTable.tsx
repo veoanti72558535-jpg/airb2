@@ -26,6 +26,7 @@ import {
   toggleColumn,
 } from '@/lib/ballistic-table';
 import { ShotLineExplainer } from './ShotLineExplainer';
+import { DeviationExplainer } from './DeviationExplainer';
 
 interface Props {
   /** Engine-produced rows. Single source of truth for physics. */
@@ -373,7 +374,14 @@ export function BallisticTable({
                           </td>
                         )}
                         {isColumnVisible(cfg, 'windDrift') && (
-                          <td className="text-right py-1.5 px-2">{r.windDrift.toFixed(1)}</td>
+                          <td className="text-right py-1.5 px-2">
+                            <span className="inline-flex items-center gap-1">
+                              {r.windDrift.toFixed(1)}
+                              {r.windDrift !== 0 && (
+                                <DeviationExplainer distanceM={r.range} driftMm={r.windDrift} />
+                              )}
+                            </span>
+                          </td>
                         )}
                         {isColumnVisible(cfg, 'windClicks') && (
                           <td className="text-right py-1.5 px-2">

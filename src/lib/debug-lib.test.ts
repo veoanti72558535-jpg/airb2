@@ -1,10 +1,13 @@
 import { describe, it, expect, vi } from 'vitest';
 
-const { mockFrom } = vi.hoisted(() => {
+const { mockUpsert, mockFrom } = vi.hoisted(() => {
+  const mockUpsert = vi.fn().mockResolvedValue({ error: null });
   const mockFrom = vi.fn().mockReturnValue({
-    upsert: vi.fn().mockResolvedValue({ error: null }),
+    upsert: mockUpsert,
+    delete: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }),
+    select: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ data: [], error: null }) }),
   });
-  return { mockFrom };
+  return { mockUpsert, mockFrom };
 });
 
 vi.mock('@/integrations/supabase/client', () => ({
@@ -14,18 +17,14 @@ vi.mock('@/integrations/supabase/client', () => ({
   },
 }));
 
-import { supabase } from '@/integrations/supabase/client';
+import { upsertToSupabase } from './library-supabase-repo';
 
-describe('debug', () => {
-  it('supabase is truthy', () => {
-    console.log('supabase:', supabase);
-    console.log('typeof supabase:', typeof supabase);
-    console.log('!!supabase:', !!supabase);
-    expect(supabase).toBeTruthy();
-  });
-  it('from is callable', () => {
-    const result = supabase!.from('airguns');
-    console.log('from result:', result);
-    expect(mockFrom).toHaveBeenCalled();
+describe('upsert', () => {
+  it('calls from and upsert', async () => {
+    await upsertToSupabase('airguns', { id: 'a1' });
+    console.log('mockFrom called:', mockFrom.mock.calls.length);
+    console.log('mockUpsert called:', mockUpsert.mock.calls.length);
+    expect(mockFrom).toHaveBeenCalledWith('airguns');
+    expect(mockUpsert).toHaveBeenCalled();
   });
 });

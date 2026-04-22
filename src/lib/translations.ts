@@ -1325,6 +1325,14 @@ const fr = {
   'admin.ai.runbook.logNoResult': 'Aucun run trouvé pour cet ID.',
   'admin.ai.runbook.logRun': 'Run',
   'admin.ai.runbook.logEvents': 'Events',
+
+  // IA2f1 — Shot Line Explainer
+  'shotLineExplainer.button': 'Expliquer',
+  'shotLineExplainer.loading': 'Analyse en cours...',
+  'shotLineExplainer.error': 'Explication indisponible',
+  'shotLineExplainer.confidence': 'Données IA — à valider',
+  'shotLineExplainer.viewLog': 'Voir log',
+  'shotLineExplainer.badge.confidence': 'confidence: C',
 } as const;
 
 const en: Record<keyof typeof fr, string> = {
@@ -2628,6 +2636,14 @@ const en: Record<keyof typeof fr, string> = {
   'admin.ai.runbook.logNoResult': 'No run found for this ID.',
   'admin.ai.runbook.logRun': 'Run',
   'admin.ai.runbook.logEvents': 'Events',
+
+  // IA2f1 — Shot Line Explainer
+  'shotLineExplainer.button': 'Explain',
+  'shotLineExplainer.loading': 'Analysing...',
+  'shotLineExplainer.error': 'Explanation unavailable',
+  'shotLineExplainer.confidence': 'AI data — verify before use',
+  'shotLineExplainer.viewLog': 'View log',
+  'shotLineExplainer.badge.confidence': 'confidence: C',
 };
 
 // Append paste-import keys (EN) — kept after object literal would be a TS

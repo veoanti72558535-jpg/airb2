@@ -9,7 +9,7 @@
  * the table itself scrolls horizontally when the chosen columns overflow.
  */
 import { useMemo, useState } from 'react';
-import { ChevronDown, ChevronUp, Settings2, RotateCcw, Crosshair } from 'lucide-react';
+import { ChevronDown, ChevronUp, Settings2, RotateCcw, Crosshair, Sparkles } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import type { TranslationKey } from '@/lib/translations';
 import { useUnits } from '@/hooks/use-units';
@@ -25,6 +25,7 @@ import {
   isColumnVisible,
   toggleColumn,
 } from '@/lib/ballistic-table';
+import { ShotLineExplainer } from './ShotLineExplainer';
 
 interface Props {
   /** Engine-produced rows. Single source of truth for physics. */
@@ -299,6 +300,7 @@ export function BallisticTable({
                         {t('ballisticTable.timeOfFlight')} (s)
                       </th>
                     )}
+                    <th className="py-1.5 pl-2 w-0" />
                   </tr>
                 </thead>
                 <tbody>
@@ -387,6 +389,15 @@ export function BallisticTable({
                         {isColumnVisible(cfg, 'tof') && (
                           <td className="text-right py-1.5 pl-2">{r.tof.toFixed(3)}</td>
                         )}
+                        <td className="py-1.5 pl-2">
+                          <ShotLineExplainer
+                            row={r}
+                            distUnit={distUnit}
+                            lengthUnit={lengthUnit}
+                            velUnit={velUnit}
+                            energyUnit={energyUnit}
+                          />
+                        </td>
                       </tr>
                     );
                   })}

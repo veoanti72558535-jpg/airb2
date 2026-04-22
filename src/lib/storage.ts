@@ -14,6 +14,11 @@ import {
   migrateSessionsFromLocalStorageIfNeeded,
   writeSessionsToIdb,
 } from './session-repo';
+import {
+  upsertSessionToSupabase,
+  deleteSessionFromSupabase,
+} from './session-supabase-repo';
+import { supabase } from '@/integrations/supabase/client';
 
 const KEYS = {
   airguns: 'pcp-airguns',

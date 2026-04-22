@@ -9,6 +9,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback, use
 import type { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { syncPreferencesOnLogin } from './preferences-sync';
+import { syncSessionsOnLogin } from './session-supabase-repo';
 
 interface AuthContextType {
   user: User | null;
@@ -42,6 +43,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
       if (s?.user) {
         syncPreferencesOnLogin(s.user.id).catch(() => {});
+        syncSessionsOnLogin(s.user.id).catch(e =>
+          console.error('[auth] session sync failed', e)
+        );
       }
     });
 

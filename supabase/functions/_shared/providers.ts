@@ -116,7 +116,7 @@ export async function callQuatarly(input: ProviderCallInput): Promise<ProviderCa
       errorCode: `http-${resp.status}`,
       errorMessage: txt.slice(0, 500),
       latencyMs,
-      retryable: resp.status >= 500 || resp.status === 429,
+      retryable: resp.status >= 500 || resp.status === 429 || resp.status === 401,
     };
   }
 

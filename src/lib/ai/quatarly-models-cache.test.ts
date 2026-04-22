@@ -1,11 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const mockInvoke = vi.fn();
-vi.mock('@/integrations/supabase/client', () => ({
-  supabase: {
-    functions: { invoke: mockInvoke },
-  },
-}));
+
+vi.mock('@/integrations/supabase/client', () => {
+  return {
+    supabase: {
+      functions: { invoke: (...args: unknown[]) => mockInvoke(...args) },
+    },
+  };
+});
 
 import { getQuatarlyModels, refreshQuatarlyModels, isCacheFresh } from './quatarly-models-cache';
 

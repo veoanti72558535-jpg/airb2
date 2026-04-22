@@ -1,23 +1,29 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, vi } from 'vitest';
 
 const { mockFrom } = vi.hoisted(() => ({
-  mockFrom: vi.fn().mockReturnValue({ upsert: vi.fn().mockResolvedValue({ error: null }) }),
+  mockFrom: vi.fn().mockReturnValue({
+    upsert: vi.fn().mockResolvedValue({ error: null }),
+    select: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ data: [], error: null }) }),
+  }),
 }));
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: { from: mockFrom, auth: { getUser: vi.fn() } },
 }));
 
-import { supabase } from '@/integrations/supabase/client';
+// Spy console.error to see what's caught
+const origError = console.error;
+console.error = (...args: any[]) => { origError('CAUGHT ERROR:', ...args); };
+
+import { upsertToSupabase } from './library-supabase-repo';
 
 describe('debug', () => {
-  it('from is the mock', () => {
-    console.log('typeof supabase.from:', typeof supabase?.from);
-    console.log('from === mockFrom:', supabase?.from === mockFrom);
-    if (supabase) {
-      const r = supabase.from('test');
-      console.log('direct call result:', r);
-      console.log('mockFrom called:', mockFrom.mock.calls.length);
+  it('upsert with error capture', async () => {
+    try {
+      await upsertToSupabase('airguns', { id: 'a1' });
+    } catch (e) {
+      console.log('THROWN:', e);
     }
+    console.log('mockFrom calls:', mockFrom.mock.calls.length);
   });
 });

@@ -29,7 +29,7 @@ import { isSupabaseConfigured, supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { AiQuotaCard, type GoogleQuotaData } from '@/components/admin/AiQuotaCard';
 import { AiOllamaCard, type OllamaTestResult } from '@/components/admin/AiOllamaCard';
-import { AiAgentsCard } from '@/components/admin/AiAgentsCard';
+import AgentsList from '@/components/admin/AgentsList';
 import RunbookChecklist from '@/components/admin/RunbookChecklist';
 import RunbookPayloads from '@/components/admin/RunbookPayloads';
 import RunbookLogViewer from '@/components/admin/RunbookLogViewer';
@@ -484,7 +484,7 @@ function AdminAiAuthenticated() {
       )}
 
       {/* IA2 — Agents */}
-      <AiAgentsCard />
+      <AgentsList />
 
       {/* IA2f — Runbook validation dispatcher */}
       <div className="pt-4 border-t border-border space-y-4">

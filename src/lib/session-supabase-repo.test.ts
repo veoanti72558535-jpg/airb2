@@ -15,9 +15,9 @@ const mockSelectEq = vi.fn().mockResolvedValue({ data: [], error: null });
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     from: (table: string) => ({
-      upsert: mockUpsert,
-      delete: () => ({ eq: mockDeleteEq }),
-      select: () => ({ eq: mockSelectEq }),
+      upsert: (...args: any[]) => mockUpsert(...args),
+      delete: () => ({ eq: (...args: any[]) => mockDeleteEq(...args) }),
+      select: () => ({ eq: (...args: any[]) => mockSelectEq(...args) }),
     }),
     auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'u1' } } }) },
   },
@@ -88,9 +88,7 @@ describe('upsertSessionToSupabase', () => {
   it('calls supabase.from("sessions").upsert()', async () => {
     await upsertSessionToSupabase(makeSession(), 'u1');
     expect(mockUpsert).toHaveBeenCalledTimes(1);
-    const payload = mockUpsert.mock.calls[0][0];
-    expect(payload.id).toBe('sess-1');
-    expect(payload.user_id).toBe('u1');
+    expect(mockUpsert.mock.calls[0][0]).toMatchObject({ id: 'sess-1', user_id: 'u1' });
   });
 });
 

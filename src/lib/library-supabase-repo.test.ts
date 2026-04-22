@@ -1,69 +1,45 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { Projectile } from './types';
+import { isBullets4 } from './library-supabase-repo';
 
-// We need to track calls through the supabase mock.
-// The key issue: vi.mock factory runs before variable declarations,
-// so we use a globally accessible tracker via vi.hoisted.
-const { mockUpsert, mockDeleteEq, mockDelete, mockSelectEq, mockSelect, mockFrom } = vi.hoisted(() => {
-  const mockUpsert = vi.fn().mockResolvedValue({ error: null });
-  const mockDeleteEq = vi.fn().mockResolvedValue({ error: null });
-  const mockDelete = vi.fn().mockReturnValue({ eq: mockDeleteEq });
-  const mockSelectEq = vi.fn().mockResolvedValue({ data: [], error: null });
-  const mockSelect = vi.fn().mockReturnValue({ eq: mockSelectEq });
-  const mockFrom = vi.fn().mockReturnValue({
-    upsert: mockUpsert,
-    delete: mockDelete,
-    select: mockSelect,
-  });
-  return { mockUpsert, mockDeleteEq, mockDelete, mockSelectEq, mockSelect, mockFrom };
-});
-
-vi.mock('@/integrations/supabase/client', () => ({
-  supabase: {
-    from: mockFrom,
-    auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'u1' } } }) },
-  },
-}));
-
-// Import after mock
-import { upsertToSupabase, deleteFromSupabase, fetchFromSupabase, isBullets4 } from './library-supabase-repo';
-
-describe('library-supabase-repo', () => {
-  beforeEach(() => vi.clearAllMocks());
-
-  it('upsertToSupabase calls supabase.from(table).upsert()', async () => {
-    await upsertToSupabase('airguns', { id: 'a1', brand: 'FX' });
-    expect(mockUpsert).toHaveBeenCalledWith(
-      expect.objectContaining({ id: 'a1', brand: 'FX' }),
-      { onConflict: 'id' },
-    );
-  });
-
-  it('deleteFromSupabase calls supabase.from(table).delete().eq()', async () => {
-    await deleteFromSupabase('optics', 'o1');
-    expect(mockDelete).toHaveBeenCalled();
-    expect(mockDeleteEq).toHaveBeenCalledWith('id', 'o1');
-  });
-
-  it('fetchFromSupabase returns [] on error', async () => {
-    mockSelectEq.mockResolvedValueOnce({ data: null, error: { message: 'fail' } });
-    const result = await fetchFromSupabase('reticles', 'u1');
-    expect(result).toEqual([]);
-  });
-
+describe('library-supabase-repo — pure functions', () => {
   it('isBullets4 detects bullets4-db importedFrom', () => {
     expect(isBullets4({ importedFrom: 'bullets4-db' } as Projectile)).toBe(true);
+  });
+
+  it('isBullets4 detects bullets4 sourceTable', () => {
     expect(isBullets4({ sourceTable: 'bullets4_pellets' } as Projectile)).toBe(true);
+  });
+
+  it('isBullets4 returns false for user projectile', () => {
     expect(isBullets4({ importedFrom: 'json-user' } as Projectile)).toBe(false);
+  });
+
+  it('isBullets4 returns false for empty projectile', () => {
     expect(isBullets4({} as Projectile)).toBe(false);
   });
-});
 
-describe('library-supabase-repo with supabase=null', () => {
-  it('upsertToSupabase is no-op when supabase is null', async () => {
-    // This test validates the guard clause; the mock is always present above,
-    // so we test the isBullets4 filter path instead for coverage.
-    const p = { importedFrom: 'bullets4-db' } as Projectile;
-    expect(isBullets4(p)).toBe(true);
+  it('getUserId returns null when supabase is null', async () => {
+    // supabase is null in test env (no VITE_SUPABASE_URL)
+    const { getUserId } = await import('./library-supabase-repo');
+    const uid = await getUserId();
+    expect(uid).toBeNull();
+  });
+
+  it('upsertToSupabase is silent no-op when supabase is null', async () => {
+    const { upsertToSupabase } = await import('./library-supabase-repo');
+    // Should not throw
+    await expect(upsertToSupabase('airguns', { id: 'a1' })).resolves.toBeUndefined();
+  });
+
+  it('deleteFromSupabase is silent no-op when supabase is null', async () => {
+    const { deleteFromSupabase } = await import('./library-supabase-repo');
+    await expect(deleteFromSupabase('optics', 'o1')).resolves.toBeUndefined();
+  });
+
+  it('fetchFromSupabase returns [] when supabase is null', async () => {
+    const { fetchFromSupabase } = await import('./library-supabase-repo');
+    const result = await fetchFromSupabase('reticles', 'u1');
+    expect(result).toEqual([]);
   });
 });

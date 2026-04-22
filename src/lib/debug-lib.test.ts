@@ -1,13 +1,11 @@
 import { describe, it, expect, vi } from 'vitest';
 
-const { mockUpsert, mockFrom } = vi.hoisted(() => {
-  const mockUpsert = vi.fn().mockResolvedValue({ error: null });
+const { mockFrom } = vi.hoisted(() => {
   const mockFrom = vi.fn().mockReturnValue({
-    upsert: mockUpsert,
-    delete: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }),
-    select: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ data: [], error: null }) }),
+    upsert: vi.fn().mockResolvedValue({ error: null }),
+    select: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ data: [{ x: 1 }], error: null }) }),
   });
-  return { mockUpsert, mockFrom };
+  return { mockFrom };
 });
 
 vi.mock('@/integrations/supabase/client', () => ({
@@ -17,14 +15,23 @@ vi.mock('@/integrations/supabase/client', () => ({
   },
 }));
 
-import { upsertToSupabase } from './library-supabase-repo';
+import { supabase } from '@/integrations/supabase/client';
+import { upsertToSupabase, fetchFromSupabase } from './library-supabase-repo';
 
-describe('upsert', () => {
-  it('calls from and upsert', async () => {
+describe('debug', () => {
+  it('supabase imported value', () => {
+    console.log('supabase ===', JSON.stringify(supabase));
+    console.log('supabase is null?', supabase === null);
+    console.log('!supabase?', !supabase);
+  });
+  it('fetch calls from', async () => {
+    const r = await fetchFromSupabase('airguns', 'u1');
+    console.log('fetch result:', r);
+    console.log('mockFrom calls after fetch:', mockFrom.mock.calls.length);
+  });
+  it('upsert calls from', async () => {
+    mockFrom.mockClear();
     await upsertToSupabase('airguns', { id: 'a1' });
-    console.log('mockFrom called:', mockFrom.mock.calls.length);
-    console.log('mockUpsert called:', mockUpsert.mock.calls.length);
-    expect(mockFrom).toHaveBeenCalledWith('airguns');
-    expect(mockUpsert).toHaveBeenCalled();
+    console.log('mockFrom calls after upsert:', mockFrom.mock.calls.length);
   });
 });

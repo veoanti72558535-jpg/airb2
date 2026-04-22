@@ -89,6 +89,7 @@ describe('ShotLineExplainer', () => {
     expect(screen.getByTestId('sle-badge-provider')).toHaveTextContent('quatarly');
     expect(screen.getByTestId('sle-badge-model')).toHaveTextContent('haiku');
     expect(screen.getByTestId('sle-badge-confidence')).toHaveTextContent('confidence: C');
+    // Note: the mock t() returns the key, so we also verify the key is correct
   });
 
   it('shows error message when queryAIViaEdge fails', async () => {

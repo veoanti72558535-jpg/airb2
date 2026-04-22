@@ -1,21 +1,26 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { Projectile } from './types';
 
-// Track calls
-const mockUpsert = vi.fn().mockResolvedValue({ error: null });
-const mockDeleteEq = vi.fn().mockResolvedValue({ error: null });
-const mockDelete = vi.fn().mockReturnValue({ eq: mockDeleteEq });
-const mockSelectEq = vi.fn().mockResolvedValue({ data: [], error: null });
-const mockSelect = vi.fn().mockReturnValue({ eq: mockSelectEq });
-const mockFrom = vi.fn().mockReturnValue({
-  upsert: mockUpsert,
-  delete: mockDelete,
-  select: mockSelect,
+// We need to track calls through the supabase mock.
+// The key issue: vi.mock factory runs before variable declarations,
+// so we use a globally accessible tracker via vi.hoisted.
+const { mockUpsert, mockDeleteEq, mockDelete, mockSelectEq, mockSelect, mockFrom } = vi.hoisted(() => {
+  const mockUpsert = vi.fn().mockResolvedValue({ error: null });
+  const mockDeleteEq = vi.fn().mockResolvedValue({ error: null });
+  const mockDelete = vi.fn().mockReturnValue({ eq: mockDeleteEq });
+  const mockSelectEq = vi.fn().mockResolvedValue({ data: [], error: null });
+  const mockSelect = vi.fn().mockReturnValue({ eq: mockSelectEq });
+  const mockFrom = vi.fn().mockReturnValue({
+    upsert: mockUpsert,
+    delete: mockDelete,
+    select: mockSelect,
+  });
+  return { mockUpsert, mockDeleteEq, mockDelete, mockSelectEq, mockSelect, mockFrom };
 });
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
-    from: (...args: any[]) => mockFrom(...args),
+    from: mockFrom,
     auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'u1' } } }) },
   },
 }));

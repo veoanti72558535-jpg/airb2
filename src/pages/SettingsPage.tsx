@@ -9,6 +9,8 @@ import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { isSupabaseConfigured } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/lib/auth-context';
+import { savePreferenceToSupabase, markLocalUpdated } from '@/lib/preferences-sync';
 
 /** Preset thresholds (J) — covers the most common airgun regulations. */
 const ENERGY_PRESETS: { key: string; value: number | null; labelKey: string }[] = [
@@ -24,6 +26,7 @@ export default function SettingsPage() {
   const settings = getSettings();
   const { prefs, setUnitPref } = useUnits();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   // Identify which preset matches the stored value (null/7.5/16.27 → preset; anything else → custom).
   const currentThreshold = settings.energyThresholdJ === undefined ? 16.27 : settings.energyThresholdJ;
@@ -38,10 +41,17 @@ export default function SettingsPage() {
     setPresetKey(key);
     if (key === 'custom') {
       const parsed = parseFloat(customJ);
-      saveSettings({ ...settings, energyThresholdJ: Number.isFinite(parsed) && parsed > 0 ? parsed : 12 });
+      const val = Number.isFinite(parsed) && parsed > 0 ? parsed : 12;
+      saveSettings({ ...settings, energyThresholdJ: val });
+      markLocalUpdated();
+      if (user) savePreferenceToSupabase(user.id, 'energy_threshold_j', val).catch(() => {});
     } else {
       const preset = ENERGY_PRESETS.find(p => p.key === key);
-      if (preset) saveSettings({ ...settings, energyThresholdJ: preset.value });
+      if (preset) {
+        saveSettings({ ...settings, energyThresholdJ: preset.value });
+        markLocalUpdated();
+        if (user) savePreferenceToSupabase(user.id, 'energy_threshold_j', preset.value ?? null).catch(() => {});
+      }
     }
   };
 
@@ -50,6 +60,8 @@ export default function SettingsPage() {
     const parsed = parseFloat(raw);
     if (Number.isFinite(parsed) && parsed > 0) {
       saveSettings({ ...settings, energyThresholdJ: parsed });
+      markLocalUpdated();
+      if (user) savePreferenceToSupabase(user.id, 'energy_threshold_j', parsed).catch(() => {});
     }
   };
 
@@ -59,7 +71,10 @@ export default function SettingsPage() {
   };
 
   const toggleUnits = () => {
-    saveSettings({ ...settings, unitSystem: settings.unitSystem === 'metric' ? 'imperial' : 'metric' });
+    const newSystem = settings.unitSystem === 'metric' ? 'imperial' : 'metric';
+    saveSettings({ ...settings, unitSystem: newSystem });
+    markLocalUpdated();
+    if (user) savePreferenceToSupabase(user.id, 'unit_system', newSystem).catch(() => {});
     window.location.reload();
   };
 

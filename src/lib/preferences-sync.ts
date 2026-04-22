@@ -1,82 +1,148 @@
 /**
  * P-6 — Preferences sync between localStorage and Supabase `profiles`.
  *
- * localStorage is always the read-time source of truth.
- * Supabase is the persistence layer for cross-device sync.
+ * Rules:
+ *  - localStorage is the read-time source of truth.
+ *  - Supabase is the cross-device persistence layer.
+ *  - Language & theme are NEVER synced (intentionally per-device).
+ *  - All Supabase errors are silent (console.error only).
  *
- * - `pullPreferences(userId)`: reads Supabase profile → merges into localStorage
- * - `pushPreferences(userId)`: writes current localStorage prefs → Supabase profile
- *
- * Both are fire-and-forget safe: if Supabase is unavailable, they silently fail.
+ * Synced columns: unit_system, energy_threshold_j, display_name
  */
 import { supabase } from '@/integrations/supabase/client';
 import { getSettings, saveSettings } from './storage';
-import type { AppSettings } from './types';
 
-/** Shape of the columns we read/write on `profiles`. */
-interface ProfilePrefsRow {
-  unit_system: string | null;
-  energy_threshold_j: number | null;
-  feature_flags: Record<string, boolean> | null;
+/** Timestamp key in localStorage to track last local modification. */
+const LS_UPDATED_KEY = 'pcp-settings-updated-at';
+
+function getLocalUpdatedAt(): string {
+  return localStorage.getItem(LS_UPDATED_KEY) ?? '1970-01-01T00:00:00Z';
+}
+
+export function markLocalUpdated(): void {
+  localStorage.setItem(LS_UPDATED_KEY, new Date().toISOString());
 }
 
 /**
- * Pull preferences from Supabase and merge into localStorage.
- * Called once after login. Does NOT overwrite fields Supabase doesn't store
- * (e.g. advancedMode, weatherAutoSuggest stay local-only).
+ * Load preferences from Supabase profile into localStorage.
+ * If Supabase fails → localStorage unchanged, no exception.
  */
-export async function pullPreferences(userId: string): Promise<void> {
+export async function loadPreferencesFromSupabase(userId: string): Promise<void> {
   if (!supabase) return;
   try {
     const { data, error } = await supabase
       .from('profiles')
-      .select('unit_system, energy_threshold_j, feature_flags')
+      .select('unit_system, energy_threshold_j, display_name, updated_at')
       .eq('id', userId)
       .maybeSingle();
 
     if (error || !data) return;
 
     const local = getSettings();
-    const merged: AppSettings = { ...local };
+    let changed = false;
 
     if (data.unit_system === 'metric' || data.unit_system === 'imperial') {
-      merged.unitSystem = data.unit_system;
+      if (local.unitSystem !== data.unit_system) {
+        local.unitSystem = data.unit_system;
+        changed = true;
+      }
     }
-    if (data.energy_threshold_j !== undefined) {
-      merged.energyThresholdJ = data.energy_threshold_j;
-    }
-    if (data.feature_flags && typeof data.feature_flags === 'object') {
-      merged.featureFlags = {
-        ai: !!(data.feature_flags as Record<string, boolean>).ai,
-        weather: (data.feature_flags as Record<string, boolean>).weather !== false,
-      };
+    if (data.energy_threshold_j !== undefined && data.energy_threshold_j !== null) {
+      if (local.energyThresholdJ !== data.energy_threshold_j) {
+        local.energyThresholdJ = data.energy_threshold_j;
+        changed = true;
+      }
     }
 
-    saveSettings(merged);
-  } catch {
-    // Supabase unavailable — localStorage stays as-is
+    if (changed) saveSettings(local);
+  } catch (e) {
+    console.error('[preferences-sync] loadPreferencesFromSupabase failed:', e);
   }
 }
 
 /**
- * Push current localStorage preferences to Supabase profile.
- * Called on every saveSettings when user is authenticated.
- * Fire-and-forget — errors are silently swallowed.
+ * Save a single preference to Supabase (fire-and-forget).
+ * Errors are logged to console only.
  */
-export async function pushPreferences(userId: string): Promise<void> {
+export async function savePreferenceToSupabase(
+  userId: string,
+  key: 'unit_system' | 'energy_threshold_j' | 'display_name',
+  value: string | number | null,
+): Promise<void> {
   if (!supabase) return;
   try {
-    const s = getSettings();
+    const { error } = await supabase
+      .from('profiles')
+      .update({ [key]: value, updated_at: new Date().toISOString() })
+      .eq('id', userId);
+    if (error) console.error('[preferences-sync] savePreferenceToSupabase error:', error.message);
+  } catch (e) {
+    console.error('[preferences-sync] savePreferenceToSupabase failed:', e);
+  }
+}
+
+/**
+ * Full sync on login: last-write-wins between localStorage and Supabase.
+ * Compares `updated_at` from Supabase vs local timestamp.
+ * Fire-and-forget — never throws.
+ */
+export async function syncPreferencesOnLogin(userId: string): Promise<void> {
+  if (!supabase) return;
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('unit_system, energy_threshold_j, display_name, updated_at')
+      .eq('id', userId)
+      .maybeSingle();
+
+    if (error || !data) {
+      // No profile row or error — push local prefs to create baseline
+      await pushAllPreferences(userId);
+      return;
+    }
+
+    const remoteTs = data.updated_at ?? '1970-01-01T00:00:00Z';
+    const localTs = getLocalUpdatedAt();
+
+    if (remoteTs > localTs) {
+      // Supabase is newer — pull into localStorage
+      const local = getSettings();
+      let changed = false;
+      if ((data.unit_system === 'metric' || data.unit_system === 'imperial') && local.unitSystem !== data.unit_system) {
+        local.unitSystem = data.unit_system;
+        changed = true;
+      }
+      if (data.energy_threshold_j != null && local.energyThresholdJ !== data.energy_threshold_j) {
+        local.energyThresholdJ = data.energy_threshold_j;
+        changed = true;
+      }
+      if (changed) {
+        saveSettings(local);
+        markLocalUpdated();
+      }
+    } else {
+      // localStorage is newer or same — push to Supabase
+      await pushAllPreferences(userId);
+    }
+  } catch (e) {
+    console.error('[preferences-sync] syncPreferencesOnLogin failed:', e);
+  }
+}
+
+/** Internal: push all synced prefs to Supabase. */
+async function pushAllPreferences(userId: string): Promise<void> {
+  if (!supabase) return;
+  const s = getSettings();
+  try {
     await supabase
       .from('profiles')
       .update({
         unit_system: s.unitSystem,
         energy_threshold_j: s.energyThresholdJ ?? null,
-        feature_flags: s.featureFlags,
         updated_at: new Date().toISOString(),
       })
       .eq('id', userId);
-  } catch {
-    // Supabase unavailable — no-op
+  } catch (e) {
+    console.error('[preferences-sync] pushAllPreferences failed:', e);
   }
 }

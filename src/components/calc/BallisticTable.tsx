@@ -9,7 +9,7 @@
  * the table itself scrolls horizontally when the chosen columns overflow.
  */
 import { useMemo, useState } from 'react';
-import { ChevronDown, ChevronUp, Settings2, RotateCcw, Crosshair } from 'lucide-react';
+import { ChevronDown, ChevronUp, Settings2, RotateCcw, Crosshair, Sparkles } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import type { TranslationKey } from '@/lib/translations';
 import { useUnits } from '@/hooks/use-units';
@@ -25,6 +25,7 @@ import {
   isColumnVisible,
   toggleColumn,
 } from '@/lib/ballistic-table';
+import { ShotLineExplainer } from './ShotLineExplainer';
 
 interface Props {
   /** Engine-produced rows. Single source of truth for physics. */

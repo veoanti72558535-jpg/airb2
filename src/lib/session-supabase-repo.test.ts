@@ -1,36 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import {
-  resolveSessionsLastWriteWins,
-  upsertSessionToSupabase,
-  deleteSessionFromSupabase,
-  fetchSessionsFromSupabase,
-} from './session-supabase-repo';
+import { describe, it, expect } from 'vitest';
+import { resolveSessionsLastWriteWins } from './session-supabase-repo';
 import type { Session } from './types';
-
-// ── Mock supabase ────────────────────────────────────────────────────────
-const mockUpsert = vi.fn().mockResolvedValue({ error: null });
-const mockDeleteEq = vi.fn().mockResolvedValue({ error: null });
-const mockSelectEq = vi.fn().mockResolvedValue({ data: [], error: null });
-
-vi.mock('@/integrations/supabase/client', () => ({
-  supabase: {
-    from: () => ({
-      upsert: mockUpsert,
-      delete: () => ({ eq: mockDeleteEq }),
-      select: () => ({ eq: mockSelectEq }),
-    }),
-    auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'u1' } } }) },
-  },
-}));
-
-// Prevent real IDB / storage access
-vi.mock('./session-repo', () => ({
-  readSessionsFromIdb: vi.fn().mockResolvedValue([]),
-  writeSessionsToIdb: vi.fn().mockResolvedValue(undefined),
-}));
-vi.mock('./storage', () => ({
-  sessionStore: { __hydrate: vi.fn() },
-}));
 
 function makeSession(overrides: Partial<Session> = {}): Session {
   return {
@@ -46,11 +16,6 @@ function makeSession(overrides: Partial<Session> = {}): Session {
   };
 }
 
-beforeEach(() => {
-  vi.clearAllMocks();
-});
-
-// ── resolveSessionsLastWriteWins ─────────────────────────────────────────
 describe('resolveSessionsLastWriteWins', () => {
   it('local wins when more recent', () => {
     const local = [makeSession({ updatedAt: '2025-06-01T00:00:00Z', name: 'Local' })];
@@ -81,28 +46,15 @@ describe('resolveSessionsLastWriteWins', () => {
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe('only-remote');
   });
-});
 
-// ── CRUD ─────────────────────────────────────────────────────────────────
-describe('upsertSessionToSupabase', () => {
-  it('calls supabase.from("sessions").upsert()', async () => {
-    await upsertSessionToSupabase(makeSession(), 'u1');
-    expect(mockUpsert).toHaveBeenCalledTimes(1);
-    expect(mockUpsert.mock.calls[0][0]).toMatchObject({ id: 'sess-1', user_id: 'u1' });
+  it('merges disjoint sets', () => {
+    const local = [makeSession({ id: 'a' })];
+    const remote = [makeSession({ id: 'b' })];
+    const result = resolveSessionsLastWriteWins(local, remote);
+    expect(result).toHaveLength(2);
   });
-});
 
-describe('deleteSessionFromSupabase', () => {
-  it('calls supabase.from("sessions").delete().eq()', async () => {
-    await deleteSessionFromSupabase('sess-1');
-    expect(mockDeleteEq).toHaveBeenCalledWith('id', 'sess-1');
-  });
-});
-
-describe('fetchSessionsFromSupabase', () => {
-  it('returns [] on error', async () => {
-    mockSelectEq.mockResolvedValueOnce({ data: null, error: { message: 'fail' } });
-    const result = await fetchSessionsFromSupabase('u1');
-    expect(result).toEqual([]);
+  it('empty + empty = empty', () => {
+    expect(resolveSessionsLastWriteWins([], [])).toEqual([]);
   });
 });

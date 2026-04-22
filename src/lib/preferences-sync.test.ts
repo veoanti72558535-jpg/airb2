@@ -1,28 +1,21 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Mock supabase client
-const mockSelect = vi.fn();
-const mockEq = vi.fn();
 const mockMaybeSingle = vi.fn();
+const mockUpdateEq = vi.fn();
 const mockUpdate = vi.fn();
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
-    from: vi.fn((table: string) => ({
-      select: (...args: unknown[]) => {
-        mockSelect(...args);
-        return {
-          eq: (...eqArgs: unknown[]) => {
-            mockEq(...eqArgs);
-            return { maybeSingle: mockMaybeSingle };
-          },
-        };
-      },
+    from: vi.fn(() => ({
+      select: () => ({
+        eq: () => ({ maybeSingle: mockMaybeSingle }),
+      }),
       update: (payload: unknown) => {
         mockUpdate(payload);
         return {
-          eq: (...eqArgs: unknown[]) => {
-            mockEq(...eqArgs);
+          eq: (...args: unknown[]) => {
+            mockUpdateEq(...args);
             return Promise.resolve({ error: null });
           },
         };
@@ -31,7 +24,6 @@ vi.mock('@/integrations/supabase/client', () => ({
   },
 }));
 
-// Mock storage
 const mockSettings = {
   unitSystem: 'metric' as const,
   advancedMode: false,
@@ -43,53 +35,79 @@ vi.mock('./storage', () => ({
   saveSettings: vi.fn(),
 }));
 
-import { pullPreferences, pushPreferences } from './preferences-sync';
+import {
+  loadPreferencesFromSupabase,
+  savePreferenceToSupabase,
+  syncPreferencesOnLogin,
+} from './preferences-sync';
 import { saveSettings } from './storage';
 
 describe('preferences-sync', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.clear();
   });
 
-  describe('pullPreferences', () => {
+  describe('loadPreferencesFromSupabase', () => {
     it('merges Supabase profile into localStorage', async () => {
       mockMaybeSingle.mockResolvedValue({
-        data: { unit_system: 'imperial', energy_threshold_j: 7.5, feature_flags: { ai: true, weather: false } },
+        data: { unit_system: 'imperial', energy_threshold_j: 7.5, display_name: null, updated_at: '2026-01-01T00:00:00Z' },
         error: null,
       });
 
-      await pullPreferences('user-123');
+      await loadPreferencesFromSupabase('user-123');
 
       expect(saveSettings).toHaveBeenCalledWith(
-        expect.objectContaining({
-          unitSystem: 'imperial',
-          energyThresholdJ: 7.5,
-          featureFlags: { ai: true, weather: false },
-        }),
+        expect.objectContaining({ unitSystem: 'imperial', energyThresholdJ: 7.5 }),
       );
     });
 
     it('does nothing on Supabase error', async () => {
       mockMaybeSingle.mockResolvedValue({ data: null, error: { message: 'fail' } });
 
-      await pullPreferences('user-123');
+      await loadPreferencesFromSupabase('user-123');
 
       expect(saveSettings).not.toHaveBeenCalled();
     });
   });
 
-  describe('pushPreferences', () => {
-    it('writes current settings to Supabase', async () => {
-      mockEq.mockResolvedValue({ error: null });
-
-      await pushPreferences('user-456');
+  describe('savePreferenceToSupabase', () => {
+    it('calls supabase update with correct key/value', async () => {
+      await savePreferenceToSupabase('user-456', 'unit_system', 'imperial');
 
       expect(mockUpdate).toHaveBeenCalledWith(
-        expect.objectContaining({
-          unit_system: 'metric',
-          energy_threshold_j: 16.27,
-          feature_flags: { ai: false, weather: true },
-        }),
+        expect.objectContaining({ unit_system: 'imperial' }),
+      );
+      expect(mockUpdateEq).toHaveBeenCalledWith('id', 'user-456');
+    });
+  });
+
+  describe('syncPreferencesOnLogin', () => {
+    it('pulls from Supabase when remote is newer', async () => {
+      localStorage.setItem('pcp-settings-updated-at', '2020-01-01T00:00:00Z');
+      mockMaybeSingle.mockResolvedValue({
+        data: { unit_system: 'imperial', energy_threshold_j: 7.5, display_name: null, updated_at: '2026-04-22T00:00:00Z' },
+        error: null,
+      });
+
+      await syncPreferencesOnLogin('user-789');
+
+      expect(saveSettings).toHaveBeenCalledWith(
+        expect.objectContaining({ unitSystem: 'imperial', energyThresholdJ: 7.5 }),
+      );
+    });
+
+    it('pushes to Supabase when local is newer', async () => {
+      localStorage.setItem('pcp-settings-updated-at', '2026-12-01T00:00:00Z');
+      mockMaybeSingle.mockResolvedValue({
+        data: { unit_system: 'metric', energy_threshold_j: 16.27, display_name: null, updated_at: '2020-01-01T00:00:00Z' },
+        error: null,
+      });
+
+      await syncPreferencesOnLogin('user-789');
+
+      expect(mockUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({ unit_system: 'metric', energy_threshold_j: 16.27 }),
       );
     });
   });

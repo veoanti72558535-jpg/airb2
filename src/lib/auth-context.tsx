@@ -5,9 +5,10 @@
  * exposes a permanent `{ user: null, session: null, loading: false }`
  * so the entire app works identically without any backend.
  */
-import React, { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef, type ReactNode } from 'react';
 import type { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { syncPreferencesOnLogin } from './preferences-sync';
 
 interface AuthContextType {
   user: User | null;
@@ -35,10 +36,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     });
 
-    supabase.auth.getSession().then(({ data: { session: s } }) => {
+    supabase.auth.getSession().then(async ({ data: { session: s } }) => {
       setSession(s);
       setUser(s?.user ?? null);
       setLoading(false);
+      if (s?.user) {
+        syncPreferencesOnLogin(s.user.id).catch(() => {});
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -46,8 +50,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = useCallback(async (email: string, password: string) => {
     if (!supabase) throw new Error('Supabase not configured');
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error, data } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
+    if (data.user) {
+      syncPreferencesOnLogin(data.user.id).catch(() => {});
+    }
   }, []);
 
   const signUp = useCallback(async (email: string, password: string) => {

@@ -14,6 +14,11 @@ import {
   migrateSessionsFromLocalStorageIfNeeded,
   writeSessionsToIdb,
 } from './session-repo';
+import {
+  upsertSessionToSupabase,
+  deleteSessionFromSupabase,
+} from './session-supabase-repo';
+import { supabase } from '@/integrations/supabase/client';
 
 const KEYS = {
   airguns: 'pcp-airguns',
@@ -461,6 +466,23 @@ function createSessionStore(): SessionStoreInternal {
     });
   };
 
+  /**
+   * P-3 dual-write — fire-and-forget push to Supabase.
+   * Never awaited by the caller; errors logged silently.
+   */
+  const persistToSupabase = (session: Session, op: 'upsert' | 'delete') => {
+    if (!supabase) return;
+    supabase.auth.getUser().then(({ data }) => {
+      const userId = data?.user?.id;
+      if (!userId) return;
+      if (op === 'upsert') {
+        upsertSessionToSupabase(session, userId).catch(() => {});
+      } else {
+        deleteSessionFromSupabase(session.id).catch(() => {});
+      }
+    }).catch(() => {});
+  };
+
   return {
     getAll: () => {
       ensureHydrated();
@@ -481,6 +503,7 @@ function createSessionStore(): SessionStoreInternal {
       } as Session;
       cache = [...cache, fresh];
       persist();
+      persistToSupabase(fresh, 'upsert');
       return fresh;
     },
     update: (id, updates) => {
@@ -494,17 +517,20 @@ function createSessionStore(): SessionStoreInternal {
       } as Session;
       cache = [...cache.slice(0, idx), next, ...cache.slice(idx + 1)];
       persist();
+      persistToSupabase(next, 'upsert');
       return next;
     },
     delete: (id) => {
       ensureHydrated();
       const before = cache.length;
+      const target = cache.find((s) => s.id === id);
       cache = cache.filter((s) => s.id !== id);
       if (cache.length === before) return false;
       persist();
+      if (target) persistToSupabase(target, 'delete');
       return true;
     },
-    __hydrate: (items) => {
+    __hydrate: (items: Session[]) => {
       cache = Array.isArray(items) ? items.slice() : [];
       hydrated = true;
     },

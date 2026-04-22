@@ -1307,6 +1307,22 @@ const fr = {
   'admin.ai.agents.slugReserved': 'Cet identifiant est réservé',
   'admin.ai.agents.slugFormat': 'Lowercase et tirets uniquement',
 
+  // IA2h — Logs
+  'admin.ai.logs.title': "Logs d'exécution",
+  'admin.ai.logs.agent': 'Agent',
+  'admin.ai.logs.provider': 'Provider',
+  'admin.ai.logs.status': 'Statut',
+  'admin.ai.logs.latency': 'Latence',
+  'admin.ai.logs.fallback': 'Fallback',
+  'admin.ai.logs.refresh': 'Rafraîchir',
+  'admin.ai.logs.noLogs': 'Aucun log disponible',
+  'admin.ai.logs.runDetail': 'Détail du run',
+  'admin.ai.logs.events': 'Événements',
+  'admin.ai.stats.callsToday': "Appels aujourd'hui",
+  'admin.ai.stats.successRate': 'Taux de succès',
+  'admin.ai.stats.googleCalls': 'Appels Google',
+  'admin.ai.stats.fallbacks': 'Fallbacks',
+
   // IA2 — Quatarly models
   'admin.ai.quatarly.models': 'Modèles Quatarly',
   'admin.ai.quatarly.noModels': 'Aucun modèle disponible',
@@ -2655,6 +2671,22 @@ const en: Record<keyof typeof fr, string> = {
   'admin.ai.agents.noLimit': 'No limit',
   'admin.ai.agents.slugReserved': 'This slug is reserved',
   'admin.ai.agents.slugFormat': 'Lowercase and hyphens only',
+
+  // IA2h — Logs
+  'admin.ai.logs.title': 'Execution logs',
+  'admin.ai.logs.agent': 'Agent',
+  'admin.ai.logs.provider': 'Provider',
+  'admin.ai.logs.status': 'Status',
+  'admin.ai.logs.latency': 'Latency',
+  'admin.ai.logs.fallback': 'Fallback',
+  'admin.ai.logs.refresh': 'Refresh',
+  'admin.ai.logs.noLogs': 'No logs available',
+  'admin.ai.logs.runDetail': 'Run detail',
+  'admin.ai.logs.events': 'Events',
+  'admin.ai.stats.callsToday': 'Calls today',
+  'admin.ai.stats.successRate': 'Success rate',
+  'admin.ai.stats.googleCalls': 'Google calls',
+  'admin.ai.stats.fallbacks': 'Fallbacks',
 
   // IA2 — Quatarly models
   'admin.ai.quatarly.models': 'Quatarly models',

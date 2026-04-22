@@ -30,6 +30,8 @@ import { toast } from 'sonner';
 import { AiQuotaCard, type GoogleQuotaData } from '@/components/admin/AiQuotaCard';
 import { AiOllamaCard, type OllamaTestResult } from '@/components/admin/AiOllamaCard';
 import AgentsList from '@/components/admin/AgentsList';
+import LogsViewer from '@/components/admin/LogsViewer';
+import AiDailyStats from '@/components/admin/AiDailyStats';
 import RunbookChecklist from '@/components/admin/RunbookChecklist';
 import RunbookPayloads from '@/components/admin/RunbookPayloads';
 import RunbookLogViewer from '@/components/admin/RunbookLogViewer';
@@ -485,6 +487,10 @@ function AdminAiAuthenticated() {
 
       {/* IA2 — Agents */}
       <AgentsList />
+
+      {/* IA2h — Logs */}
+      <AiDailyStats />
+      <LogsViewer />
 
       {/* IA2f — Runbook validation dispatcher */}
       <div className="pt-4 border-t border-border space-y-4">

@@ -388,6 +388,46 @@ function createProjectileStore(): ProjectileStoreInternal {
 }
 
 /**
+ * P-4 — wraps createProjectileStore() with Supabase dual-write.
+ * persist() IDB logic is UNTOUCHED. Only create/update/delete get
+ * fire-and-forget pushes. bullets4 projectiles are EXCLUDED.
+ */
+function createProjectileStoreWithDualWrite(): ProjectileStoreInternal {
+  const inner = createProjectileStore();
+
+  const pushIfNotBullets4 = (p: Projectile) => {
+    if (isBullets4(p)) return;
+    getUserId().then((uid) => {
+      if (uid) upsertToSupabase('projectiles', toRow('projectiles', p, uid)).catch(() => {});
+    }).catch(() => {});
+  };
+
+  return {
+    ...inner,
+    create: (item) => {
+      const result = inner.create(item);
+      pushIfNotBullets4(result);
+      return result;
+    },
+    createMany: (items) => {
+      const results = inner.createMany(items);
+      for (const r of results) pushIfNotBullets4(r);
+      return results;
+    },
+    update: (id, updates) => {
+      const result = inner.update(id, updates);
+      if (result) pushIfNotBullets4(result);
+      return result;
+    },
+    delete: (id) => {
+      const result = inner.delete(id);
+      if (result) deleteFromSupabase('projectiles', id).catch(() => {});
+      return result;
+    },
+  };
+}
+
+/**
  * Tranche Import UX — attend explicitement la fin de toutes les writes IDB
  * du `projectileStore` empilées jusqu'à présent.
  *

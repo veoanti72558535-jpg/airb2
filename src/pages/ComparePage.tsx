@@ -28,6 +28,7 @@ import { DifferencesList } from '@/components/compare/DifferencesList';
 import { ComparisonTable } from '@/components/compare/ComparisonTable';
 import { BallisticTable } from '@/components/compare/BallisticTable';
 import { PbrZeroReadout } from '@/components/compare/PbrZeroReadout';
+import { CompareInsights } from '@/components/compare/CompareInsights';
 
 /**
  * Dedicated, bookmarkable comparison view for two sessions.
@@ -233,6 +234,11 @@ export default function ComparePage() {
 
         {/* Bloc B — Differences */}
         <DifferencesList diff={diff} />
+
+        {/* IA2i-5 — AI compare insights */}
+        <div className="px-1">
+          <CompareInsights sessionA={a} sessionB={b} />
+        </div>
 
         {/* Range controls — drive both the comparison table and downstream exports */}
         <div className="surface-card p-4 space-y-3">

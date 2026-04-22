@@ -7,6 +7,7 @@ import { DetailLayout, DetailRow, DetailSection } from '@/components/library/Det
 import { LinkedSessions } from '@/components/library/LinkedSessions';
 import { NotFoundDetail } from '@/components/library/NotFoundDetail';
 import { Bullets4ProjectileDetails } from '@/components/projectiles/Bullets4ProjectileDetails';
+import { ProjectileSummary } from '@/components/projectiles/ProjectileSummary';
 
 export default function ProjectileDetailPage() {
   const { id = '' } = useParams<{ id: string }>();
@@ -84,6 +85,10 @@ export default function ProjectileDetailPage() {
       )}
 
       <Bullets4ProjectileDetails projectile={p} />
+
+      <div className="px-1 py-2">
+        <ProjectileSummary projectile={p} />
+      </div>
 
       <LinkedSessions field="projectileId" id={p.id} />
 

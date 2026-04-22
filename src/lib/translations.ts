@@ -1372,6 +1372,12 @@ const fr = {
   'shotLineExplainer.viewLog': 'Voir log',
   'shotLineExplainer.badge.confidence': 'confidence: C',
 
+  // IA2i — Agent buttons
+  'deviationExplainer.button': 'Expliquer la dérive',
+  'projectileSummary.button': 'Résumé IA',
+  'sessionSummarizer.button': 'Résumer',
+  'compareInsights.button': 'Analyser les différences',
+
   // Auth
   'auth.signIn': 'Se connecter',
   'auth.signUp': 'Créer un compte',
@@ -2736,6 +2742,12 @@ const en: Record<keyof typeof fr, string> = {
   'shotLineExplainer.confidence': 'AI data — verify before use',
   'shotLineExplainer.viewLog': 'View log',
   'shotLineExplainer.badge.confidence': 'confidence: C',
+
+  // IA2i — Agent buttons
+  'deviationExplainer.button': 'Explain drift',
+  'projectileSummary.button': 'AI Summary',
+  'sessionSummarizer.button': 'Summarize',
+  'compareInsights.button': 'Analyse differences',
 
   // Auth
   'auth.signIn': 'Sign in',

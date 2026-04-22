@@ -18,6 +18,7 @@ import { EngineBadge } from '@/components/sessions/EngineBadge';
 import { CalculationMetadataBlock } from '@/components/sessions/CalculationMetadataBlock';
 import { RecalculateDialog } from '@/components/sessions/RecalculateDialog';
 import { SessionLineage } from '@/components/sessions/SessionLineage';
+import { SessionSummarizer } from '@/components/sessions/SessionSummarizer';
 import { normalizeSession } from '@/lib/session-normalize';
 import { BallisticTable } from '@/components/calc/BallisticTable';
 import { ZeroIntersectionsCard } from '@/components/calc/ZeroIntersectionsCard';
@@ -314,6 +315,9 @@ export default function SessionsPage() {
                     </div>
                     <div className="text-[11px] text-muted-foreground mt-0.5">
                       {new Date(s.createdAt).toLocaleString()}
+                    </div>
+                    <div className="mt-1">
+                      <SessionSummarizer session={s} />
                     </div>
                     {(s.tags.length > 0 || advBadges.length > 0) && (
                       <div className="flex flex-wrap gap-1 mt-2">

@@ -15,7 +15,7 @@
  * d'indisponibilité et NE TENTE AUCUN appel.
  */
 import React, { useCallback, useEffect, useState } from 'react';
-import { Bot, KeyRound, RefreshCw, ShieldAlert, LogOut, Server } from 'lucide-react';
+import { Bot, KeyRound, RefreshCw, ShieldAlert, LogOut, Server, Clock } from 'lucide-react';
 import type { Session } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,6 +34,14 @@ import RunbookChecklist from '@/components/admin/RunbookChecklist';
 import RunbookPayloads from '@/components/admin/RunbookPayloads';
 import RunbookLogViewer from '@/components/admin/RunbookLogViewer';
 import { ClipboardCheck } from 'lucide-react';
+import { getQuatarlyModels, refreshQuatarlyModels, getCacheFetchedAt } from '@/lib/ai/quatarly-models-cache';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+const GOOGLE_DIRECT_MODELS = [
+  'gemini-2.5-flash',
+  'gemini-2.5-flash-preview-05-20',
+  'gemini-2.5-pro-preview-06-05',
+];
 
 interface AiSettingsForm {
   providerPrimary: string;
@@ -250,6 +258,17 @@ function AdminAiAuthenticated() {
   const [saving, setSaving] = useState(false);
   const [testResult, setTestResult] = useState<ProvidersTestResult | null>(null);
   const [testing, setTesting] = useState(false);
+  const [quatarlyModels, setQuatarlyModels] = useState<string[]>([]);
+  const [modelsLoading, setModelsLoading] = useState(false);
+  const [cacheFetchedAt, setCacheFetchedAt] = useState<number | null>(null);
+
+  const loadModels = useCallback(async (force = false) => {
+    setModelsLoading(true);
+    const models = force ? await refreshQuatarlyModels() : await getQuatarlyModels();
+    setQuatarlyModels(models);
+    setCacheFetchedAt(getCacheFetchedAt());
+    setModelsLoading(false);
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -281,7 +300,8 @@ function AdminAiAuthenticated() {
 
   useEffect(() => {
     void load();
-  }, [load]);
+    void loadModels();
+  }, [load, loadModels]);
 
   const save = async () => {
     setSaving(true);
@@ -367,11 +387,15 @@ function AdminAiAuthenticated() {
             disabled={loading}
             testId="ai-set-providerPrimary"
           />
-          <SettingText
-            label={t('admin.ai.settings.modelPrimary')}
+          <ModelSelectCard
+            label={t('admin.ai.models.quatarlyPrimary')}
             value={form.modelPrimary}
+            options={quatarlyModels}
             onChange={(v) => update('modelPrimary', v)}
             disabled={loading}
+            modelsLoading={modelsLoading}
+            onRefresh={() => void loadModels(true)}
+            cacheFetchedAt={cacheFetchedAt}
             testId="ai-set-modelPrimary"
           />
           <SettingText
@@ -382,9 +406,10 @@ function AdminAiAuthenticated() {
             testId="ai-set-quatarlyApiUrl"
             wide
           />
-          <SettingText
-            label={t('admin.ai.settings.googleDirectModel')}
+          <ModelSelectCard
+            label={t('admin.ai.models.googleFallback')}
             value={form.googleDirectModel}
+            options={GOOGLE_DIRECT_MODELS}
             onChange={(v) => update('googleDirectModel', v)}
             disabled={loading}
             testId="ai-set-googleDirectModel"

@@ -1,29 +1,27 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { isBullets4 } from './library-supabase-repo';
 import type { Projectile } from './types';
 
-// Mock supabase — each from() call returns a fresh builder
+// Track calls
 const mockUpsert = vi.fn().mockResolvedValue({ error: null });
 const mockDeleteEq = vi.fn().mockResolvedValue({ error: null });
 const mockDelete = vi.fn().mockReturnValue({ eq: mockDeleteEq });
 const mockSelectEq = vi.fn().mockResolvedValue({ data: [], error: null });
 const mockSelect = vi.fn().mockReturnValue({ eq: mockSelectEq });
+const mockFrom = vi.fn().mockReturnValue({
+  upsert: mockUpsert,
+  delete: mockDelete,
+  select: mockSelect,
+});
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
-    from: (table: string) => {
-      return {
-        upsert: mockUpsert,
-        delete: mockDelete,
-        select: mockSelect,
-      };
-    },
+    from: (...args: any[]) => mockFrom(...args),
     auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'u1' } } }) },
   },
 }));
 
 // Import after mock
-import { upsertToSupabase, deleteFromSupabase, fetchFromSupabase } from './library-supabase-repo';
+import { upsertToSupabase, deleteFromSupabase, fetchFromSupabase, isBullets4 } from './library-supabase-repo';
 
 describe('library-supabase-repo', () => {
   beforeEach(() => vi.clearAllMocks());

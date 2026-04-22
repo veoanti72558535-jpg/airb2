@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
+import { useAuth } from '@/lib/auth-context';
+import { isSupabaseConfigured } from '@/integrations/supabase/client';
+import AuthModal from '@/components/auth/AuthModal';
 import { Link, useLocation } from 'react-router-dom';
 import {
   Home, Crosshair, History, BookOpen, MoreHorizontal,
   ArrowLeftRight, FileText, Search, Settings, Shield,
-  Sun, Moon, Globe, X, ChevronRight, FlaskConical,
+  Sun, Moon, Globe, X, ChevronRight, FlaskConical, LogIn, LogOut,
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { useTheme } from '@/lib/theme';
@@ -32,6 +35,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
   const [moreOpen, setMoreOpen] = useState(false);
+  const { user, signOut } = useAuth();
+  const [authOpen, setAuthOpen] = useState(false);
+  const sbConfigured = isSupabaseConfigured();
 
   const isActive = (path: string) =>
     path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
@@ -82,6 +88,25 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             {theme === 'dark' ? t('common.light') : t('common.dark')}
           </button>
+          {sbConfigured && (
+            user ? (
+              <button
+                onClick={() => signOut()}
+                className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors w-full"
+              >
+                <LogOut className="h-4 w-4" />
+                <span className="truncate text-xs">{user.email}</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => setAuthOpen(true)}
+                className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors w-full"
+              >
+                <LogIn className="h-4 w-4" />
+                {t('auth.signIn' as any)}
+              </button>
+            )
+          )}
         </div>
       </aside>
 
@@ -109,6 +134,24 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               >
                 {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
               </button>
+              {sbConfigured && (
+                user ? (
+                  <button
+                    onClick={() => signOut()}
+                    className="p-2 rounded-md text-muted-foreground hover:text-foreground"
+                    title={user.email ?? ''}
+                  >
+                    <LogOut className="h-4 w-4" />
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setAuthOpen(true)}
+                    className="p-2 rounded-md text-muted-foreground hover:text-foreground"
+                  >
+                    <LogIn className="h-4 w-4" />
+                  </button>
+                )
+              )}
             </div>
           </div>
         </header>
@@ -185,6 +228,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </div>
         </>
       )}
+
+      {/* Auth modal */}
+      <AuthModal open={authOpen} onOpenChange={setAuthOpen} />
     </div>
   );
 }

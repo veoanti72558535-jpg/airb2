@@ -1333,6 +1333,20 @@ const fr = {
   'shotLineExplainer.confidence': 'Données IA — à valider',
   'shotLineExplainer.viewLog': 'Voir log',
   'shotLineExplainer.badge.confidence': 'confidence: C',
+
+  // Auth
+  'auth.signIn': 'Se connecter',
+  'auth.signUp': 'Créer un compte',
+  'auth.signOut': 'Se déconnecter',
+  'auth.email': 'Email',
+  'auth.password': 'Mot de passe',
+  'auth.loading': 'Connexion...',
+  'auth.error.invalidCredentials': 'Email ou mot de passe incorrect',
+  'auth.error.emailTaken': 'Cet email est déjà utilisé',
+  'auth.error.generic': 'Une erreur est survenue',
+  'auth.connectedAs': 'Connecté en tant que',
+  'auth.syncEnabled': 'Synchronisation active',
+  'auth.syncDisabled': 'Mode hors-ligne',
 } as const;
 
 const en: Record<keyof typeof fr, string> = {
@@ -2644,6 +2658,20 @@ const en: Record<keyof typeof fr, string> = {
   'shotLineExplainer.confidence': 'AI data — verify before use',
   'shotLineExplainer.viewLog': 'View log',
   'shotLineExplainer.badge.confidence': 'confidence: C',
+
+  // Auth
+  'auth.signIn': 'Sign in',
+  'auth.signUp': 'Create account',
+  'auth.signOut': 'Sign out',
+  'auth.email': 'Email',
+  'auth.password': 'Password',
+  'auth.loading': 'Signing in...',
+  'auth.error.invalidCredentials': 'Invalid email or password',
+  'auth.error.emailTaken': 'Email already in use',
+  'auth.error.generic': 'An error occurred',
+  'auth.connectedAs': 'Signed in as',
+  'auth.syncEnabled': 'Sync enabled',
+  'auth.syncDisabled': 'Offline mode',
 };
 
 // Append paste-import keys (EN) — kept after object literal would be a TS

@@ -10,6 +10,7 @@ import type { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { syncPreferencesOnLogin } from './preferences-sync';
 import { syncSessionsOnLogin } from './session-supabase-repo';
+import { syncLibraryOnLogin } from './library-supabase-repo';
 
 interface AuthContextType {
   user: User | null;
@@ -45,6 +46,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         syncPreferencesOnLogin(s.user.id).catch(() => {});
         syncSessionsOnLogin(s.user.id).catch(e =>
           console.error('[auth] session sync failed', e)
+        );
+        syncLibraryOnLogin(s.user.id).catch(e =>
+          console.error('[auth] library sync failed', e)
         );
       }
     });

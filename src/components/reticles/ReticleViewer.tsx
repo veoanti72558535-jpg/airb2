@@ -3,6 +3,7 @@
  * Coordinate mapping: x = cx + milX * ms, y = cy - milY * ms (Y inverted).
  * All patterns rendered in pure SVG, no canvas or bitmap.
  * Memoized: SVG elements only recompute when relevant parameters change.
+ * Cross-instance LRU cache: shares computed SVG across multiple viewers with same params.
  */
 import React, { useMemo } from 'react';
 import type { ReticleCatalogEntry } from '@/lib/reticles-catalog-repo';
@@ -253,11 +254,54 @@ function buildSvgElements(
   return { elements, badges };
 }
 
+// ── Cross-instance LRU cache ──
+const SVG_CACHE_MAX = 64;
+type CacheEntry = { elements: React.ReactNode[]; badges: React.ReactNode[] };
+const svgCache = new Map<string, CacheEntry>();
+
+function makeCacheKey(
+  pattern: string, size: number, darkMode: boolean,
+  fp: string | null, trueMag: number | null, mag: number | undefined,
+  illum: boolean, clickVal: number | null, clickUnits: string | null,
+  performanceMode: boolean,
+): string {
+  return `${pattern}|${size}|${darkMode ? 1 : 0}|${fp ?? ''}|${trueMag ?? ''}|${mag ?? ''}|${illum ? 1 : 0}|${clickVal ?? ''}|${clickUnits ?? ''}|${performanceMode ? 1 : 0}`;
+}
+
+function cachedBuild(
+  pattern: string, size: number, darkMode: boolean,
+  fp: string | null, trueMag: number | null, mag: number | undefined,
+  illum: boolean, clickVal: number | null, clickUnits: string | null,
+  performanceMode: boolean,
+): CacheEntry {
+  const key = makeCacheKey(pattern, size, darkMode, fp, trueMag, mag, illum, clickVal, clickUnits, performanceMode);
+  const cached = svgCache.get(key);
+  if (cached) {
+    // Move to end (most recently used)
+    svgCache.delete(key);
+    svgCache.set(key, cached);
+    return cached;
+  }
+  const result = buildSvgElements(pattern, size, darkMode, fp, trueMag, mag, illum, clickVal, clickUnits, performanceMode);
+  svgCache.set(key, result);
+  // Evict oldest if over limit
+  if (svgCache.size > SVG_CACHE_MAX) {
+    const oldest = svgCache.keys().next().value;
+    if (oldest !== undefined) svgCache.delete(oldest);
+  }
+  return result;
+}
+
+/** Exposed for testing — clears the cross-instance SVG cache */
+export function clearSvgCache() { svgCache.clear(); }
+/** Exposed for testing — returns current cache size */
+export function svgCacheSize() { return svgCache.size; }
+
 const ReticleViewer = React.memo(function ReticleViewer({ reticle, size = 400, darkMode = true, currentMagnification, performanceMode = false }: Props) {
   const { pattern, fp, trueMag, clickUnits, clickVal, illum, name } = extractReticleParams(reticle);
 
   const { elements, badges } = useMemo(
-    () => buildSvgElements(pattern, size, darkMode, fp, trueMag, currentMagnification, illum, clickVal, clickUnits, performanceMode),
+    () => cachedBuild(pattern, size, darkMode, fp, trueMag, currentMagnification, illum, clickVal, clickUnits, performanceMode),
     [pattern, size, darkMode, fp, trueMag, currentMagnification, illum, clickVal, clickUnits, performanceMode],
   );
 

@@ -5,7 +5,7 @@
  * Memoized: SVG elements only recompute when relevant parameters change.
  * Cross-instance LRU cache: shares computed SVG across multiple viewers with same params.
  */
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef } from 'react';
 import type { ReticleCatalogEntry } from '@/lib/reticles-catalog-repo';
 import type { Reticle } from '@/lib/types';
 
@@ -31,8 +31,18 @@ function isCatalog(r: Props['reticle']): r is ReticleCatalogEntry {
   return 'reticle_id' in r;
 }
 
-// Extract stable scalar values from the reticle prop for memoization
-function extractReticleParams(reticle: Props['reticle']) {
+interface ReticleParams {
+  pattern: string;
+  fp: string | null;
+  trueMag: number | null;
+  clickUnits: string | null;
+  clickVal: number | null;
+  illum: boolean;
+  name: string;
+}
+
+// Extract scalar values from the reticle prop (pure, no hooks)
+function extractReticleParams(reticle: Props['reticle']): ReticleParams {
   const pattern = getPatternType(reticle);
   const fp = isCatalog(reticle) ? reticle.focal_plane : ('focalPlane' in reticle ? (reticle as Reticle).focalPlane : null);
   const trueMag = isCatalog(reticle) ? reticle.true_magnification : null;
@@ -298,7 +308,21 @@ export function clearSvgCache() { svgCache.clear(); }
 export function svgCacheSize() { return svgCache.size; }
 
 const ReticleViewer = React.memo(function ReticleViewer({ reticle, size = 400, darkMode = true, currentMagnification, performanceMode = false }: Props) {
-  const { pattern, fp, trueMag, clickUnits, clickVal, illum, name } = extractReticleParams(reticle);
+  // Stabilise extracted params: only update the object ref when a scalar value actually changes
+  const raw = extractReticleParams(reticle);
+  const prevRef = useRef<ReticleParams>(raw);
+  const params = useMemo(() => {
+    const p = prevRef.current;
+    if (
+      p.pattern === raw.pattern && p.fp === raw.fp && p.trueMag === raw.trueMag &&
+      p.clickUnits === raw.clickUnits && p.clickVal === raw.clickVal &&
+      p.illum === raw.illum && p.name === raw.name
+    ) return p;
+    prevRef.current = raw;
+    return raw;
+  }, [raw.pattern, raw.fp, raw.trueMag, raw.clickUnits, raw.clickVal, raw.illum, raw.name]);
+
+  const { pattern, fp, trueMag, clickUnits, clickVal, illum, name } = params;
 
   const { elements, badges } = useMemo(
     () => cachedBuild(pattern, size, darkMode, fp, trueMag, currentMagnification, illum, clickVal, clickUnits, performanceMode),

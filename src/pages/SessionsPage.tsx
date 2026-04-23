@@ -443,7 +443,6 @@ export default function SessionsPage() {
           {truingSource && (
             <TruingPanel
               session={truingSource}
-              onBcCorrected={(correctedBc, projectileId) => {
               onBcCorrected={(correctedBc, projectileId, calibrationEntry) => {
                 if (!truingSource) return;
                 const prevHistory = truingSource.calibrationHistory ?? [];

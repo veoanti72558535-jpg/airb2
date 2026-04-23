@@ -1393,6 +1393,24 @@ const fr = {
   'auth.connectedAs': 'Connecté en tant que',
   'auth.syncEnabled': 'Synchronisation active',
   'auth.syncDisabled': 'Mode hors-ligne',
+
+  // Field validation
+  'field.validation.title': 'Validation terrain',
+  'field.validation.selectDistance': 'Distance mesurée',
+  'field.validation.measuredDrop': 'Chute mesurée (mm)',
+  'field.validation.measuredVelocity': 'Vitesse chrono (m/s)',
+  'field.validation.measuredWindage': 'Dérive mesurée (mm)',
+  'field.validation.predicted': 'Prédit',
+  'field.validation.measured': 'Mesuré',
+  'field.validation.delta': 'Écart',
+  'field.validation.accurate': 'Précis ✅',
+  'field.validation.moderateDelta': 'Écart modéré 🟡',
+  'field.validation.largeDelta': 'Écart important 🔴',
+  'field.validation.save': 'Enregistrer la mesure',
+  'field.validation.history': 'Mesures terrain',
+  'field.validation.recalibrationHint': 'Écart important : vérifiez votre BC ou vos conditions atmosphériques',
+  'field.validation.noMeasurements': 'Aucune mesure terrain',
+  'field.validation.notes': 'Notes',
 } as const;
 
 const en: Record<keyof typeof fr, string> = {
@@ -2764,6 +2782,24 @@ const en: Record<keyof typeof fr, string> = {
   'auth.connectedAs': 'Signed in as',
   'auth.syncEnabled': 'Sync enabled',
   'auth.syncDisabled': 'Offline mode',
+
+  // Field validation
+  'field.validation.title': 'Field validation',
+  'field.validation.selectDistance': 'Measured distance',
+  'field.validation.measuredDrop': 'Measured drop (mm)',
+  'field.validation.measuredVelocity': 'Chrono velocity (m/s)',
+  'field.validation.measuredWindage': 'Measured windage (mm)',
+  'field.validation.predicted': 'Predicted',
+  'field.validation.measured': 'Measured',
+  'field.validation.delta': 'Delta',
+  'field.validation.accurate': 'Accurate ✅',
+  'field.validation.moderateDelta': 'Moderate delta 🟡',
+  'field.validation.largeDelta': 'Large delta 🔴',
+  'field.validation.save': 'Save measurement',
+  'field.validation.history': 'Field measurements',
+  'field.validation.recalibrationHint': 'Large delta: check your BC or atmospheric conditions',
+  'field.validation.noMeasurements': 'No field measurements',
+  'field.validation.notes': 'Notes',
 };
 
 // Append paste-import keys (EN) — kept after object literal would be a TS

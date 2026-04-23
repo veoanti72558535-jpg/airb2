@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { History, Star, Trash2, Search, Crosshair, Play, Filter, X, ArrowLeftRight, CheckSquare, RotateCcw, Target } from 'lucide-react';
 import { toast } from 'sonner';
 import { useI18n } from '@/lib/i18n';
+import { calculateTrajectory } from '@/lib/ballistics';
 import {
   sessionStore,
   airgunStore,
@@ -446,8 +447,17 @@ export default function SessionsPage() {
               onBcCorrected={(correctedBc, projectileId, calibrationEntry) => {
                 if (!truingSource) return;
                 const prevHistory = truingSource.calibrationHistory ?? [];
+                // Recalculate trajectory with corrected BC
+                const updatedInput = { ...truingSource.input, bc: correctedBc };
+                let newResults = truingSource.results;
+                try {
+                  newResults = calculateTrajectory(updatedInput);
+                } catch (e) {
+                  console.warn('[truing] recalc failed, keeping old results', e);
+                }
                 sessionStore.update(truingSource.id, {
-                  input: { ...truingSource.input, bc: correctedBc },
+                  input: updatedInput,
+                  results: newResults,
                   ...(calibrationEntry
                     ? { calibrationHistory: [...prevHistory, calibrationEntry] }
                     : {}),

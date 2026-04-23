@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Settings, Globe, Gauge, ToggleLeft, Cloud, Bot, Ruler, Zap, Shield, Palette } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
-import { useTheme } from '@/lib/theme';
+import { useTheme, THEMES } from '@/lib/theme';
 import { getSettings, saveSettings } from '@/lib/storage';
 import { useUnits } from '@/hooks/use-units';
 import { unitCategories } from '@/lib/units';
@@ -11,6 +11,7 @@ import { isSupabaseConfigured } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth-context';
 import { savePreferenceToSupabase, markLocalUpdated } from '@/lib/preferences-sync';
+import { ThemePicker } from '@/components/settings/ThemePicker';
 
 /** Preset thresholds (J) — covers the most common airgun regulations. */
 const ENERGY_PRESETS: { key: string; value: number | null; labelKey: string }[] = [

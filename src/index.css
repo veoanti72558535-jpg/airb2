@@ -84,6 +84,123 @@
     --sidebar-border: 0 0% 17%;
     --sidebar-ring: 142 71% 45%;
   }
+
+  /* ── Tactical Dark ── */
+  [data-theme="tactical-dark"] {
+    --background: 222 28% 6%;
+    --foreground: 214 32% 91%;
+    --card: 224 24% 10%;
+    --card-foreground: 214 32% 91%;
+    --popover: 222 27% 14%;
+    --popover-foreground: 214 32% 91%;
+    --primary: 38 92% 50%;
+    --primary-foreground: 222 28% 6%;
+    --secondary: 222 29% 16%;
+    --secondary-foreground: 215 16% 47%;
+    --muted: 222 29% 16%;
+    --muted-foreground: 215 25% 27%;
+    --accent: 32 95% 44%;
+    --accent-foreground: 222 28% 6%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 222 25% 22%;
+    --input: 222 25% 22%;
+    --ring: 38 92% 50%;
+    --surface: 224 24% 10%;
+    --surface-foreground: 214 32% 91%;
+    --tactical: 38 92% 50%;
+    --tactical-foreground: 222 28% 6%;
+    --warning: 45 93% 47%;
+    --warning-foreground: 45 93% 10%;
+    --info: 217 91% 60%;
+    --info-foreground: 0 0% 98%;
+    --sidebar-background: 224 24% 10%;
+    --sidebar-foreground: 215 16% 47%;
+    --sidebar-primary: 38 92% 50%;
+    --sidebar-primary-foreground: 222 28% 6%;
+    --sidebar-accent: 222 29% 16%;
+    --sidebar-accent-foreground: 215 16% 47%;
+    --sidebar-border: 222 25% 22%;
+    --sidebar-ring: 38 92% 50%;
+  }
+
+  /* ── Slate Light ── */
+  [data-theme="slate-light"] {
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 210 40% 96%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 214 32% 91%;
+    --secondary-foreground: 215 16% 37%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 65%;
+    --accent: 217 91% 54%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 213 27% 84%;
+    --input: 213 27% 84%;
+    --ring: 217 91% 60%;
+    --surface: 0 0% 100%;
+    --surface-foreground: 222 47% 11%;
+    --tactical: 217 91% 60%;
+    --tactical-foreground: 0 0% 100%;
+    --warning: 45 93% 47%;
+    --warning-foreground: 45 93% 10%;
+    --info: 217 91% 60%;
+    --info-foreground: 0 0% 98%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 215 16% 37%;
+    --sidebar-primary: 217 91% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 214 32% 91%;
+    --sidebar-accent-foreground: 215 16% 37%;
+    --sidebar-border: 213 27% 84%;
+    --sidebar-ring: 217 91% 60%;
+  }
+
+  /* ── Desert Tan ── */
+  [data-theme="desert-tan"] {
+    --background: 25 29% 9%;
+    --foreground: 39 77% 83%;
+    --card: 25 26% 12%;
+    --card-foreground: 39 77% 83%;
+    --popover: 25 25% 15%;
+    --popover-foreground: 39 77% 83%;
+    --primary: 23 74% 55%;
+    --primary-foreground: 25 29% 9%;
+    --secondary: 27 24% 18%;
+    --secondary-foreground: 31 24% 44%;
+    --muted: 27 24% 18%;
+    --muted-foreground: 27 27% 28%;
+    --accent: 18 66% 47%;
+    --accent-foreground: 25 29% 9%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 27 24% 24%;
+    --input: 27 24% 24%;
+    --ring: 23 74% 55%;
+    --surface: 25 26% 12%;
+    --surface-foreground: 39 77% 83%;
+    --tactical: 23 74% 55%;
+    --tactical-foreground: 25 29% 9%;
+    --warning: 45 93% 47%;
+    --warning-foreground: 45 93% 10%;
+    --info: 217 91% 60%;
+    --info-foreground: 0 0% 98%;
+    --sidebar-background: 25 26% 12%;
+    --sidebar-foreground: 31 24% 44%;
+    --sidebar-primary: 23 74% 55%;
+    --sidebar-primary-foreground: 25 29% 9%;
+    --sidebar-accent: 27 24% 18%;
+    --sidebar-accent-foreground: 31 24% 44%;
+    --sidebar-border: 27 24% 24%;
+    --sidebar-ring: 23 74% 55%;
+  }
 }
 
 @layer base {

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Settings, Globe, Sun, Moon, Gauge, ToggleLeft, Cloud, Bot, Ruler, Zap, Shield } from 'lucide-react';
+import { Settings, Globe, Gauge, ToggleLeft, Cloud, Bot, Ruler, Zap, Shield, Palette } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
-import { useTheme } from '@/lib/theme';
+import { useTheme, THEMES } from '@/lib/theme';
 import { getSettings, saveSettings } from '@/lib/storage';
 import { useUnits } from '@/hooks/use-units';
 import { unitCategories } from '@/lib/units';
@@ -11,6 +11,7 @@ import { isSupabaseConfigured } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth-context';
 import { savePreferenceToSupabase, markLocalUpdated } from '@/lib/preferences-sync';
+import { ThemePicker } from '@/components/settings/ThemePicker';
 
 /** Preset thresholds (J) — covers the most common airgun regulations. */
 const ENERGY_PRESETS: { key: string; value: number | null; labelKey: string }[] = [
@@ -22,7 +23,7 @@ const ENERGY_PRESETS: { key: string; value: number | null; labelKey: string }[] 
 
 export default function SettingsPage() {
   const { t, locale, setLocale } = useI18n();
-  const { theme, toggleTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
   const settings = getSettings();
   const { prefs, setUnitPref } = useUnits();
   const navigate = useNavigate();
@@ -100,18 +101,16 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* Theme */}
-        <div className="surface-elevated p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              {theme === 'dark' ? <Moon className="h-4 w-4 text-primary" /> : <Sun className="h-4 w-4 text-primary" />}
+        {/* Theme picker */}
+        <div className="surface-elevated p-4 space-y-3">
+          <div className="flex items-center gap-3">
+            <Palette className="h-4 w-4 text-primary" />
+            <div>
               <div className="text-sm font-medium">{t('settings.theme')}</div>
-            </div>
-            <div className="flex gap-1">
-              <button onClick={() => theme !== 'dark' && toggleTheme()} className={cn('px-3 py-1 rounded-md text-xs font-medium', theme === 'dark' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted')}>{t('common.dark')}</button>
-              <button onClick={() => theme !== 'light' && toggleTheme()} className={cn('px-3 py-1 rounded-md text-xs font-medium', theme === 'light' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted')}>{t('common.light')}</button>
+              <div className="text-[11px] text-muted-foreground">{t('settings.themeSubtitle' as any)}</div>
             </div>
           </div>
+          <ThemePicker />
         </div>
 
         {/* Unit system quick toggle */}

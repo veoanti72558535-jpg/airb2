@@ -45,7 +45,7 @@ const adminNav = [
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const { t, locale, setLocale } = useI18n();
-  const { theme, toggleTheme } = useTheme();
+  const { isDark } = useTheme();
   const location = useLocation();
   const [moreOpen, setMoreOpen] = useState(false);
   const { user, signOut } = useAuth();
@@ -115,13 +115,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           >
             <Globe className="h-4 w-4" />
           </button>
-          <button
-            onClick={toggleTheme}
-            title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
+          <Link
+            to="/settings"
+            title={t('settings.theme' as any)}
             className="flex items-center justify-center w-9 h-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors duration-150"
           >
-            {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-          </button>
+            {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </Link>
           {user && (
             <button
               onClick={() => signOut()}

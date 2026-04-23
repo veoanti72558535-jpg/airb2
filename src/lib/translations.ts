@@ -1476,6 +1476,11 @@ const fr = {
   'reticles.viewer.light': 'Fond clair',
   'reticles.tabs.mine': 'Mes réticules',
   'reticles.tabs.catalog': 'Catalogue',
+  'reticles.catalog.favoriteAdd': 'Ajouter aux favoris',
+  'reticles.catalog.favoriteRemove': 'Retirer des favoris',
+  'reticles.catalog.favoriteAdded': 'Ajouté aux favoris',
+  'reticles.catalog.favoriteRemoved': 'Retiré des favoris',
+  'reticles.catalog.favorites': 'Favoris catalogue',
 } as const;
 
 const en: Record<keyof typeof fr, string> = {
@@ -2930,6 +2935,11 @@ const en: Record<keyof typeof fr, string> = {
   'reticles.viewer.light': 'Light',
   'reticles.tabs.mine': 'My reticles',
   'reticles.tabs.catalog': 'Catalog',
+  'reticles.catalog.favoriteAdd': 'Add to favorites',
+  'reticles.catalog.favoriteRemove': 'Remove from favorites',
+  'reticles.catalog.favoriteAdded': 'Added to favorites',
+  'reticles.catalog.favoriteRemoved': 'Removed from favorites',
+  'reticles.catalog.favorites': 'Catalog favorites',
 };
 
 // Append paste-import keys (EN) — kept after object literal would be a TS

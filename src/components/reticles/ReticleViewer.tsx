@@ -268,6 +268,7 @@ function buildSvgElements(
 const SVG_CACHE_MAX = 64;
 type CacheEntry = { elements: React.ReactNode[]; badges: React.ReactNode[] };
 const svgCache = new Map<string, CacheEntry>();
+let _svgBuildCount = 0;
 
 function makeCacheKey(
   pattern: string, size: number, darkMode: boolean,
@@ -293,6 +294,7 @@ function cachedBuild(
     return cached;
   }
   const result = buildSvgElements(pattern, size, darkMode, fp, trueMag, mag, illum, clickVal, clickUnits, performanceMode);
+  _svgBuildCount++;
   svgCache.set(key, result);
   // Evict oldest if over limit
   if (svgCache.size > SVG_CACHE_MAX) {
@@ -306,6 +308,10 @@ function cachedBuild(
 export function clearSvgCache() { svgCache.clear(); }
 /** Exposed for testing — returns current cache size */
 export function svgCacheSize() { return svgCache.size; }
+/** Exposed for testing/devtools — returns how many times SVG was actually rebuilt (cache misses) */
+export function svgBuildCount() { return _svgBuildCount; }
+/** Exposed for testing — resets build counter */
+export function resetSvgBuildCount() { _svgBuildCount = 0; }
 
 const ReticleViewer = React.memo(function ReticleViewer({ reticle, size = 400, darkMode = true, currentMagnification, performanceMode = false }: Props) {
   // Stabilise extracted params: only update the object ref when a scalar value actually changes

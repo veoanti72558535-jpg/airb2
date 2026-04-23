@@ -244,8 +244,12 @@ describe('ReticleViewer', () => {
       if (lines200.length > 0) {
         const x1_200 = Number(lines200[0].getAttribute('x1'));
         const x1_400 = Number(lines400[0].getAttribute('x1'));
-        // x = size/2 + milX * size/20 → ratio should be 2
-        expect(x1_400 / x1_200).toBeCloseTo(2, 2);
+        // x = size/2 + milX * size/20 → if milX=0, x=size/2, check absolute scaling
+        if (x1_200 !== 0) {
+          expect(x1_400 / x1_200).toBeCloseTo(2, 2);
+        } else {
+          expect(x1_400).toBe(0);
+        }
       }
     }
   });

@@ -43,6 +43,9 @@ import { ReticleAssistPanel } from '@/components/calc/ReticleAssistPanel';
 import { ZeroIntersectionsCard } from '@/components/calc/ZeroIntersectionsCard';
 import { TrajectoryMiniChart } from '@/components/calc/TrajectoryMiniChart';
 import { PbrCard } from '@/components/calc/PbrCard';
+import { ZeroAdvisorButton } from '@/components/ai/agents/ZeroAdvisorButton';
+import { WindCorrectionCoachButton } from '@/components/ai/agents/WindCorrectionCoachButton';
+import { EnergyAdvisorButton } from '@/components/ai/agents/EnergyAdvisorButton';
 import { computeZeroIntersections } from '@/lib/zero-intersections';
 import { computePointBlankRange } from '@/lib/pbr';
 import { usePbrPrefs } from '@/hooks/use-pbr-prefs';
@@ -663,6 +666,29 @@ export default function QuickCalc() {
           onZeroWeatherReplace={next => update({ zeroWeather: next })}
           advanced={advanced}
         />
+        {/* A7 — AI Zero advisor. Pure assistance, never alters user's zero. */}
+        <div className="md:col-span-2 -mt-2">
+          <ZeroAdvisorButton
+            projectile={{
+              name: (() => {
+                const p = form.projectileId
+                  ? projectiles.find(pp => pp.id === form.projectileId)
+                  : null;
+                return p ? `${p.brand} ${p.model}` : 'Custom';
+              })(),
+              weightGrains: form.projectileWeight,
+              bc: form.bc,
+            }}
+            muzzleVelocityMs={form.muzzleVelocity}
+            typicalDistancesM={
+              form.useRange
+                ? [form.minRange || 0, form.targetDistance, form.maxRange]
+                    .filter(v => v > 0)
+                : [form.targetDistance].filter(v => v > 0)
+            }
+            usage="hunting"
+          />
+        </div>
         <DistanceSection
           targetDistance={form.targetDistance}
           useRange={form.useRange}
@@ -731,6 +757,17 @@ export default function QuickCalc() {
             energyThresholdJ={energyThresholdJ}
           />
 
+          {/* A9 — Energy hunting advisor for the hero distance. Optional
+              game-size selector lets the model qualify the recommendation. */}
+          {heroResult && heroResult.energy > 0 && (
+            <div className="rounded-xl border border-border bg-card/60 p-3">
+              <EnergyAdvisorButton
+                energyJ={heroResult.energy}
+                distanceM={heroResult.range}
+              />
+            </div>
+          )}
+
           {/* Tranche O — Near / Far Zero, dérivés de `results`. Mémoïsé pour
               partager la donnée entre la carte dédiée et les marqueurs de
               ligne dans la BallisticTable. */}
@@ -790,6 +827,26 @@ export default function QuickCalc() {
               results={results}
               distances={buildDistanceList(tableConfig).filter(d => d > 0)}
             />
+          )}
+
+          {/* D4 — Wind correction coach. Visible only when wind is non-zero;
+              pure assistance, never alters the engine results. */}
+          {results.length > 1 && form.weather.windSpeed > 0 && (
+            <div className="rounded-xl border border-border bg-card/60 p-3">
+              <WindCorrectionCoachButton
+                windSpeedMs={form.weather.windSpeed}
+                windAngleDeg={form.weather.windAngle}
+                windDriftResults={results
+                  .filter(r => r.range > 0)
+                  .slice(0, 8)
+                  .map(r => ({
+                    distanceM: r.range,
+                    driftMm: r.windDrift,
+                    driftMOA: r.windDriftMOA,
+                    driftMRAD: r.windDriftMRAD,
+                  }))}
+              />
+            </div>
           )}
 
           <div className="rounded-xl border border-border bg-card/60 p-3 space-y-2">

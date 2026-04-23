@@ -7,6 +7,7 @@ import { calculateTrajectory } from '@/lib/ballistics';
 import { projectileStore } from '@/lib/storage';
 import type { Session, CalibrationHistoryEntry } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
+import { TruingExplainerButton } from '@/components/ai/agents/TruingExplainerButton';
 
 // ── Validation constants ────────────────────────────────────────────────
 const DIST_MIN = 5;
@@ -247,6 +248,16 @@ export function TruingPanel({ session, onBcCorrected, allowNewProjectile = true 
               <span className="text-muted-foreground">{t('truing.converged')}</span>
               <div>{result.iterations}</div>
             </div>
+          </div>
+
+          {/* A6 — AI explainer for the truing factor. Pure assistance, no
+              calculation impact. Shown next to the data grid. */}
+          <div data-testid="truing-explainer-slot">
+            <TruingExplainerButton
+              factor={result.factor}
+              originalBc={result.originalBc}
+              correctedBc={result.correctedBc}
+            />
           </div>
 
           {/* Warnings */}

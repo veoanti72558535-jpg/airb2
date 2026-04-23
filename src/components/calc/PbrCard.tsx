@@ -14,6 +14,7 @@ import { usePbrPrefs, DEFAULT_PBR_VITAL_ZONE_M } from '@/hooks/use-pbr-prefs';
 import { cn } from '@/lib/utils';
 import type { BallisticResult } from '@/lib/types';
 import { computePointBlankRange } from '@/lib/pbr';
+import { PbrExplainerButton } from '@/components/ai/agents/PbrExplainerButton';
 
 interface Props {
   rows: BallisticResult[];
@@ -167,6 +168,16 @@ export function PbrCard({
                 value={fmtDist(pbr.maxOrdinateDistance)}
                 testId="pbr-max-ordinate-distance"
                 muted
+              />
+            </div>
+          )}
+
+          {pbr.startDistance != null && pbr.endDistance != null && (
+            <div className="pt-1.5 border-t border-border/30">
+              <PbrExplainerButton
+                pbrMin={pbr.startDistance}
+                pbrMax={pbr.endDistance}
+                killZoneMm={vitalZoneM * 1000}
               />
             </div>
           )}

@@ -43,6 +43,8 @@ import { ReticleAssistPanel } from '@/components/calc/ReticleAssistPanel';
 import { ZeroIntersectionsCard } from '@/components/calc/ZeroIntersectionsCard';
 import { TrajectoryMiniChart } from '@/components/calc/TrajectoryMiniChart';
 import { PbrCard } from '@/components/calc/PbrCard';
+import { ZeroAdvisorButton } from '@/components/ai/agents/ZeroAdvisorButton';
+import { WindCorrectionCoachButton } from '@/components/ai/agents/WindCorrectionCoachButton';
 import { computeZeroIntersections } from '@/lib/zero-intersections';
 import { computePointBlankRange } from '@/lib/pbr';
 import { usePbrPrefs } from '@/hooks/use-pbr-prefs';

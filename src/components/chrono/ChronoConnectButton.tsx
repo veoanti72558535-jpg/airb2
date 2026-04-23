@@ -78,7 +78,7 @@ export default function ChronoConnectButton({ onVelocity, onStateChange }: Chron
   if (state === 'connected') {
     return (
       <div className="flex items-center gap-3">
-        <Badge variant="default" className="bg-green-600 text-white gap-1.5">
+        <Badge variant="default" className="bg-primary text-primary-foreground gap-1.5">
           <Wifi className="h-3 w-3" />
           {t('chrono.connected')}
         </Badge>

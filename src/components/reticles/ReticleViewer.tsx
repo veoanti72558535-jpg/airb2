@@ -13,6 +13,8 @@ interface Props {
   size?: number;
   darkMode?: boolean;
   currentMagnification?: number;
+  /** Performance mode: skip badges, labels, and fine ticks for faster rendering during drag/scroll */
+  performanceMode?: boolean;
 }
 
 function getPatternType(r: Props['reticle']): string {
@@ -44,6 +46,7 @@ function buildSvgElements(
   pattern: string, size: number, darkMode: boolean,
   fp: string | null, trueMag: number | null, currentMagnification: number | undefined,
   illum: boolean, clickVal: number | null, clickUnits: string | null,
+  performanceMode: boolean,
 ): { elements: React.ReactNode[]; badges: React.ReactNode[] } {
   const cx = size / 2;
   const cy = size / 2;
@@ -88,18 +91,19 @@ function buildSvgElements(
         const d = i4 * 0.5;
         if (i4 % 2 === 0) {
           elements.push(hTick(-d, 0, tickL));
-          elements.push(
+          if (!performanceMode) elements.push(
             <text key={`bdc-lbl-${i4}`} x={cx + tickL * sms} y={cy + d * sms + 3}
               fill={color} fontSize={Math.max(7, ms * 0.35)} textAnchor="start">{i4 / 2}</text>
           );
         } else {
-          elements.push(hTick(-d, 0, tickL * 0.5));
+          if (!performanceMode) elements.push(hTick(-d, 0, tickL * 0.5));
         }
       }
 
       // Windage ticks left/right
       for (let i = 2; i <= 10; i++) {
         const d = i * 0.5;
+        if (performanceMode && i % 2 !== 0) continue;
         const tw = i % 2 === 0 ? 0.3 : 0.15;
         elements.push(vTick(-d, 0, tw), vTick(d, 0, tw));
       }
@@ -153,10 +157,12 @@ function buildSvgElements(
       for (let i = 1; i <= 30; i++) {
         const d = i * moaMil;
         if (d > 9.5) break;
+        if (performanceMode && i % 5 !== 0) continue;
         const tw = i % 5 === 0 ? 0.4 : i % 2 === 0 ? 0.25 : 0.15;
         elements.push(hTick(d, 0, tw), hTick(-d, 0, tw));
         elements.push(vTick(d, 0, tw), vTick(-d, 0, tw));
         if (i % 5 === 0) {
+          if (performanceMode) continue;
           const fs = Math.max(6, ms * 0.3);
           elements.push(
             <text key={`moa-h-${i}`} x={cx + (tw / 2 + 0.15) * sms} y={cy - d * sms + 3} fill={color} fontSize={fs}>{i}</text>
@@ -170,12 +176,15 @@ function buildSvgElements(
       elements.push(L(-10, 0, 10, 0), L(0, -10, 0, 10));
       for (let i = 1; i <= 9; i++) {
         const full = i;
-        const half = i - 0.5;
         elements.push(hTick(full, 0, 0.35), hTick(-full, 0, 0.35));
         elements.push(vTick(full, 0, 0.35), vTick(-full, 0, 0.35));
-        elements.push(hTick(half, 0, 0.18), hTick(-half, 0, 0.18));
-        elements.push(vTick(half, 0, 0.18), vTick(-half, 0, 0.18));
+        if (!performanceMode) {
+          const half = i - 0.5;
+          elements.push(hTick(half, 0, 0.18), hTick(-half, 0, 0.18));
+          elements.push(vTick(half, 0, 0.18), vTick(-half, 0, 0.18));
+        }
         if (i % 2 === 0) {
+          if (performanceMode) continue;
           const fs = Math.max(6, ms * 0.3);
           elements.push(
             <text key={`mrad-h-${i}`} x={cx + 0.35 * sms} y={cy - full * sms + 3} fill={color} fontSize={fs}>{i}</text>
@@ -205,49 +214,51 @@ function buildSvgElements(
     default: {
       // Generic: simple cross + hash marks at 1 MIL
       elements.push(L(-10, 0, 10, 0), L(0, -10, 0, 10));
-      for (let i = 1; i <= 9; i++) {
+      for (let i = 1; i <= 9; i += (performanceMode ? 2 : 1)) {
         elements.push(hTick(i, 0, 0.2), hTick(-i, 0, 0.2));
         elements.push(vTick(i, 0, 0.2), vTick(-i, 0, 0.2));
       }
     }
   }
 
-  const badgeFontSize = Math.max(7, size * 0.025);
   const badges: React.ReactNode[] = [];
-  if (fp) {
-    badges.push(
-      <text key="fp-badge" x={4} y={badgeFontSize + 2} fill={color} fontSize={badgeFontSize} opacity={0.7}>{fp}</text>
-    );
-  }
-  if (illum) {
-    badges.push(
-      <text key="illum-badge" x={size - 4} y={badgeFontSize + 2} fill="red" fontSize={badgeFontSize} textAnchor="end" opacity={0.8}>ILLUM</text>
-    );
-  }
-  if (clickVal && clickUnits) {
-    badges.push(
-      <text key="click-badge" x={size - 4} y={size - 4} fill={color} fontSize={badgeFontSize} textAnchor="end" opacity={0.7}>
-        {clickVal} {clickUnits}
-      </text>
-    );
-  }
-  if (fp === 'SFP' && trueMag) {
-    badges.push(
-      <text key="sfp-cal" x={cx} y={size - 4} fill={color} fontSize={badgeFontSize} textAnchor="middle" opacity={0.5}>
-        @{trueMag}x
-      </text>
-    );
+  if (!performanceMode) {
+    const badgeFontSize = Math.max(7, size * 0.025);
+    if (fp) {
+      badges.push(
+        <text key="fp-badge" x={4} y={badgeFontSize + 2} fill={color} fontSize={badgeFontSize} opacity={0.7}>{fp}</text>
+      );
+    }
+    if (illum) {
+      badges.push(
+        <text key="illum-badge" x={size - 4} y={badgeFontSize + 2} fill="red" fontSize={badgeFontSize} textAnchor="end" opacity={0.8}>ILLUM</text>
+      );
+    }
+    if (clickVal && clickUnits) {
+      badges.push(
+        <text key="click-badge" x={size - 4} y={size - 4} fill={color} fontSize={badgeFontSize} textAnchor="end" opacity={0.7}>
+          {clickVal} {clickUnits}
+        </text>
+      );
+    }
+    if (fp === 'SFP' && trueMag) {
+      badges.push(
+        <text key="sfp-cal" x={cx} y={size - 4} fill={color} fontSize={badgeFontSize} textAnchor="middle" opacity={0.5}>
+          @{trueMag}x
+        </text>
+      );
+    }
   }
 
   return { elements, badges };
 }
 
-const ReticleViewer = React.memo(function ReticleViewer({ reticle, size = 400, darkMode = true, currentMagnification }: Props) {
+const ReticleViewer = React.memo(function ReticleViewer({ reticle, size = 400, darkMode = true, currentMagnification, performanceMode = false }: Props) {
   const { pattern, fp, trueMag, clickUnits, clickVal, illum, name } = extractReticleParams(reticle);
 
   const { elements, badges } = useMemo(
-    () => buildSvgElements(pattern, size, darkMode, fp, trueMag, currentMagnification, illum, clickVal, clickUnits),
-    [pattern, size, darkMode, fp, trueMag, currentMagnification, illum, clickVal, clickUnits],
+    () => buildSvgElements(pattern, size, darkMode, fp, trueMag, currentMagnification, illum, clickVal, clickUnits, performanceMode),
+    [pattern, size, darkMode, fp, trueMag, currentMagnification, illum, clickVal, clickUnits, performanceMode],
   );
 
   const bg = darkMode ? '#0a0a0a' : '#f5f5f5';

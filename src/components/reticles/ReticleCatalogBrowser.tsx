@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { Search, Download, Check, Heart } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { isSupabaseConfigured } from '@/integrations/supabase/client';
@@ -35,6 +35,15 @@ export default function ReticleCatalogBrowser() {
   const [favIds, setFavIds] = useState<Set<number>>(() => {
     try { const raw = localStorage.getItem('reticle_catalog_favorites'); return new Set(raw ? JSON.parse(raw) : []); } catch { return new Set(); }
   });
+
+  // Performance mode: activate during scroll to reduce SVG complexity
+  const [scrolling, setScrolling] = useState(false);
+  const scrollTimer = useRef<ReturnType<typeof setTimeout>>();
+  const handleScroll = useCallback(() => {
+    setScrolling(true);
+    clearTimeout(scrollTimer.current);
+    scrollTimer.current = setTimeout(() => setScrolling(false), 150);
+  }, []);
 
   // Load filter options once
   useEffect(() => {
@@ -136,13 +145,13 @@ export default function ReticleCatalogBrowser() {
       </div>
 
       {/* Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" onWheel={handleScroll}>
         {data.map(entry => {
           const imported = importedIds.has(entry.reticle_id) || isAlreadyImported(entry.reticle_id);
           return (
             <div key={entry.reticle_id} className="surface-elevated p-3 flex gap-3 items-start" data-testid={`catalog-item-${entry.reticle_id}`}>
               <div className="shrink-0">
-                <ReticleViewer reticle={entry} size={80} darkMode />
+                <ReticleViewer reticle={entry} size={80} darkMode performanceMode={scrolling} />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="font-semibold text-xs truncate" title={entry.name}>

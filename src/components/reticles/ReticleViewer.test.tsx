@@ -233,6 +233,30 @@ describe('ReticleViewer', () => {
 
   // ── Size scaling invariant ──
   it('all patterns scale linearly with size', () => {
+    // ── Performance mode reduces SVG elements ──
+  });
+
+  it('performanceMode reduces elements for mrad', () => {
+    const entry = makeEntry({ pattern_type: 'mrad' });
+    const { container: full } = render(<ReticleViewer reticle={entry} size={400} />);
+    const { container: perf } = render(<ReticleViewer reticle={entry} size={400} performanceMode />);
+    const fullLines = full.querySelectorAll('line').length;
+    const perfLines = perf.querySelectorAll('line').length;
+    expect(perfLines).toBeLessThan(fullLines);
+    // No text labels in perf mode
+    const perfTexts = perf.querySelectorAll('text').length;
+    expect(perfTexts).toBe(0);
+  });
+
+  it('performanceMode removes badges', () => {
+    const entry = makeEntry({ pattern_type: 'bdc', illuminated: true });
+    const { container } = render(<ReticleViewer reticle={entry} size={400} performanceMode />);
+    const texts = [...container.querySelectorAll('text')];
+    expect(texts.find(t => t.textContent === 'ILLUM')).toBeUndefined();
+    expect(texts.find(t => t.textContent === 'FFP')).toBeUndefined();
+  });
+
+  it('all patterns scale linearly with size', () => {
     const patterns = ['bdc', 'mildot', 'duplex', 'german', 'moa', 'mrad', 'chevron'] as const;
     for (const p of patterns) {
       const { container: c200 } = render(<ReticleViewer reticle={makeEntry({ pattern_type: p })} size={200} />);

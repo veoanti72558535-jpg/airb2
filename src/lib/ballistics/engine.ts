@@ -217,5 +217,36 @@ export function calculateTrajectory(input: BallisticInput): BallisticResult[] {
     }
   }
 
+  // ── Post-processing: slope & cant corrections ──────────────────────────
+  const slopeRad = input.slopeAngleDeg ? input.slopeAngleDeg * (Math.PI / 180) : 0;
+  const cantRad = input.cantAngleDeg ? input.cantAngleDeg * (Math.PI / 180) : 0;
+  const applySlope = slopeRad !== 0;
+  const applyCant = cantRad !== 0;
+
+  if (applySlope || applyCant) {
+    const cosSlopeSquared = applySlope ? Math.cos(slopeRad) * Math.cos(slopeRad) : 1;
+    const sinCant = applyCant ? Math.sin(cantRad) : 0;
+    const cosCantMinus1 = applyCant ? Math.cos(cantRad) - 1 : 0;
+
+    for (const r of results) {
+      if (r.range === 0) continue;
+
+      if (applySlope) {
+        r.dropAfterSlope = Math.round(r.drop * cosSlopeSquared * 10) / 10;
+      }
+
+      if (applyCant) {
+        // Use slope-corrected drop if available, otherwise raw drop
+        const effectiveDrop = applySlope ? r.dropAfterSlope! : r.drop;
+        const shift = -effectiveDrop * sinCant;
+        const dropCorr = effectiveDrop * cosCantMinus1;
+        r.cantWindageShift = Math.round(shift * 10) / 10;
+        r.cantDropCorrection = Math.round(dropCorr * 10) / 10;
+        // Add cant shift to total wind drift
+        r.windDrift = Math.round((r.windDrift + shift) * 10) / 10;
+      }
+    }
+  }
+
   return results;
 }

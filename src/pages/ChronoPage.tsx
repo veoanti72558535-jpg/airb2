@@ -1,4 +1,7 @@
 import React, { useState, useCallback } from 'react';
+import type { BleParseConfig } from '@/lib/chrono/fx-radar-ble';
+import { DEFAULT_BLE_PARSE_CONFIG } from '@/lib/chrono/fx-radar-ble';
+import ChronoBleSettings from '@/components/chrono/ChronoBleSettings';
 import { useI18n } from '@/lib/i18n';
 import { useAuth } from '@/lib/auth-context';
 import ChronoConnectButton from '@/components/chrono/ChronoConnectButton';
@@ -14,6 +17,8 @@ export default function ChronoPage() {
   const { user } = useAuth();
   const [measurements, setMeasurements] = useState<ChronoMeasurement[]>([]);
   const [saved, setSaved] = useState(false);
+  const [bleConfig, setBleConfig] = useState<BleParseConfig>(DEFAULT_BLE_PARSE_CONFIG);
+  const [bleConnected, setBleConnected] = useState(false);
 
   const handleVelocity = useCallback((v: number) => {
     setMeasurements(prev => [
@@ -42,7 +47,17 @@ export default function ChronoPage() {
     <div className="space-y-6">
       <h1 className="text-2xl font-heading font-bold">{t('chrono.title')}</h1>
 
-      <ChronoConnectButton onVelocity={handleVelocity} />
+      <ChronoConnectButton
+        onVelocity={handleVelocity}
+        bleConfig={bleConfig}
+        onStateChange={(s) => setBleConnected(s === 'connected')}
+      />
+
+      <ChronoBleSettings
+        value={bleConfig}
+        onChange={setBleConfig}
+        disabled={bleConnected}
+      />
 
       <ChronoMeasurementsList
         measurements={measurements}

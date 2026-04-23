@@ -15,6 +15,9 @@ import { calToken, buildCaliberCounts } from '@/lib/caliber';
 import { AdvancedDisclosure } from '@/components/AdvancedDisclosure';
 import { ImportPresetAirgunsModal } from '@/components/airguns/ImportPresetAirgunsModal';
 import { seedAirgunKey } from '@/lib/seed-airguns';
+import { TuneAdviceAgent } from '@/components/ai/agents/TuneAdviceAgent';
+import { AirgunReviewAgent } from '@/components/ai/agents/AirgunReviewAgent';
+import { AgentDialog } from '@/components/ai/agents/AgentDialog';
 
 const TWIST_OPTIONS = [12, 14, 16, 18, 20, 22, 24, 28, 32];
 

@@ -1,5 +1,5 @@
-import { describe, it, expect, test, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, it, expect, test, beforeEach, vi } from 'vitest';
+import { render, screen, act } from '@testing-library/react';
 import ReticleViewer, { clearSvgCache, svgCacheSize } from './ReticleViewer';
 import type { ReticleCatalogEntry } from '@/lib/reticles-catalog-repo';
 
@@ -312,6 +312,86 @@ describe('ReticleViewer', () => {
       // Back to normal → cache hit on first entry
       render(<ReticleViewer reticle={entry} size={80} />);
       expect(svgCacheSize()).toBe(2);
+    });
+  });
+
+  // ── Memoization stability tests ──
+  describe('memoization stability', () => {
+    beforeEach(() => clearSvgCache());
+
+    it('does not rebuild SVG when reticle object ref changes but values are identical', () => {
+      clearSvgCache();
+      const props1 = makeEntry({ pattern_type: 'mrad', focal_plane: 'FFP', illuminated: false });
+      const { container, rerender } = render(<ReticleViewer reticle={props1} size={400} />);
+      expect(svgCacheSize()).toBe(1);
+      const linesBefore = container.querySelectorAll('line').length;
+
+      // New object ref, same values → cache hit, no new entry
+      const props2 = makeEntry({ pattern_type: 'mrad', focal_plane: 'FFP', illuminated: false });
+      expect(props1).not.toBe(props2); // different ref
+      rerender(<ReticleViewer reticle={props2} size={400} />);
+      expect(svgCacheSize()).toBe(1); // still 1 — cache reused
+      expect(container.querySelectorAll('line').length).toBe(linesBefore);
+    });
+
+    it('rebuilds SVG when pattern changes', () => {
+      clearSvgCache();
+      const { container, rerender } = render(
+        <ReticleViewer reticle={makeEntry({ pattern_type: 'mrad' })} size={400} />
+      );
+      const mradLines = container.querySelectorAll('line').length;
+      expect(svgCacheSize()).toBe(1);
+
+      rerender(<ReticleViewer reticle={makeEntry({ pattern_type: 'duplex' })} size={400} />);
+      expect(svgCacheSize()).toBe(2); // new cache entry
+      expect(container.querySelectorAll('line').length).not.toBe(mradLines);
+    });
+
+    it('rebuilds SVG when illuminated changes', () => {
+      clearSvgCache();
+      const { container, rerender } = render(
+        <ReticleViewer reticle={makeEntry({ pattern_type: 'bdc', illuminated: false })} size={400} />
+      );
+      const circlesBefore = container.querySelectorAll('circle').length;
+      expect(svgCacheSize()).toBe(1);
+
+      rerender(<ReticleViewer reticle={makeEntry({ pattern_type: 'bdc', illuminated: true })} size={400} />);
+      expect(svgCacheSize()).toBe(2);
+      // Illuminated BDC adds a red center circle
+      expect(container.querySelectorAll('circle').length).toBeGreaterThan(circlesBefore);
+    });
+
+    it('rebuilds SVG when focal_plane changes', () => {
+      clearSvgCache();
+      const { container, rerender } = render(
+        <ReticleViewer reticle={makeEntry({ pattern_type: 'mrad', focal_plane: 'FFP' })} size={400} />
+      );
+      expect(svgCacheSize()).toBe(1);
+
+      rerender(<ReticleViewer reticle={makeEntry({ pattern_type: 'mrad', focal_plane: 'SFP', true_magnification: 25 })} size={400} currentMagnification={10} />);
+      expect(svgCacheSize()).toBe(2);
+    });
+
+    it('rebuilds SVG when size changes', () => {
+      clearSvgCache();
+      const entry = makeEntry({ pattern_type: 'mildot' });
+      const { container, rerender } = render(<ReticleViewer reticle={entry} size={200} />);
+      expect(svgCacheSize()).toBe(1);
+
+      rerender(<ReticleViewer reticle={entry} size={400} />);
+      expect(svgCacheSize()).toBe(2);
+    });
+
+    it('does NOT rebuild when unrelated props stay the same', () => {
+      clearSvgCache();
+      const entry = makeEntry({ pattern_type: 'duplex', focal_plane: 'FFP', illuminated: false });
+      const { rerender } = render(<ReticleViewer reticle={entry} size={400} darkMode />);
+      expect(svgCacheSize()).toBe(1);
+
+      // Re-render with identical values but fresh entry object + same darkMode
+      const entry2 = makeEntry({ pattern_type: 'duplex', focal_plane: 'FFP', illuminated: false });
+      rerender(<ReticleViewer reticle={entry2} size={400} darkMode />);
+      expect(svgCacheSize()).toBe(1); // no new entry
     });
   });
 });

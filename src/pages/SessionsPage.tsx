@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { History, Star, Trash2, Search, Crosshair, Play, Filter, X, ArrowLeftRight, CheckSquare, RotateCcw, Target } from 'lucide-react';
+import { History, Star, Trash2, Search, Crosshair, Play, Filter, X, ArrowLeftRight, CheckSquare, RotateCcw, Target, Camera } from 'lucide-react';
 import { toast } from 'sonner';
 import { useI18n } from '@/lib/i18n';
 import { calculateTrajectory } from '@/lib/ballistics';
@@ -38,6 +38,7 @@ import {
 } from '@/lib/ballistic-table';
 import { FieldValidation } from '@/components/sessions/FieldValidation';
 import { TruingPanel } from '@/components/sessions/TruingPanel';
+import { TargetPhotoAnalyzer } from '@/components/sessions/TargetPhotoAnalyzer';
 import { CalibrationHistoryBlock } from '@/components/sessions/CalibrationHistoryBlock';
 import {
   Dialog,
@@ -70,6 +71,7 @@ export default function SessionsPage() {
   // confirmation does, and it always creates a NEW linked session.
   const [recalcSource, setRecalcSource] = useState<Session | null>(null);
   const [truingSource, setTruingSource] = useState<Session | null>(null);
+  const [targetSource, setTargetSource] = useState<Session | null>(null);
 
   const airguns = useMemo(() => airgunStore.getAll(), []);
   const projectiles = useMemo(() => projectileStore.getAll(), []);
@@ -419,6 +421,14 @@ export default function SessionsPage() {
                       <Target className="h-3 w-3" />
                       {t('truing.button')}
                     </button>}
+                    <button
+                      type="button"
+                      onClick={() => setTargetSource(s)}
+                      className="w-full inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md border border-dashed border-border text-[11px] text-muted-foreground hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-colors"
+                    >
+                      <Camera className="h-3 w-3" />
+                      {t('target.analyzeCard' as any)}
+                    </button>
                   </div>
                 )}
               </div>
@@ -486,6 +496,21 @@ export default function SessionsPage() {
           toast.success(t('recalculate.toastSuccess'), { description: created.name });
         }}
       />
+
+      {/* Target photo analyzer dialog */}
+      <Dialog open={targetSource !== null} onOpenChange={(open) => { if (!open) setTargetSource(null); }}>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{t('target.title' as any)}</DialogTitle>
+          </DialogHeader>
+          {targetSource && (
+            <TargetPhotoAnalyzer
+              sessionId={targetSource.id}
+              distanceM={targetSource.input.zeroRange}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </motion.div>
   );
 }

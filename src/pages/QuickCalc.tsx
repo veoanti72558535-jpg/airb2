@@ -137,6 +137,8 @@ function defaultForm(): FormState {
     weather: defaultWeather(),
     useZeroWeather: false,
     zeroWeather: defaultWeather(),
+    slopeAngleDeg: 0,
+    cantAngleDeg: 0,
   };
 }
 

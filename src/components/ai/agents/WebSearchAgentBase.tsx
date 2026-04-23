@@ -102,8 +102,8 @@ export function WebSearchAgentBase<T>({
         { agent_slug: agentSlug, prompt, forceRefresh },
         user?.id ?? '',
       );
-      if (!result.ok) {
-        setState({ status: 'error', message: result.error });
+      if (result.ok !== true) {
+        setState({ status: 'error', message: (result as { error: string }).error });
         return;
       }
       const parsed = tryParseJson<T>(result.data.text);

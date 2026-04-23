@@ -522,6 +522,30 @@ export default function ProjectilesPage() {
                     </div>
                   </div>
                 </Link>
+                <div className="mt-2 flex flex-wrap gap-1.5 border-t border-border/40 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => { setAiSeed(`${p.brand} ${p.model} ${p.weight}gr ${p.caliber}`); setAiOpen('bc'); }}
+                    className="text-[10px] px-1.5 py-0.5 rounded border border-primary/30 text-primary/80 hover:bg-primary/10"
+                    data-testid={`projectile-ai-bc-${p.id}`}
+                  >
+                    {t('agentSearch.bcPublished' as any)}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setAiSeed(`${p.brand} ${p.model} ${p.caliber}`); setAiOpen('velocity'); }}
+                    className="text-[10px] px-1.5 py-0.5 rounded border border-primary/30 text-primary/80 hover:bg-primary/10"
+                  >
+                    {t('agentSearch.velocityForums' as any)}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setAiSeed(`${p.brand} ${p.model}`); setAiOpen('review'); }}
+                    className="text-[10px] px-1.5 py-0.5 rounded border border-primary/30 text-primary/80 hover:bg-primary/10"
+                  >
+                    {t('agentSearch.reviews' as any)}
+                  </button>
+                </div>
               </div>
             );
           })}
@@ -568,6 +592,36 @@ export default function ProjectilesPage() {
           });
         }}
       />
+
+      {/* AI agent dialogs */}
+      <AgentDialog
+        open={aiOpen === 'search'}
+        onOpenChange={(o) => setAiOpen(o ? 'search' : null)}
+        title={t('agentSearch.searchProjectile' as any)}
+      >
+        <ProjectileSearchAgent initialQuery={aiSeed} onResult={refresh} />
+      </AgentDialog>
+      <AgentDialog
+        open={aiOpen === 'bc'}
+        onOpenChange={(o) => setAiOpen(o ? 'bc' : null)}
+        title={t('agentSearch.bcPublished' as any)}
+      >
+        <BcSearchAgent initialQuery={aiSeed} />
+      </AgentDialog>
+      <AgentDialog
+        open={aiOpen === 'velocity'}
+        onOpenChange={(o) => setAiOpen(o ? 'velocity' : null)}
+        title={t('agentSearch.velocityForums' as any)}
+      >
+        <VelocityForumAgent initialQuery={aiSeed} />
+      </AgentDialog>
+      <AgentDialog
+        open={aiOpen === 'review'}
+        onOpenChange={(o) => setAiOpen(o ? 'review' : null)}
+        title={t('agentSearch.reviews' as any)}
+      >
+        <AirgunReviewAgent initialQuery={aiSeed} />
+      </AgentDialog>
     </motion.div>
   );
 }

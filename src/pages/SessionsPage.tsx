@@ -36,6 +36,7 @@ import {
 } from '@/lib/ballistic-table';
 import { FieldValidation } from '@/components/sessions/FieldValidation';
 import { TruingPanel } from '@/components/sessions/TruingPanel';
+import { CalibrationHistoryBlock } from '@/components/sessions/CalibrationHistoryBlock';
 import {
   Dialog,
   DialogContent,
@@ -319,6 +320,12 @@ export default function SessionsPage() {
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <span className="font-semibold text-sm truncate">{s.name}</span>
                       <EngineBadge session={s} size="xs" />
+                     {s.calibrationHistory && s.calibrationHistory.length > 0 && (
+                       <span className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded bg-primary/15 text-primary">
+                         <Target className="h-2.5 w-2.5" />
+                         {t('truing.calibrated')} ({s.calibrationHistory.length})
+                       </span>
+                     )}
                     </div>
                     <div className="text-xs text-muted-foreground font-mono mt-1">
                       {s.input.muzzleVelocity} m/s • BC {s.input.bc} • {s.input.projectileWeight} gr • Zero {s.input.zeroRange}m
@@ -383,6 +390,8 @@ export default function SessionsPage() {
                     <CalculationMetadataBlock session={s} />
                     {/* Field validation — terrain measurements vs predictions */}
                     <FieldValidation session={s} />
+                    {/* Calibration history */}
+                    <CalibrationHistoryBlock history={s.calibrationHistory ?? []} />
                     {/* Tranche H + J — Table balistique configurable +
                         assistant réticule synchronisé sur la même grille.
                         Lit les résultats figés, aucun recalcul moteur. */}
@@ -435,9 +444,14 @@ export default function SessionsPage() {
             <TruingPanel
               session={truingSource}
               onBcCorrected={(correctedBc, projectileId) => {
+              onBcCorrected={(correctedBc, projectileId, calibrationEntry) => {
                 if (!truingSource) return;
+                const prevHistory = truingSource.calibrationHistory ?? [];
                 sessionStore.update(truingSource.id, {
                   input: { ...truingSource.input, bc: correctedBc },
+                  ...(calibrationEntry
+                    ? { calibrationHistory: [...prevHistory, calibrationEntry] }
+                    : {}),
                 });
                 refresh();
                 setTruingSource(null);

@@ -275,6 +275,14 @@ export function BallisticTable({
                         {t('ballisticTable.drop')} ({lengthUnit})
                       </th>
                     )}
+                    {showSlope && isColumnVisible(cfg, 'drop') && (
+                      <th data-testid="bt-th-dropCorrected" className="text-right py-1.5 px-2">
+                        <span className="inline-flex items-center gap-0.5">
+                          <Mountain className="h-3 w-3 text-primary" />
+                          {t('calc.dropCorrected' as any) || 'Corrected'} ({lengthUnit})
+                        </span>
+                      </th>
+                    )}
                     {isColumnVisible(cfg, 'holdover') && (
                       <th data-testid="bt-th-holdover" className="text-right py-1.5 px-2">
                         {t('ballisticTable.holdover')} ({clickUnit})
@@ -308,6 +316,14 @@ export function BallisticTable({
                     {isColumnVisible(cfg, 'tof') && (
                       <th data-testid="bt-th-tof" className="text-right py-1.5 pl-2">
                         {t('ballisticTable.timeOfFlight')} (s)
+                      </th>
+                    )}
+                    {showCant && (
+                      <th data-testid="bt-th-cantDrift" className="text-right py-1.5 px-2">
+                        <span className="inline-flex items-center gap-0.5">
+                          <RotateCw className="h-3 w-3 text-primary" />
+                          {t('calc.cantDrift' as any) || 'Cant'} ({lengthUnit})
+                        </span>
                       </th>
                     )}
                     <th className="py-1.5 pl-2 w-0" />

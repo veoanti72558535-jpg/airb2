@@ -330,6 +330,16 @@ export interface BallisticInput {
    * existing call site.
    */
   engineConfig?: import('./ballistics/types').EngineConfig;
+  /**
+   * Shooting angle in degrees (positive = uphill, negative = downhill).
+   * 0 = level shot (default). Applies Improved Rifleman's Rule: drop × cos²(θ).
+   */
+  slopeAngleDeg?: number;
+  /**
+   * Rifle cant angle in degrees (positive = tilted right, negative = left).
+   * 0 = upright (default).
+   */
+  cantAngleDeg?: number;
 }
 
 export interface BallisticResult {
@@ -357,6 +367,12 @@ export interface BallisticResult {
   spinDrift?: number;
   clicksElevation?: number;
   clicksWindage?: number;
+  /** Drop corrected for slope angle (mm). Absent when slopeAngleDeg is 0 or unset. */
+  dropAfterSlope?: number;
+  /** Lateral shift due to rifle cant (mm). Positive = right. */
+  cantWindageShift?: number;
+  /** Vertical correction due to cant (mm). */
+  cantDropCorrection?: number;
 }
 
 /**

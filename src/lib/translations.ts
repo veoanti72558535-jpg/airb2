@@ -1529,6 +1529,36 @@ const fr = {
   'reticles.catalog.favorites': 'Favoris catalogue',
 } as const;
 
+// ── Truing (BC calibration) — FR ────────────────────────────────────────
+const truingFr = {
+  'truing.title': 'Calibration BC (Truing)',
+  'truing.subtitle': 'Recalibrage depuis tirs réels',
+  'truing.measuredDist': 'Distance de mesure (m)',
+  'truing.measuredDrop': 'Drop mesuré (mm)',
+  'truing.dropHint': 'Négatif = sous la LOS, Positif = au-dessus',
+  'truing.enginePredicts': 'Le moteur prédit',
+  'truing.atDistance': 'à cette distance',
+  'truing.calculate': 'Calculer le BC corrigé',
+  'truing.originalBc': 'BC original',
+  'truing.correctedBc': 'BC corrigé',
+  'truing.factor': 'Facteur de correction',
+  'truing.predictedBefore': 'Prédiction avant',
+  'truing.predictedAfter': 'Prédiction après',
+  'truing.measured': 'Drop mesuré',
+  'truing.converged': 'Itérations',
+  'truing.warnExtreme': 'Facteur hors plage — vérifiez votre mesure',
+  'truing.warnNoConv': 'Pas de convergence — drop inaccessible',
+  'truing.confirmExtreme': 'Appliquer malgré tout',
+  'truing.saveNew': 'Sauvegarder comme nouveau projectile',
+  'truing.applySession': 'Appliquer à cette session',
+  'truing.restart': 'Recommencer',
+  'truing.bcReduced': 'BC réduit',
+  'truing.bcIncreased': 'BC augmenté',
+  'truing.bcStable': 'BC quasi identique',
+  'truing.button': 'Calibrer BC (Truing)',
+  'truing.created': 'Projectile calibré créé',
+} as const;
+
 const en: Record<keyof typeof fr, string> = {
   'nav.home': 'Home',
   'nav.quickCalc': 'Calc',

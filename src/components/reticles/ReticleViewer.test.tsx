@@ -1,6 +1,6 @@
 import { describe, it, expect, test, beforeEach, vi } from 'vitest';
 import { render, screen, act } from '@testing-library/react';
-import ReticleViewer, { clearSvgCache, svgCacheSize } from './ReticleViewer';
+import ReticleViewer, { clearSvgCache, svgCacheSize, svgBuildCount, resetSvgBuildCount } from './ReticleViewer';
 import type { ReticleCatalogEntry } from '@/lib/reticles-catalog-repo';
 
 function makeEntry(overrides: Partial<ReticleCatalogEntry> = {}): ReticleCatalogEntry {
@@ -504,6 +504,40 @@ describe('ReticleViewer', () => {
       // Re-render at size 10 → cache hit
       rerender(<ReticleViewer reticle={entry} size={10} />);
       expect(svgCacheSize()).toBe(2);
+    });
+  });
+
+  // ── Build count tracking ──
+  describe('svgBuildCount', () => {
+    beforeEach(() => { clearSvgCache(); resetSvgBuildCount(); });
+
+    it('increments on cache miss, not on hit', () => {
+      const entry = makeEntry({ pattern_type: 'mrad' });
+      expect(svgBuildCount()).toBe(0);
+      const { rerender } = render(<ReticleViewer reticle={entry} size={400} />);
+      expect(svgBuildCount()).toBe(1);
+      // Same params → cache hit, count unchanged
+      rerender(<ReticleViewer reticle={entry} size={400} />);
+      expect(svgBuildCount()).toBe(1);
+      // Different size → miss
+      rerender(<ReticleViewer reticle={entry} size={200} />);
+      expect(svgBuildCount()).toBe(2);
+    });
+
+    it('rapid re-renders with 3 alternating sizes produce only 3 builds', () => {
+      const entry = makeEntry({ pattern_type: 'bdc' });
+      const { rerender } = render(<ReticleViewer reticle={entry} size={100} />);
+      for (const s of [200, 300, 100, 200, 300, 100, 200, 300]) {
+        rerender(<ReticleViewer reticle={entry} size={s} />);
+      }
+      expect(svgBuildCount()).toBe(3);
+    });
+
+    it('resetSvgBuildCount zeroes the counter', () => {
+      render(<ReticleViewer reticle={makeEntry({ pattern_type: 'duplex' })} size={400} />);
+      expect(svgBuildCount()).toBeGreaterThan(0);
+      resetSvgBuildCount();
+      expect(svgBuildCount()).toBe(0);
     });
   });
 });

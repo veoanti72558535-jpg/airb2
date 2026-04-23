@@ -147,7 +147,7 @@ export function TargetPhotoAnalyzer({ sessionId, distanceM: initialDistance, onA
   const linkToSession = useCallback(async () => {
     if (!result || !sessionId || !user?.id) return;
     const dist = Number(distance);
-    await saveFieldMeasurement(
+    const res = await saveFieldMeasurement(
       {
         sessionId,
         distanceM: dist,
@@ -163,8 +163,12 @@ export function TargetPhotoAnalyzer({ sessionId, distanceM: initialDistance, onA
       },
       user.id,
     );
-    setLinked(true);
-    toast.success(t('target.linkedToast' as any));
+    if (res.ok) {
+      setLinked(true);
+      toast.success(t('target.linkedToast' as any));
+    } else {
+      toast.error(t('target.linkError' as any));
+    }
   }, [result, sessionId, user?.id, distance, t]);
 
   const copyCorrections = useCallback(async () => {

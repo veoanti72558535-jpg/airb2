@@ -15,7 +15,7 @@ vi.mock('@/lib/ai/agent-cache', () => ({
 }));
 
 vi.mock('@/lib/field-measurements-repo', () => ({
-  saveFieldMeasurement: vi.fn(() => Promise.resolve()),
+  saveFieldMeasurement: vi.fn(() => Promise.resolve({ ok: true, id: 'fm-1' })),
 }));
 
 vi.mock('@/lib/target-photo', async () => {

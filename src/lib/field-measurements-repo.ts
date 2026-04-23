@@ -22,23 +22,32 @@ export interface FieldMeasurement {
 export async function saveFieldMeasurement(
   measurement: FieldMeasurement,
   userId: string,
-): Promise<void> {
-  if (!supabase) return;
+): Promise<{ ok: true; id?: string } | { ok: false; error: string }> {
+  if (!supabase) return { ok: false, error: 'supabase-not-configured' };
   try {
-    const { error } = await supabase.from('field_measurements').insert({
-      user_id: userId,
-      session_id: measurement.sessionId,
-      distance_m: measurement.distanceM,
-      measured_drop_mm: measurement.measuredDropMm ?? null,
-      measured_velocity_ms: measurement.measuredVelocityMs ?? null,
-      measured_windage_mm: measurement.measuredWindageMm ?? null,
-      notes: measurement.notes ?? null,
-      conditions: measurement.conditions ?? null,
-      measured_at: measurement.measuredAt ?? new Date().toISOString(),
-    });
-    if (error) console.error('[field-measurements] save error:', error.message);
+    const { data, error } = await supabase
+      .from('field_measurements')
+      .insert({
+        user_id: userId,
+        session_id: measurement.sessionId,
+        distance_m: measurement.distanceM,
+        measured_drop_mm: measurement.measuredDropMm ?? null,
+        measured_velocity_ms: measurement.measuredVelocityMs ?? null,
+        measured_windage_mm: measurement.measuredWindageMm ?? null,
+        notes: measurement.notes ?? null,
+        conditions: measurement.conditions ?? null,
+        measured_at: measurement.measuredAt ?? new Date().toISOString(),
+      })
+      .select('id')
+      .single();
+    if (error) {
+      console.error('[field-measurements] save error:', error.message);
+      return { ok: false, error: error.message };
+    }
+    return { ok: true, id: data?.id };
   } catch (err) {
     console.error('[field-measurements] save exception:', err);
+    return { ok: false, error: err instanceof Error ? err.message : 'unknown-error' };
   }
 }
 

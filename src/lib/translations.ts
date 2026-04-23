@@ -1393,6 +1393,24 @@ const fr = {
   'auth.connectedAs': 'Connecté en tant que',
   'auth.syncEnabled': 'Synchronisation active',
   'auth.syncDisabled': 'Mode hors-ligne',
+
+  // Field validation
+  'field.validation.title': 'Validation terrain',
+  'field.validation.selectDistance': 'Distance mesurée',
+  'field.validation.measuredDrop': 'Chute mesurée (mm)',
+  'field.validation.measuredVelocity': 'Vitesse chrono (m/s)',
+  'field.validation.measuredWindage': 'Dérive mesurée (mm)',
+  'field.validation.predicted': 'Prédit',
+  'field.validation.measured': 'Mesuré',
+  'field.validation.delta': 'Écart',
+  'field.validation.accurate': 'Précis ✅',
+  'field.validation.moderateDelta': 'Écart modéré 🟡',
+  'field.validation.largeDelta': 'Écart important 🔴',
+  'field.validation.save': 'Enregistrer la mesure',
+  'field.validation.history': 'Mesures terrain',
+  'field.validation.recalibrationHint': 'Écart important : vérifiez votre BC ou vos conditions atmosphériques',
+  'field.validation.noMeasurements': 'Aucune mesure terrain',
+  'field.validation.notes': 'Notes',
 } as const;
 
 const en: Record<keyof typeof fr, string> = {

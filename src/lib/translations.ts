@@ -415,6 +415,9 @@ const fr = {
   'optics.noMatch': 'Aucune optique pour ces filtres.',
   'optics.resetFilters': 'Réinitialiser les filtres',
   // Tranche G — liaison Optic ↔ Reticle
+  'optics.editTitle': 'Modifier l\'optique',
+  'optics.addTitle': 'Nouvelle optique',
+  'optics.edited': 'Optique mise à jour',
   'optics.reticle.label': 'Réticule lié',
   'optics.reticle.none': 'Aucun réticule lié',
   'optics.reticle.link': 'Lier un réticule',
@@ -1917,6 +1920,9 @@ const en: Record<keyof typeof fr, string> = {
   'optics.noMatch': 'No optic for these filters.',
   'optics.resetFilters': 'Reset filters',
   // Tranche G — Optic ↔ Reticle link
+  'optics.editTitle': 'Edit optic',
+  'optics.addTitle': 'New optic',
+  'optics.edited': 'Optic updated',
   'optics.reticle.label': 'Linked reticle',
   'optics.reticle.none': 'No linked reticle',
   'optics.reticle.link': 'Link a reticle',

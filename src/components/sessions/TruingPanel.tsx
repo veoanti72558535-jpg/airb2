@@ -5,12 +5,24 @@ import { useI18n } from '@/lib/i18n';
 import { calibrateBC, type CalibrationResult } from '@/lib/calibration';
 import { calculateTrajectory } from '@/lib/ballistics';
 import { projectileStore } from '@/lib/storage';
-import type { Session } from '@/lib/types';
+import type { Session, CalibrationHistoryEntry } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
+
+// ── Validation constants ────────────────────────────────────────────────
+const DIST_MIN = 5;
+const DIST_MAX = 500;
+const DROP_MIN = -50_000;
+const DROP_MAX = 5_000;
+
+function dropPrecisionOk(v: number): boolean {
+  return Math.abs(v * 10 - Math.round(v * 10)) < 1e-9;
+}
 
 interface TruingPanelProps {
   session: Session;
-  onBcCorrected: (correctedBc: number, projectileId?: string) => void;
+  onBcCorrected: (correctedBc: number, projectileId?: string, calibrationEntry?: CalibrationHistoryEntry) => void;
+  /** When false, hides "save as new projectile" (Simple mode). Default true. */
+  allowNewProjectile?: boolean;
 }
 
 type Step = 'input' | 'result' | 'apply';
@@ -42,19 +54,47 @@ function enginePrediction(session: Session, distance: number): number | null {
   }
 }
 
-export function TruingPanel({ session, onBcCorrected }: TruingPanelProps) {
+export function TruingPanel({ session, onBcCorrected, allowNewProjectile = true }: TruingPanelProps) {
   const { t } = useI18n();
   const [step, setStep] = useState<Step>('input');
-  const [distance, setDistance] = useState(50);
+  const [distanceRaw, setDistanceRaw] = useState('50');
   const [dropMm, setDropMm] = useState('');
   const [result, setResult] = useState<CalibrationResult | null>(null);
   const [confirmExtreme, setConfirmExtreme] = useState(false);
+  const [errors, setErrors] = useState<{ distance?: string; drop?: string }>({});
 
+  const distance = parseFloat(distanceRaw) || 0;
   const predicted = useMemo(() => enginePrediction(session, distance), [session, distance]);
 
+  const validate = (): boolean => {
+    const next: { distance?: string; drop?: string } = {};
+    const d = parseFloat(distanceRaw);
+    if (!Number.isFinite(d)) {
+      next.distance = t('truing.errDistRequired');
+    } else if (d < DIST_MIN) {
+      next.distance = t('truing.errDistMin');
+    } else if (d > DIST_MAX) {
+      next.distance = t('truing.errDistMax');
+    } else if (d <= session.input.zeroRange) {
+      next.distance = t('truing.errDistBeyondZero').replace('{zero}', String(session.input.zeroRange));
+    }
+    const m = parseFloat(dropMm);
+    if (!dropMm.trim() || !Number.isFinite(m)) {
+      next.drop = t('truing.errDropRequired');
+    } else if (m < DROP_MIN) {
+      next.drop = t('truing.errDropMin');
+    } else if (m > DROP_MAX) {
+      next.drop = t('truing.errDropMax');
+    } else if (!dropPrecisionOk(m)) {
+      next.drop = t('truing.errDropPrecision');
+    }
+    setErrors(next);
+    return !next.distance && !next.drop;
+  };
+
   const handleCalculate = () => {
-    const measured = parseFloat(dropMm);
-    if (!Number.isFinite(measured)) return;
+    if (!validate()) return;
+    const measured = Math.round(parseFloat(dropMm) * 10) / 10;
     try {
       const r = calibrateBC({ session, measuredDistance: distance, measuredDropMm: measured });
       setResult(r);
@@ -64,6 +104,16 @@ export function TruingPanel({ session, onBcCorrected }: TruingPanelProps) {
       toast.error(e.message ?? 'Calibration error');
     }
   };
+
+  const buildEntry = (derivedProjectileId?: string): CalibrationHistoryEntry => ({
+    date: new Date().toISOString(),
+    originalBc: result!.originalBc,
+    correctedBc: result!.correctedBc,
+    factor: result!.factor,
+    measuredDistance: distance,
+    measuredDropMm: Math.round(parseFloat(dropMm) * 10) / 10,
+    derivedProjectileId,
+  });
 
   const handleSaveNewProjectile = () => {
     if (!result) return;
@@ -85,19 +135,21 @@ export function TruingPanel({ session, onBcCorrected }: TruingPanelProps) {
       notes: `BC calibré depuis ${baseName}. Facteur ×${result.factor.toFixed(3)}`,
     });
     toast.success(t('truing.created'));
-    onBcCorrected(result.correctedBc, newProj.id);
+    onBcCorrected(result.correctedBc, newProj.id, buildEntry(newProj.id));
   };
 
   const handleApplySession = () => {
     if (!result) return;
-    onBcCorrected(result.correctedBc, undefined);
+    onBcCorrected(result.correctedBc, undefined, buildEntry());
   };
 
   const handleRestart = () => {
     setStep('input');
     setResult(null);
     setDropMm('');
+    setDistanceRaw('50');
     setConfirmExtreme(false);
+    setErrors({});
   };
 
   const pctChange = result ? ((result.factor - 1) * 100).toFixed(1) : '';
@@ -118,12 +170,13 @@ export function TruingPanel({ session, onBcCorrected }: TruingPanelProps) {
             <label className="text-xs font-medium">{t('truing.measuredDist')}</label>
             <input
               type="number"
-              min={10}
-              max={500}
-              value={distance}
-              onChange={e => setDistance(Math.max(10, Math.min(500, parseInt(e.target.value) || 10)))}
-              className="mt-1 w-full bg-muted border border-border rounded-md px-3 py-1.5 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary"
+              min={DIST_MIN}
+              max={DIST_MAX}
+              value={distanceRaw}
+              onChange={e => { setDistanceRaw(e.target.value); setErrors(prev => ({ ...prev, distance: undefined })); }}
+              className={`mt-1 w-full bg-muted border rounded-md px-3 py-1.5 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary ${errors.distance ? 'border-destructive' : 'border-border'}`}
             />
+            {errors.distance && <p className="text-[10px] text-destructive mt-1">{errors.distance}</p>}
           </div>
           <div>
             <label className="text-xs font-medium">{t('truing.measuredDrop')}</label>
@@ -131,10 +184,11 @@ export function TruingPanel({ session, onBcCorrected }: TruingPanelProps) {
               type="number"
               step="0.1"
               value={dropMm}
-              onChange={e => setDropMm(e.target.value)}
+              onChange={e => { setDropMm(e.target.value); setErrors(prev => ({ ...prev, drop: undefined })); }}
               placeholder="-120"
-              className="mt-1 w-full bg-muted border border-border rounded-md px-3 py-1.5 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary"
+              className={`mt-1 w-full bg-muted border rounded-md px-3 py-1.5 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary ${errors.drop ? 'border-destructive' : 'border-border'}`}
             />
+            {errors.drop && <p className="text-[10px] text-destructive mt-1">{errors.drop}</p>}
             <p className="text-[10px] text-muted-foreground mt-1">{t('truing.dropHint')}</p>
           </div>
           {predicted !== null && (
@@ -145,7 +199,7 @@ export function TruingPanel({ session, onBcCorrected }: TruingPanelProps) {
           <button
             type="button"
             onClick={handleCalculate}
-            disabled={!dropMm || !Number.isFinite(parseFloat(dropMm))}
+            disabled={!distanceRaw || !dropMm}
             className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 disabled:opacity-40"
           >
             <ArrowRight className="h-3.5 w-3.5" />
@@ -223,14 +277,16 @@ export function TruingPanel({ session, onBcCorrected }: TruingPanelProps) {
           {/* Action buttons */}
           {(!result.warning || result.warning === 'extreme' && confirmExtreme) && (
             <div className="space-y-2">
-              <button
-                type="button"
-                onClick={handleSaveNewProjectile}
-                className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:opacity-90"
-              >
-                <Save className="h-3.5 w-3.5" />
-                {t('truing.saveNew')}
-              </button>
+              {allowNewProjectile && (
+                <button
+                  type="button"
+                  onClick={handleSaveNewProjectile}
+                  className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:opacity-90"
+                >
+                  <Save className="h-3.5 w-3.5" />
+                  {t('truing.saveNew')}
+                </button>
+              )}
               <button
                 type="button"
                 onClick={handleApplySession}

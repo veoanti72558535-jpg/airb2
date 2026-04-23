@@ -817,6 +817,26 @@ export default function QuickCalc() {
             />
           )}
 
+          {/* D4 — Wind correction coach. Visible only when wind is non-zero;
+              pure assistance, never alters the engine results. */}
+          {results.length > 1 && form.weather.windSpeed > 0 && (
+            <div className="rounded-xl border border-border bg-card/60 p-3">
+              <WindCorrectionCoachButton
+                windSpeedMs={form.weather.windSpeed}
+                windAngleDeg={form.weather.windAngle}
+                windDriftResults={results
+                  .filter(r => r.range > 0)
+                  .slice(0, 8)
+                  .map(r => ({
+                    distanceM: r.range,
+                    driftMm: r.windDrift,
+                    driftMOA: r.windDriftMOA,
+                    driftMRAD: r.windDriftMRAD,
+                  }))}
+              />
+            </div>
+          )}
+
           <div className="rounded-xl border border-border bg-card/60 p-3 space-y-2">
             <label className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium">
               {t('calc.saveSession')}

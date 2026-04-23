@@ -1576,6 +1576,14 @@ const fr = {
   'truing.history': 'Historique calibrations',
   'truing.viewProjectile': 'Voir le projectile',
   'truing.calibrated': 'BC calibré',
+  'truing.errDistMin': 'Distance min. : 5 m',
+  'truing.errDistMax': 'Distance max. : 500 m',
+  'truing.errDistRequired': 'Distance requise',
+  'truing.errDropRequired': 'Drop requis',
+  'truing.errDropMin': 'Drop min. : -50 000 mm',
+  'truing.errDropMax': 'Drop max. : 5 000 mm',
+  'truing.errDropPrecision': 'Précision max. : 0.1 mm',
+  'truing.errDistBeyondZero': 'Distance doit dépasser le zéro ({zero} m)',
 } as const;
 
 const en: Record<keyof typeof fr, string> = {

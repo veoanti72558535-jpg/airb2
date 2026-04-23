@@ -48,10 +48,10 @@ describe('calculateClickShift', () => {
     expect(r.shiftCm).toBe(10);
   });
 
-  // Test 8: 0.5 CM_100M × 1 click × 100 m → 5.00 mm
-  it('0.5 cm/100m × 1 click at 100 m = 5 mm', () => {
+  // Test 8: 0.5 CM_100M × 1 click × 100 m → 0.5 mm (0.5 cm/100m = 0.005 MRAD)
+  it('0.5 cm/100m × 1 click at 100 m = 0.5 mm', () => {
     const r = calculateClickShift({ clickValueNative: 0.5, clickUnit: 'CM_100M', numberOfClicks: 1, targetDistanceM: 100 });
-    expect(r.shiftMm).toBe(5);
+    expect(r.shiftMm).toBeCloseTo(0.5, 4);
   });
 
   // Test 10: perClickMm check

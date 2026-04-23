@@ -1,6 +1,6 @@
-import { describe, it, expect, test } from 'vitest';
+import { describe, it, expect, test, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import ReticleViewer from './ReticleViewer';
+import ReticleViewer, { clearSvgCache, svgCacheSize } from './ReticleViewer';
 import type { ReticleCatalogEntry } from '@/lib/reticles-catalog-repo';
 
 function makeEntry(overrides: Partial<ReticleCatalogEntry> = {}): ReticleCatalogEntry {
@@ -14,6 +14,8 @@ function makeEntry(overrides: Partial<ReticleCatalogEntry> = {}): ReticleCatalog
 }
 
 describe('ReticleViewer', () => {
+  beforeEach(() => clearSvgCache());
+
   it('renders bdc pattern with triangles', () => {
     const { container } = render(<ReticleViewer reticle={makeEntry({ pattern_type: 'bdc' })} size={400} />);
     const svg = container.querySelector('svg');
@@ -258,6 +260,7 @@ describe('ReticleViewer', () => {
 
   it('all patterns scale linearly with size', () => {
     const patterns = ['bdc', 'mildot', 'duplex', 'german', 'moa', 'mrad', 'chevron'] as const;
+    clearSvgCache();
     for (const p of patterns) {
       const { container: c200 } = render(<ReticleViewer reticle={makeEntry({ pattern_type: p })} size={200} />);
       const { container: c400 } = render(<ReticleViewer reticle={makeEntry({ pattern_type: p })} size={400} />);
@@ -276,5 +279,39 @@ describe('ReticleViewer', () => {
         }
       }
     }
+  });
+
+  // ── Cache tests ──
+  describe('SVG cache', () => {
+    beforeEach(() => clearSvgCache());
+
+    it('caches and reuses SVG for identical params', () => {
+      const entry = makeEntry({ pattern_type: 'mrad' });
+      expect(svgCacheSize()).toBe(0);
+      render(<ReticleViewer reticle={entry} size={400} />);
+      expect(svgCacheSize()).toBe(1);
+      // Second render with same params → cache hit, still 1
+      render(<ReticleViewer reticle={entry} size={400} />);
+      expect(svgCacheSize()).toBe(1);
+    });
+
+    it('creates separate entries for different params', () => {
+      const entry = makeEntry({ pattern_type: 'mrad' });
+      render(<ReticleViewer reticle={entry} size={200} />);
+      render(<ReticleViewer reticle={entry} size={400} />);
+      render(<ReticleViewer reticle={entry} size={400} darkMode={false} />);
+      expect(svgCacheSize()).toBe(3);
+    });
+
+    it('performanceMode toggle reuses cache on return', () => {
+      const entry = makeEntry({ pattern_type: 'bdc' });
+      render(<ReticleViewer reticle={entry} size={80} />);
+      expect(svgCacheSize()).toBe(1);
+      render(<ReticleViewer reticle={entry} size={80} performanceMode />);
+      expect(svgCacheSize()).toBe(2);
+      // Back to normal → cache hit on first entry
+      render(<ReticleViewer reticle={entry} size={80} />);
+      expect(svgCacheSize()).toBe(2);
+    });
   });
 });

@@ -3007,6 +3007,12 @@ const en: Record<keyof typeof fr, string> = {
   'shotLineExplainer.viewLog': 'View log',
   'shotLineExplainer.badge.confidence': 'confidence: C',
 
+  // IA2g — Agent cache badges
+  'agentButton.fromCache': 'Cache',
+  'agentButton.fresh': 'New',
+  'agentButton.refresh': 'Refresh',
+  'admin.ai.agents.ollamaHint': 'e.g. qwen3:14b, llama3.2, mistral',
+
   // IA2i — Agent buttons
   'deviationExplainer.button': 'Explain drift',
   'projectileSummary.button': 'AI Summary',

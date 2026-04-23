@@ -388,6 +388,11 @@ export function BallisticTable({
                         {isColumnVisible(cfg, 'drop') && (
                           <td className="text-right py-1.5 px-2">{r.drop.toFixed(1)}</td>
                         )}
+                        {showSlope && isColumnVisible(cfg, 'drop') && (
+                          <td data-testid={`bt-dropCorrected-${r.range}`} className="text-right py-1.5 px-2 text-primary font-semibold">
+                            {r.dropAfterSlope != null ? r.dropAfterSlope.toFixed(1) : '—'}
+                          </td>
+                        )}
                         {isColumnVisible(cfg, 'holdover') && (
                           <td className="text-right py-1.5 px-2">
                             {(clickUnit === 'MOA' ? r.holdover : r.holdoverMRAD).toFixed(2)}
@@ -421,6 +426,16 @@ export function BallisticTable({
                         )}
                         {isColumnVisible(cfg, 'tof') && (
                           <td className="text-right py-1.5 pl-2">{r.tof.toFixed(3)}</td>
+                        )}
+                        {showCant && (
+                          <td data-testid={`bt-cantDrift-${r.range}`} className="text-right py-1.5 px-2">
+                            {r.cantWindageShift != null ? (
+                              <span className="inline-flex items-center gap-0.5">
+                                {r.cantWindageShift > 0 ? '→' : r.cantWindageShift < 0 ? '←' : ''}
+                                {r.cantWindageShift.toFixed(1)}
+                              </span>
+                            ) : '—'}
+                          </td>
                         )}
                         <td className="py-1.5 pl-2">
                           <ShotLineExplainer

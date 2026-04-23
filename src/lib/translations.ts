@@ -1437,6 +1437,12 @@ const fr = {
   'shotLineExplainer.viewLog': 'Voir log',
   'shotLineExplainer.badge.confidence': 'confidence: C',
 
+  // IA2g — Agent cache badges
+  'agentButton.fromCache': 'Cache',
+  'agentButton.fresh': 'Nouveau',
+  'agentButton.refresh': 'Actualiser',
+  'admin.ai.agents.ollamaHint': 'Ex : qwen3:14b, llama3.2, mistral',
+
   // IA2i — Agent buttons
   'deviationExplainer.button': 'Expliquer la dérive',
   'projectileSummary.button': 'Résumé IA',

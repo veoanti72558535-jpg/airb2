@@ -1681,7 +1681,6 @@ const fr = {
   'agents2.usageUnspecified': 'Non précisé',
   'agents2.caliberConstraintHint': 'Contrainte (budget, bruit...)',
   'nav.competitionPrep': 'Préparation compétition',
-  'target.analyzeCard': 'Analyser cible',
 } as const;
 
 const en: Record<keyof typeof fr, string> = {

@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { History, Star, Trash2, Search, Crosshair, Play, Filter, X, ArrowLeftRight, CheckSquare, RotateCcw } from 'lucide-react';
+import { History, Star, Trash2, Search, Crosshair, Play, Filter, X, ArrowLeftRight, CheckSquare, RotateCcw, Target } from 'lucide-react';
 import { toast } from 'sonner';
 import { useI18n } from '@/lib/i18n';
 import {
@@ -35,6 +35,13 @@ import {
   type BallisticTableConfig,
 } from '@/lib/ballistic-table';
 import { FieldValidation } from '@/components/sessions/FieldValidation';
+import { TruingPanel } from '@/components/sessions/TruingPanel';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 export default function SessionsPage() {
   const { t } = useI18n();
@@ -56,6 +63,7 @@ export default function SessionsPage() {
   // Tranche C — recalc target. Opening this dialog never recalculates; only
   // confirmation does, and it always creates a NEW linked session.
   const [recalcSource, setRecalcSource] = useState<Session | null>(null);
+  const [truingSource, setTruingSource] = useState<Session | null>(null);
 
   const airguns = useMemo(() => airgunStore.getAll(), []);
   const projectiles = useMemo(() => projectileStore.getAll(), []);

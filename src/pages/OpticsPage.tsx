@@ -94,7 +94,7 @@ export default function OpticsPage() {
     setShowForm(false);
     setEditing(null);
     setForm(emptyForm);
-    toast({ title: t('common.save') });
+    toast({ title: editing ? t('optics.edited') : t('common.save') });
   };
 
   const handleDelete = (id: string) => { opticStore.delete(id); refresh(); };
@@ -180,6 +180,7 @@ export default function OpticsPage() {
 
       {showForm && (
         <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="surface-elevated p-4 pb-20 md:pb-4 space-y-3">
+          <h2 className="text-sm font-semibold text-foreground">{editing ? t('optics.editTitle') : t('optics.addTitle')}</h2>
           <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2">
               <label className="text-xs text-muted-foreground">{t('optics.name')}</label>

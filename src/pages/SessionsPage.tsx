@@ -24,6 +24,7 @@ import { BallisticTable } from '@/components/calc/BallisticTable';
 import { ZeroIntersectionsCard } from '@/components/calc/ZeroIntersectionsCard';
 import { TrajectoryMiniChart } from '@/components/calc/TrajectoryMiniChart';
 import { PbrCard } from '@/components/calc/PbrCard';
+import { AdvancedTrajectoryChart } from '@/components/calc/AdvancedTrajectoryChart';
 import { computeZeroIntersections } from '@/lib/zero-intersections';
 import { computePointBlankRange } from '@/lib/pbr';
 import { usePbrPrefs } from '@/hooks/use-pbr-prefs';
@@ -476,6 +477,18 @@ function SessionAdvancedReadouts({ session }: { session: Session }) {
       {/* Tranche P — Point Blank Range, dérivé des résultats stockés. */}
       {session.results && session.results.length > 1 && (
         <PbrCard rows={session.results} />
+      )}
+      {/* Advanced multi-curve chart — drop, windage, energy */}
+      {session.results && session.results.length > 1 && (
+        <AdvancedTrajectoryChart
+          results={session.results}
+          zeroRange={session.input.zeroRange}
+          pbr={{
+            vitalZoneM: vitalZoneM,
+            startDistance: pbrOverlay.startDistance,
+            endDistance: pbrOverlay.endDistance,
+          }}
+        />
       )}
       <BallisticTable
         rows={session.results}

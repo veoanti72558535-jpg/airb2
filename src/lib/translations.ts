@@ -1411,6 +1411,17 @@ const fr = {
   'field.validation.recalibrationHint': 'Écart important : vérifiez votre BC ou vos conditions atmosphériques',
   'field.validation.noMeasurements': 'Aucune mesure terrain',
   'field.validation.notes': 'Notes',
+
+  // Advanced trajectory chart
+  'chart.advanced.title': 'Trajectoire avancée',
+  'chart.advanced.drop': 'Chute',
+  'chart.advanced.windage': 'Dérive vent',
+  'chart.advanced.energy': 'Énergie',
+  'chart.advanced.zeroPoint': 'Point de zéro',
+  'chart.advanced.sightLine': 'Ligne de visée',
+  'chart.advanced.toggleDrop': 'Afficher chute',
+  'chart.advanced.toggleWindage': 'Afficher dérive',
+  'chart.advanced.toggleEnergy': 'Afficher énergie',
 } as const;
 
 const en: Record<keyof typeof fr, string> = {
@@ -2800,6 +2811,17 @@ const en: Record<keyof typeof fr, string> = {
   'field.validation.recalibrationHint': 'Large delta: check your BC or atmospheric conditions',
   'field.validation.noMeasurements': 'No field measurements',
   'field.validation.notes': 'Notes',
+
+  // Advanced trajectory chart
+  'chart.advanced.title': 'Advanced trajectory',
+  'chart.advanced.drop': 'Drop',
+  'chart.advanced.windage': 'Wind drift',
+  'chart.advanced.energy': 'Energy',
+  'chart.advanced.zeroPoint': 'Zero point',
+  'chart.advanced.sightLine': 'Sight line',
+  'chart.advanced.toggleDrop': 'Show drop',
+  'chart.advanced.toggleWindage': 'Show windage',
+  'chart.advanced.toggleEnergy': 'Show energy',
 };
 
 // Append paste-import keys (EN) — kept after object literal would be a TS

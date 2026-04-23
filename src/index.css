@@ -223,6 +223,9 @@
   button, a {
     transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease, fill 180ms ease, stroke 180ms ease;
   }
+  svg, svg path, svg circle, svg rect, svg line, svg polyline, svg polygon {
+    transition: fill 180ms ease, stroke 180ms ease, color 180ms ease;
+  }
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
   }

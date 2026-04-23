@@ -45,7 +45,7 @@ const adminNav = [
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const { t, locale, setLocale } = useI18n();
-  const { theme, toggleTheme } = useTheme();
+  const { isDark } = useTheme();
   const location = useLocation();
   const [moreOpen, setMoreOpen] = useState(false);
   const { user, signOut } = useAuth();

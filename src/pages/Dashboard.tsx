@@ -1,141 +1,164 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Crosshair, Target, Eye, History, ArrowLeftRight, Zap, BarChart3, Star, FileText, BookOpen, Search } from 'lucide-react';
+import { Target, FileText, Timer, Settings2, Star, ChevronRight } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
-import { airgunStore, projectileStore, opticStore, sessionStore } from '@/lib/storage';
-import { motion } from 'framer-motion';
-
-const container = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.05 } },
-};
-const item = {
-  hidden: { opacity: 0, y: 10 },
-  show: { opacity: 1, y: 0 },
-};
+import { sessionStore } from '@/lib/storage';
+import { calculateTrajectory } from '@/lib/ballistics';
+import { BallisticResult } from '@/lib/types';
+import { AppCard } from '@/components/ui/AppCard';
+import { BallisticValue } from '@/components/ui/BallisticValue';
+import { StatusBadge } from '@/components/ui/StatusBadge';
+import { TrajectoryMiniChart } from '@/components/calc/TrajectoryMiniChart';
 
 export default function Dashboard() {
   const { t } = useI18n();
-  const airguns = airgunStore.getAll();
-  const projectiles = projectileStore.getAll();
-  const optics = opticStore.getAll();
   const sessions = sessionStore.getAll();
-  const favorites = sessions.filter(s => s.favorite);
+  const last = sessions.length > 0 ? sessions[sessions.length - 1] : null;
 
-  const stats = [
-    { label: t('dashboard.stats.airguns'), value: airguns.length, icon: Target, color: 'text-primary' },
-    { label: t('dashboard.stats.projectiles'), value: projectiles.length, icon: Zap, color: 'text-tactical' },
-    { label: t('dashboard.stats.optics'), value: optics.length, icon: Eye, color: 'text-accent' },
-    { label: t('dashboard.stats.sessions'), value: sessions.length, icon: BarChart3, color: 'text-primary' },
-  ];
+  // Compute stats from last session
+  const lastResult = useMemo(() => {
+    if (!last) return null;
+    try {
+      return calculateTrajectory(last.input);
+    } catch {
+      return null;
+    }
+  }, [last]);
+
+  const zeroRow = lastResult?.find((r: BallisticResult) => r.range === (last?.input.zeroRange ?? 0));
+  const dropAtZero = zeroRow ? zeroRow.drop.toFixed(1) : '—';
+  const velocityAtZero = zeroRow ? Math.round(zeroRow.velocity).toString() : '—';
+  const energyAtZero = zeroRow ? zeroRow.energy.toFixed(1) : '—';
 
   return (
-    <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
-      {/* Hero */}
-      <motion.div variants={item} className="py-4">
-        <div className="flex items-center gap-2 mb-2">
-          <Crosshair className="h-6 w-6 text-primary" />
-          <h1 className="text-2xl font-heading font-bold tracking-tight">
-            Air<span className="text-gradient">Ballistik</span>
-          </h1>
-        </div>
-        <p className="text-muted-foreground text-sm">{t('dashboard.subtitle')}</p>
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="pt-2">
+        <h1 className="text-xl font-heading font-semibold">
+          {t('dashboard.greeting')}
+        </h1>
+        <p className="text-sm text-muted-foreground mt-0.5">{t('dashboard.subtitle')}</p>
+      </div>
 
-        <Link
-          to="/calc"
-          className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-lg font-semibold text-sm hover:opacity-90 transition-opacity"
-        >
-          <Crosshair className="h-4 w-4" />
-          {t('dashboard.quickCalc')}
-        </Link>
-      </motion.div>
+      {/* Metric cards */}
+      <div className="grid grid-cols-3 gap-3">
+        <AppCard className="p-3">
+          <BallisticValue
+            label={t('dashboard.dropAtZero')}
+            value={dropAtZero}
+            unit="mm"
+            size="md"
+          />
+        </AppCard>
+        <AppCard className="p-3">
+          <BallisticValue
+            label={t('dashboard.velocity')}
+            value={velocityAtZero}
+            unit="m/s"
+            size="md"
+          />
+        </AppCard>
+        <AppCard className="p-3">
+          <BallisticValue
+            label={t('dashboard.energy')}
+            value={energyAtZero}
+            unit="J"
+            size="md"
+          />
+        </AppCard>
+      </div>
 
-      {/* Stats */}
-      <motion.div variants={item} className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {stats.map(s => (
-          <div key={s.label} className="surface-elevated p-3 text-center">
-            <s.icon className={`h-4 w-4 mx-auto mb-1.5 ${s.color}`} />
-            <div className="text-xl font-mono font-bold">{s.value}</div>
-            <div className="text-[11px] text-muted-foreground">{s.label}</div>
+      {/* Trajectory mini chart */}
+      {lastResult && last && (
+        <AppCard>
+          <h2 className="text-xs uppercase tracking-wider text-muted-foreground font-medium mb-2">
+            {t('dashboard.trajectory')} — {last.name}
+          </h2>
+          <div className="h-40">
+            <TrajectoryMiniChart rows={lastResult} />
           </div>
-        ))}
-      </motion.div>
+        </AppCard>
+      )}
 
-      {/* Recent Sessions */}
-      <motion.div variants={item}>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-heading font-semibold text-base flex items-center gap-2">
-            <History className="h-4 w-4 text-primary" />
-            {t('dashboard.recentSessions')}
+      {/* Quick access */}
+      <div>
+        <h2 className="text-xs uppercase tracking-wider text-muted-foreground font-medium mb-2">
+          {t('dashboard.quickAccess')}
+        </h2>
+        <div className="grid grid-cols-2 gap-3">
+          <Link to="/calc">
+            <AppCard className="flex items-center gap-3 p-3 hover:border-primary/30 transition-colors duration-150 cursor-pointer">
+              <Target className="h-5 w-5 text-primary shrink-0" />
+              <span className="text-sm font-medium">{t('dashboard.newCalc')}</span>
+            </AppCard>
+          </Link>
+          <Link to="/chrono">
+            <AppCard className="flex items-center gap-3 p-3 hover:border-primary/30 transition-colors duration-150 cursor-pointer">
+              <Timer className="h-5 w-5 text-primary shrink-0" />
+              <span className="text-sm font-medium">{t('chrono.title')}</span>
+            </AppCard>
+          </Link>
+          <Link to="/sessions">
+            <AppCard className="flex items-center gap-3 p-3 hover:border-primary/30 transition-colors duration-150 cursor-pointer">
+              <FileText className="h-5 w-5 text-primary shrink-0" />
+              <span className="text-sm font-medium">{t('dashboard.dopePdf')}</span>
+            </AppCard>
+          </Link>
+          <Link to="/sessions">
+            <AppCard className="flex items-center gap-3 p-3 hover:border-primary/30 transition-colors duration-150 cursor-pointer">
+              <Settings2 className="h-5 w-5 text-primary shrink-0" />
+              <span className="text-sm font-medium">{t('dashboard.calibrateBc')}</span>
+            </AppCard>
+          </Link>
+        </div>
+      </div>
+
+      {/* Last session */}
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
+            {t('dashboard.lastSession')}
           </h2>
           {sessions.length > 0 && (
-            <Link to="/sessions" className="text-xs text-primary font-medium hover:underline">{t('common.viewAll')}</Link>
+            <Link to="/sessions" className="text-xs text-primary font-medium hover:underline">
+              {t('dashboard.viewAll')} →
+            </Link>
           )}
         </div>
-        {sessions.length === 0 ? (
-          <div className="surface-card p-6 text-center text-muted-foreground text-sm">
-            {t('dashboard.noSessions')}
-          </div>
+
+        {!last ? (
+          <AppCard className="text-center py-8">
+            <p className="text-muted-foreground text-sm mb-4">{t('dashboard.noSession')}</p>
+            <Link
+              to="/calc"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors duration-150"
+            >
+              <Target className="h-4 w-4" />
+              {t('dashboard.createFirst')}
+            </Link>
+          </AppCard>
         ) : (
-          <div className="space-y-2">
-            {sessions.slice(-3).reverse().map(session => (
-              <Link
-                key={session.id}
-                to="/sessions"
-                className="surface-card p-3 flex items-center justify-between hover:border-primary/30 transition-colors block"
-              >
-                <div>
-                  <div className="text-sm font-medium">{session.name}</div>
-                  <div className="text-xs text-muted-foreground font-mono">
-                    {new Date(session.createdAt).toLocaleDateString()} — {session.input.muzzleVelocity} m/s
+          <Link to="/sessions">
+            <AppCard className="hover:border-primary/30 transition-colors duration-150 cursor-pointer">
+              <div className="flex items-center justify-between">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium truncate">{last.name}</span>
+                    {last.favorite && <Star className="h-3 w-3 text-primary fill-primary shrink-0" />}
+                    {(last as any).truingFactor && (
+                      <StatusBadge variant="success">BC calibré</StatusBadge>
+                    )}
+                  </div>
+                  <div className="text-xs text-muted-foreground font-mono mt-1">
+                    {last.input.muzzleVelocity} m/s · BC {last.input.bc} · {last.input.zeroRange}m
                   </div>
                 </div>
-                {session.favorite && <Star className="h-3.5 w-3.5 text-primary fill-primary" />}
-              </Link>
-            ))}
-          </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+              </div>
+            </AppCard>
+          </Link>
         )}
-      </motion.div>
-
-      {/* Favorites */}
-      <motion.div variants={item}>
-        <h2 className="font-heading font-semibold text-base flex items-center gap-2 mb-3">
-          <Star className="h-4 w-4 text-primary" />
-          {t('dashboard.favorites')}
-        </h2>
-        {favorites.length === 0 ? (
-          <div className="surface-card p-6 text-center text-muted-foreground text-sm">
-            {t('dashboard.noFavorites')}
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {favorites.slice(0, 3).map(fav => (
-              <Link key={fav.id} to="/sessions" className="surface-card p-3 block hover:border-primary/30 transition-colors">
-                <div className="text-sm font-medium">{fav.name}</div>
-                <div className="text-xs text-muted-foreground font-mono mt-0.5">
-                  {fav.input.muzzleVelocity} m/s • BC {fav.input.bc} • {fav.input.projectileWeight} gr
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
-      </motion.div>
-
-      {/* Quick grid */}
-      <motion.div variants={item} className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        <Link to="/library" className="surface-elevated p-4 flex flex-col items-center text-center gap-2 hover:border-primary/30 transition-colors group">
-          <BookOpen className="h-5 w-5 text-primary group-hover:scale-110 transition-transform" />
-          <span className="text-xs font-medium">{t('dashboard.recentProfiles')}</span>
-        </Link>
-        <Link to="/conversions" className="surface-elevated p-4 flex flex-col items-center text-center gap-2 hover:border-primary/30 transition-colors group">
-          <ArrowLeftRight className="h-5 w-5 text-primary group-hover:scale-110 transition-transform" />
-          <span className="text-xs font-medium">{t('dashboard.quickConversions')}</span>
-        </Link>
-        <Link to="/docs" className="surface-elevated p-4 flex flex-col items-center text-center gap-2 hover:border-primary/30 transition-colors group">
-          <FileText className="h-5 w-5 text-primary group-hover:scale-110 transition-transform" />
-          <span className="text-xs font-medium">{t('dashboard.fxDocs')}</span>
-        </Link>
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 }

@@ -2,33 +2,46 @@ import React, { useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { Link, useLocation } from 'react-router-dom';
 import {
-  Home, Crosshair, History, BookOpen, MoreHorizontal,
-  ArrowLeftRight, FileText, Search, Settings, Shield,
-  Sun, Moon, Globe, X, ChevronRight, FlaskConical, LogOut,
-  Timer,
+  LayoutDashboard, Target, BookOpen, Package, Timer,
+  ArrowLeftRight, GitCompare, Cpu, MoreHorizontal,
+  Sun, Moon, Globe, X, ChevronRight, FlaskConical,
+  LogOut, FileText, Search, Settings, Shield,
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { useTheme } from '@/lib/theme';
 import { cn } from '@/lib/utils';
 
-const mainNav = [
-  { path: '/', icon: Home, labelKey: 'nav.home' as const },
-  { path: '/calc', icon: Crosshair, labelKey: 'nav.quickCalc' as const },
-  { path: '/sessions', icon: History, labelKey: 'nav.sessions' as const },
-  { path: '/library', icon: BookOpen, labelKey: 'nav.library' as const },
+const sidebarNav = [
+  { path: '/', icon: LayoutDashboard, labelKey: 'nav.home' as const },
+  { path: '/calc', icon: Target, labelKey: 'nav.quickCalc' as const },
+  { path: '/sessions', icon: BookOpen, labelKey: 'nav.sessions' as const },
+  { path: '/library', icon: Package, labelKey: 'nav.library' as const },
+  { path: '/chrono', icon: Timer, labelKey: 'chrono.title' as const },
+  { path: '/conversions', icon: ArrowLeftRight, labelKey: 'nav.conversions' as const },
+  { path: '/compare', icon: GitCompare, labelKey: 'nav.compare' as const },
+];
+
+const bottomNav = [
+  { path: '/', icon: LayoutDashboard, labelKey: 'nav.home' as const },
+  { path: '/calc', icon: Target, labelKey: 'nav.quickCalc' as const },
+  { path: '/sessions', icon: BookOpen, labelKey: 'nav.sessions' as const },
 ];
 
 const moreNav = [
+  { path: '/library', icon: Package, labelKey: 'nav.library' as const },
+  { path: '/chrono', icon: Timer, labelKey: 'chrono.title' as const },
+  { path: '/compare', icon: GitCompare, labelKey: 'nav.compare' as const },
   { path: '/conversions', icon: ArrowLeftRight, labelKey: 'nav.conversions' as const },
+  { path: '/cross-validation', icon: FlaskConical, labelKey: 'nav.crossValidation' as const },
   { path: '/docs', icon: FileText, labelKey: 'nav.docs' as const },
   { path: '/search', icon: Search, labelKey: 'nav.search' as const },
-  { path: '/cross-validation', icon: FlaskConical, labelKey: 'nav.crossValidation' as const },
-  { path: '/chrono', icon: Timer, labelKey: 'chrono.title' as const },
   { path: '/settings', icon: Settings, labelKey: 'nav.settings' as const },
   { path: '/admin', icon: Shield, labelKey: 'nav.admin' as const },
 ];
 
-const allNav = [...mainNav, ...moreNav];
+const adminNav = [
+  { path: '/admin/ai', icon: Cpu, labelKey: 'nav.adminAi' as const },
+];
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const { t, locale, setLocale } = useI18n();
@@ -42,129 +55,118 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background flex">
-      {/* Desktop Sidebar */}
-      <aside className="hidden md:flex flex-col w-60 border-r border-border bg-card/50 sticky top-0 h-screen shrink-0">
-        <div className="p-4 border-b border-border">
-          <Link to="/" className="flex items-center gap-2">
-            <Crosshair className="h-5 w-5 text-primary" />
-            <span className="font-heading font-bold text-lg tracking-tight">
-              Air<span className="text-gradient">Ballistik</span>
-            </span>
-          </Link>
-        </div>
+      {/* ── Desktop Sidebar (64px icons + labels) ── */}
+      <aside className="hidden md:flex flex-col w-16 border-r border-border bg-card sticky top-0 h-screen shrink-0">
+        {/* Logo */}
+        <Link to="/" className="flex items-center justify-center h-14 border-b border-border">
+          <Target className="h-5 w-5 text-primary" />
+        </Link>
 
-        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-          {allNav.map(item => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={cn(
-                'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
-                isActive(item.path)
-                  ? 'bg-primary/10 text-primary'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-              )}
-            >
-              <item.icon className="h-4 w-4 shrink-0" />
-              {t(item.labelKey)}
-            </Link>
-          ))}
+        {/* Nav items */}
+        <nav className="flex-1 flex flex-col items-center gap-1 py-3 overflow-y-auto">
+          {sidebarNav.map(item => {
+            const active = isActive(item.path);
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                title={t(item.labelKey)}
+                className={cn(
+                  'flex flex-col items-center justify-center w-11 h-11 rounded-lg transition-colors duration-150',
+                  active
+                    ? 'bg-primary/10 text-primary'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                )}
+              >
+                <item.icon className="h-5 w-5" />
+              </Link>
+            );
+          })}
+
+          {/* Separator */}
+          <div className="w-6 border-t border-border my-1" />
+
+          {adminNav.map(item => {
+            const active = isActive(item.path);
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                title={t(item.labelKey)}
+                className={cn(
+                  'flex flex-col items-center justify-center w-11 h-11 rounded-lg transition-colors duration-150',
+                  active
+                    ? 'bg-primary/10 text-primary'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                )}
+              >
+                <item.icon className="h-5 w-5" />
+              </Link>
+            );
+          })}
         </nav>
 
-        <div className="p-3 border-t border-border space-y-1">
+        {/* Bottom controls */}
+        <div className="flex flex-col items-center gap-2 py-3 border-t border-border">
           <button
             onClick={() => setLocale(locale === 'fr' ? 'en' : 'fr')}
-            className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors w-full"
+            title={locale === 'fr' ? 'English' : 'Français'}
+            className="flex items-center justify-center w-9 h-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors duration-150"
           >
             <Globe className="h-4 w-4" />
-            {locale === 'fr' ? 'Français' : 'English'}
           </button>
           <button
             onClick={toggleTheme}
-            className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors w-full"
+            title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
+            className="flex items-center justify-center w-9 h-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors duration-150"
           >
             {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            {theme === 'dark' ? t('common.light') : t('common.dark')}
           </button>
           {user && (
             <button
               onClick={() => signOut()}
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors w-full"
+              title={user.email ?? 'Sign out'}
+              className="flex items-center justify-center w-9 h-9 rounded-full bg-primary/10 text-primary text-xs font-bold"
             >
-              <LogOut className="h-4 w-4" />
-              <span className="truncate text-xs">{user.email}</span>
+              {(user.email ?? '?')[0].toUpperCase()}
             </button>
           )}
         </div>
       </aside>
 
-      {/* Main content area */}
+      {/* ── Main content ── */}
       <div className="flex-1 flex flex-col min-h-screen">
-        {/* Mobile top bar */}
-        <header className="md:hidden sticky top-0 z-50 border-b border-border bg-card/80 backdrop-blur-md">
-          <div className="flex items-center justify-between h-12 px-4">
-            <Link to="/" className="flex items-center gap-2">
-              <Crosshair className="h-4 w-4 text-primary" />
-              <span className="font-heading font-bold text-base tracking-tight">
-                Air<span className="text-gradient">Ballistik</span>
-              </span>
-            </Link>
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => setLocale(locale === 'fr' ? 'en' : 'fr')}
-                className="p-2 rounded-md text-muted-foreground hover:text-foreground text-xs font-mono"
-              >
-                {locale.toUpperCase()}
-              </button>
-              <button
-                onClick={toggleTheme}
-                className="p-2 rounded-md text-muted-foreground hover:text-foreground"
-              >
-                {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-              </button>
-              {user && (
-                <button
-                  onClick={() => signOut()}
-                  className="p-2 rounded-md text-muted-foreground hover:text-foreground"
-                  title={user.email ?? ''}
-                >
-                  <LogOut className="h-4 w-4" />
-                </button>
-              )}
-            </div>
-          </div>
-        </header>
-
-        {/* Page content */}
-        <main className="flex-1 px-4 py-4 pb-24 md:pb-4 max-w-5xl w-full mx-auto">
+        <main className="flex-1 px-4 py-4 pb-24 md:pb-4 max-w-4xl w-full mx-auto">
           {children}
         </main>
       </div>
 
-      {/* Mobile bottom nav */}
+      {/* ── Mobile Bottom Nav ── */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/95 backdrop-blur-md safe-area-bottom">
-        <div className="flex items-center justify-around h-16 px-1">
-          {mainNav.map(item => {
+        <div className="flex items-center justify-around h-14 px-1">
+          {bottomNav.map(item => {
             const active = isActive(item.path);
             return (
               <Link
                 key={item.path}
                 to={item.path}
                 className={cn(
-                  'flex flex-col items-center gap-0.5 py-1 px-2 rounded-md transition-colors min-w-0',
+                  'flex flex-col items-center gap-0.5 py-1 px-3 rounded-md transition-colors duration-150 touch-target relative',
                   active ? 'text-primary' : 'text-muted-foreground'
                 )}
               >
+                {active && (
+                  <span className="absolute top-0 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-full bg-primary" />
+                )}
                 <item.icon className="h-5 w-5" />
-                <span className="text-[10px] font-medium truncate">{t(item.labelKey)}</span>
+                <span className="text-[10px] font-medium">{t(item.labelKey)}</span>
               </Link>
             );
           })}
-          {/* More button */}
           <button
             onClick={() => setMoreOpen(true)}
             className={cn(
-              'flex flex-col items-center gap-0.5 py-1 px-2 rounded-md transition-colors',
+              'flex flex-col items-center gap-0.5 py-1 px-3 rounded-md transition-colors duration-150 touch-target',
               moreNav.some(n => isActive(n.path)) ? 'text-primary' : 'text-muted-foreground'
             )}
           >
@@ -174,7 +176,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </div>
       </nav>
 
-      {/* More sheet (mobile) */}
+      {/* ── More bottom sheet (mobile) ── */}
       {moreOpen && (
         <>
           <div className="md:hidden fixed inset-0 z-[60] bg-background/60 backdrop-blur-sm" onClick={() => setMoreOpen(false)} />
@@ -192,7 +194,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   to={item.path}
                   onClick={() => setMoreOpen(false)}
                   className={cn(
-                    'flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors',
+                    'flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors duration-150 touch-target',
                     isActive(item.path)
                       ? 'bg-primary/10 text-primary'
                       : 'text-muted-foreground hover:text-foreground hover:bg-muted'
@@ -207,7 +209,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </div>
         </>
       )}
-
     </div>
   );
 }

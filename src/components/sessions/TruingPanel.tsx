@@ -177,12 +177,13 @@ export function TruingPanel({ session, onBcCorrected }: TruingPanelProps) {
             <label className="text-xs font-medium">{t('truing.measuredDist')}</label>
             <input
               type="number"
-              min={10}
+              min={DIST_MIN}
               max={500}
-              value={distance}
-              onChange={e => setDistance(Math.max(10, Math.min(500, parseInt(e.target.value) || 10)))}
-              className="mt-1 w-full bg-muted border border-border rounded-md px-3 py-1.5 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary"
+              value={distanceRaw}
+              onChange={e => { setDistanceRaw(e.target.value); setErrors(prev => ({ ...prev, distance: undefined })); }}
+              className={`mt-1 w-full bg-muted border rounded-md px-3 py-1.5 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary ${errors.distance ? 'border-destructive' : 'border-border'}`}
             />
+            {errors.distance && <p className="text-[10px] text-destructive mt-1">{errors.distance}</p>}
           </div>
           <div>
             <label className="text-xs font-medium">{t('truing.measuredDrop')}</label>
@@ -190,10 +191,11 @@ export function TruingPanel({ session, onBcCorrected }: TruingPanelProps) {
               type="number"
               step="0.1"
               value={dropMm}
-              onChange={e => setDropMm(e.target.value)}
+              onChange={e => { setDropMm(e.target.value); setErrors(prev => ({ ...prev, drop: undefined })); }}
               placeholder="-120"
-              className="mt-1 w-full bg-muted border border-border rounded-md px-3 py-1.5 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary"
+              className={`mt-1 w-full bg-muted border rounded-md px-3 py-1.5 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary ${errors.drop ? 'border-destructive' : 'border-border'}`}
             />
+            {errors.drop && <p className="text-[10px] text-destructive mt-1">{errors.drop}</p>}
             <p className="text-[10px] text-muted-foreground mt-1">{t('truing.dropHint')}</p>
           </div>
           {predicted !== null && (
@@ -204,7 +206,7 @@ export function TruingPanel({ session, onBcCorrected }: TruingPanelProps) {
           <button
             type="button"
             onClick={handleCalculate}
-            disabled={!dropMm || !Number.isFinite(parseFloat(dropMm))}
+            disabled={!distanceRaw || !dropMm}
             className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 disabled:opacity-40"
           >
             <ArrowRight className="h-3.5 w-3.5" />

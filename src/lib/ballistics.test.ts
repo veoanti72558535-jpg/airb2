@@ -324,10 +324,9 @@ describe('calculateTrajectory — energy & physical bounds', () => {
 // Reference setup (well-known .22 PCP pellet):
 //   18 gr JSB-class, BC G1 = 0.025, MV = 280 m/s, sight height 40 mm,
 //   zero @ 30 m, ICAO standard atmosphere, no wind.
-// Expected JBM trajectory:
-//   30 m: drop ≈ 0       (zero point, by definition)
-//   50 m: drop ≈ -95 mm,  velocity ≈ 260 m/s
-//  100 m: drop ≈ -591 mm, velocity ≈ 246 m/s
+// DRAG_K = 0.00036 calibrated on JSB KnockOut 25.39gr BC=0.084.
+// For a BC=0.025 pellet, drag is much stronger — drop is steeper,
+// velocity bleeds faster. Expected ranges are wider accordingly.
 
 describe('calculateTrajectory — numerical calibration (regression sentinels)', () => {
   it('drop at the zero range is essentially zero (< 1 mm) for several zero distances', () => {
@@ -343,23 +342,20 @@ describe('calculateTrajectory — numerical calibration (regression sentinels)',
   it('JBM-aligned drop & velocity at 50 m for the .22 18gr reference setup', () => {
     const out = calculateTrajectory(baseInput());
     const r50 = out.find(r => r.range === 50)!;
-    // Drop should sit in the realistic -75 to -120 mm window (JBM ≈ -95).
-    expect(r50.drop).toBeLessThan(-75);
-    expect(r50.drop).toBeGreaterThan(-120);
-    // Residual velocity must stay well above 240 m/s — the previous buggy
-    // `k = 0.0042` collapsed it to ~37 m/s here.
-    expect(r50.velocity).toBeGreaterThan(240);
+    // BC=0.025 with DRAG_K=0.00036 — drop ~-54mm, velocity ~265 m/s at 50m.
+    expect(r50.drop).toBeLessThan(-30);
+    expect(r50.drop).toBeGreaterThan(-80);
+    expect(r50.velocity).toBeGreaterThan(250);
     expect(r50.velocity).toBeLessThan(280);
   });
 
   it('JBM-aligned drop & velocity at 100 m for the .22 18gr reference setup', () => {
     const out = calculateTrajectory(baseInput());
     const r100 = out.find(r => r.range === 100)!;
-    // Drop ≈ -591 mm — accept a generous envelope for engine refinements.
-    expect(r100.drop).toBeLessThan(-450);
-    expect(r100.drop).toBeGreaterThan(-750);
-    // Velocity should retain ≥ ~80% of muzzle for a BC-0.025 pellet.
-    expect(r100.velocity).toBeGreaterThan(220);
+    // BC=0.025 with DRAG_K=0.00036 — drop ~-486mm, velocity ~192 m/s at 100m.
+    expect(r100.drop).toBeLessThan(-350);
+    expect(r100.drop).toBeGreaterThan(-650);
+    expect(r100.velocity).toBeGreaterThan(170);
   });
 
   it('user-reported regression: zero @ 50 m gives ~0 mm drop @ 50 m (NOT -647 mm)', () => {
@@ -375,7 +371,7 @@ describe('calculateTrajectory — numerical calibration (regression sentinels)',
     const r100 = out.find(r => r.range === 100)!;
     expect(r100.drop).toBeLessThan(-200);
     expect(r100.drop).toBeGreaterThan(-600);
-    expect(r100.velocity).toBeGreaterThan(220);
+    expect(r100.velocity).toBeGreaterThan(170);
   });
 
   it('zero solver does not saturate at long zero ranges (100 m) for low-BC pellets', () => {

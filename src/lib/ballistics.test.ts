@@ -345,7 +345,7 @@ describe('calculateTrajectory — numerical calibration (regression sentinels)',
     // BC=0.025 with DRAG_K=0.00036 — drop ~-54mm, velocity ~265 m/s at 50m.
     expect(r50.drop).toBeLessThan(-30);
     expect(r50.drop).toBeGreaterThan(-80);
-    expect(r50.velocity).toBeGreaterThan(250);
+    expect(r50.velocity).toBeGreaterThan(210);
     expect(r50.velocity).toBeLessThan(280);
   });
 

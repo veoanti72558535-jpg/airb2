@@ -236,7 +236,7 @@ export async function queryAIWithCache(
 
   // 2. Live call
   const result = await queryAIViaEdge(edgeRequest);
-  if (!result.ok) {
+  if (result.ok !== true) {
     return { ok: false, error: result.error, code: result.code };
   }
 

@@ -29,7 +29,11 @@ import type { AIImportConfirmPayload } from '@/components/cross-validation/AIImp
 // --- 1. Supabase doit être "configuré" pour exposer le bouton IA -----------
 vi.mock('@/integrations/supabase/client', () => ({
   isSupabaseConfigured: () => true,
-  supabase: {},
+  supabase: {
+    auth: {
+      getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'test-user-id' } }, error: null }),
+    },
+  },
   getSupabaseUrl: () => 'http://local-test',
 }));
 

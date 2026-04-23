@@ -417,6 +417,31 @@ export default function SessionsPage() {
       {/* Tranche C — Recalculate dialog. Opening = free; only confirm runs the
           engine and creates a brand-new linked session. The original is never
           mutated. */}
+      {/* Truing dialog */}
+      <Dialog open={truingSource !== null} onOpenChange={(open) => { if (!open) setTruingSource(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t('truing.title')}</DialogTitle>
+          </DialogHeader>
+          {truingSource && (
+            <TruingPanel
+              session={truingSource}
+              onBcCorrected={(correctedBc, projectileId) => {
+                if (!truingSource) return;
+                sessionStore.update(truingSource.id, {
+                  input: { ...truingSource.input, bc: correctedBc },
+                });
+                refresh();
+                setTruingSource(null);
+                toast.success(
+                  projectileId ? t('truing.created') : t('truing.applySession'),
+                );
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
       <RecalculateDialog
         open={recalcSource !== null}
         onOpenChange={(open) => { if (!open) setRecalcSource(null); }}

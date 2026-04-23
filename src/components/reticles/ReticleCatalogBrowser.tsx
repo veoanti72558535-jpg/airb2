@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
-import { Search, Download, Check } from 'lucide-react';
+import { Search, Download, Check, Heart } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { isSupabaseConfigured } from '@/integrations/supabase/client';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
@@ -10,6 +10,8 @@ import {
   getCatalogPatternTypes,
   importToLibrary,
   isAlreadyImported,
+  toggleFavorite,
+  isFavorite,
   type ReticleCatalogEntry,
   type CatalogFilters,
 } from '@/lib/reticles-catalog-repo';
@@ -30,6 +32,9 @@ export default function ReticleCatalogBrowser() {
   const [brands, setBrands] = useState<string[]>([]);
   const [patterns, setPatterns] = useState<string[]>([]);
   const [importedIds, setImportedIds] = useState<Set<number>>(new Set());
+  const [favIds, setFavIds] = useState<Set<number>>(() => {
+    try { const raw = localStorage.getItem('reticle_catalog_favorites'); return new Set(raw ? JSON.parse(raw) : []); } catch { return new Set(); }
+  });
 
   // Load filter options once
   useEffect(() => {
@@ -65,6 +70,16 @@ export default function ReticleCatalogBrowser() {
     importToLibrary(entry);
     setImportedIds(prev => new Set(prev).add(entry.reticle_id));
     toast({ title: t('reticles.catalog.importSuccess') });
+  }, [t]);
+
+  const handleToggleFav = useCallback((reticleId: number) => {
+    const added = toggleFavorite(reticleId);
+    setFavIds(prev => {
+      const next = new Set(prev);
+      if (added) next.add(reticleId); else next.delete(reticleId);
+      return next;
+    });
+    toast({ title: added ? t('reticles.catalog.favoriteAdded') : t('reticles.catalog.favoriteRemoved') });
   }, [t]);
 
   const totalPages = Math.ceil(count / 20);
@@ -141,22 +156,32 @@ export default function ReticleCatalogBrowser() {
                     <span className="tactical-badge">{entry.min_magnification}-{entry.max_magnification}x</span>
                   )}
                 </div>
-                <button
-                  disabled={imported}
-                  onClick={() => handleImport(entry)}
-                  className={`mt-2 px-2 py-1 rounded text-xs font-medium flex items-center gap-1 ${
-                    imported
-                      ? 'bg-muted text-muted-foreground cursor-not-allowed'
-                      : 'bg-primary text-primary-foreground hover:opacity-90'
-                  }`}
-                  data-testid={`catalog-import-${entry.reticle_id}`}
-                >
-                  {imported ? (
-                    <><Check className="h-3 w-3" />{t('reticles.catalog.imported')}</>
-                  ) : (
-                    <><Download className="h-3 w-3" />{t('reticles.catalog.import')}</>
-                  )}
-                </button>
+                <div className="flex items-center gap-1.5 mt-2">
+                  <button
+                    onClick={() => handleToggleFav(entry.reticle_id)}
+                    className="p-1 rounded hover:bg-muted"
+                    aria-label={favIds.has(entry.reticle_id) ? t('reticles.catalog.favoriteRemove') : t('reticles.catalog.favoriteAdd')}
+                    data-testid={`catalog-fav-${entry.reticle_id}`}
+                  >
+                    <Heart className={`h-3.5 w-3.5 ${favIds.has(entry.reticle_id) ? 'fill-primary text-primary' : 'text-muted-foreground'}`} />
+                  </button>
+                  <button
+                    disabled={imported}
+                    onClick={() => handleImport(entry)}
+                    className={`px-2 py-1 rounded text-xs font-medium flex items-center gap-1 ${
+                      imported
+                        ? 'bg-muted text-muted-foreground cursor-not-allowed'
+                        : 'bg-primary text-primary-foreground hover:opacity-90'
+                    }`}
+                    data-testid={`catalog-import-${entry.reticle_id}`}
+                  >
+                    {imported ? (
+                      <><Check className="h-3 w-3" />{t('reticles.catalog.imported')}</>
+                    ) : (
+                      <><Download className="h-3 w-3" />{t('reticles.catalog.import')}</>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           );

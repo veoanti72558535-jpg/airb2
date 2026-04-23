@@ -125,7 +125,7 @@ export function TargetPhotoAnalyzer({ sessionId, distanceM: initialDistance, onA
       user?.id ?? '',
     );
 
-    if (!ai.ok) {
+    if (ai.ok !== true) {
       setStage('idle');
       setError(ai.error || t('target.errAi' as any));
       return;

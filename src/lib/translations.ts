@@ -1450,6 +1450,10 @@ const fr = {
   'chrono.settings.endian': 'Ordre des octets',
   'chrono.settings.divisor': 'Diviseur',
   'chrono.settings.divisorHint': 'ex. 10 si l\'appareil envoie des dixièmes de m/s',
+  'admin.ble.title': 'Journal BLE',
+  'admin.ble.desc': 'Scanner un appareil BLE et lister tous les services/caractéristiques GATT pour diagnostic',
+  'admin.ble.scan': 'Scanner un appareil',
+  'admin.ble.exportJson': 'Exporter UUIDs JSON',
 } as const;
 
 const en: Record<keyof typeof fr, string> = {
@@ -2878,6 +2882,10 @@ const en: Record<keyof typeof fr, string> = {
   'chrono.settings.endian': 'Byte order',
   'chrono.settings.divisor': 'Divisor',
   'chrono.settings.divisorHint': 'e.g. 10 if device sends tenths of m/s',
+  'admin.ble.title': 'BLE Journal',
+  'admin.ble.desc': 'Scan a BLE device and list all GATT services/characteristics for diagnosis',
+  'admin.ble.scan': 'Scan device',
+  'admin.ble.exportJson': 'Export UUIDs JSON',
 };
 
 // Append paste-import keys (EN) — kept after object literal would be a TS

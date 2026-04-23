@@ -11,6 +11,7 @@ import { ProjectileStorageDiagnosticCard } from '@/components/admin/ProjectileSt
 import { ProjectileCleanupCard } from '@/components/admin/ProjectileCleanupCard';
 import { SessionStorageDiagnosticCard } from '@/components/admin/SessionStorageDiagnosticCard';
 import { StorageQuotaDiagnosticCard } from '@/components/admin/StorageQuotaDiagnosticCard';
+import { BleJournalCard } from '@/components/admin/BleJournalCard';
 
 export default function AdminPage() {
   const { t } = useI18n();
@@ -125,6 +126,9 @@ export default function AdminPage() {
 
       {/* Nettoyage projectiles non-airgun (Tranche Cleanup) */}
       <ProjectileCleanupCard onCleaned={() => setDiagRefreshKey((k) => k + 1)} />
+
+      {/* Journal BLE — diagnostic UUIDs FX Radar */}
+      <BleJournalCard />
 
       {/* Lien vers /admin/ai — conditionnel à Supabase */}
       <div className="surface-elevated p-4 flex items-start gap-3">

@@ -3315,6 +3315,31 @@ const en: Record<keyof typeof fr, string> = {
   'agents.gameMedium': 'Medium game',
   'agents.gameLarge': 'Large game',
   'agents.gameUnspecified': 'Unspecified',
+
+  // BUILD-IA bis — diagnostic / library / reports agents
+  'agents2.fieldDelta': 'Analyze delta (AI)',
+  'agents2.chronoStats': 'Interpret stats (AI)',
+  'agents2.groupingAnalysis': 'Analyze grouping (AI)',
+  'agents2.tuneStability': 'Check tune stability (AI)',
+  'agents2.pairingAdvisor': 'Recommended projectiles (AI)',
+  'agents2.opticAdvisor': 'Optic advisor (AI)',
+  'agents2.compareAdvisor': 'Comparative analysis (AI)',
+  'agents2.caliberAdvisor': 'Caliber advisor (AI)',
+  'agents2.sessionReport': 'Session report (AI)',
+  'agents2.trainingLog': 'Monthly summary (AI)',
+  'agents2.competitionPrep': 'Competition prep (AI)',
+  'agents2.exportPdf': 'Export as PDF',
+  'agents2.expectedWeather': 'Expected weather',
+  'agents2.usageHunting': 'Hunting',
+  'agents2.usageHuntSmall': 'Small game hunting',
+  'agents2.usageHuntMedium': 'Medium game hunting',
+  'agents2.usageTarget': 'Target',
+  'agents2.usageFt': 'Field Target',
+  'agents2.usageBenchrest': 'Benchrest',
+  'agents2.usagePlinking': 'Plinking',
+  'agents2.usageUnspecified': 'Unspecified',
+  'agents2.caliberConstraintHint': 'Constraint (budget, noise...)',
+  'nav.competitionPrep': 'Competition prep',
 };
 
 // Append paste-import keys (EN) — kept after object literal would be a TS

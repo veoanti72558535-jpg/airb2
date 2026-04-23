@@ -3061,6 +3061,36 @@ const en: Record<keyof typeof fr, string> = {
   'reticles.catalog.favorites': 'Catalog favorites',
 };
 
+// ── Truing (BC calibration) — EN ────────────────────────────────────────
+Object.assign(en, {
+  'truing.title': 'BC Calibration (Truing)',
+  'truing.subtitle': 'Real-world shot calibration',
+  'truing.measuredDist': 'Measurement distance (m)',
+  'truing.measuredDrop': 'Measured drop (mm)',
+  'truing.dropHint': 'Negative = below LOS, Positive = above',
+  'truing.enginePredicts': 'Engine predicts',
+  'truing.atDistance': 'at this distance',
+  'truing.calculate': 'Calculate corrected BC',
+  'truing.originalBc': 'Original BC',
+  'truing.correctedBc': 'Corrected BC',
+  'truing.factor': 'Correction factor',
+  'truing.predictedBefore': 'Prediction before',
+  'truing.predictedAfter': 'Prediction after',
+  'truing.measured': 'Measured drop',
+  'truing.converged': 'Iterations',
+  'truing.warnExtreme': 'Factor out of range — check your measurement',
+  'truing.warnNoConv': 'No convergence — drop unreachable',
+  'truing.confirmExtreme': 'Apply anyway',
+  'truing.saveNew': 'Save as new projectile',
+  'truing.applySession': 'Apply to this session',
+  'truing.restart': 'Restart',
+  'truing.bcReduced': 'BC reduced',
+  'truing.bcIncreased': 'BC increased',
+  'truing.bcStable': 'BC nearly unchanged',
+  'truing.button': 'Calibrate BC (Truing)',
+  'truing.created': 'Calibrated projectile created',
+});
+
 // Append paste-import keys (EN) — kept after object literal would be a TS
 // error, so we inject them inline above. (No-op marker.)
 

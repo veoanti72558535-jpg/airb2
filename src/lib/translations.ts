@@ -1527,10 +1527,7 @@ const fr = {
   'reticles.catalog.favoriteAdded': 'Ajouté aux favoris',
   'reticles.catalog.favoriteRemoved': 'Retiré des favoris',
   'reticles.catalog.favorites': 'Favoris catalogue',
-} as const;
-
-// ── Truing (BC calibration) — FR ────────────────────────────────────────
-const truingFr = {
+  // ── Truing (BC calibration) ───────────────────────────────────────────
   'truing.title': 'Calibration BC (Truing)',
   'truing.subtitle': 'Recalibrage depuis tirs réels',
   'truing.measuredDist': 'Distance de mesure (m)',

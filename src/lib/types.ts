@@ -477,6 +477,8 @@ export interface AppSettings {
   featureFlags: {
     ai: boolean;
     weather: boolean;
+    /** When true, the BC truing panel is available on sessions. Default true. */
+    truing?: boolean;
   };
   /** When true, the calculator may suggest auto-fill from a weather provider. */
   weatherAutoSuggest?: boolean;

@@ -33,6 +33,7 @@ import {
   defaultConfig,
   type BallisticTableConfig,
 } from '@/lib/ballistic-table';
+import { FieldValidation } from '@/components/sessions/FieldValidation';
 
 export default function SessionsPage() {
   const { t } = useI18n();
@@ -371,6 +372,8 @@ export default function SessionsPage() {
                 {!selectionMode && (
                   <div className="mt-3 space-y-2">
                     <CalculationMetadataBlock session={s} />
+                    {/* Field validation — terrain measurements vs predictions */}
+                    <FieldValidation session={s} />
                     {/* Tranche H + J — Table balistique configurable +
                         assistant réticule synchronisé sur la même grille.
                         Lit les résultats figés, aucun recalcul moteur. */}

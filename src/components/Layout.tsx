@@ -6,6 +6,7 @@ import {
   ArrowLeftRight, FileText, Search, Settings, Shield,
   Sun, Moon, Globe, X, ChevronRight, FlaskConical, LogOut,
   Timer,
+  Target,
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { useTheme } from '@/lib/theme';
@@ -24,6 +25,7 @@ const moreNav = [
   { path: '/search', icon: Search, labelKey: 'nav.search' as const },
   { path: '/cross-validation', icon: FlaskConical, labelKey: 'nav.crossValidation' as const },
   { path: '/chrono', icon: Timer, labelKey: 'chrono.title' as const },
+  { path: '/compare-projectiles', icon: Target, labelKey: 'compareProjectiles.title' as const },
   { path: '/settings', icon: Settings, labelKey: 'nav.settings' as const },
   { path: '/admin', icon: Shield, labelKey: 'nav.admin' as const },
 ];

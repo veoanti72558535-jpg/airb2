@@ -1469,6 +1469,20 @@ const fr = {
   'dope.section.atmosphere': 'Atmosphère',
   'dope.section.table': 'Table balistique',
   'dope.section.pbr': 'Portée balistique pratique',
+  'compareProjectiles.title': 'Comparaison projectiles',
+  'compareProjectiles.selectProjectiles': 'Sélectionner les projectiles',
+  'compareProjectiles.minMax': '2 à 5 projectiles',
+  'compareProjectiles.commonConditions': 'Conditions communes',
+  'compareProjectiles.muzzleVelocity': 'Vitesse initiale (m/s)',
+  'compareProjectiles.compare': 'Comparer',
+  'compareProjectiles.winner': 'Gagnant',
+  'compareProjectiles.bestCompromise': 'Meilleur compromis',
+  'compareProjectiles.atDistance': 'À {d}m',
+  'compareProjectiles.noProjectiles': 'Sélectionnez au moins 2 projectiles',
+  'compareProjectiles.dropCurve': 'Courbe de chute',
+  'compareProjectiles.velocityCurve': 'Courbe de vitesse',
+  'compareProjectiles.energyCurve': 'Courbe d\'énergie',
+  'compareProjectiles.removeProjectile': 'Retirer',
 } as const;
 
 const en: Record<keyof typeof fr, string> = {
@@ -2916,6 +2930,20 @@ const en: Record<keyof typeof fr, string> = {
   'dope.section.atmosphere': 'Atmosphere',
   'dope.section.table': 'Ballistic table',
   'dope.section.pbr': 'Point Blank Range',
+  'compareProjectiles.title': 'Projectile comparison',
+  'compareProjectiles.selectProjectiles': 'Select projectiles',
+  'compareProjectiles.minMax': '2 to 5 projectiles',
+  'compareProjectiles.commonConditions': 'Common conditions',
+  'compareProjectiles.muzzleVelocity': 'Muzzle velocity (m/s)',
+  'compareProjectiles.compare': 'Compare',
+  'compareProjectiles.winner': 'Winner',
+  'compareProjectiles.bestCompromise': 'Best compromise',
+  'compareProjectiles.atDistance': 'At {d}m',
+  'compareProjectiles.noProjectiles': 'Select at least 2 projectiles',
+  'compareProjectiles.dropCurve': 'Drop curve',
+  'compareProjectiles.velocityCurve': 'Velocity curve',
+  'compareProjectiles.energyCurve': 'Energy curve',
+  'compareProjectiles.removeProjectile': 'Remove',
 };
 
 // Append paste-import keys (EN) — kept after object literal would be a TS

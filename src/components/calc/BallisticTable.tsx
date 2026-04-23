@@ -9,7 +9,7 @@
  * the table itself scrolls horizontally when the chosen columns overflow.
  */
 import { useMemo, useState } from 'react';
-import { ChevronDown, ChevronUp, Settings2, RotateCcw, Crosshair, Sparkles } from 'lucide-react';
+import { ChevronDown, ChevronUp, Settings2, RotateCcw, Crosshair, Sparkles, Mountain, RotateCw } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import type { TranslationKey } from '@/lib/translations';
 import { useUnits } from '@/hooks/use-units';
@@ -51,6 +51,10 @@ interface Props {
    */
   nearZeroDistance?: number | null;
   farZeroDistance?: number | null;
+  /** When non-zero, slope correction columns appear. */
+  slopeAngleDeg?: number;
+  /** When non-zero, cant drift column appears. */
+  cantAngleDeg?: number;
 }
 
 const COLUMN_LABEL_KEYS: Record<BallisticTableColumn, TranslationKey> = {
@@ -76,6 +80,8 @@ export function BallisticTable({
   title,
   nearZeroDistance,
   farZeroDistance,
+  slopeAngleDeg,
+  cantAngleDeg,
 }: Props) {
   const { t } = useI18n();
   const { symbol } = useUnits();
@@ -97,6 +103,9 @@ export function BallisticTable({
     if (!isControlled) setInternalCfg(next);
     onConfigChange?.(next);
   };
+
+  const showSlope = !!slopeAngleDeg && slopeAngleDeg !== 0;
+  const showCant = !!cantAngleDeg && cantAngleDeg !== 0;
 
   const distUnit = symbol('distance');
   const lengthUnit = symbol('length');

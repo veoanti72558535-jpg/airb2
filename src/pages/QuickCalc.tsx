@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Crosshair, RotateCcw, Save, Sparkles, Settings2, Zap, ArrowLeftRight } from 'lucide-react';
+import { Crosshair, RotateCcw, Save, Sparkles, Settings2, Zap, ArrowLeftRight, Mountain, RotateCw } from 'lucide-react';
 import { SessionPickerDialog } from '@/components/compare/SessionPickerDialog';
 import { toast } from 'sonner';
 import { useI18n } from '@/lib/i18n';
@@ -693,10 +693,59 @@ export default function QuickCalc() {
       </div>
 
       {advanced && (
-        <div className="rounded-lg border border-dashed border-primary/30 bg-primary/5 px-3 py-2 flex items-center gap-2 text-[11px] text-muted-foreground">
-          <Settings2 className="h-3.5 w-3.5 text-primary shrink-0" />
-          <span>{t('calc.sectionAdvanced')} — {t('calc.modeHint')}</span>
-        </div>
+        <>
+          {/* Slope & Cant corrections */}
+          <div className="surface-elevated rounded-xl p-4 space-y-3">
+            <div className="flex items-center gap-2 text-xs font-semibold">
+              <Mountain className="h-3.5 w-3.5 text-primary" />
+              {t('calc.corrections' as any) || 'Advanced corrections'}
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase tracking-wide text-muted-foreground flex items-center gap-1">
+                  <Mountain className="h-3 w-3" />
+                  {t('calc.slopeAngle' as any) || 'Shooting angle (°)'}
+                </label>
+                <input
+                  type="number"
+                  step="0.5"
+                  min="-60"
+                  max="60"
+                  value={form.slopeAngleDeg}
+                  onChange={e => update({ slopeAngleDeg: parseFloat(e.target.value) || 0 })}
+                  data-testid="slope-input"
+                  className="w-full bg-muted/40 border border-border rounded-md px-2 py-1 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+                <p className="text-[9px] text-muted-foreground">
+                  {t('calc.slopeAngle.help' as any) || 'Positive = uphill, Negative = downhill'}
+                </p>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase tracking-wide text-muted-foreground flex items-center gap-1">
+                  <RotateCw className="h-3 w-3" />
+                  {t('calc.cantAngle' as any) || 'Cant (°)'}
+                </label>
+                <input
+                  type="number"
+                  step="0.5"
+                  min="-45"
+                  max="45"
+                  value={form.cantAngleDeg}
+                  onChange={e => update({ cantAngleDeg: parseFloat(e.target.value) || 0 })}
+                  data-testid="cant-input"
+                  className="w-full bg-muted/40 border border-border rounded-md px-2 py-1 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+                <p className="text-[9px] text-muted-foreground">
+                  {t('calc.cantAngle.help' as any) || 'Lateral rifle cant. 0 = level.'}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="rounded-lg border border-dashed border-primary/30 bg-primary/5 px-3 py-2 flex items-center gap-2 text-[11px] text-muted-foreground">
+            <Settings2 className="h-3.5 w-3.5 text-primary shrink-0" />
+            <span>{t('calc.sectionAdvanced')} — {t('calc.modeHint')}</span>
+          </div>
+        </>
       )}
 
       <div className="sticky bottom-0 z-10 -mx-4 px-4 py-3 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/70 border-t border-border md:static md:mx-0 md:px-0 md:py-0 md:bg-transparent md:border-0">

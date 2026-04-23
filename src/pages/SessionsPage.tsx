@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { History, Star, Trash2, Search, Crosshair, Play, Filter, X, ArrowLeftRight, CheckSquare, RotateCcw, Target } from 'lucide-react';
+import { History, Star, Trash2, Search, Crosshair, Play, Filter, X, ArrowLeftRight, CheckSquare, RotateCcw, Target, Camera } from 'lucide-react';
 import { toast } from 'sonner';
 import { useI18n } from '@/lib/i18n';
 import { calculateTrajectory } from '@/lib/ballistics';
@@ -38,6 +38,7 @@ import {
 } from '@/lib/ballistic-table';
 import { FieldValidation } from '@/components/sessions/FieldValidation';
 import { TruingPanel } from '@/components/sessions/TruingPanel';
+import { TargetPhotoAnalyzer } from '@/components/sessions/TargetPhotoAnalyzer';
 import { CalibrationHistoryBlock } from '@/components/sessions/CalibrationHistoryBlock';
 import {
   Dialog,
@@ -70,6 +71,7 @@ export default function SessionsPage() {
   // confirmation does, and it always creates a NEW linked session.
   const [recalcSource, setRecalcSource] = useState<Session | null>(null);
   const [truingSource, setTruingSource] = useState<Session | null>(null);
+  const [targetSource, setTargetSource] = useState<Session | null>(null);
 
   const airguns = useMemo(() => airgunStore.getAll(), []);
   const projectiles = useMemo(() => projectileStore.getAll(), []);

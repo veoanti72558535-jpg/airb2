@@ -466,8 +466,32 @@ export interface Session {
    * show the filiation in LinkedSessions and to offer a side-by-side diff.
    */
   derivedFromSessionId?: string;
+  /**
+   * Calibration history — append-only log of BC truing events on this session.
+   * Each entry records the date, factor, corrected BC, and optional link to the
+   * derived projectile. Purely additive, rétrocompatible (optional field).
+   */
+  calibrationHistory?: CalibrationHistoryEntry[];
   createdAt: string;
   updatedAt: string;
+}
+
+/** Single BC calibration event recorded on a session. */
+export interface CalibrationHistoryEntry {
+  /** ISO timestamp of the calibration. */
+  date: string;
+  /** Original BC before calibration. */
+  originalBc: number;
+  /** Corrected BC after calibration. */
+  correctedBc: number;
+  /** Multiplicative factor (correctedBc / originalBc). */
+  factor: number;
+  /** Distance at which the measurement was taken (m). */
+  measuredDistance: number;
+  /** Measured drop (mm). */
+  measuredDropMm: number;
+  /** ID of the derived projectile created, if any. */
+  derivedProjectileId?: string;
 }
 
 export interface AppSettings {

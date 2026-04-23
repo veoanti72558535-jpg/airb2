@@ -1573,6 +1573,9 @@ const fr = {
   'truing.bcStable': 'BC quasi identique',
   'truing.button': 'Calibrer BC (Truing)',
   'truing.created': 'Projectile calibré créé',
+  'truing.history': 'Historique calibrations',
+  'truing.viewProjectile': 'Voir le projectile',
+  'truing.calibrated': 'BC calibré',
 } as const;
 
 const en: Record<keyof typeof fr, string> = {
@@ -3124,6 +3127,9 @@ const en: Record<keyof typeof fr, string> = {
   'truing.bcStable': 'BC nearly unchanged',
   'truing.button': 'Calibrate BC (Truing)',
   'truing.created': 'Calibrated projectile created',
+  'truing.history': 'Calibration history',
+  'truing.viewProjectile': 'View projectile',
+  'truing.calibrated': 'BC calibrated',
 };
 
 // Append paste-import keys (EN) — kept after object literal would be a TS

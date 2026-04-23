@@ -1,0 +1,188 @@
+import { useEffect, useMemo, useState, useCallback } from 'react';
+import { Search, Download, Check } from 'lucide-react';
+import { useI18n } from '@/lib/i18n';
+import { isSupabaseConfigured } from '@/integrations/supabase/client';
+import { useDebouncedValue } from '@/hooks/use-debounced-value';
+import { toast } from '@/hooks/use-toast';
+import {
+  getReticlesCatalog,
+  getCatalogBrands,
+  getCatalogPatternTypes,
+  importToLibrary,
+  isAlreadyImported,
+  type ReticleCatalogEntry,
+  type CatalogFilters,
+} from '@/lib/reticles-catalog-repo';
+import ReticleViewer from './ReticleViewer';
+
+export default function ReticleCatalogBrowser() {
+  const { t } = useI18n();
+  const [search, setSearch] = useState('');
+  const debouncedSearch = useDebouncedValue(search, 300);
+  const [brand, setBrand] = useState('');
+  const [focalPlane, setFocalPlane] = useState('');
+  const [clickUnits, setClickUnits] = useState('');
+  const [patternType, setPatternType] = useState('');
+  const [page, setPage] = useState(0);
+  const [data, setData] = useState<ReticleCatalogEntry[]>([]);
+  const [count, setCount] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [brands, setBrands] = useState<string[]>([]);
+  const [patterns, setPatterns] = useState<string[]>([]);
+  const [importedIds, setImportedIds] = useState<Set<number>>(new Set());
+
+  // Load filter options once
+  useEffect(() => {
+    getCatalogBrands().then(setBrands);
+    getCatalogPatternTypes().then(setPatterns);
+  }, []);
+
+  const filters: CatalogFilters = useMemo(() => ({
+    search: debouncedSearch || undefined,
+    brand: brand || undefined,
+    focal_plane: (focalPlane as 'FFP' | 'SFP') || undefined,
+    click_units: (clickUnits as 'MOA' | 'MRAD') || undefined,
+    pattern_type: patternType || undefined,
+  }), [debouncedSearch, brand, focalPlane, clickUnits, patternType]);
+
+  // Reset page on filter change
+  useEffect(() => { setPage(0); }, [debouncedSearch, brand, focalPlane, clickUnits, patternType]);
+
+  // Fetch data
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    getReticlesCatalog(filters, page).then(res => {
+      if (cancelled) return;
+      setData(res.data);
+      setCount(res.count);
+      setLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, [filters, page]);
+
+  const handleImport = useCallback((entry: ReticleCatalogEntry) => {
+    importToLibrary(entry);
+    setImportedIds(prev => new Set(prev).add(entry.reticle_id));
+    toast({ title: t('reticles.catalog.importSuccess') });
+  }, [t]);
+
+  const totalPages = Math.ceil(count / 20);
+  const selectClass = 'bg-muted border border-border rounded-md px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-primary';
+
+  if (!isSupabaseConfigured()) {
+    return (
+      <div className="surface-card p-8 text-center text-muted-foreground text-sm">
+        Supabase non configuré — catalogue indisponible.
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {/* Search */}
+      <div className="relative">
+        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+        <input
+          className="w-full bg-muted border border-border rounded-md pl-8 pr-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+          placeholder={t('reticles.catalog.search')}
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          data-testid="catalog-search"
+        />
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-wrap gap-2">
+        <select className={selectClass} value={brand} onChange={e => setBrand(e.target.value)} data-testid="catalog-filter-brand">
+          <option value="">{t('reticles.catalog.all')} — {t('reticles.catalog.brand')}</option>
+          {brands.map(b => <option key={b} value={b}>{b}</option>)}
+        </select>
+        <select className={selectClass} value={focalPlane} onChange={e => setFocalPlane(e.target.value)} data-testid="catalog-filter-fp">
+          <option value="">{t('reticles.catalog.all')} — {t('reticles.catalog.focalPlane')}</option>
+          <option value="FFP">FFP</option>
+          <option value="SFP">SFP</option>
+        </select>
+        <select className={selectClass} value={clickUnits} onChange={e => setClickUnits(e.target.value)} data-testid="catalog-filter-units">
+          <option value="">{t('reticles.catalog.all')} — {t('reticles.catalog.units')}</option>
+          <option value="MOA">MOA</option>
+          <option value="MRAD">MRAD</option>
+        </select>
+        <select className={selectClass} value={patternType} onChange={e => setPatternType(e.target.value)} data-testid="catalog-filter-pattern">
+          <option value="">{t('reticles.catalog.all')} — {t('reticles.catalog.pattern')}</option>
+          {patterns.map(p => <option key={p} value={p}>{p}</option>)}
+        </select>
+      </div>
+
+      {/* Count */}
+      <div className="text-xs text-muted-foreground">
+        {count} {t('reticles.catalog.title').toLowerCase()}
+        {loading && ' …'}
+      </div>
+
+      {/* Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {data.map(entry => {
+          const imported = importedIds.has(entry.reticle_id) || isAlreadyImported(entry.reticle_id);
+          return (
+            <div key={entry.reticle_id} className="surface-elevated p-3 flex gap-3 items-start" data-testid={`catalog-item-${entry.reticle_id}`}>
+              <div className="shrink-0">
+                <ReticleViewer reticle={entry} size={80} darkMode />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="font-semibold text-xs truncate" title={entry.name}>
+                  {entry.name.length > 40 ? entry.name.slice(0, 40) + '…' : entry.name}
+                </div>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {entry.focal_plane && <span className="tactical-badge">{entry.focal_plane}</span>}
+                  {entry.click_units && <span className="tactical-badge">{entry.click_units}</span>}
+                  <span className="tactical-badge">{entry.pattern_type}</span>
+                  {entry.min_magnification && entry.max_magnification && (
+                    <span className="tactical-badge">{entry.min_magnification}-{entry.max_magnification}x</span>
+                  )}
+                </div>
+                <button
+                  disabled={imported}
+                  onClick={() => handleImport(entry)}
+                  className={`mt-2 px-2 py-1 rounded text-xs font-medium flex items-center gap-1 ${
+                    imported
+                      ? 'bg-muted text-muted-foreground cursor-not-allowed'
+                      : 'bg-primary text-primary-foreground hover:opacity-90'
+                  }`}
+                  data-testid={`catalog-import-${entry.reticle_id}`}
+                >
+                  {imported ? (
+                    <><Check className="h-3 w-3" />{t('reticles.catalog.imported')}</>
+                  ) : (
+                    <><Download className="h-3 w-3" />{t('reticles.catalog.import')}</>
+                  )}
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 pt-2">
+          <button
+            disabled={page === 0}
+            onClick={() => setPage(p => p - 1)}
+            className="px-3 py-1 rounded text-xs bg-muted hover:bg-muted/80 disabled:opacity-40"
+          >
+            ←
+          </button>
+          <span className="text-xs text-muted-foreground">{page + 1} / {totalPages}</span>
+          <button
+            disabled={page >= totalPages - 1}
+            onClick={() => setPage(p => p + 1)}
+            className="px-3 py-1 rounded text-xs bg-muted hover:bg-muted/80 disabled:opacity-40"
+          >
+            →
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}

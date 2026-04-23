@@ -215,6 +215,14 @@
   .surface-card, .surface-elevated, [class*="bg-card"], [class*="bg-background"], [class*="bg-muted"], [class*="bg-popover"], aside, nav {
     transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease;
   }
+  /* Accent-bearing elements: smooth color swap on theme toggle */
+  [class*="bg-primary"], [class*="bg-accent"], [class*="bg-tactical"],
+  [class*="text-primary"], [class*="text-accent"], [class*="text-tactical"],
+  [class*="border-primary"], [class*="border-accent"], [class*="border-tactical"],
+  .tactical-badge, .text-gradient,
+  button, a {
+    transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease, fill 180ms ease, stroke 180ms ease;
+  }
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
   }

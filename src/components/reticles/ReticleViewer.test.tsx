@@ -540,4 +540,67 @@ describe('ReticleViewer', () => {
       expect(svgBuildCount()).toBe(0);
     });
   });
+
+  // ── LRU eviction ──
+  describe('LRU eviction at capacity (64)', () => {
+    beforeEach(() => { clearSvgCache(); resetSvgBuildCount(); });
+
+    it('evicts oldest entry after 64 unique inserts and rebuilds on re-access', () => {
+      const entry = makeEntry({ pattern_type: 'mrad' });
+      const { rerender } = render(<ReticleViewer reticle={entry} size={1} />);
+
+      // Fill cache with 64 unique sizes (1..64)
+      for (let s = 2; s <= 64; s++) {
+        rerender(<ReticleViewer reticle={entry} size={s} />);
+      }
+      expect(svgCacheSize()).toBe(64);
+      expect(svgBuildCount()).toBe(64);
+
+      // Insert 65th → evicts size=1 (oldest)
+      rerender(<ReticleViewer reticle={entry} size={65} />);
+      expect(svgCacheSize()).toBe(64); // still at max
+      expect(svgBuildCount()).toBe(65);
+
+      // Re-access size=1 → cache miss, must rebuild
+      resetSvgBuildCount();
+      rerender(<ReticleViewer reticle={entry} size={1} />);
+      expect(svgBuildCount()).toBe(1); // rebuilt
+
+      // Re-access size=2 → was also evicted by size=1 insertion (pushed to 65 again)
+      // Actually size=2 was evicted when size=65+size=1 pushed it out
+      resetSvgBuildCount();
+      rerender(<ReticleViewer reticle={entry} size={2} />);
+      expect(svgBuildCount()).toBe(1); // evicted, rebuilt
+    });
+
+    it('LRU promotion prevents eviction of recently accessed entries', () => {
+      const entry = makeEntry({ pattern_type: 'duplex' });
+      const { rerender } = render(<ReticleViewer reticle={entry} size={1} />);
+
+      // Fill to 64
+      for (let s = 2; s <= 64; s++) {
+        rerender(<ReticleViewer reticle={entry} size={s} />);
+      }
+      expect(svgCacheSize()).toBe(64);
+
+      // Touch size=1 → promotes it to most-recent
+      resetSvgBuildCount();
+      rerender(<ReticleViewer reticle={entry} size={1} />);
+      expect(svgBuildCount()).toBe(0); // cache hit
+
+      // Now insert size=65 → evicts size=2 (the new oldest), NOT size=1
+      rerender(<ReticleViewer reticle={entry} size={65} />);
+      expect(svgCacheSize()).toBe(64);
+
+      // size=1 still cached
+      resetSvgBuildCount();
+      rerender(<ReticleViewer reticle={entry} size={1} />);
+      expect(svgBuildCount()).toBe(0); // still a hit
+
+      // size=2 was evicted
+      resetSvgBuildCount();
+      rerender(<ReticleViewer reticle={entry} size={2} />);
+      expect(svgBuildCount()).toBe(1); // miss → rebuild
+    });
+  });
 });

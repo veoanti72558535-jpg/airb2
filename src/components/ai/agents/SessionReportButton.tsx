@@ -42,7 +42,7 @@ function buildPrompt(session: Session, language: string): string {
     `T: ${i.temperature}°C, P: ${i.pressure}hPa, H: ${i.humidity}% | ` +
     `Vent: ${i.windSpeed}m/s @${i.windAngle}° | ` +
     `Distances clés: ${rows || 'n/a'} | ` +
-    `Langue: ${language}`;
+    `Langue: ${language}`
   );
 }
 

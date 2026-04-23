@@ -4,6 +4,7 @@ import { Target, FileText, Timer, Settings2, Star, ChevronRight } from 'lucide-r
 import { useI18n } from '@/lib/i18n';
 import { sessionStore } from '@/lib/storage';
 import { calculateTrajectory } from '@/lib/ballistics';
+import { BallisticResult } from '@/lib/types';
 import { AppCard } from '@/components/ui/AppCard';
 import { BallisticValue } from '@/components/ui/BallisticValue';
 import { StatusBadge } from '@/components/ui/StatusBadge';
@@ -24,7 +25,7 @@ export default function Dashboard() {
     }
   }, [last]);
 
-  const zeroRow = lastResult?.table.find(r => r.distance === (last?.input.zeroRange ?? 0));
+  const zeroRow = lastResult?.find((r: BallisticResult) => r.distance === (last?.input.zeroRange ?? 0));
   const dropAtZero = zeroRow ? zeroRow.drop.toFixed(1) : '—';
   const velocityAtZero = zeroRow ? Math.round(zeroRow.velocity).toString() : '—';
   const energyAtZero = zeroRow ? zeroRow.energy.toFixed(1) : '—';
@@ -74,7 +75,7 @@ export default function Dashboard() {
             {t('dashboard.trajectory')} — {last.name}
           </h2>
           <div className="h-40">
-            <TrajectoryMiniChart table={lastResult.table} zeroRange={last.input.zeroRange} />
+            <TrajectoryMiniChart rows={lastResult} />
           </div>
         </AppCard>
       )}

@@ -496,6 +496,21 @@ export default function SessionsPage() {
           toast.success(t('recalculate.toastSuccess'), { description: created.name });
         }}
       />
+
+      {/* Target photo analyzer dialog */}
+      <Dialog open={targetSource !== null} onOpenChange={(open) => { if (!open) setTargetSource(null); }}>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{t('target.title' as any)}</DialogTitle>
+          </DialogHeader>
+          {targetSource && (
+            <TargetPhotoAnalyzer
+              sessionId={targetSource.id}
+              distanceM={targetSource.input.zeroRange}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </motion.div>
   );
 }

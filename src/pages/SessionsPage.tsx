@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { History, Star, Trash2, Search, Crosshair, Play, Filter, X, ArrowLeftRight, CheckSquare, RotateCcw } from 'lucide-react';
+import { History, Star, Trash2, Search, Crosshair, Play, Filter, X, ArrowLeftRight, CheckSquare, RotateCcw, Target } from 'lucide-react';
 import { toast } from 'sonner';
 import { useI18n } from '@/lib/i18n';
 import {
@@ -35,6 +35,13 @@ import {
   type BallisticTableConfig,
 } from '@/lib/ballistic-table';
 import { FieldValidation } from '@/components/sessions/FieldValidation';
+import { TruingPanel } from '@/components/sessions/TruingPanel';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 export default function SessionsPage() {
   const { t } = useI18n();
@@ -56,6 +63,7 @@ export default function SessionsPage() {
   // Tranche C — recalc target. Opening this dialog never recalculates; only
   // confirmation does, and it always creates a NEW linked session.
   const [recalcSource, setRecalcSource] = useState<Session | null>(null);
+  const [truingSource, setTruingSource] = useState<Session | null>(null);
 
   const airguns = useMemo(() => airgunStore.getAll(), []);
   const projectiles = useMemo(() => projectileStore.getAll(), []);
@@ -389,6 +397,14 @@ export default function SessionsPage() {
                       <RotateCcw className="h-3 w-3" />
                       {t('recalculate.action')}
                     </button>
+                    <button
+                      type="button"
+                      onClick={() => setTruingSource(s)}
+                      className="w-full inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md border border-dashed border-border text-[11px] text-muted-foreground hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-colors"
+                    >
+                      <Target className="h-3 w-3" />
+                      {t('truing.button')}
+                    </button>
                   </div>
                 )}
               </div>
@@ -409,6 +425,31 @@ export default function SessionsPage() {
       {/* Tranche C — Recalculate dialog. Opening = free; only confirm runs the
           engine and creates a brand-new linked session. The original is never
           mutated. */}
+      {/* Truing dialog */}
+      <Dialog open={truingSource !== null} onOpenChange={(open) => { if (!open) setTruingSource(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t('truing.title')}</DialogTitle>
+          </DialogHeader>
+          {truingSource && (
+            <TruingPanel
+              session={truingSource}
+              onBcCorrected={(correctedBc, projectileId) => {
+                if (!truingSource) return;
+                sessionStore.update(truingSource.id, {
+                  input: { ...truingSource.input, bc: correctedBc },
+                });
+                refresh();
+                setTruingSource(null);
+                toast.success(
+                  projectileId ? t('truing.created') : t('truing.applySession'),
+                );
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
       <RecalculateDialog
         open={recalcSource !== null}
         onOpenChange={(open) => { if (!open) setRecalcSource(null); }}

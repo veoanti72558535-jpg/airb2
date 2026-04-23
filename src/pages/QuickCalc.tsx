@@ -665,6 +665,29 @@ export default function QuickCalc() {
           onZeroWeatherReplace={next => update({ zeroWeather: next })}
           advanced={advanced}
         />
+        {/* A7 — AI Zero advisor. Pure assistance, never alters user's zero. */}
+        <div className="md:col-span-2 -mt-2">
+          <ZeroAdvisorButton
+            projectile={{
+              name: (() => {
+                const p = form.projectileId
+                  ? projectiles.find(pp => pp.id === form.projectileId)
+                  : null;
+                return p ? `${p.brand} ${p.model}` : 'Custom';
+              })(),
+              weightGrains: form.projectileWeight,
+              bc: form.bc,
+            }}
+            muzzleVelocityMs={form.muzzleVelocity}
+            typicalDistancesM={
+              form.useRange
+                ? [form.minRange || 0, form.targetDistance, form.maxRange]
+                    .filter(v => v > 0)
+                : [form.targetDistance].filter(v => v > 0)
+            }
+            usage="hunting"
+          />
+        </div>
         <DistanceSection
           targetDistance={form.targetDistance}
           useRange={form.useRange}

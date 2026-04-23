@@ -1,3 +1,4 @@
+/// <reference types="web-bluetooth" />
 /**
  * FX Radar Chronograph — Web Bluetooth LE service.
  *

@@ -264,7 +264,7 @@ const ReticleViewer = React.memo(function ReticleViewer({ reticle, size = 400, d
       aria-label={name}
     >
       <rect width={size} height={size} fill={bg} rx={2} />
-      <circle cx={cx} cy={cy} r={size / 2 - 2} stroke={darkMode ? '#333' : '#ccc'} strokeWidth={1} fill="none" />
+      <circle cx={size / 2} cy={size / 2} r={size / 2 - 2} stroke={darkMode ? '#333' : '#ccc'} strokeWidth={1} fill="none" />
       {elements.map((el, i) => <React.Fragment key={i}>{el}</React.Fragment>)}
       {badges}
     </svg>

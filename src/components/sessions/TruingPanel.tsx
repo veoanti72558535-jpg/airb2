@@ -8,6 +8,16 @@ import { projectileStore } from '@/lib/storage';
 import type { Session } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 
+// ── Validation constants ────────────────────────────────────────────────
+const DIST_MIN = 5;
+const DIST_MAX = 500;
+const DROP_MIN = -50_000;
+const DROP_MAX = 5_000;
+/** Round to 0.1 mm — reject anything with more decimals. */
+function dropPrecisionOk(v: number): boolean {
+  return Math.abs(v * 10 - Math.round(v * 10)) < 1e-9;
+}
+
 interface TruingPanelProps {
   session: Session;
   onBcCorrected: (correctedBc: number, projectileId?: string, calibrationEntry?: import('@/lib/types').CalibrationHistoryEntry) => void;
@@ -45,16 +55,48 @@ function enginePrediction(session: Session, distance: number): number | null {
 export function TruingPanel({ session, onBcCorrected }: TruingPanelProps) {
   const { t } = useI18n();
   const [step, setStep] = useState<Step>('input');
-  const [distance, setDistance] = useState(50);
+  const [distanceRaw, setDistanceRaw] = useState('50');
   const [dropMm, setDropMm] = useState('');
   const [result, setResult] = useState<CalibrationResult | null>(null);
   const [confirmExtreme, setConfirmExtreme] = useState(false);
+  const [errors, setErrors] = useState<{ distance?: string; drop?: string }>({});
+
+  const distance = parseFloat(distanceRaw) || 0;
 
   const predicted = useMemo(() => enginePrediction(session, distance), [session, distance]);
 
+  /** Validate both fields, return true if valid. */
+  const validate = (): boolean => {
+    const next: { distance?: string; drop?: string } = {};
+    // Distance
+    const d = parseFloat(distanceRaw);
+    if (!Number.isFinite(d)) {
+      next.distance = t('truing.errDistRequired');
+    } else if (d < DIST_MIN) {
+      next.distance = t('truing.errDistMin');
+    } else if (d > DIST_MAX) {
+      next.distance = t('truing.errDistMax');
+    } else if (d <= session.input.zeroRange) {
+      next.distance = t('truing.errDistBeyondZero').replace('{zero}', String(session.input.zeroRange));
+    }
+    // Drop
+    const m = parseFloat(dropMm);
+    if (!dropMm.trim() || !Number.isFinite(m)) {
+      next.drop = t('truing.errDropRequired');
+    } else if (m < DROP_MIN) {
+      next.drop = t('truing.errDropMin');
+    } else if (m > DROP_MAX) {
+      next.drop = t('truing.errDropMax');
+    } else if (!dropPrecisionOk(m)) {
+      next.drop = t('truing.errDropPrecision');
+    }
+    setErrors(next);
+    return !next.distance && !next.drop;
+  };
+
   const handleCalculate = () => {
-    const measured = parseFloat(dropMm);
-    if (!Number.isFinite(measured)) return;
+    if (!validate()) return;
+    const measured = Math.round(parseFloat(dropMm) * 10) / 10;
     try {
       const r = calibrateBC({ session, measuredDistance: distance, measuredDropMm: measured });
       setResult(r);

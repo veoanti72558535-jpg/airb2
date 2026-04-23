@@ -837,6 +837,8 @@ export default function QuickCalc() {
               onConfigChange={setTableConfig}
               nearZeroDistance={zeroIntersections.nearZeroDistance}
               farZeroDistance={zeroIntersections.farZeroDistance}
+              slopeAngleDeg={form.slopeAngleDeg}
+              cantAngleDeg={form.cantAngleDeg}
             />
           )}
 

@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { DopePdfExporter } from './DopePdfExporter';
 import { I18nProvider } from '@/lib/i18n';
@@ -56,9 +56,12 @@ describe('DopePdfExporter', () => {
   });
 
   it('calls exportDopePdf on click', async () => {
+    const { exportDopePdf } = await import('@/lib/dope-pdf-export');
+    vi.mocked(exportDopePdf).mockClear();
     wrap(<DopePdfExporter session={MOCK_SESSION} />);
     fireEvent.click(screen.getByRole('button'));
-    const { exportDopePdf } = await import('@/lib/dope-pdf-export');
-    expect(exportDopePdf).toHaveBeenCalledTimes(1);
+    await waitFor(() => {
+      expect(exportDopePdf).toHaveBeenCalledTimes(1);
+    });
   });
 });

@@ -529,6 +529,16 @@ const fr = {
   'clickCalc.hint.cm100m': '1 cm/100m = 0.1 MRAD',
   'clickCalc.hint.inch100yd': '¼" à 100yd = 6.99mm à 100m',
 
+   'clickCalc.err.clickValueMin': 'Minimum : 0.001',
+   'clickCalc.err.clickValueMax': 'Maximum : 10',
+   'clickCalc.err.clicksInteger': 'Nombre entier requis',
+   'clickCalc.err.clicksMin': 'Minimum : 1 clic',
+   'clickCalc.err.clicksMax': 'Maximum : 200 clics',
+   'clickCalc.err.distMin': 'Minimum : 1 m',
+   'clickCalc.err.distMax': 'Maximum : 2000 m',
+   'clickCalc.err.invMmMin': 'Valeur positive requise',
+   'clickCalc.err.invMmMax': 'Maximum : 100 000 mm',
+
   // Docs
   'docs.title': 'Documentation technique',
   'docs.subtitle': 'Fiches techniques, manuels et schémas',
@@ -2030,6 +2040,16 @@ const en: Record<keyof typeof fr, string> = {
   'clickCalc.hint.mrad': '0.1 MRAD = 1cm at 100m',
   'clickCalc.hint.cm100m': '1 cm/100m = 0.1 MRAD',
   'clickCalc.hint.inch100yd': '¼" at 100yd = 6.99mm at 100m',
+
+   'clickCalc.err.clickValueMin': 'Minimum: 0.001',
+   'clickCalc.err.clickValueMax': 'Maximum: 10',
+   'clickCalc.err.clicksInteger': 'Whole number required',
+   'clickCalc.err.clicksMin': 'Minimum: 1 click',
+   'clickCalc.err.clicksMax': 'Maximum: 200 clicks',
+   'clickCalc.err.distMin': 'Minimum: 1 m',
+   'clickCalc.err.distMax': 'Maximum: 2,000 m',
+   'clickCalc.err.invMmMin': 'Positive value required',
+   'clickCalc.err.invMmMax': 'Maximum: 100,000 mm',
 
   'docs.title': 'Technical Documentation',
   'docs.subtitle': 'Data sheets, manuals and diagrams',

@@ -3,6 +3,34 @@ import { Crosshair } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { calculateClickShift, reverseClickShift, type ClickUnit } from '@/lib/click-shift';
 
+/* ── Validation ── */
+function vClickValue(raw: string): string | null {
+  const v = parseFloat(raw);
+  if (isNaN(v) || v < 0.001) return 'clickCalc.err.clickValueMin';
+  if (v > 10) return 'clickCalc.err.clickValueMax';
+  return null;
+}
+function vClicks(raw: string): string | null {
+  if (raw !== '' && raw.includes('.')) return 'clickCalc.err.clicksInteger';
+  const v = parseInt(raw, 10);
+  if (isNaN(v) || v < 1) return 'clickCalc.err.clicksMin';
+  if (v > 200) return 'clickCalc.err.clicksMax';
+  return null;
+}
+function vDist(raw: string): string | null {
+  const v = parseFloat(raw);
+  if (isNaN(v) || v < 1) return 'clickCalc.err.distMin';
+  if (v > 2000) return 'clickCalc.err.distMax';
+  return null;
+}
+function vInvMm(raw: string): string | null {
+  if (raw === '') return null;
+  const v = parseFloat(raw);
+  if (isNaN(v) || v <= 0) return 'clickCalc.err.invMmMin';
+  if (v > 100_000) return 'clickCalc.err.invMmMax';
+  return null;
+}
+
 const UNIT_OPTIONS: { value: ClickUnit; tKey: string; hintKey: string }[] = [
   { value: 'MOA',        tKey: 'clickCalc.unit.moa',       hintKey: 'clickCalc.hint.moa' },
   { value: 'MRAD',       tKey: 'clickCalc.unit.mrad',      hintKey: 'clickCalc.hint.mrad' },
@@ -48,6 +76,13 @@ export default function ClickShiftCalculator() {
   const nc = parseInt(numClicks, 10) || 0;
   const dm = parseFloat(distance) || 0;
 
+  const errCV = vClickValue(clickValue);
+  const errNC = vClicks(numClicks);
+  const errDist = vDist(distance);
+  const errInvMm = vInvMm(invMm);
+  const errInvDist = vDist(invDist);
+  const hasMainError = !!(errCV || errNC || errDist);
+
   const result = useMemo(
     () => calculateClickShift({ clickValueNative: cv, clickUnit, numberOfClicks: nc, targetDistanceM: dm }),
     [cv, clickUnit, nc, dm],
@@ -62,7 +97,10 @@ export default function ClickShiftCalculator() {
 
   const hint = UNIT_OPTIONS.find(u => u.value === clickUnit);
 
-  const inputCls = "w-full bg-muted border border-border rounded-md px-3 py-1.5 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary";
+  const inputCls = (err?: string | null) =>
+    `w-full bg-muted border rounded-md px-3 py-1.5 text-sm font-mono focus:outline-none focus:ring-1 ${
+      err ? 'border-destructive focus:ring-destructive' : 'border-border focus:ring-primary'
+    }`;
   const selectCls = "w-full bg-muted border border-border rounded-md px-2 py-1.5 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-primary";
   const chipCls = (active: boolean) =>
     `px-2 py-1 rounded text-xs font-mono border transition-colors cursor-pointer ${
@@ -70,6 +108,9 @@ export default function ClickShiftCalculator() {
         ? 'bg-primary/20 border-primary text-primary font-semibold'
         : 'bg-muted border-border text-muted-foreground hover:border-primary/50'
     }`;
+
+  const errEl = (key: string | null) =>
+    key ? <p className="text-[10px] text-destructive mt-0.5">{t(key as any)}</p> : null;
 
   return (
     <div className="surface-elevated p-4 space-y-5">
@@ -98,7 +139,8 @@ export default function ClickShiftCalculator() {
 
         <div className="space-y-1">
           <label className="text-[10px] text-muted-foreground font-mono">{t('clickCalc.clickValue')}</label>
-          <input type="number" inputMode="decimal" step="0.001" min="0.001" max="10" className={inputCls} value={clickValue} onChange={e => setClickValue(e.target.value)} />
+          <input type="number" inputMode="decimal" step="0.001" min="0.001" max="10" className={inputCls(errCV)} value={clickValue} onChange={e => setClickValue(e.target.value)} />
+          {errEl(errCV)}
           <div className="flex flex-wrap gap-1.5 mt-1">
             {PRESETS[clickUnit].map(p => (
               <button key={p} className={chipCls(cv === p)} onClick={() => setClickValue(String(p))}>
@@ -115,7 +157,8 @@ export default function ClickShiftCalculator() {
 
         <div className="space-y-1">
           <label className="text-[10px] text-muted-foreground font-mono">{t('clickCalc.numClicks')}</label>
-          <input type="number" inputMode="numeric" min="1" max="200" className={inputCls} value={numClicks} onChange={e => setNumClicks(e.target.value)} />
+          <input type="number" inputMode="numeric" min="1" max="200" step="1" className={inputCls(errNC)} value={numClicks} onChange={e => setNumClicks(e.target.value)} />
+          {errEl(errNC)}
           <div className="flex flex-wrap gap-1.5 mt-1">
             {CLICK_PRESETS.map(p => (
               <button key={p} className={chipCls(nc === p)} onClick={() => setNumClicks(String(p))}>
@@ -127,7 +170,8 @@ export default function ClickShiftCalculator() {
 
         <div className="space-y-1">
           <label className="text-[10px] text-muted-foreground font-mono">{t('clickCalc.targetDist')}</label>
-          <input type="number" inputMode="numeric" min="1" max="2000" className={inputCls} value={distance} onChange={e => setDistance(e.target.value)} />
+          <input type="number" inputMode="numeric" min="1" max="2000" className={inputCls(errDist)} value={distance} onChange={e => setDistance(e.target.value)} />
+          {errEl(errDist)}
           <div className="flex flex-wrap gap-1.5 mt-1">
             {DIST_PRESETS.map(p => (
               <button key={p} className={chipCls(dm === p)} onClick={() => setDistance(String(p))}>
@@ -139,7 +183,7 @@ export default function ClickShiftCalculator() {
       </fieldset>
 
       {/* Section 3 — Result */}
-      {cv > 0 && nc > 0 && dm > 0 && (
+      {cv > 0 && nc > 0 && dm > 0 && !hasMainError && (
         <div className="space-y-3">
           <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t('clickCalc.result')}</h4>
           <div className="bg-primary/5 border border-primary/20 rounded-md p-3 space-y-2">
@@ -199,14 +243,16 @@ export default function ClickShiftCalculator() {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="text-[10px] text-muted-foreground font-mono">mm</label>
-            <input type="number" inputMode="decimal" min="0" className={inputCls} value={invMm} onChange={e => setInvMm(e.target.value)} placeholder="0" />
+            <input type="number" inputMode="decimal" min="0" max="100000" className={inputCls(errInvMm)} value={invMm} onChange={e => setInvMm(e.target.value)} placeholder="0" />
+            {errEl(errInvMm)}
           </div>
           <div>
             <label className="text-[10px] text-muted-foreground font-mono">Distance (m)</label>
-            <input type="number" inputMode="numeric" min="1" max="2000" className={inputCls} value={invDist} onChange={e => setInvDist(e.target.value)} />
+            <input type="number" inputMode="numeric" min="1" max="2000" className={inputCls(errInvDist)} value={invDist} onChange={e => setInvDist(e.target.value)} />
+            {errEl(errInvDist)}
           </div>
         </div>
-        {inverse && (
+        {inverse && !errInvMm && !errInvDist && (
           <div className="bg-primary/5 border border-primary/20 rounded-md p-3 text-sm font-mono space-y-1">
             <p className="font-semibold text-primary">
               {t('clickCalc.clicksNeeded')} : {inverse.rounded}

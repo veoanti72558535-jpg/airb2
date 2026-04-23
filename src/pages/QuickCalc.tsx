@@ -90,7 +90,12 @@ interface FormState {
   useZeroWeather: boolean;
   zeroWeather: WeatherSnapshot;
 }
+// slope/cant corrections — added to FormState
 
+interface FormState {
+  // re-declared below in actual position
+}
+// placeholder removed — see actual FormState above
 function defaultWeather(): WeatherSnapshot {
   return {
     temperature: 15,

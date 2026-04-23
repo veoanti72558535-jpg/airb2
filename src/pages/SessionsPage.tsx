@@ -49,6 +49,9 @@ import {
 export default function SessionsPage() {
   const { t } = useI18n();
   const navigate = useNavigate();
+  const settings = getSettings();
+  const truingEnabled = settings.featureFlags.truing !== false;
+  const isAdvanced = settings.advancedMode;
   const [sessions, setSessions] = useState<Session[]>(sessionStore.getAll());
   const [filter, setFilter] = useState<'all' | 'favorites'>('all');
   const [query, setQuery] = useState('');
@@ -322,6 +325,12 @@ export default function SessionsPage() {
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <span className="font-semibold text-sm truncate">{s.name}</span>
                       <EngineBadge session={s} size="xs" />
+                     {s.calibrationHistory && s.calibrationHistory.length > 0 && (
+                       <span className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded bg-primary/15 text-primary">
+                         <Target className="h-2.5 w-2.5" />
+                         {t('truing.calibrated')} ({s.calibrationHistory.length})
+                       </span>
+                     )}
                     </div>
                     <div className="text-xs text-muted-foreground font-mono mt-1">
                       {s.input.muzzleVelocity} m/s • BC {s.input.bc} • {s.input.projectileWeight} gr • Zero {s.input.zeroRange}m
@@ -386,6 +395,8 @@ export default function SessionsPage() {
                     <CalculationMetadataBlock session={s} />
                     {/* Field validation — terrain measurements vs predictions */}
                     <FieldValidation session={s} />
+                    {/* Calibration history */}
+                    <CalibrationHistoryBlock history={s.calibrationHistory ?? []} />
                     {/* Tranche H + J — Table balistique configurable +
                         assistant réticule synchronisé sur la même grille.
                         Lit les résultats figés, aucun recalcul moteur. */}
@@ -400,14 +411,14 @@ export default function SessionsPage() {
                       <RotateCcw className="h-3 w-3" />
                       {t('recalculate.action')}
                     </button>
-                    <button
+                    {truingEnabled && <button
                       type="button"
                       onClick={() => setTruingSource(s)}
                       className="w-full inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md border border-dashed border-border text-[11px] text-muted-foreground hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-colors"
                     >
                       <Target className="h-3 w-3" />
                       {t('truing.button')}
-                    </button>
+                    </button>}
                   </div>
                 )}
               </div>
@@ -437,10 +448,23 @@ export default function SessionsPage() {
           {truingSource && (
             <TruingPanel
               session={truingSource}
-              onBcCorrected={(correctedBc, projectileId) => {
+              allowNewProjectile={isAdvanced}
+              onBcCorrected={(correctedBc, projectileId, calibrationEntry) => {
                 if (!truingSource) return;
+                const updatedInput = { ...truingSource.input, bc: correctedBc };
+                let newResults = truingSource.results;
+                try {
+                  newResults = calculateTrajectory(updatedInput);
+                } catch (e) {
+                  console.warn('[truing] recalc failed, keeping old results', e);
+                }
+                const prevHistory = truingSource.calibrationHistory ?? [];
                 sessionStore.update(truingSource.id, {
-                  input: { ...truingSource.input, bc: correctedBc },
+                  input: updatedInput,
+                  results: newResults,
+                  ...(calibrationEntry
+                    ? { calibrationHistory: [...prevHistory, calibrationEntry] }
+                    : {}),
                 });
                 refresh();
                 setTruingSource(null);

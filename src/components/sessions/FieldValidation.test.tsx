@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 
 // ── Mock supabase ────────────────────────────────────────────────────────
@@ -70,9 +70,11 @@ describe('FieldValidation', () => {
     expect(screen.getByText('field.validation.title')).toBeTruthy();
   });
 
-  it('shows "no measurements" when history is empty', () => {
+  it('shows "no measurements" when history is empty', async () => {
     render(<FieldValidation session={makeSession()} />);
-    expect(screen.getByText('field.validation.noMeasurements')).toBeTruthy();
+    await waitFor(() => {
+      expect(screen.getByText('field.validation.noMeasurements')).toBeTruthy();
+    });
   });
 });
 

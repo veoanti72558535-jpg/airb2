@@ -1629,6 +1629,21 @@ const fr = {
   'truing.errDistBeyondZero': 'Distance doit dépasser le zéro ({zero} m)',
   'settings.featureTruing': 'Calibration BC (Truing)',
   'settings.featureTruingDesc': 'Activer le panneau de calibration BC sur les sessions',
+
+  // AI web-search agents (BUILD-IA web search)
+  'agentSearch.searchProjectile': 'Rechercher un projectile (IA)',
+  'agentSearch.velocityForums': 'Vitesses forums',
+  'agentSearch.bcPublished': 'BC publié',
+  'agentSearch.tuneAdvice': 'Conseils tune',
+  'agentSearch.reviews': 'Avis utilisateurs',
+  'agentSearch.weatherCurrent': 'Météo actuelle (IA)',
+  'agentSearch.importToLibrary': 'Importer dans ma bibliothèque',
+  'agentSearch.useThisBC': 'Utiliser ce BC',
+  'agentSearch.useConditions': 'Utiliser ces conditions',
+  'agentSearch.sources': 'Sources',
+  'agentSearch.confidence': 'Confiance',
+  'agentSearch.noResult': 'Aucun résultat trouvé',
+  'agentSearch.queryLabel': 'Rechercher...',
 } as const;
 
 const en: Record<keyof typeof fr, string> = {

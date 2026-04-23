@@ -128,3 +128,40 @@ export function isAlreadyImported(reticleId: number): boolean {
   const all = reticleStore.getAll();
   return all.some(r => (r as any).catalogReticleId === reticleId);
 }
+
+// ── Favorites (localStorage) ──
+
+const FAV_KEY = 'reticle_catalog_favorites';
+
+export function getFavoriteIds(): number[] {
+  try {
+    const raw = localStorage.getItem(FAV_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+}
+
+export function toggleFavorite(reticleId: number): boolean {
+  const ids = getFavoriteIds();
+  const idx = ids.indexOf(reticleId);
+  if (idx >= 0) { ids.splice(idx, 1); } else { ids.push(reticleId); }
+  localStorage.setItem(FAV_KEY, JSON.stringify(ids));
+  return idx < 0; // true if added
+}
+
+export function isFavorite(reticleId: number): boolean {
+  return getFavoriteIds().includes(reticleId);
+}
+
+export async function getFavoriteEntries(): Promise<ReticleCatalogEntry[]> {
+  const ids = getFavoriteIds();
+  if (!ids.length || !isSupabaseConfigured() || !supabase) return [];
+  try {
+    const { data, error } = await supabase
+      .from('reticles_catalog')
+      .select('*')
+      .in('reticle_id', ids)
+      .order('name');
+    if (error) { console.error('[reticles-catalog]', error.message); return []; }
+    return (data ?? []) as ReticleCatalogEntry[];
+  } catch { return []; }
+}

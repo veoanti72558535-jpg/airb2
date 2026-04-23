@@ -14,6 +14,7 @@ import { unitCategories, UnitOption } from '@/lib/units';
 import { motion } from 'framer-motion';
 import { useConversionHistory, ConversionHistoryEntry } from '@/hooks/use-conversion-history';
 import { useConversionFavorites } from '@/hooks/use-conversion-favorites';
+import ClickShiftCalculator from '@/components/conversions/ClickShiftCalculator';
 
 // ── Map category key → converter fn ──
 const convertFns: Record<string, (v: number, f: string, t: string) => number> = {
@@ -328,6 +329,11 @@ export default function ConversionsPage() {
             />
           ))}
         </div>
+      )}
+
+      {/* Quick energy calculator */}
+      {!normalizedQuery && (
+        <ClickShiftCalculator />
       )}
 
       {/* Quick energy calculator */}

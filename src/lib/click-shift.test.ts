@@ -81,4 +81,20 @@ describe('reverseClickShift', () => {
     expect(r.exact).toBe(1);
     expect(r.errorMm).toBe(0);
   });
+
+  it('errorPct: 15 mm at 100 m with 0.1 MRAD → rounded 2 → +5 mm = +33.3%', () => {
+    const r = reverseClickShift(15, 0.1, 'MRAD', 100);
+    expect(r.rounded).toBe(2);
+    expect(r.actualMm).toBe(20);
+    expect(r.errorMm).toBeCloseTo(5, 2);
+    expect(r.errorPct).toBeCloseTo(33.33, 1);
+  });
+
+  it('errorPct: negative when undershoot', () => {
+    const r = reverseClickShift(35, 0.1, 'MRAD', 100);
+    expect(r.rounded).toBe(4);
+    expect(r.actualMm).toBe(40);
+    expect(r.errorMm).toBeCloseTo(5, 2);
+    expect(r.errorPct).toBeCloseTo(14.29, 1);
+  });
 });

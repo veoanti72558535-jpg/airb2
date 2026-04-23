@@ -98,15 +98,16 @@ export function reverseClickShift(
   clickValueNative: number,
   clickUnit: ClickUnit,
   targetDistanceM: number,
-): { exact: number; rounded: number; actualMm: number; errorMm: number } {
+): { exact: number; rounded: number; actualMm: number; errorMm: number; errorPct: number } {
   const angleMrad = toMrad(clickValueNative, clickUnit);
   const perClickMm = angleMrad * targetDistanceM;
-  if (perClickMm === 0) return { exact: 0, rounded: 0, actualMm: 0, errorMm: 0 };
+  if (perClickMm === 0) return { exact: 0, rounded: 0, actualMm: 0, errorMm: 0, errorPct: 0 };
 
   const exact = desiredMm / perClickMm;
   const rounded = Math.round(exact);
   const actualMm = rounded * perClickMm;
   const errorMm = actualMm - desiredMm;
+  const errorPct = desiredMm !== 0 ? (errorMm / desiredMm) * 100 : 0;
 
-  return { exact, rounded, actualMm, errorMm };
+  return { exact, rounded, actualMm, errorMm, errorPct };
 }

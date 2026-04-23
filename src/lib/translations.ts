@@ -539,6 +539,14 @@ const fr = {
    'clickCalc.err.invMmMin': 'Valeur positive requise',
    'clickCalc.err.invMmMax': 'Maximum : 100 000 mm',
 
+   'clickCalc.inv.roundClick': 'Au clic près',
+   'clickCalc.inv.roundExact': 'Valeur exacte',
+   'clickCalc.inv.exact': 'exact',
+   'clickCalc.inv.error': 'Erreur',
+   'clickCalc.inv.overshoot': 'Dépassement — le POI ira légèrement au-delà',
+   'clickCalc.inv.undershoot': 'Sous-correction — le POI restera en deçà',
+   'clickCalc.inv.perfect': 'Correspondance exacte, aucune erreur d\'arrondi',
+
   // Docs
   'docs.title': 'Documentation technique',
   'docs.subtitle': 'Fiches techniques, manuels et schémas',
@@ -2050,6 +2058,14 @@ const en: Record<keyof typeof fr, string> = {
    'clickCalc.err.distMax': 'Maximum: 2,000 m',
    'clickCalc.err.invMmMin': 'Positive value required',
    'clickCalc.err.invMmMax': 'Maximum: 100,000 mm',
+
+   'clickCalc.inv.roundClick': 'Nearest click',
+   'clickCalc.inv.roundExact': 'Exact value',
+   'clickCalc.inv.exact': 'exact',
+   'clickCalc.inv.error': 'Error',
+   'clickCalc.inv.overshoot': 'Overshoot — POI will go slightly beyond',
+   'clickCalc.inv.undershoot': 'Undershoot — POI will fall slightly short',
+   'clickCalc.inv.perfect': 'Exact match, no rounding error',
 
   'docs.title': 'Technical Documentation',
   'docs.subtitle': 'Data sheets, manuals and diagrams',

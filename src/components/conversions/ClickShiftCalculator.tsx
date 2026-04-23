@@ -71,6 +71,7 @@ export default function ClickShiftCalculator() {
   // --- Inverse ---
   const [invMm, setInvMm]       = useState('');
   const [invDist, setInvDist]   = useState('100');
+  const [invRound, setInvRound] = useState<'click' | 'exact'>('click');
 
   const cv = parseFloat(clickValue) || 0;
   const nc = parseInt(numClicks, 10) || 0;
@@ -240,6 +241,17 @@ export default function ClickShiftCalculator() {
       <fieldset className="space-y-2 border-t border-border/50 pt-4">
         <legend className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t('clickCalc.inverse')}</legend>
         <p className="text-[11px] text-muted-foreground">{t('clickCalc.wantShift')}</p>
+
+        {/* Rounding toggle */}
+        <div className="flex gap-1.5">
+          <button className={chipCls(invRound === 'click')} onClick={() => setInvRound('click')}>
+            {t('clickCalc.inv.roundClick' as any)}
+          </button>
+          <button className={chipCls(invRound === 'exact')} onClick={() => setInvRound('exact')}>
+            {t('clickCalc.inv.roundExact' as any)}
+          </button>
+        </div>
+
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="text-[10px] text-muted-foreground font-mono">mm</label>
@@ -253,15 +265,45 @@ export default function ClickShiftCalculator() {
           </div>
         </div>
         {inverse && !errInvMm && !errInvDist && (
-          <div className="bg-primary/5 border border-primary/20 rounded-md p-3 text-sm font-mono space-y-1">
-            <p className="font-semibold text-primary">
-              {t('clickCalc.clicksNeeded')} : {inverse.rounded}
-              <span className="text-muted-foreground text-xs ml-2">({fmt(inverse.exact, 2)} exact)</span>
-            </p>
-            <p className="text-xs text-muted-foreground">
-              = {fmt(inverse.actualMm)} mm (±{fmt(Math.abs(inverse.errorMm))} mm)
-            </p>
-          </div>
+          (() => {
+            const desiredMm = parseFloat(invMm) || 0;
+            const displayClicks = invRound === 'click' ? inverse.rounded : inverse.exact;
+            const displayMm = invRound === 'click' ? inverse.actualMm : desiredMm;
+            const errMm = invRound === 'click' ? inverse.errorMm : 0;
+            const errPct = invRound === 'click' ? inverse.errorPct : 0;
+            const sign = errMm >= 0 ? '+' : '';
+            return (
+              <div className="bg-primary/5 border border-primary/20 rounded-md p-3 text-sm font-mono space-y-2">
+                <p className="font-semibold text-primary">
+                  {t('clickCalc.clicksNeeded')} :{' '}
+                  {invRound === 'click' ? inverse.rounded : fmt(inverse.exact, 3)}
+                  {invRound === 'click' && (
+                    <span className="text-muted-foreground text-xs ml-2">
+                      ({fmt(inverse.exact, 3)} {t('clickCalc.inv.exact' as any)})
+                    </span>
+                  )}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  = {fmt(displayMm)} mm
+                </p>
+                {invRound === 'click' && errMm !== 0 && (
+                  <div className="border-t border-border/50 pt-1.5 text-xs space-y-0.5">
+                    <p className={errMm > 0 ? 'text-amber-500' : 'text-blue-500'}>
+                      {t('clickCalc.inv.error' as any)} : {sign}{fmt(errMm)} mm ({sign}{fmt(errPct, 1)}%)
+                    </p>
+                    <p className="text-muted-foreground text-[10px]">
+                      {errMm > 0
+                        ? t('clickCalc.inv.overshoot' as any)
+                        : t('clickCalc.inv.undershoot' as any)}
+                    </p>
+                  </div>
+                )}
+                {invRound === 'click' && errMm === 0 && (
+                  <p className="text-xs text-green-500">✓ {t('clickCalc.inv.perfect' as any)}</p>
+                )}
+              </div>
+            );
+          })()
         )}
       </fieldset>
     </div>

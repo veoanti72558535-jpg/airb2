@@ -185,6 +185,7 @@ export default function SessionsPage() {
           )}
           <button onClick={() => setFilter('all')} className={`px-3 py-1 rounded-md text-xs font-medium ${filter === 'all' ? 'bg-primary/10 text-primary' : 'text-muted-foreground'}`}>{t('common.all')}</button>
           <button onClick={() => setFilter('favorites')} className={`px-3 py-1 rounded-md text-xs font-medium ${filter === 'favorites' ? 'bg-primary/10 text-primary' : 'text-muted-foreground'}`}>★</button>
+          {sessions.length > 0 && <TrainingLogSummarizerButton sessions={sessions} />}
         </div>
       </div>
 

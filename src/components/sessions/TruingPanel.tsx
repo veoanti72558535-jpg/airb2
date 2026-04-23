@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 
 interface TruingPanelProps {
   session: Session;
-  onBcCorrected: (correctedBc: number, projectileId?: string) => void;
+  onBcCorrected: (correctedBc: number, projectileId?: string, calibrationEntry?: import('@/lib/types').CalibrationHistoryEntry) => void;
 }
 
 type Step = 'input' | 'result' | 'apply';
@@ -85,12 +85,29 @@ export function TruingPanel({ session, onBcCorrected }: TruingPanelProps) {
       notes: `BC calibré depuis ${baseName}. Facteur ×${result.factor.toFixed(3)}`,
     });
     toast.success(t('truing.created'));
-    onBcCorrected(result.correctedBc, newProj.id);
+    const entry: import('@/lib/types').CalibrationHistoryEntry = {
+      date: new Date().toISOString(),
+      originalBc: result.originalBc,
+      correctedBc: result.correctedBc,
+      factor: result.factor,
+      measuredDistance: distance,
+      measuredDropMm: parseFloat(dropMm),
+      derivedProjectileId: newProj.id,
+    };
+    onBcCorrected(result.correctedBc, newProj.id, entry);
   };
 
   const handleApplySession = () => {
     if (!result) return;
-    onBcCorrected(result.correctedBc, undefined);
+    const entry: import('@/lib/types').CalibrationHistoryEntry = {
+      date: new Date().toISOString(),
+      originalBc: result.originalBc,
+      correctedBc: result.correctedBc,
+      factor: result.factor,
+      measuredDistance: distance,
+      measuredDropMm: parseFloat(dropMm),
+    };
+    onBcCorrected(result.correctedBc, undefined, entry);
   };
 
   const handleRestart = () => {

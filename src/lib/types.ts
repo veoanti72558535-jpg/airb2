@@ -243,6 +243,8 @@ export interface Reticle {
   notes?: string;
   /** Tranche F.1 — origine de la donnée si importée. */
   importedFrom?: ImportSource;
+  /** Catalogue source reticle_id if imported from reticles_catalog. */
+  catalogReticleId?: number;
   /**
    * Tranche F.4 — image principale optionnelle, encodée en data URL
    * (data:image/<png|jpeg|webp>;base64,...). Une seule image par réticule

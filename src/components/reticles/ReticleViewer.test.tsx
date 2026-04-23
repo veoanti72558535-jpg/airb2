@@ -394,4 +394,80 @@ describe('ReticleViewer', () => {
       expect(svgCacheSize()).toBe(1); // no new entry
     });
   });
+
+  // ── Rapid scroll / performance-mode regression ──
+  describe('rapid scroll simulation', () => {
+    beforeEach(() => clearSvgCache());
+
+    it('performance mode produces fewer elements than full mode across rapid size changes', () => {
+      const entry = makeEntry({ pattern_type: 'mrad' });
+      const sizes = [100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300];
+
+      let totalFullElements = 0;
+      let totalPerfElements = 0;
+
+      // Simulate rapid scrolling: render at many sizes in quick succession
+      const { container, rerender } = render(
+        <ReticleViewer reticle={entry} size={sizes[0]} />
+      );
+      totalFullElements += container.querySelectorAll('line,circle,polygon,text').length;
+
+      for (let i = 1; i < sizes.length; i++) {
+        rerender(<ReticleViewer reticle={entry} size={sizes[i]} />);
+        totalFullElements += container.querySelectorAll('line,circle,polygon,text').length;
+      }
+
+      // Now the same sequence in performance mode
+      clearSvgCache();
+      rerender(<ReticleViewer reticle={entry} size={sizes[0]} performanceMode />);
+      totalPerfElements += container.querySelectorAll('line,circle,polygon,text').length;
+
+      for (let i = 1; i < sizes.length; i++) {
+        rerender(<ReticleViewer reticle={entry} size={sizes[i]} performanceMode />);
+        totalPerfElements += container.querySelectorAll('line,circle,polygon,text').length;
+      }
+
+      // Performance mode should have strictly fewer total elements
+      expect(totalPerfElements).toBeLessThan(totalFullElements);
+      // At least 30% reduction
+      expect(totalPerfElements / totalFullElements).toBeLessThan(0.7);
+    });
+
+    it('cache limits SVG rebuilds during rapid size changes', () => {
+      clearSvgCache();
+      const entry = makeEntry({ pattern_type: 'bdc' });
+      const sizes = [200, 220, 240, 200, 220, 240, 200, 220, 240];
+
+      const { rerender } = render(
+        <ReticleViewer reticle={entry} size={sizes[0]} performanceMode />
+      );
+      for (let i = 1; i < sizes.length; i++) {
+        rerender(<ReticleViewer reticle={entry} size={sizes[i]} performanceMode />);
+      }
+
+      // Only 3 unique size keys should exist, not 9
+      expect(svgCacheSize()).toBe(3);
+    });
+
+    it('toggling performanceMode on/off during scroll reuses cache', () => {
+      clearSvgCache();
+      const entry = makeEntry({ pattern_type: 'duplex' });
+
+      const { container, rerender } = render(
+        <ReticleViewer reticle={entry} size={300} />
+      );
+      const fullLines = container.querySelectorAll('line').length;
+
+      // Switch to perf mode (simulating scroll start)
+      rerender(<ReticleViewer reticle={entry} size={300} performanceMode />);
+      const perfLines = container.querySelectorAll('line').length;
+      expect(perfLines).toBeLessThanOrEqual(fullLines);
+      expect(svgCacheSize()).toBe(2);
+
+      // Switch back (scroll end) — should reuse cache entry #1
+      rerender(<ReticleViewer reticle={entry} size={300} />);
+      expect(svgCacheSize()).toBe(2); // no new entry
+      expect(container.querySelectorAll('line').length).toBe(fullLines);
+    });
+  });
 });

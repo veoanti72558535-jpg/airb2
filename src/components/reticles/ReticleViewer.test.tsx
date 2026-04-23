@@ -470,4 +470,40 @@ describe('ReticleViewer', () => {
       expect(container.querySelectorAll('line').length).toBe(fullLines);
     });
   });
+
+  // ── Extreme sizes ──
+  describe('extreme sizes', () => {
+    const patterns = ['bdc', 'mildot', 'duplex', 'german', 'moa', 'mrad', 'chevron'] as const;
+
+    beforeEach(() => clearSvgCache());
+
+    it.each(patterns)('%s: tiny size (20) renders same element count as normal size', (pattern) => {
+      const entry = makeEntry({ pattern_type: pattern });
+      const { container: cTiny } = render(<ReticleViewer reticle={entry} size={20} />);
+      const { container: cNormal } = render(<ReticleViewer reticle={entry} size={400} />);
+      // Element counts must match — only coordinates scale
+      const count = (c: HTMLElement) => c.querySelectorAll('line,circle,polygon').length;
+      expect(count(cTiny)).toBe(count(cNormal));
+    });
+
+    it.each(patterns)('%s: large size (2000) renders same element count as normal size', (pattern) => {
+      const entry = makeEntry({ pattern_type: pattern });
+      const { container: cLarge } = render(<ReticleViewer reticle={entry} size={2000} />);
+      const { container: cNormal } = render(<ReticleViewer reticle={entry} size={400} />);
+      const count = (c: HTMLElement) => c.querySelectorAll('line,circle,polygon').length;
+      expect(count(cLarge)).toBe(count(cNormal));
+    });
+
+    it('cache works across extreme sizes', () => {
+      clearSvgCache();
+      const entry = makeEntry({ pattern_type: 'mrad' });
+      const { rerender } = render(<ReticleViewer reticle={entry} size={10} />);
+      expect(svgCacheSize()).toBe(1);
+      rerender(<ReticleViewer reticle={entry} size={2000} />);
+      expect(svgCacheSize()).toBe(2);
+      // Re-render at size 10 → cache hit
+      rerender(<ReticleViewer reticle={entry} size={10} />);
+      expect(svgCacheSize()).toBe(2);
+    });
+  });
 });

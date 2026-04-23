@@ -2,8 +2,9 @@
  * SVG reticle renderer — faithful to Strelok Pro coordinate system.
  * Coordinate mapping: x = cx + milX * ms, y = cy - milY * ms (Y inverted).
  * All patterns rendered in pure SVG, no canvas or bitmap.
+ * Memoized: SVG elements only recompute when relevant parameters change.
  */
-import React from 'react';
+import React, { useMemo } from 'react';
 import type { ReticleCatalogEntry } from '@/lib/reticles-catalog-repo';
 import type { Reticle } from '@/lib/types';
 
@@ -27,39 +28,42 @@ function isCatalog(r: Props['reticle']): r is ReticleCatalogEntry {
   return 'reticle_id' in r;
 }
 
-export default function ReticleViewer({ reticle, size = 400, darkMode = true, currentMagnification }: Props) {
-  const cx = size / 2;
-  const cy = size / 2;
-  const ms = size / 20; // milScale: pixels per MIL, viewport ±10 MIL
+// Extract stable scalar values from the reticle prop for memoization
+function extractReticleParams(reticle: Props['reticle']) {
   const pattern = getPatternType(reticle);
-  const bg = darkMode ? '#0a0a0a' : '#f5f5f5';
-  const color = darkMode ? '#00FF00' : '#1a1a1a';
-  const thinW = 0.05 * ms; // standard line width
-  const thickW = 3;
-
   const fp = isCatalog(reticle) ? reticle.focal_plane : ('focalPlane' in reticle ? (reticle as Reticle).focalPlane : null);
   const trueMag = isCatalog(reticle) ? reticle.true_magnification : null;
   const clickUnits = isCatalog(reticle) ? reticle.click_units : ('unit' in reticle ? (reticle as Reticle).unit : null);
   const clickVal = isCatalog(reticle) ? reticle.click_vertical : ('subtension' in reticle ? (reticle as Reticle).subtension : null);
   const illum = isCatalog(reticle) ? reticle.illuminated : false;
+  const name = isCatalog(reticle) ? reticle.name : ('brand' in reticle ? `${(reticle as Reticle).brand} ${(reticle as Reticle).model}` : 'Reticle');
+  return { pattern, fp, trueMag, clickUnits, clickVal, illum, name };
+}
 
-  // SFP scaling
+function buildSvgElements(
+  pattern: string, size: number, darkMode: boolean,
+  fp: string | null, trueMag: number | null, currentMagnification: number | undefined,
+  illum: boolean, clickVal: number | null, clickUnits: string | null,
+): { elements: React.ReactNode[]; badges: React.ReactNode[] } {
+  const cx = size / 2;
+  const cy = size / 2;
+  const ms = size / 20;
+  const color = darkMode ? '#00FF00' : '#1a1a1a';
+  const thinW = 0.05 * ms;
+  const thickW = 3;
+
   const scaleFactor = fp === 'SFP' && trueMag && currentMagnification ? currentMagnification / trueMag : 1;
-  const sms = ms * scaleFactor; // scaled milScale for hash marks
+  const sms = ms * scaleFactor;
 
-  // Helper: line in MIL coords
   const L = (x1: number, y1: number, x2: number, y2: number, sw = thinW) => (
     <line x1={cx + x1 * ms} y1={cy - y1 * ms} x2={cx + x2 * ms} y2={cy - y2 * ms} stroke={color} strokeWidth={sw} />
   );
-  // Horizontal tick (z0 in Strelok)
   const hTick = (milY: number, milX: number, w: number, sw = thinW) => (
     <line x1={cx + (milX - w / 2) * sms} y1={cy - milY * sms} x2={cx + (milX + w / 2) * sms} y2={cy - milY * sms} stroke={color} strokeWidth={sw} />
   );
-  // Vertical tick (D1 in Strelok)
   const vTick = (milX: number, milY: number, h: number, sw = thinW) => (
     <line x1={cx + milX * sms} y1={cy - (milY - h / 2) * sms} x2={cx + milX * sms} y2={cy - (milY + h / 2) * sms} stroke={color} strokeWidth={sw} />
   );
-  // Circle in MIL coords
   const dot = (milX: number, milY: number, r: number) => (
     <circle cx={cx + milX * ms} cy={cy - milY * ms} r={r} fill={color} />
   );
@@ -208,7 +212,6 @@ export default function ReticleViewer({ reticle, size = 400, darkMode = true, cu
     }
   }
 
-  // Badge helpers
   const badgeFontSize = Math.max(7, size * 0.025);
   const badges: React.ReactNode[] = [];
   if (fp) {
@@ -236,6 +239,19 @@ export default function ReticleViewer({ reticle, size = 400, darkMode = true, cu
     );
   }
 
+  return { elements, badges };
+}
+
+const ReticleViewer = React.memo(function ReticleViewer({ reticle, size = 400, darkMode = true, currentMagnification }: Props) {
+  const { pattern, fp, trueMag, clickUnits, clickVal, illum, name } = extractReticleParams(reticle);
+
+  const { elements, badges } = useMemo(
+    () => buildSvgElements(pattern, size, darkMode, fp, trueMag, currentMagnification, illum, clickVal, clickUnits),
+    [pattern, size, darkMode, fp, trueMag, currentMagnification, illum, clickVal, clickUnits],
+  );
+
+  const bg = darkMode ? '#0a0a0a' : '#f5f5f5';
+
   return (
     <svg
       width={size}
@@ -245,12 +261,14 @@ export default function ReticleViewer({ reticle, size = 400, darkMode = true, cu
       data-testid="reticle-viewer"
       data-pattern={pattern}
       role="img"
-      aria-label={isCatalog(reticle) ? reticle.name : ('brand' in reticle ? `${(reticle as Reticle).brand} ${(reticle as Reticle).model}` : 'Reticle')}
+      aria-label={name}
     >
       <rect width={size} height={size} fill={bg} rx={2} />
-      <circle cx={cx} cy={cy} r={size / 2 - 2} stroke={darkMode ? '#333' : '#ccc'} strokeWidth={1} fill="none" />
+      <circle cx={size / 2} cy={size / 2} r={size / 2 - 2} stroke={darkMode ? '#333' : '#ccc'} strokeWidth={1} fill="none" />
       {elements.map((el, i) => <React.Fragment key={i}>{el}</React.Fragment>)}
       {badges}
     </svg>
   );
-}
+});
+
+export default ReticleViewer;

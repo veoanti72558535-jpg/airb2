@@ -7,6 +7,9 @@ import { reticleStore } from '@/lib/storage';
 import { RETICLE_TYPES, RETICLE_UNITS } from '@/lib/reticle';
 import type { Reticle, ReticleType, ReticleUnit, OpticFocalPlane } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
+import { isSupabaseConfigured } from '@/integrations/supabase/client';
+import { cn } from '@/lib/utils';
+import ReticleCatalogBrowser from '@/components/reticles/ReticleCatalogBrowser';
 
 interface FormState {
   brand: string;
@@ -41,6 +44,8 @@ export default function ReticlesPage() {
   const [reticles, setReticles] = useState<Reticle[]>(() => reticleStore.getAll());
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<FormState>(emptyForm);
+  const [tab, setTab] = useState<'mine' | 'catalog'>('mine');
+  const hasCatalog = isSupabaseConfigured();
 
   const refresh = () => setReticles(reticleStore.getAll());
 
@@ -81,7 +86,7 @@ export default function ReticlesPage() {
           <Crosshair className="h-5 w-5 text-primary" />
           <h1 className="text-xl font-heading font-bold">{t('reticles.title')}</h1>
         </div>
-        <button
+        {tab === 'mine' && <button
           onClick={() => {
             setShowForm(s => !s);
             setForm(emptyForm);
@@ -91,10 +96,34 @@ export default function ReticlesPage() {
         >
           <Plus className="h-4 w-4" />
           {t('reticles.add')}
-        </button>
+        </button>}
       </div>
 
-      {showForm && (
+      {/* Tabs */}
+      {hasCatalog && (
+        <div className="flex gap-1">
+          <button
+            onClick={() => setTab('mine')}
+            className={cn('px-3 py-1.5 rounded-lg text-xs font-medium transition-colors',
+              tab === 'mine' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground hover:bg-muted')}
+          >
+            {t('reticles.tabs.mine')}
+          </button>
+          <button
+            onClick={() => setTab('catalog')}
+            className={cn('px-3 py-1.5 rounded-lg text-xs font-medium transition-colors',
+              tab === 'catalog' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground hover:bg-muted')}
+          >
+            {t('reticles.tabs.catalog')}
+          </button>
+        </div>
+      )}
+
+      {tab === 'catalog' && hasCatalog ? (
+        <ReticleCatalogBrowser />
+      ) : (
+      <>
+      {showForm && tab === 'mine' && (
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -259,6 +288,8 @@ export default function ReticlesPage() {
             </div>
           ))}
         </div>
+      )}
+      </>
       )}
     </motion.div>
   );

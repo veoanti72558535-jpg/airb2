@@ -4,6 +4,7 @@ import { History, Star, Trash2, Search, Crosshair, Play, Filter, X, ArrowLeftRig
 import { toast } from 'sonner';
 import { useI18n } from '@/lib/i18n';
 import { calculateTrajectory } from '@/lib/ballistics';
+import { getSettings } from '@/lib/storage';
 import {
   sessionStore,
   airgunStore,
@@ -48,6 +49,9 @@ import {
 export default function SessionsPage() {
   const { t } = useI18n();
   const navigate = useNavigate();
+  const settings = getSettings();
+  const truingEnabled = settings.featureFlags.truing !== false;
+  const isAdvanced = settings.advancedMode;
   const [sessions, setSessions] = useState<Session[]>(sessionStore.getAll());
   const [filter, setFilter] = useState<'all' | 'favorites'>('all');
   const [query, setQuery] = useState('');
@@ -407,14 +411,14 @@ export default function SessionsPage() {
                       <RotateCcw className="h-3 w-3" />
                       {t('recalculate.action')}
                     </button>
-                    <button
+                    {truingEnabled && <button
                       type="button"
                       onClick={() => setTruingSource(s)}
                       className="w-full inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md border border-dashed border-border text-[11px] text-muted-foreground hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-colors"
                     >
                       <Target className="h-3 w-3" />
                       {t('truing.button')}
-                    </button>
+                    </button>}
                   </div>
                 )}
               </div>
@@ -444,10 +448,9 @@ export default function SessionsPage() {
           {truingSource && (
             <TruingPanel
               session={truingSource}
+              allowNewProjectile={isAdvanced}
               onBcCorrected={(correctedBc, projectileId, calibrationEntry) => {
                 if (!truingSource) return;
-                const prevHistory = truingSource.calibrationHistory ?? [];
-                // Recalculate trajectory with corrected BC
                 const updatedInput = { ...truingSource.input, bc: correctedBc };
                 let newResults = truingSource.results;
                 try {
@@ -455,6 +458,7 @@ export default function SessionsPage() {
                 } catch (e) {
                   console.warn('[truing] recalc failed, keeping old results', e);
                 }
+                const prevHistory = truingSource.calibrationHistory ?? [];
                 sessionStore.update(truingSource.id, {
                   input: updatedInput,
                   results: newResults,

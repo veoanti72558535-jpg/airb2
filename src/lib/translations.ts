@@ -1584,6 +1584,8 @@ const fr = {
   'truing.errDropMax': 'Drop max. : 5 000 mm',
   'truing.errDropPrecision': 'Précision max. : 0.1 mm',
   'truing.errDistBeyondZero': 'Distance doit dépasser le zéro ({zero} m)',
+  'settings.featureTruing': 'Calibration BC (Truing)',
+  'settings.featureTruingDesc': 'Activer le panneau de calibration BC sur les sessions',
 } as const;
 
 const en: Record<keyof typeof fr, string> = {
@@ -3146,6 +3148,8 @@ const en: Record<keyof typeof fr, string> = {
   'truing.errDropMax': 'Max drop: 5,000 mm',
   'truing.errDropPrecision': 'Max precision: 0.1 mm',
   'truing.errDistBeyondZero': 'Distance must exceed zero ({zero} m)',
+  'settings.featureTruing': 'BC Calibration (Truing)',
+  'settings.featureTruingDesc': 'Enable BC calibration panel on sessions',
 };
 
 // Append paste-import keys (EN) — kept after object literal would be a TS

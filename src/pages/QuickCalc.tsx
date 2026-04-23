@@ -260,6 +260,8 @@ export default function QuickCalc() {
       weather: baseWeather,
       useZeroWeather: !!i.zeroWeather,
       zeroWeather: i.zeroWeather ?? defaultWeather(),
+      slopeAngleDeg: i.slopeAngleDeg ?? 0,
+      cantAngleDeg: i.cantAngleDeg ?? 0,
     };
     setForm(hydrated);
     setResults(session.results ?? null);
@@ -267,6 +269,7 @@ export default function QuickCalc() {
     setPreviewOriginId(session.id);
     setTableConfig(prev => ({ ...defaultConfig(i.maxRange), columns: prev.columns }));
     if (i.dragModel === 'G7' || i.zeroWeather || i.focalPlane === 'SFP' || i.twistRate) setAdvanced(true);
+    if (i.slopeAngleDeg || i.cantAngleDeg) setAdvanced(true);
     toast.success(t('sessions.loaded'), { description: session.name });
     setSearchParams(prev => { const p = new URLSearchParams(prev); p.delete('session'); return p; });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -479,6 +482,8 @@ export default function QuickCalc() {
       projectileDiameter: form.projectileDiameter,
       zeroWeather: form.useZeroWeather ? form.zeroWeather : undefined,
       customDragTable: form.customDragTable,
+      slopeAngleDeg: form.slopeAngleDeg || undefined,
+      cantAngleDeg: form.cantAngleDeg || undefined,
     };
   };
 

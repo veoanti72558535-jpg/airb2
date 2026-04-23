@@ -236,13 +236,11 @@ export function calculateTrajectory(input: BallisticInput): BallisticResult[] {
       }
 
       if (applyCant) {
-        // Use slope-corrected drop if available, otherwise raw drop
         const effectiveDrop = applySlope ? r.dropAfterSlope! : r.drop;
         const shift = -effectiveDrop * sinCant;
         const dropCorr = effectiveDrop * cosCantMinus1;
         r.cantWindageShift = Math.round(shift * 10) / 10;
         r.cantDropCorrection = Math.round(dropCorr * 10) / 10;
-        // Add cant shift to total wind drift
         r.windDrift = Math.round((r.windDrift + shift) * 10) / 10;
       }
     }

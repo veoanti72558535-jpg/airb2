@@ -35,7 +35,6 @@ import {
   type BallisticTableConfig,
 } from '@/lib/ballistic-table';
 import { FieldValidation } from '@/components/sessions/FieldValidation';
-import { DopePdfExporter } from '@/components/sessions/DopePdfExporter';
 
 export default function SessionsPage() {
   const { t } = useI18n();
@@ -390,9 +389,6 @@ export default function SessionsPage() {
                       <RotateCcw className="h-3 w-3" />
                       {t('recalculate.action')}
                     </button>
-                    {s.results.length > 0 && (
-                      <DopePdfExporter session={s} />
-                    )}
                   </div>
                 )}
               </div>

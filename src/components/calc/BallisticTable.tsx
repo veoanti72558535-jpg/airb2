@@ -9,7 +9,7 @@
  * the table itself scrolls horizontally when the chosen columns overflow.
  */
 import { useMemo, useState } from 'react';
-import { ChevronDown, ChevronUp, Settings2, RotateCcw, Crosshair, Sparkles } from 'lucide-react';
+import { ChevronDown, ChevronUp, Settings2, RotateCcw, Crosshair, Sparkles, Mountain, RotateCw } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import type { TranslationKey } from '@/lib/translations';
 import { useUnits } from '@/hooks/use-units';
@@ -51,6 +51,10 @@ interface Props {
    */
   nearZeroDistance?: number | null;
   farZeroDistance?: number | null;
+  /** When non-zero, slope correction columns appear. */
+  slopeAngleDeg?: number;
+  /** When non-zero, cant drift column appears. */
+  cantAngleDeg?: number;
 }
 
 const COLUMN_LABEL_KEYS: Record<BallisticTableColumn, TranslationKey> = {
@@ -76,6 +80,8 @@ export function BallisticTable({
   title,
   nearZeroDistance,
   farZeroDistance,
+  slopeAngleDeg,
+  cantAngleDeg,
 }: Props) {
   const { t } = useI18n();
   const { symbol } = useUnits();
@@ -97,6 +103,9 @@ export function BallisticTable({
     if (!isControlled) setInternalCfg(next);
     onConfigChange?.(next);
   };
+
+  const showSlope = !!slopeAngleDeg && slopeAngleDeg !== 0;
+  const showCant = !!cantAngleDeg && cantAngleDeg !== 0;
 
   const distUnit = symbol('distance');
   const lengthUnit = symbol('length');
@@ -266,6 +275,14 @@ export function BallisticTable({
                         {t('ballisticTable.drop')} ({lengthUnit})
                       </th>
                     )}
+                    {showSlope && isColumnVisible(cfg, 'drop') && (
+                      <th data-testid="bt-th-dropCorrected" className="text-right py-1.5 px-2">
+                        <span className="inline-flex items-center gap-0.5">
+                          <Mountain className="h-3 w-3 text-primary" />
+                          {t('calc.dropCorrected' as any) || 'Corrected'} ({lengthUnit})
+                        </span>
+                      </th>
+                    )}
                     {isColumnVisible(cfg, 'holdover') && (
                       <th data-testid="bt-th-holdover" className="text-right py-1.5 px-2">
                         {t('ballisticTable.holdover')} ({clickUnit})
@@ -299,6 +316,14 @@ export function BallisticTable({
                     {isColumnVisible(cfg, 'tof') && (
                       <th data-testid="bt-th-tof" className="text-right py-1.5 pl-2">
                         {t('ballisticTable.timeOfFlight')} (s)
+                      </th>
+                    )}
+                    {showCant && (
+                      <th data-testid="bt-th-cantDrift" className="text-right py-1.5 px-2">
+                        <span className="inline-flex items-center gap-0.5">
+                          <RotateCw className="h-3 w-3 text-primary" />
+                          {t('calc.cantDrift' as any) || 'Cant'} ({lengthUnit})
+                        </span>
                       </th>
                     )}
                     <th className="py-1.5 pl-2 w-0" />
@@ -363,6 +388,11 @@ export function BallisticTable({
                         {isColumnVisible(cfg, 'drop') && (
                           <td className="text-right py-1.5 px-2">{r.drop.toFixed(1)}</td>
                         )}
+                        {showSlope && isColumnVisible(cfg, 'drop') && (
+                          <td data-testid={`bt-dropCorrected-${r.range}`} className="text-right py-1.5 px-2 text-primary font-semibold">
+                            {r.dropAfterSlope != null ? r.dropAfterSlope.toFixed(1) : '—'}
+                          </td>
+                        )}
                         {isColumnVisible(cfg, 'holdover') && (
                           <td className="text-right py-1.5 px-2">
                             {(clickUnit === 'MOA' ? r.holdover : r.holdoverMRAD).toFixed(2)}
@@ -396,6 +426,16 @@ export function BallisticTable({
                         )}
                         {isColumnVisible(cfg, 'tof') && (
                           <td className="text-right py-1.5 pl-2">{r.tof.toFixed(3)}</td>
+                        )}
+                        {showCant && (
+                          <td data-testid={`bt-cantDrift-${r.range}`} className="text-right py-1.5 px-2">
+                            {r.cantWindageShift != null ? (
+                              <span className="inline-flex items-center gap-0.5">
+                                {r.cantWindageShift > 0 ? '→' : r.cantWindageShift < 0 ? '←' : ''}
+                                {r.cantWindageShift.toFixed(1)}
+                              </span>
+                            ) : '—'}
+                          </td>
                         )}
                         <td className="py-1.5 pl-2">
                           <ShotLineExplainer

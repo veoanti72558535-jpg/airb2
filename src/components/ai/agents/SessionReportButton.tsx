@@ -25,6 +25,7 @@ interface Props {
 
 function buildPrompt(session: Session, language: string): string {
   const i = session.input;
+  const w = i.weather;
   const r = session.results ?? [];
   const keyDistances = [25, 50, 75, 100].filter(d => r.some(x => x.range === d));
   const rows = keyDistances
@@ -35,12 +36,12 @@ function buildPrompt(session: Session, language: string): string {
     .join(' | ');
   return (
     `Session: ${session.name ?? session.id} | ` +
-    `Projectile: ${i.weight}gr BC ${i.bc} (${i.bcModel}) | ` +
+    `Projectile: ${i.projectileWeight}gr BC ${i.bc} (${i.dragModel ?? 'G1'}) | ` +
     `V0: ${i.muzzleVelocity}m/s | ` +
     `Zéro: ${i.zeroRange}m | ` +
     `SightHeight: ${i.sightHeight}mm | ` +
-    `T: ${i.temperature}°C, P: ${i.pressure}hPa, H: ${i.humidity}% | ` +
-    `Vent: ${i.windSpeed}m/s @${i.windAngle}° | ` +
+    `T: ${w.temperature}°C, P: ${w.pressure}hPa, H: ${w.humidity}% | ` +
+    `Vent: ${w.windSpeed}m/s @${w.windAngle}° | ` +
     `Distances clés: ${rows || 'n/a'} | ` +
     `Langue: ${language}`
   );

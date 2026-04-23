@@ -26,7 +26,7 @@ function buildPrompt(sessions: Session[], language: string): string {
   const lines = sessions.map(s => {
     const i = s.input;
     const date = s.createdAt ? new Date(s.createdAt).toISOString().slice(0, 10) : '?';
-    return `${date} | ${s.name ?? s.id.slice(0, 6)} | ${i.weight}gr BC ${i.bc} | V0 ${i.muzzleVelocity}m/s | T ${i.temperature}°C`;
+    return `${date} | ${s.name ?? s.id.slice(0, 6)} | ${i.projectileWeight}gr BC ${i.bc} | V0 ${i.muzzleVelocity}m/s | T ${i.weather.temperature}°C`;
   });
   return (
     `Sessions:\n${lines.join('\n')}\n` +

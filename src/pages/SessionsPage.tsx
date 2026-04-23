@@ -397,6 +397,14 @@ export default function SessionsPage() {
                       <RotateCcw className="h-3 w-3" />
                       {t('recalculate.action')}
                     </button>
+                    <button
+                      type="button"
+                      onClick={() => setTruingSource(s)}
+                      className="w-full inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md border border-dashed border-border text-[11px] text-muted-foreground hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-colors"
+                    >
+                      <Target className="h-3 w-3" />
+                      {t('truing.button')}
+                    </button>
                   </div>
                 )}
               </div>

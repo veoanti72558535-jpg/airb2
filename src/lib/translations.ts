@@ -1422,6 +1422,27 @@ const fr = {
   'chart.advanced.toggleDrop': 'Afficher chute',
   'chart.advanced.toggleWindage': 'Afficher dérive',
   'chart.advanced.toggleEnergy': 'Afficher énergie',
+
+  // Chronograph
+  'chrono.title': 'Chronographe',
+  'chrono.connect': 'Connecter FX Radar',
+  'chrono.disconnect': 'Déconnecter',
+  'chrono.scanning': 'Recherche en cours...',
+  'chrono.connected': 'FX Radar connecté',
+  'chrono.unsupported': 'Web Bluetooth non supporté — utilisez Chrome sur Android',
+  'chrono.manualEntry': 'Saisie manuelle',
+  'chrono.addVelocity': 'Ajouter une vitesse',
+  'chrono.velocity': 'Vitesse',
+  'chrono.shot': 'Tir',
+  'chrono.average': 'Moyenne',
+  'chrono.es': 'Extrême spread',
+  'chrono.sd': 'Écart-type',
+  'chrono.linkToSession': 'Lier à la session',
+  'chrono.exportCsv': 'Exporter CSV',
+  'chrono.noMeasurements': 'Aucune mesure',
+  'chrono.source.ble': 'BLE',
+  'chrono.source.manual': 'Manuel',
+  'chrono.save': 'Enregistrer',
 } as const;
 
 const en: Record<keyof typeof fr, string> = {
@@ -2822,6 +2843,27 @@ const en: Record<keyof typeof fr, string> = {
   'chart.advanced.toggleDrop': 'Show drop',
   'chart.advanced.toggleWindage': 'Show windage',
   'chart.advanced.toggleEnergy': 'Show energy',
+
+  // Chronograph
+  'chrono.title': 'Chronograph',
+  'chrono.connect': 'Connect FX Radar',
+  'chrono.disconnect': 'Disconnect',
+  'chrono.scanning': 'Scanning...',
+  'chrono.connected': 'FX Radar connected',
+  'chrono.unsupported': 'Web Bluetooth not supported — use Chrome on Android',
+  'chrono.manualEntry': 'Manual entry',
+  'chrono.addVelocity': 'Add velocity',
+  'chrono.velocity': 'Velocity',
+  'chrono.shot': 'Shot',
+  'chrono.average': 'Average',
+  'chrono.es': 'Extreme spread',
+  'chrono.sd': 'Std deviation',
+  'chrono.linkToSession': 'Link to session',
+  'chrono.exportCsv': 'Export CSV',
+  'chrono.noMeasurements': 'No measurements',
+  'chrono.source.ble': 'BLE',
+  'chrono.source.manual': 'Manual',
+  'chrono.save': 'Save',
 };
 
 // Append paste-import keys (EN) — kept after object literal would be a TS

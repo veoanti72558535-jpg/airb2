@@ -145,7 +145,7 @@ function dropAtDistance(
   const span = x - prevX;
   const t = span > 0 ? (distance - prevX) / span : 0;
   const yAtD = prevY + t * (y - prevY);
-  const sightLine = -sightHeightM + (sightHeightM / zeroRange) * distance;
+  const sightLine = sightHeightM - (sightHeightM / zeroRange) * distance;
   return (yAtD - sightLine) * 1000;
 }
 

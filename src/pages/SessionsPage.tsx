@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { History, Star, Trash2, Search, Crosshair, Play, Filter, X, ArrowLeftRight, CheckSquare, RotateCcw, Target } from 'lucide-react';
 import { toast } from 'sonner';
 import { useI18n } from '@/lib/i18n';
+import { calculateTrajectory } from '@/lib/ballistics';
+import { getSettings } from '@/lib/storage';
 import {
   sessionStore,
   airgunStore,
@@ -36,6 +38,7 @@ import {
 } from '@/lib/ballistic-table';
 import { FieldValidation } from '@/components/sessions/FieldValidation';
 import { TruingPanel } from '@/components/sessions/TruingPanel';
+import { CalibrationHistoryBlock } from '@/components/sessions/CalibrationHistoryBlock';
 import {
   Dialog,
   DialogContent,

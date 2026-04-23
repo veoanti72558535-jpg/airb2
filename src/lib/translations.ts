@@ -1422,6 +1422,27 @@ const fr = {
   'chart.advanced.toggleDrop': 'Afficher chute',
   'chart.advanced.toggleWindage': 'Afficher dérive',
   'chart.advanced.toggleEnergy': 'Afficher énergie',
+
+  // Chronograph
+  'chrono.title': 'Chronographe',
+  'chrono.connect': 'Connecter FX Radar',
+  'chrono.disconnect': 'Déconnecter',
+  'chrono.scanning': 'Recherche en cours...',
+  'chrono.connected': 'FX Radar connecté',
+  'chrono.unsupported': 'Web Bluetooth non supporté — utilisez Chrome sur Android',
+  'chrono.manualEntry': 'Saisie manuelle',
+  'chrono.addVelocity': 'Ajouter une vitesse',
+  'chrono.velocity': 'Vitesse',
+  'chrono.shot': 'Tir',
+  'chrono.average': 'Moyenne',
+  'chrono.es': 'Extrême spread',
+  'chrono.sd': 'Écart-type',
+  'chrono.linkToSession': 'Lier à la session',
+  'chrono.exportCsv': 'Exporter CSV',
+  'chrono.noMeasurements': 'Aucune mesure',
+  'chrono.source.ble': 'BLE',
+  'chrono.source.manual': 'Manuel',
+  'chrono.save': 'Enregistrer',
 } as const;
 
 const en: Record<keyof typeof fr, string> = {

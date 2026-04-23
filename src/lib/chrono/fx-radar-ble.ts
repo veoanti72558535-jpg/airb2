@@ -19,6 +19,52 @@
 const CANDIDATE_SERVICE = '0000fff0-0000-1000-8000-00805f9b34fb';
 const CANDIDATE_CHAR    = '0000fff1-0000-1000-8000-00805f9b34fb';
 
+export type BleDataFormat = 'float32' | 'uint16' | 'uint8' | 'auto';
+export type BleEndian = 'little' | 'big';
+
+export interface BleParseConfig {
+  format: BleDataFormat;
+  endian: BleEndian;
+  /** Divisor applied after reading raw value (e.g. 10 for tenths of m/s) */
+  divisor: number;
+}
+
+export const DEFAULT_BLE_PARSE_CONFIG: BleParseConfig = {
+  format: 'auto',
+  endian: 'little',
+  divisor: 1,
+};
+
+export function parseVelocityValue(value: DataView, config: BleParseConfig): number | null {
+  const le = config.endian === 'little';
+  let raw: number;
+
+  if (config.format === 'auto') {
+    if (value.byteLength >= 4) {
+      raw = value.getFloat32(0, le);
+    } else if (value.byteLength >= 2) {
+      raw = value.getUint16(0, le) / 10;
+    } else {
+      raw = value.getUint8(0);
+    }
+  } else if (config.format === 'float32') {
+    if (value.byteLength < 4) return null;
+    raw = value.getFloat32(0, le);
+  } else if (config.format === 'uint16') {
+    if (value.byteLength < 2) return null;
+    raw = value.getUint16(0, le);
+  } else {
+    raw = value.getUint8(0);
+  }
+
+  const velocity = config.divisor !== 1 && config.format !== 'auto'
+    ? raw / config.divisor
+    : (config.format === 'auto' ? raw : raw);
+
+  if (velocity > 0 && velocity < 500) return velocity;
+  return null;
+}
+
 export interface BleDiscoveryLog {
   service: string;
   characteristics: string[];
@@ -80,6 +126,7 @@ export async function startVelocityStream(
   device: BluetoothDevice,
   onVelocity: (velocityMs: number) => void,
   onError: (error: Error) => void,
+  config: BleParseConfig = DEFAULT_BLE_PARSE_CONFIG,
 ): Promise<() => void> {
   try {
     const gatt = device.gatt!;
@@ -118,20 +165,11 @@ export async function startVelocityStream(
     const handler = (event: Event) => {
       const value = (event.target as BluetoothRemoteGATTCharacteristic).value;
       if (!value) return;
-      // FX Radar typically sends velocity as a 16-bit or 32-bit float.
-      // Try float32 first (4 bytes), fallback to uint16
-      let velocity: number;
-      if (value.byteLength >= 4) {
-        velocity = value.getFloat32(0, true); // little-endian
-      } else if (value.byteLength >= 2) {
-        velocity = value.getUint16(0, true) / 10; // often tenths of m/s
-      } else {
-        velocity = value.getUint8(0);
-      }
-      if (velocity > 0 && velocity < 500) { // sanity: airgun range
+      const velocity = parseVelocityValue(value, config);
+      if (velocity !== null) {
         onVelocity(velocity);
       } else {
-        console.warn('[FX Radar] Unexpected velocity value:', velocity,
+        console.warn('[FX Radar] Unexpected velocity value:',
           'raw bytes:', new Uint8Array(value.buffer));
       }
     };

@@ -1656,6 +1656,32 @@ const fr = {
   'agents.gameMedium': 'Gibier moyen',
   'agents.gameLarge': 'Grand gibier',
   'agents.gameUnspecified': 'Non précisé',
+
+  // BUILD-IA bis — diagnostic / library / reports agents
+  'agents2.fieldDelta': 'Analyser l\'écart (IA)',
+  'agents2.chronoStats': 'Interpréter les stats (IA)',
+  'agents2.groupingAnalysis': 'Analyser le groupement (IA)',
+  'agents2.tuneStability': 'Vérifier la stabilité (IA)',
+  'agents2.pairingAdvisor': 'Projectiles recommandés (IA)',
+  'agents2.opticAdvisor': 'Conseiller optique (IA)',
+  'agents2.compareAdvisor': 'Analyse comparative (IA)',
+  'agents2.caliberAdvisor': 'Conseiller calibre (IA)',
+  'agents2.sessionReport': 'Rapport de session (IA)',
+  'agents2.trainingLog': 'Résumé du mois (IA)',
+  'agents2.competitionPrep': 'Préparation compétition (IA)',
+  'agents2.exportPdf': 'Exporter en PDF',
+  'agents2.expectedWeather': 'Météo prévue',
+  'agents2.usageHunting': 'Chasse',
+  'agents2.usageHuntSmall': 'Chasse petit gibier',
+  'agents2.usageHuntMedium': 'Chasse gibier moyen',
+  'agents2.usageTarget': 'Target',
+  'agents2.usageFt': 'Field Target',
+  'agents2.usageBenchrest': 'Benchrest',
+  'agents2.usagePlinking': 'Plinking',
+  'agents2.usageUnspecified': 'Non précisé',
+  'agents2.caliberConstraintHint': 'Contrainte (budget, bruit...)',
+  'nav.competitionPrep': 'Préparation compétition',
+  'target.analyzeCard': 'Analyser cible',
 } as const;
 
 const en: Record<keyof typeof fr, string> = {

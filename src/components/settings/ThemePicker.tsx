@@ -18,25 +18,28 @@ export function ThemePicker() {
             key={t.id}
             onClick={() => setTheme(t.id)}
             className={cn(
-              'relative flex flex-col items-start gap-1.5 p-3 rounded-lg border-2 transition-all duration-200 text-left',
+              'relative flex flex-col items-start gap-1.5 p-3 rounded-lg border-2 transition-all duration-200 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
               selected
-                ? 'border-primary bg-primary/5'
-                : 'border-border hover:border-muted-foreground/30 bg-card'
+                ? 'border-primary bg-primary/10 shadow-sm shadow-primary/10'
+                : 'border-border hover:border-muted-foreground/50 bg-card'
             )}
+            aria-pressed={selected}
           >
             {/* Mini preview */}
             <div
-              className="w-full h-8 rounded-md flex items-center justify-center gap-1 border border-border/30"
+              className="w-full h-8 rounded-md flex items-center justify-center gap-1 border border-border/50"
               style={{ backgroundColor: t.bgColor }}
             >
               <div className="w-6 h-2 rounded-sm" style={{ backgroundColor: t.accentColor }} />
               <div className="w-4 h-2 rounded-sm" style={{ backgroundColor: t.accentColor, opacity: 0.4 }} />
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="text-xs font-medium text-foreground">{label}</span>
+              <span className="text-xs font-semibold text-foreground">{label}</span>
               <span className={cn(
                 'text-[10px] px-1.5 py-0.5 rounded font-medium',
-                t.isDark ? 'bg-muted text-muted-foreground' : 'bg-primary/10 text-primary'
+                t.isDark
+                  ? 'bg-secondary text-secondary-foreground'
+                  : 'bg-primary/15 text-primary'
               )}>
                 {t.isDark ? (locale === 'fr' ? 'Sombre' : 'Dark') : (locale === 'fr' ? 'Clair' : 'Light')}
               </span>

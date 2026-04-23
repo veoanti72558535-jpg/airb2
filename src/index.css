@@ -212,7 +212,11 @@
     font-family: var(--font-body);
     transition: background-color 180ms ease, color 180ms ease;
   }
-  .surface-card, .surface-elevated, [class*="bg-card"], [class*="bg-background"], [class*="bg-muted"], [class*="bg-popover"], aside, nav {
+  .surface-card, .surface-elevated,
+  [class*="bg-card"], [class*="bg-background"], [class*="bg-muted"], [class*="bg-popover"],
+  aside, nav, main, header, footer, section, dialog,
+  [role="dialog"], [data-radix-popper-content-wrapper],
+  [class*="fixed inset"], [class*="bg-black/"] {
     transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease;
   }
   /* Accent-bearing elements: smooth color swap on theme toggle */

@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Crosshair, Plus, Trash2, Image as ImageIcon } from 'lucide-react';
+import { Crosshair, Plus, Trash2, Image as ImageIcon, Heart } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useI18n } from '@/lib/i18n';
 import { reticleStore } from '@/lib/storage';
@@ -8,6 +8,8 @@ import { RETICLE_TYPES, RETICLE_UNITS } from '@/lib/reticle';
 import type { Reticle, ReticleType, ReticleUnit, OpticFocalPlane } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
 import { isSupabaseConfigured } from '@/integrations/supabase/client';
+import { getFavoriteIds, getFavoriteEntries, toggleFavorite, type ReticleCatalogEntry } from '@/lib/reticles-catalog-repo';
+import ReticleViewer from '@/components/reticles/ReticleViewer';
 import { cn } from '@/lib/utils';
 import ReticleCatalogBrowser from '@/components/reticles/ReticleCatalogBrowser';
 

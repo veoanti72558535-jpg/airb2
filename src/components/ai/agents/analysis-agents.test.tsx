@@ -169,4 +169,30 @@ describe('Cache badge', () => {
       expect(screen.getByTestId('pbr-explainer-badge-cache')).toBeInTheDocument(),
     );
   });
+
+  it('shows fresh badge when fromCache=false', async () => {
+    queryMock.mockResolvedValueOnce({
+      ok: true,
+      data: {
+        text: 'Fresh response',
+        provider: 'quatarly',
+        model: 'claude-haiku-4-5',
+        run_id: 'run-3',
+        fromCache: false,
+      },
+    });
+    render(
+      withProviders(
+        <WindCorrectionCoachButton
+          windSpeedMs={3}
+          windAngleDeg={90}
+          windDriftResults={[{ distanceM: 50, driftMm: 18 }]}
+        />,
+      ),
+    );
+    fireEvent.click(screen.getByTestId('wind-coach-btn'));
+    await waitFor(() =>
+      expect(screen.getByTestId('wind-coach-badge-fresh')).toBeInTheDocument(),
+    );
+  });
 });

@@ -1443,6 +1443,13 @@ const fr = {
   'chrono.source.ble': 'BLE',
   'chrono.source.manual': 'Manuel',
   'chrono.save': 'Enregistrer',
+  'chrono.settings.title': 'Réglages parsing BLE',
+  'chrono.settings.desc': 'Ajuster le format d\'interprétation des octets de vitesse',
+  'chrono.settings.format': 'Format de données',
+  'chrono.settings.auto': 'Auto (détection)',
+  'chrono.settings.endian': 'Ordre des octets',
+  'chrono.settings.divisor': 'Diviseur',
+  'chrono.settings.divisorHint': 'ex. 10 si l\'appareil envoie des dixièmes de m/s',
 } as const;
 
 const en: Record<keyof typeof fr, string> = {
@@ -2864,6 +2871,13 @@ const en: Record<keyof typeof fr, string> = {
   'chrono.source.ble': 'BLE',
   'chrono.source.manual': 'Manual',
   'chrono.save': 'Save',
+  'chrono.settings.title': 'BLE parse settings',
+  'chrono.settings.desc': 'Adjust how velocity bytes are interpreted',
+  'chrono.settings.format': 'Data format',
+  'chrono.settings.auto': 'Auto (detect)',
+  'chrono.settings.endian': 'Byte order',
+  'chrono.settings.divisor': 'Divisor',
+  'chrono.settings.divisorHint': 'e.g. 10 if device sends tenths of m/s',
 };
 
 // Append paste-import keys (EN) — kept after object literal would be a TS

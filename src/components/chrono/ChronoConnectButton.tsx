@@ -9,15 +9,18 @@ import {
   startVelocityStream,
   disconnect,
 } from '@/lib/chrono/fx-radar-ble';
+import type { BleParseConfig } from '@/lib/chrono/fx-radar-ble';
+import { DEFAULT_BLE_PARSE_CONFIG } from '@/lib/chrono/fx-radar-ble';
 
 type BleState = 'unsupported' | 'disconnected' | 'scanning' | 'connected' | 'error';
 
 interface ChronoConnectButtonProps {
   onVelocity: (v: number) => void;
   onStateChange?: (state: BleState) => void;
+  bleConfig?: BleParseConfig;
 }
 
-export default function ChronoConnectButton({ onVelocity, onStateChange }: ChronoConnectButtonProps) {
+export default function ChronoConnectButton({ onVelocity, onStateChange, bleConfig }: ChronoConnectButtonProps) {
   const { t } = useI18n();
   const [state, setState] = useState<BleState>(
     isWebBluetoothSupported() ? 'disconnected' : 'unsupported',
@@ -44,6 +47,7 @@ export default function ChronoConnectButton({ onVelocity, onStateChange }: Chron
           setError(err.message);
           updateState('error');
         },
+        bleConfig ?? DEFAULT_BLE_PARSE_CONFIG,
       );
       setStopFn(() => stop);
       updateState('connected');

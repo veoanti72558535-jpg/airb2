@@ -1454,6 +1454,15 @@ const fr = {
   'admin.ble.desc': 'Scanner un appareil BLE et lister tous les services/caractéristiques GATT pour diagnostic',
   'admin.ble.scan': 'Scanner un appareil',
   'admin.ble.exportJson': 'Exporter UUIDs JSON',
+  'calc.slopeAngle': 'Angle de tir (°)',
+  'calc.slopeAngle.help': 'Positif = montée, Négatif = descente',
+  'calc.cantAngle': 'Cant (°)',
+  'calc.cantAngle.help': 'Inclinaison latérale du fusil. 0 = droit.',
+  'calc.corrections': 'Corrections avancées',
+  'calc.dropCorrected': 'Drop corrigé',
+  'calc.cantDrift': 'Dérive cant',
+  'session.slopeAngle': 'Angle de tir',
+  'session.cantAngle': 'Cant',
 } as const;
 
 const en: Record<keyof typeof fr, string> = {
@@ -2886,6 +2895,15 @@ const en: Record<keyof typeof fr, string> = {
   'admin.ble.desc': 'Scan a BLE device and list all GATT services/characteristics for diagnosis',
   'admin.ble.scan': 'Scan device',
   'admin.ble.exportJson': 'Export UUIDs JSON',
+  'calc.slopeAngle': 'Shooting angle (°)',
+  'calc.slopeAngle.help': 'Positive = uphill, Negative = downhill',
+  'calc.cantAngle': 'Cant (°)',
+  'calc.cantAngle.help': 'Lateral rifle cant. 0 = level.',
+  'calc.corrections': 'Advanced corrections',
+  'calc.dropCorrected': 'Corrected drop',
+  'calc.cantDrift': 'Cant drift',
+  'session.slopeAngle': 'Shooting angle',
+  'session.cantAngle': 'Cant',
 };
 
 // Append paste-import keys (EN) — kept after object literal would be a TS

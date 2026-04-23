@@ -45,6 +45,7 @@ import { TrajectoryMiniChart } from '@/components/calc/TrajectoryMiniChart';
 import { PbrCard } from '@/components/calc/PbrCard';
 import { ZeroAdvisorButton } from '@/components/ai/agents/ZeroAdvisorButton';
 import { WindCorrectionCoachButton } from '@/components/ai/agents/WindCorrectionCoachButton';
+import { EnergyAdvisorButton } from '@/components/ai/agents/EnergyAdvisorButton';
 import { computeZeroIntersections } from '@/lib/zero-intersections';
 import { computePointBlankRange } from '@/lib/pbr';
 import { usePbrPrefs } from '@/hooks/use-pbr-prefs';
@@ -755,6 +756,17 @@ export default function QuickCalc() {
             zeroWeather={form.useZeroWeather ? form.zeroWeather : undefined}
             energyThresholdJ={energyThresholdJ}
           />
+
+          {/* A9 — Energy hunting advisor for the hero distance. Optional
+              game-size selector lets the model qualify the recommendation. */}
+          {heroResult && heroResult.energy > 0 && (
+            <div className="rounded-xl border border-border bg-card/60 p-3">
+              <EnergyAdvisorButton
+                energyJ={heroResult.energy}
+                distanceM={heroResult.range}
+              />
+            </div>
+          )}
 
           {/* Tranche O — Near / Far Zero, dérivés de `results`. Mémoïsé pour
               partager la donnée entre la carte dédiée et les marqueurs de

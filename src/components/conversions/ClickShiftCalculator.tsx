@@ -90,10 +90,10 @@ export default function ClickShiftCalculator() {
           <label className="text-[10px] text-muted-foreground font-mono">{t('clickCalc.clickUnit')}</label>
           <select className={selectCls} value={clickUnit} onChange={e => setClickUnit(e.target.value as ClickUnit)}>
             {UNIT_OPTIONS.map(u => (
-              <option key={u.value} value={u.value}>{t(u.tKey)}</option>
+              <option key={u.value} value={u.value}>{t(u.tKey as any)}</option>
             ))}
           </select>
-          {hint && <p className="text-[10px] text-muted-foreground italic">{t(hint.hintKey)}</p>}
+          {hint && <p className="text-[10px] text-muted-foreground italic">{t(hint.hintKey as any)}</p>}
         </div>
 
         <div className="space-y-1">

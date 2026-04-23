@@ -247,7 +247,38 @@ export default function ReticlesPage() {
         </motion.div>
       )}
 
-      {sorted.length === 0 ? (
+      {/* Catalog favorites */}
+      {favEntries.length > 0 && (
+        <div className="space-y-2">
+          <h2 className="text-sm font-semibold text-muted-foreground">{t('reticles.catalog.favorites')}</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {favEntries.map(entry => (
+              <div key={entry.reticle_id} className="surface-elevated p-3 flex gap-3 items-start">
+                <div className="shrink-0">
+                  <ReticleViewer reticle={entry} size={64} darkMode />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-xs truncate">{entry.name}</div>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {entry.focal_plane && <span className="tactical-badge">{entry.focal_plane}</span>}
+                    {entry.click_units && <span className="tactical-badge">{entry.click_units}</span>}
+                    <span className="tactical-badge">{entry.pattern_type}</span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleRemoveFav(entry.reticle_id)}
+                  className="p-1.5 rounded hover:bg-destructive/10 text-primary shrink-0"
+                  aria-label={t('reticles.catalog.favoriteRemove')}
+                >
+                  <Heart className="h-3.5 w-3.5 fill-primary" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {sorted.length === 0 && favEntries.length === 0 ? (
         <div
           className="surface-card p-8 text-center text-muted-foreground text-sm"
           data-testid="reticles-empty"

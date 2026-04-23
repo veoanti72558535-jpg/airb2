@@ -476,8 +476,6 @@ export interface Session {
   updatedAt: string;
 }
 
-export interface AppSettings {
-
 /** Single BC calibration event recorded on a session. */
 export interface CalibrationHistoryEntry {
   /** ISO timestamp of the calibration. */

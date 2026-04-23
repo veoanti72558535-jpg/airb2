@@ -9,6 +9,7 @@ vi.mock('@/integrations/supabase/client', () => ({
       signUp: vi.fn(),
       signOut: vi.fn(),
       getSession: vi.fn().mockResolvedValue({ data: { session: null } }),
+      getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }),
       onAuthStateChange: vi.fn().mockReturnValue({
         data: { subscription: { unsubscribe: vi.fn() } },
       }),
@@ -44,7 +45,7 @@ describe('useAuth', () => {
   });
 
   it('signIn calls supabase.auth.signInWithPassword', async () => {
-    mockAuth.signInWithPassword.mockResolvedValue({ error: null });
+    mockAuth.signInWithPassword.mockResolvedValue({ data: { user: { id: 'test-user-id' }, session: {} }, error: null });
     const { result } = renderHook(() => useAuth(), { wrapper });
     await act(async () => {
       await result.current.signIn('a@b.com', 'pass123');

@@ -89,7 +89,6 @@ interface FormState {
   // Zeroing weather
   useZeroWeather: boolean;
   zeroWeather: WeatherSnapshot;
-}
   // Corrections
   slopeAngleDeg: number;
   cantAngleDeg: number;

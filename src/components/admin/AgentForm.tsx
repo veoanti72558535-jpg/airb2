@@ -22,9 +22,33 @@ const SLUG_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 const PROVIDERS = ['quatarly', 'google-direct', 'ollama'] as const;
 const GOOGLE_MODELS = [
   'gemini-2.5-flash',
-  'gemini-2.5-flash-preview-05-20',
-  'gemini-2.5-pro-preview-06-05',
+  'gemini-2.5-pro-preview',
+  'gemini-2.0-flash',
+  'gemini-1.5-pro',
+  'gemini-1.5-flash',
 ];
+
+/** Fallback list when Quatarly cache is empty. */
+const QUATARLY_FALLBACK = [
+  'claude-sonnet-4-6-thinking',
+  'claude-haiku-4-5-20251001',
+  'claude-opus-4-6',
+  'claude-sonnet-4-6',
+  'claude-haiku-4-5',
+];
+
+/** Returns true if a model supports image inputs. */
+function supportsVision(model: string): boolean {
+  return (
+    /^claude-(sonnet|opus)-/i.test(model) ||
+    /^gemini-/i.test(model)
+  );
+}
+
+/** Returns true if a model is a "thinking" / reasoning variant. */
+function isThinking(model: string): boolean {
+  return /-thinking($|[-_])/i.test(model);
+}
 
 interface Props {
   agent: AgentRow | null; // null = creation
@@ -55,7 +79,9 @@ export default function AgentForm({ agent, onCancel, onSaved }: Props) {
   // Quatarly models
   const [quatarlyModels, setQuatarlyModels] = useState<string[]>([]);
   useEffect(() => {
-    void getQuatarlyModels().then(setQuatarlyModels);
+    void getQuatarlyModels().then((m) =>
+      setQuatarlyModels(m.length > 0 ? m : QUATARLY_FALLBACK),
+    );
   }, []);
 
   const validateSlug = (v: string) => {

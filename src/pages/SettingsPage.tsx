@@ -199,6 +199,31 @@ export default function SettingsPage() {
         </div>
 
         {/* Energy threshold (FAC / FR / custom / off) */}
+        {/* BC Truing feature flag */}
+        <div className="surface-elevated p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <Target className="h-4 w-4 text-primary shrink-0" />
+              <div className="min-w-0">
+                <div className="text-sm font-medium">{t('settings.featureTruing')}</div>
+                <div className="text-[11px] text-muted-foreground">{t('settings.featureTruingDesc')}</div>
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                const current = settings.featureFlags.truing !== false;
+                saveSettings({ ...settings, featureFlags: { ...settings.featureFlags, truing: !current } });
+                markLocalUpdated();
+                if (user) savePreferenceToSupabase(user.id, 'feature_truing', !current).catch(() => {});
+                window.location.reload();
+              }}
+              className={cn('px-3 py-1 rounded-md text-xs font-medium', settings.featureFlags.truing !== false ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted')}
+            >
+              {settings.featureFlags.truing !== false ? 'ON' : 'OFF'}
+            </button>
+          </div>
+        </div>
+
         <div className="surface-elevated p-4 space-y-3">
           <div className="flex items-start gap-3">
             <Zap className="h-4 w-4 text-primary shrink-0 mt-0.5" />

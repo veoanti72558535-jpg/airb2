@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { Search, Download, Check, Heart } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { isSupabaseConfigured } from '@/integrations/supabase/client';

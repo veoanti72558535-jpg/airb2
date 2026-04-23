@@ -36,6 +36,15 @@ export default function ReticleCatalogBrowser() {
     try { const raw = localStorage.getItem('reticle_catalog_favorites'); return new Set(raw ? JSON.parse(raw) : []); } catch { return new Set(); }
   });
 
+  // Performance mode: activate during scroll to reduce SVG complexity
+  const [scrolling, setScrolling] = useState(false);
+  const scrollTimer = useRef<ReturnType<typeof setTimeout>>();
+  const handleScroll = useCallback(() => {
+    setScrolling(true);
+    clearTimeout(scrollTimer.current);
+    scrollTimer.current = setTimeout(() => setScrolling(false), 150);
+  }, []);
+
   // Load filter options once
   useEffect(() => {
     getCatalogBrands().then(setBrands);

@@ -25,7 +25,7 @@ export default function Dashboard() {
     }
   }, [last]);
 
-  const zeroRow = lastResult?.find((r: BallisticResult) => r.distance === (last?.input.zeroRange ?? 0));
+  const zeroRow = lastResult?.find((r: BallisticResult) => r.range === (last?.input.zeroRange ?? 0));
   const dropAtZero = zeroRow ? zeroRow.drop.toFixed(1) : '—';
   const velocityAtZero = zeroRow ? Math.round(zeroRow.velocity).toString() : '—';
   const energyAtZero = zeroRow ? zeroRow.energy.toFixed(1) : '—';

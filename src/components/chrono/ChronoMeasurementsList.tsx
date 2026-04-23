@@ -5,6 +5,8 @@ import { useI18n } from '@/lib/i18n';
 import { Download, Plus } from 'lucide-react';
 import type { ChronoMeasurement } from '@/lib/chrono/chrono-repo';
 import { chronoStats } from '@/lib/chrono/chrono-repo';
+import { ChronoStatsInterpreterButton } from '@/components/ai/agents/ChronoStatsInterpreterButton';
+import { TuneStabilityCheckButton } from '@/components/ai/agents/TuneStabilityCheckButton';
 
 interface Props {
   measurements: ChronoMeasurement[];
@@ -125,6 +127,19 @@ export default function ChronoMeasurementsList({ measurements, sessionId, onAdd,
             <Button variant="outline" size="sm" onClick={() => onLinkSession('')}>
               {t('chrono.linkToSession')}
             </Button>
+          )}
+          {measurements.length >= 5 && (
+            <>
+              <ChronoStatsInterpreterButton
+                esMs={stats.es}
+                sdMs={stats.sd}
+                avgMs={stats.avg}
+                shotCount={measurements.length}
+              />
+              <TuneStabilityCheckButton
+                velocitiesMs={measurements.map(m => m.velocityMs)}
+              />
+            </>
           )}
         </div>
       )}

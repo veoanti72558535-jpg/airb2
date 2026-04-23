@@ -1656,6 +1656,31 @@ const fr = {
   'agents.gameMedium': 'Gibier moyen',
   'agents.gameLarge': 'Grand gibier',
   'agents.gameUnspecified': 'Non précisé',
+
+  // BUILD-IA bis — diagnostic / library / reports agents
+  'agents2.fieldDelta': 'Analyser l\'écart (IA)',
+  'agents2.chronoStats': 'Interpréter les stats (IA)',
+  'agents2.groupingAnalysis': 'Analyser le groupement (IA)',
+  'agents2.tuneStability': 'Vérifier la stabilité (IA)',
+  'agents2.pairingAdvisor': 'Projectiles recommandés (IA)',
+  'agents2.opticAdvisor': 'Conseiller optique (IA)',
+  'agents2.compareAdvisor': 'Analyse comparative (IA)',
+  'agents2.caliberAdvisor': 'Conseiller calibre (IA)',
+  'agents2.sessionReport': 'Rapport de session (IA)',
+  'agents2.trainingLog': 'Résumé du mois (IA)',
+  'agents2.competitionPrep': 'Préparation compétition (IA)',
+  'agents2.exportPdf': 'Exporter en PDF',
+  'agents2.expectedWeather': 'Météo prévue',
+  'agents2.usageHunting': 'Chasse',
+  'agents2.usageHuntSmall': 'Chasse petit gibier',
+  'agents2.usageHuntMedium': 'Chasse gibier moyen',
+  'agents2.usageTarget': 'Target',
+  'agents2.usageFt': 'Field Target',
+  'agents2.usageBenchrest': 'Benchrest',
+  'agents2.usagePlinking': 'Plinking',
+  'agents2.usageUnspecified': 'Non précisé',
+  'agents2.caliberConstraintHint': 'Contrainte (budget, bruit...)',
+  'nav.competitionPrep': 'Préparation compétition',
 } as const;
 
 const en: Record<keyof typeof fr, string> = {
@@ -3290,6 +3315,31 @@ const en: Record<keyof typeof fr, string> = {
   'agents.gameMedium': 'Medium game',
   'agents.gameLarge': 'Large game',
   'agents.gameUnspecified': 'Unspecified',
+
+  // BUILD-IA bis — diagnostic / library / reports agents
+  'agents2.fieldDelta': 'Analyze delta (AI)',
+  'agents2.chronoStats': 'Interpret stats (AI)',
+  'agents2.groupingAnalysis': 'Analyze grouping (AI)',
+  'agents2.tuneStability': 'Check tune stability (AI)',
+  'agents2.pairingAdvisor': 'Recommended projectiles (AI)',
+  'agents2.opticAdvisor': 'Optic advisor (AI)',
+  'agents2.compareAdvisor': 'Comparative analysis (AI)',
+  'agents2.caliberAdvisor': 'Caliber advisor (AI)',
+  'agents2.sessionReport': 'Session report (AI)',
+  'agents2.trainingLog': 'Monthly summary (AI)',
+  'agents2.competitionPrep': 'Competition prep (AI)',
+  'agents2.exportPdf': 'Export as PDF',
+  'agents2.expectedWeather': 'Expected weather',
+  'agents2.usageHunting': 'Hunting',
+  'agents2.usageHuntSmall': 'Small game hunting',
+  'agents2.usageHuntMedium': 'Medium game hunting',
+  'agents2.usageTarget': 'Target',
+  'agents2.usageFt': 'Field Target',
+  'agents2.usageBenchrest': 'Benchrest',
+  'agents2.usagePlinking': 'Plinking',
+  'agents2.usageUnspecified': 'Unspecified',
+  'agents2.caliberConstraintHint': 'Constraint (budget, noise...)',
+  'nav.competitionPrep': 'Competition prep',
 };
 
 // Append paste-import keys (EN) — kept after object literal would be a TS

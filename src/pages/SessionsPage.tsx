@@ -40,6 +40,8 @@ import { FieldValidation } from '@/components/sessions/FieldValidation';
 import { TruingPanel } from '@/components/sessions/TruingPanel';
 import { TargetPhotoAnalyzer } from '@/components/sessions/TargetPhotoAnalyzer';
 import { CalibrationHistoryBlock } from '@/components/sessions/CalibrationHistoryBlock';
+import { SessionReportButton } from '@/components/ai/agents/SessionReportButton';
+import { TrainingLogSummarizerButton } from '@/components/ai/agents/TrainingLogSummarizerButton';
 import {
   Dialog,
   DialogContent,
@@ -183,6 +185,7 @@ export default function SessionsPage() {
           )}
           <button onClick={() => setFilter('all')} className={`px-3 py-1 rounded-md text-xs font-medium ${filter === 'all' ? 'bg-primary/10 text-primary' : 'text-muted-foreground'}`}>{t('common.all')}</button>
           <button onClick={() => setFilter('favorites')} className={`px-3 py-1 rounded-md text-xs font-medium ${filter === 'favorites' ? 'bg-primary/10 text-primary' : 'text-muted-foreground'}`}>★</button>
+          {sessions.length > 0 && <TrainingLogSummarizerButton sessions={sessions} />}
         </div>
       </div>
 
@@ -429,6 +432,9 @@ export default function SessionsPage() {
                       <Camera className="h-3 w-3" />
                       {t('target.analyzeCard' as any)}
                     </button>
+                    <div className="pt-1">
+                      <SessionReportButton session={s} />
+                    </div>
                   </div>
                 )}
               </div>

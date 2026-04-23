@@ -29,6 +29,7 @@ import AdminAiPage from "@/pages/AdminAiPage";
 import CrossValidationPage from "@/pages/CrossValidationPage";
 import ChronoPage from "@/pages/ChronoPage";
 import TargetAnalysisPage from "@/pages/TargetAnalysisPage";
+import CompetitionPrepPage from "@/pages/CompetitionPrepPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -79,6 +80,7 @@ const App = () => (
                 <Route path="/cross-validation" element={<CrossValidationPage />} />
                 <Route path="/chrono" element={<ChronoPage />} />
                 <Route path="/target-analysis" element={<TargetAnalysisPage />} />
+                <Route path="/competition-prep" element={<CompetitionPrepPage />} />
                 {/* Legacy routes */}
                 <Route path="/airguns" element={<LibraryPage />} />
                 <Route path="/projectiles" element={<LibraryPage />} />

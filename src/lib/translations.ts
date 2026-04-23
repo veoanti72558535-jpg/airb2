@@ -2843,6 +2843,27 @@ const en: Record<keyof typeof fr, string> = {
   'chart.advanced.toggleDrop': 'Show drop',
   'chart.advanced.toggleWindage': 'Show windage',
   'chart.advanced.toggleEnergy': 'Show energy',
+
+  // Chronograph
+  'chrono.title': 'Chronograph',
+  'chrono.connect': 'Connect FX Radar',
+  'chrono.disconnect': 'Disconnect',
+  'chrono.scanning': 'Scanning...',
+  'chrono.connected': 'FX Radar connected',
+  'chrono.unsupported': 'Web Bluetooth not supported — use Chrome on Android',
+  'chrono.manualEntry': 'Manual entry',
+  'chrono.addVelocity': 'Add velocity',
+  'chrono.velocity': 'Velocity',
+  'chrono.shot': 'Shot',
+  'chrono.average': 'Average',
+  'chrono.es': 'Extreme spread',
+  'chrono.sd': 'Std deviation',
+  'chrono.linkToSession': 'Link to session',
+  'chrono.exportCsv': 'Export CSV',
+  'chrono.noMeasurements': 'No measurements',
+  'chrono.source.ble': 'BLE',
+  'chrono.source.manual': 'Manual',
+  'chrono.save': 'Save',
 };
 
 // Append paste-import keys (EN) — kept after object literal would be a TS

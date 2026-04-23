@@ -3251,6 +3251,21 @@ const en: Record<keyof typeof fr, string> = {
   'truing.errDistBeyondZero': 'Distance must exceed zero ({zero} m)',
   'settings.featureTruing': 'BC Calibration (Truing)',
   'settings.featureTruingDesc': 'Enable BC calibration panel on sessions',
+
+  // AI web-search agents
+  'agentSearch.searchProjectile': 'Search projectile (AI)',
+  'agentSearch.velocityForums': 'Forum velocities',
+  'agentSearch.bcPublished': 'Published BC',
+  'agentSearch.tuneAdvice': 'Tune advice',
+  'agentSearch.reviews': 'User reviews',
+  'agentSearch.weatherCurrent': 'Current weather (AI)',
+  'agentSearch.importToLibrary': 'Import to library',
+  'agentSearch.useThisBC': 'Use this BC',
+  'agentSearch.useConditions': 'Use these conditions',
+  'agentSearch.sources': 'Sources',
+  'agentSearch.confidence': 'Confidence',
+  'agentSearch.noResult': 'No result found',
+  'agentSearch.queryLabel': 'Search...',
 };
 
 // Append paste-import keys (EN) — kept after object literal would be a TS

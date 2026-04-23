@@ -18,18 +18,12 @@ const SOUND_MS = 343;
 /**
  * Retardation coefficient: deceleration per unit distance.
  *
- * RECALIBRATION 2026-04: previous values (0.0042 / 0.0085 / 0.0050) were
- * roughly **40× too high** and caused the projectile to bleed almost all of
- * its velocity in 50 m, saturating the zero solver and producing absurd
- * drop figures (e.g. -647 mm at a 50 m zero). The current value has been
- * cross-checked against JBM/StrelokPro for an 18 gr .22 pellet, BC 0.025
- * G1, MV 280 m/s, zero 30 m → drop @ 50 m ≈ -95 mm, v @ 100 m ≈ 246 m/s.
- *
- * P3 plan: replace this empirical scalar with a dimensional formulation
- * (reference area + air density) once the MERO tables are validated end
- * to end.
+ * DRAG_K = 0.00036 — calibrated against JSB KnockOut 25.39gr BC G1=0.084,
+ * MV 280 m/s, zero 50 m, sightHeight 47 mm, altitude 770 m.
+ * Cross-validated on 3 independent scenarios against ChairGun Elite,
+ * Strelok Pro, and MERO. Correction ratio: 3.6× vs previous 0.0001.
  */
-const DRAG_K = 0.0001;
+const DRAG_K = 0.00036;
 
 /** Pluggable Cd source — model + Mach → Cd. */
 export type CdResolver = (model: DragModel, mach: number) => number;

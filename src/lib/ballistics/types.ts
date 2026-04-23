@@ -15,11 +15,10 @@ import type { DragModel } from '../types';
  * Bump this when a breaking physics change ships so legacy sessions can be
  * detected (badge in P6) and recalculated.
  *
- *  - `1` : pre-P1 monolithic engine (DRAG_K = 0.0001, piecewise Cd)
- *  - P1 currently keeps the same physics — version stays at 1 until P2
- *    introduces the trapezoidal integrator + MERO-grade Cd table.
+ *  - `1` : pre-P2 engine (inverted LOS, DRAG_K = 0.0001)
+ *  - `2` : corrected LOS formula + DRAG_K = 0.00036 (2026-04)
  */
-export const ENGINE_VERSION = 1 as const;
+export const ENGINE_VERSION = 2 as const;
 export type EngineVersion = typeof ENGINE_VERSION;
 
 /**

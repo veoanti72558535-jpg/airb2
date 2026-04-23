@@ -3138,6 +3138,14 @@ const en: Record<keyof typeof fr, string> = {
   'truing.history': 'Calibration history',
   'truing.viewProjectile': 'View projectile',
   'truing.calibrated': 'BC calibrated',
+  'truing.errDistMin': 'Min distance: 5 m',
+  'truing.errDistMax': 'Max distance: 500 m',
+  'truing.errDistRequired': 'Distance required',
+  'truing.errDropRequired': 'Drop required',
+  'truing.errDropMin': 'Min drop: -50,000 mm',
+  'truing.errDropMax': 'Max drop: 5,000 mm',
+  'truing.errDropPrecision': 'Max precision: 0.1 mm',
+  'truing.errDistBeyondZero': 'Distance must exceed zero ({zero} m)',
 };
 
 // Append paste-import keys (EN) — kept after object literal would be a TS

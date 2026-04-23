@@ -39,6 +39,7 @@ import {
 import { FieldValidation } from '@/components/sessions/FieldValidation';
 import { TruingPanel } from '@/components/sessions/TruingPanel';
 import { TargetPhotoAnalyzer } from '@/components/sessions/TargetPhotoAnalyzer';
+import { TargetAnalysesHistory } from '@/components/sessions/TargetAnalysesHistory';
 import { CalibrationHistoryBlock } from '@/components/sessions/CalibrationHistoryBlock';
 import { SessionReportButton } from '@/components/ai/agents/SessionReportButton';
 import { TrainingLogSummarizerButton } from '@/components/ai/agents/TrainingLogSummarizerButton';
@@ -432,6 +433,7 @@ export default function SessionsPage() {
                       <Camera className="h-3 w-3" />
                       {t('target.analyzeCard' as any)}
                     </button>
+                    <TargetAnalysesHistory sessionId={s.id} />
                     <div className="pt-1">
                       <SessionReportButton session={s} />
                     </div>

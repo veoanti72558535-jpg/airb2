@@ -49,6 +49,24 @@ export default function ReticlesPage() {
   const [tab, setTab] = useState<'mine' | 'catalog'>('mine');
   const hasCatalog = isSupabaseConfigured();
 
+  // Catalog favorites
+  const [favEntries, setFavEntries] = useState<ReticleCatalogEntry[]>([]);
+  const [favIds, setFavIds] = useState<Set<number>>(() => new Set(getFavoriteIds()));
+
+  useEffect(() => {
+    if (tab === 'mine' && favIds.size > 0) {
+      getFavoriteEntries().then(setFavEntries);
+    } else if (favIds.size === 0) {
+      setFavEntries([]);
+    }
+  }, [tab, favIds]);
+
+  const handleRemoveFav = (reticleId: number) => {
+    toggleFavorite(reticleId);
+    setFavIds(prev => { const n = new Set(prev); n.delete(reticleId); return n; });
+    setFavEntries(prev => prev.filter(e => e.reticle_id !== reticleId));
+  };
+
   const refresh = () => setReticles(reticleStore.getAll());
 
   const handleSave = () => {

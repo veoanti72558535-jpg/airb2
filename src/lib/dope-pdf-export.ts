@@ -56,6 +56,8 @@ export async function exportDopePdf(
 
   const l = opts.lang === 'fr';
 
+  const DEFAULT_VITAL_ZONE_M = 0.025; // 25mm diameter
+
   /* ── HEADER ────────────────────────────────────────── */
   doc.setFillColor(...C.accent);
   doc.rect(0, 0, W, 14, 'F');
@@ -178,7 +180,7 @@ export async function exportDopePdf(
   if (session.results.length > 1 && y < H - 20) {
     try {
       const { computePointBlankRange } = await import('@/lib/pbr');
-      const pbr = computePointBlankRange(session.results);
+      const pbr = computePointBlankRange(session.results, DEFAULT_VITAL_ZONE_M);
       if (pbr.startDistance > 0 && pbr.endDistance > 0) {
         y += 3;
         doc.setFont('helvetica', 'bold');
@@ -189,7 +191,7 @@ export async function exportDopePdf(
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(6.5);
         doc.setTextColor(...C.primary);
-        doc.text(`${pbr.startDistance} m → ${pbr.endDistance} m  |  ${l ? 'Zone vitale' : 'Kill zone'}: ±${pbr.vitalZoneMm} mm`, margin, y);
+        doc.text(`${pbr.startDistance} m → ${pbr.endDistance} m  |  ${l ? 'Zone vitale' : 'Kill zone'}: ±${Math.round(pbr.vitalZoneM * 1000)} mm`, margin, y);
         y += 3;
       }
     } catch { /* PBR unavailable — skip silently */ }

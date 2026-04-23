@@ -10,14 +10,14 @@ interface Props {
 }
 
 export function DopePdfExporter({ session }: Props) {
-  const { t, lang } = useI18n();
+  const { t, locale } = useI18n();
   const [loading, setLoading] = useState(false);
 
   const handleExport = async () => {
     setLoading(true);
     try {
       const { exportDopePdf } = await import('@/lib/dope-pdf-export');
-      await exportDopePdf(session, { lang: lang as 'fr' | 'en' });
+      await exportDopePdf(session, { lang: locale });
     } catch (err) {
       console.error('[DOPE PDF]', err);
       toast.error(t('dope.export.error' as any) || 'PDF generation failed');

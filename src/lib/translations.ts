@@ -1644,6 +1644,18 @@ const fr = {
   'agentSearch.confidence': 'Confiance',
   'agentSearch.noResult': 'Aucun résultat trouvé',
   'agentSearch.queryLabel': 'Rechercher...',
+
+  // AI analysis agents (BUILD-IA analysis)
+  'agents.truingExplain': 'Expliquer ce résultat (IA)',
+  'agents.zeroAdvisor': 'Conseiller le zéro (IA)',
+  'agents.energyAdvisor': 'Analyse énergie (IA)',
+  'agents.pbrExplain': 'Expliquer le PBR (IA)',
+  'agents.cantSlope': 'Impact slope/cant (IA)',
+  'agents.windCoach': 'Coach correction vent (IA)',
+  'agents.gameSmall': 'Petit gibier',
+  'agents.gameMedium': 'Gibier moyen',
+  'agents.gameLarge': 'Grand gibier',
+  'agents.gameUnspecified': 'Non précisé',
 } as const;
 
 const en: Record<keyof typeof fr, string> = {
@@ -3266,6 +3278,18 @@ const en: Record<keyof typeof fr, string> = {
   'agentSearch.confidence': 'Confidence',
   'agentSearch.noResult': 'No result found',
   'agentSearch.queryLabel': 'Search...',
+
+  // AI analysis agents
+  'agents.truingExplain': 'Explain this result (AI)',
+  'agents.zeroAdvisor': 'Zero advisor (AI)',
+  'agents.energyAdvisor': 'Energy analysis (AI)',
+  'agents.pbrExplain': 'Explain PBR (AI)',
+  'agents.cantSlope': 'Slope/cant impact (AI)',
+  'agents.windCoach': 'Wind correction coach (AI)',
+  'agents.gameSmall': 'Small game',
+  'agents.gameMedium': 'Medium game',
+  'agents.gameLarge': 'Large game',
+  'agents.gameUnspecified': 'Unspecified',
 };
 
 // Append paste-import keys (EN) — kept after object literal would be a TS

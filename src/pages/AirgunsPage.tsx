@@ -15,6 +15,9 @@ import { calToken, buildCaliberCounts } from '@/lib/caliber';
 import { AdvancedDisclosure } from '@/components/AdvancedDisclosure';
 import { ImportPresetAirgunsModal } from '@/components/airguns/ImportPresetAirgunsModal';
 import { seedAirgunKey } from '@/lib/seed-airguns';
+import { TuneAdviceAgent } from '@/components/ai/agents/TuneAdviceAgent';
+import { AirgunReviewAgent } from '@/components/ai/agents/AirgunReviewAgent';
+import { AgentDialog } from '@/components/ai/agents/AgentDialog';
 
 const TWIST_OPTIONS = [12, 14, 16, 18, 20, 22, 24, 28, 32];
 
@@ -63,6 +66,9 @@ export default function AirgunsPage() {
   const [showImport, setShowImport] = useState(false);
   const [editing, setEditing] = useState<Airgun | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
+  // AI agent dialogs
+  const [aiOpen, setAiOpen] = useState<null | 'tune' | 'review'>(null);
+  const [aiSeed, setAiSeed] = useState<string>('');
 
   const existingKeys = useMemo(
     () => new Set(airguns.map(a => seedAirgunKey({ brand: a.brand, model: a.model, caliber: a.caliber }))),
@@ -315,10 +321,42 @@ export default function AirgunsPage() {
                 {a.fillPressure ? <span>Fill: {a.fillPressure} {pressSym}</span> : null}
               </div>
               {a.notes && <p className="text-xs text-muted-foreground mt-2 italic">{a.notes}</p>}
+              <div className="mt-2 flex flex-wrap gap-1.5 border-t border-border/40 pt-2">
+                <button
+                  type="button"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setAiSeed(`${a.brand} ${a.model}`); setAiOpen('tune'); }}
+                  className="text-[10px] px-1.5 py-0.5 rounded border border-primary/30 text-primary/80 hover:bg-primary/10"
+                  data-testid={`airgun-ai-tune-${a.id}`}
+                >
+                  {t('agentSearch.tuneAdvice' as any)}
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setAiSeed(`${a.brand} ${a.model}`); setAiOpen('review'); }}
+                  className="text-[10px] px-1.5 py-0.5 rounded border border-primary/30 text-primary/80 hover:bg-primary/10"
+                >
+                  {t('agentSearch.reviews' as any)}
+                </button>
+              </div>
             </Link>
           ))}
         </div>
       )}
+
+      <AgentDialog
+        open={aiOpen === 'tune'}
+        onOpenChange={(o) => setAiOpen(o ? 'tune' : null)}
+        title={t('agentSearch.tuneAdvice' as any)}
+      >
+        <TuneAdviceAgent initialQuery={aiSeed} />
+      </AgentDialog>
+      <AgentDialog
+        open={aiOpen === 'review'}
+        onOpenChange={(o) => setAiOpen(o ? 'review' : null)}
+        title={t('agentSearch.reviews' as any)}
+      >
+        <AirgunReviewAgent initialQuery={aiSeed} />
+      </AgentDialog>
     </motion.div>
   );
 }

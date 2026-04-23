@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Zap, Plus, Trash2, Edit2, Download, GitCompare, X, Layers, Sparkles, Database } from 'lucide-react';
+import { Zap, Plus, Trash2, Edit2, Download, GitCompare, X, Layers, Sparkles, Database, Search } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { projectileStore } from '@/lib/storage';
 import { useUnits } from '@/hooks/use-units';
@@ -17,6 +17,11 @@ import { ImportPresetProjectilesModal } from '@/components/projectiles/ImportPre
 import { CompareProjectilesModal } from '@/components/projectiles/CompareProjectilesModal';
 import { DragTableEditor } from '@/components/projectiles/DragTableEditor';
 import { seedProjectileKey } from '@/lib/seed-projectiles';
+import { ProjectileSearchAgent } from '@/components/ai/agents/ProjectileSearchAgent';
+import { BcSearchAgent } from '@/components/ai/agents/BcSearchAgent';
+import { VelocityForumAgent } from '@/components/ai/agents/VelocityForumAgent';
+import { AirgunReviewAgent } from '@/components/ai/agents/AirgunReviewAgent';
+import { AgentDialog } from '@/components/ai/agents/AgentDialog';
 
 /** Tranche K — un projectile a-t-il au moins une zone BC exploitable (informatif). */
 export function hasBcZones(p: Projectile): boolean {
@@ -99,6 +104,9 @@ export default function ProjectilesPage() {
   const [sortKey, setSortKey] = useState<'name' | 'weight' | 'bc' | 'caliber'>('name');
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [showCompare, setShowCompare] = useState(false);
+  // AI agent dialogs
+  const [aiOpen, setAiOpen] = useState<null | 'search' | 'bc' | 'velocity' | 'review'>(null);
+  const [aiSeed, setAiSeed] = useState<string>('');
 
   const compareSelected = useMemo(
     () => compareIds
@@ -216,6 +224,14 @@ export default function ProjectilesPage() {
           <h1 className="text-xl font-heading font-bold">{t('projectiles.title')}</h1>
         </div>
         <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => { setAiSeed(''); setAiOpen('search'); }}
+            className="px-3 py-1.5 bg-muted text-foreground rounded-md text-sm font-medium flex items-center gap-1 hover:bg-muted/70 border border-border"
+            data-testid="projectiles-ai-search-btn"
+          >
+            <Search className="h-4 w-4" />{t('agentSearch.searchProjectile' as any)}
+          </button>
           <button onClick={() => setShowImport(true)} className="px-3 py-1.5 bg-muted text-foreground rounded-md text-sm font-medium flex items-center gap-1 hover:bg-muted/70 border border-border">
             <Download className="h-4 w-4" />{t('projectiles.importPreset')}
           </button>
@@ -506,6 +522,30 @@ export default function ProjectilesPage() {
                     </div>
                   </div>
                 </Link>
+                <div className="mt-2 flex flex-wrap gap-1.5 border-t border-border/40 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => { setAiSeed(`${p.brand} ${p.model} ${p.weight}gr ${p.caliber}`); setAiOpen('bc'); }}
+                    className="text-[10px] px-1.5 py-0.5 rounded border border-primary/30 text-primary/80 hover:bg-primary/10"
+                    data-testid={`projectile-ai-bc-${p.id}`}
+                  >
+                    {t('agentSearch.bcPublished' as any)}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setAiSeed(`${p.brand} ${p.model} ${p.caliber}`); setAiOpen('velocity'); }}
+                    className="text-[10px] px-1.5 py-0.5 rounded border border-primary/30 text-primary/80 hover:bg-primary/10"
+                  >
+                    {t('agentSearch.velocityForums' as any)}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setAiSeed(`${p.brand} ${p.model}`); setAiOpen('review'); }}
+                    className="text-[10px] px-1.5 py-0.5 rounded border border-primary/30 text-primary/80 hover:bg-primary/10"
+                  >
+                    {t('agentSearch.reviews' as any)}
+                  </button>
+                </div>
               </div>
             );
           })}
@@ -552,6 +592,36 @@ export default function ProjectilesPage() {
           });
         }}
       />
+
+      {/* AI agent dialogs */}
+      <AgentDialog
+        open={aiOpen === 'search'}
+        onOpenChange={(o) => setAiOpen(o ? 'search' : null)}
+        title={t('agentSearch.searchProjectile' as any)}
+      >
+        <ProjectileSearchAgent initialQuery={aiSeed} onResult={refresh} />
+      </AgentDialog>
+      <AgentDialog
+        open={aiOpen === 'bc'}
+        onOpenChange={(o) => setAiOpen(o ? 'bc' : null)}
+        title={t('agentSearch.bcPublished' as any)}
+      >
+        <BcSearchAgent initialQuery={aiSeed} />
+      </AgentDialog>
+      <AgentDialog
+        open={aiOpen === 'velocity'}
+        onOpenChange={(o) => setAiOpen(o ? 'velocity' : null)}
+        title={t('agentSearch.velocityForums' as any)}
+      >
+        <VelocityForumAgent initialQuery={aiSeed} />
+      </AgentDialog>
+      <AgentDialog
+        open={aiOpen === 'review'}
+        onOpenChange={(o) => setAiOpen(o ? 'review' : null)}
+        title={t('agentSearch.reviews' as any)}
+      >
+        <AirgunReviewAgent initialQuery={aiSeed} />
+      </AgentDialog>
     </motion.div>
   );
 }

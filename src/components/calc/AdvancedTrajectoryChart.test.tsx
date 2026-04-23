@@ -61,7 +61,9 @@ describe('AdvancedTrajectoryChart', () => {
 
   it('renders all three toggle buttons', () => {
     renderChart();
-    expect(screen.getByRole('radio', { name: /drop|chute/i }) || screen.getByText(/Chute|Drop/)).toBeTruthy();
+    expect(screen.getByRole('button', { name: /chute/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /dérive/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /énergie/i })).toBeInTheDocument();
   });
 
   it('does not crash with pbr overlay', () => {

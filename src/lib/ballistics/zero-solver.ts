@@ -79,6 +79,7 @@ function simulateToRange(
     if (v < 1) break;
     step(state, dt, decelFn);
   }
-  const sightLineY = -sightHeightM + (sightHeightM / targetRange) * state.x;
+  // Straight line from (+sightHeight, 0) to (0, zeroRange).
+  const sightLineY = sightHeightM - (sightHeightM / targetRange) * state.x;
   return state.y - sightLineY;
 }

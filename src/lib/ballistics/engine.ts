@@ -155,7 +155,8 @@ export function calculateTrajectory(input: BallisticInput): BallisticResult[] {
     if (state.x >= nextRange && nextRange <= maxRange) {
       // CRITICAL: this sight-line formula MUST match the one used inside
       // `simulateToRange` (the zero solver).
-      const sightLineAtRange = -sightHeightM + (sightHeightM / zeroRange) * state.x;
+      // Straight line from (+sightHeight, 0) to (0, zeroRange).
+      const sightLineAtRange = sightHeightM - (sightHeightM / zeroRange) * state.x;
       const dropMm = (state.y - sightLineAtRange) * 1000;
 
       const holdoverMOA = state.x > 0 ? Math.atan2(-dropMm / 1000, state.x) * (180 / Math.PI) * 60 : 0;

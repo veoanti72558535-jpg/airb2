@@ -193,13 +193,38 @@ export default function AgentForm({ agent, onCancel, onSaved }: Props) {
               </SelectTrigger>
               <SelectContent>
                 {modelOptions.map((m) => (
-                  <SelectItem key={m} value={m} className="text-xs font-mono">{m}</SelectItem>
+                  <SelectItem key={m} value={m} className="text-xs font-mono">
+                    <span className="inline-flex items-center gap-1.5">
+                      <span>{m}</span>
+                      {supportsVision(m) && (
+                        <span
+                          data-testid={`model-badge-vision-${m}`}
+                          className="px-1 py-0 rounded text-[8px] font-sans uppercase bg-info/15 text-info border border-info/30"
+                        >
+                          VISION
+                        </span>
+                      )}
+                      {isThinking(m) && (
+                        <span
+                          data-testid={`model-badge-thinking-${m}`}
+                          className="px-1 py-0 rounded text-[8px] font-sans uppercase bg-primary/15 text-primary border border-primary/30"
+                        >
+                          THINKING
+                        </span>
+                      )}
+                    </span>
+                  </SelectItem>
                 ))}
                 {model && !modelOptions.includes(model) && (
                   <SelectItem value={model} className="text-xs font-mono text-muted-foreground">{model} (current)</SelectItem>
                 )}
               </SelectContent>
             </Select>
+          )}
+          {provider === 'ollama' && (
+            <p className="text-[10px] text-muted-foreground">
+              {t('admin.ai.agents.ollamaHint' as any)}
+            </p>
           )}
         </div>
 

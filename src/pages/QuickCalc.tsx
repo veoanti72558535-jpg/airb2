@@ -243,6 +243,7 @@ export default function QuickCalc() {
       projectileWeight: i.projectileWeight,
       dragModel: i.dragModel ?? proj?.bcModel ?? 'G1',
       projectileType: proj?.projectileType ?? 'pellet',
+      g1Source: i.g1Source ?? 'legacy-piecewise',
       projectileLength: i.projectileLength ?? proj?.length,
       projectileDiameter: i.projectileDiameter ?? proj?.diameter,
       muzzleVelocity: i.muzzleVelocity,

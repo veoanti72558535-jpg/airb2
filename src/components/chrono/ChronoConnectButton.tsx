@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Bluetooth, Loader2, AlertTriangle, Wifi, WifiOff, X, Info, CheckCircle2, Circle, XCircle } from 'lucide-react';
+import { Bluetooth, Loader2, AlertTriangle, Wifi, WifiOff, X, Info } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import {
   isWebBluetoothSupported,
@@ -17,7 +17,6 @@ import type {
   BleParseConfig,
   GattStage,
   GattStageEvent,
-  GattStageStatus,
 } from '@/lib/chrono/fx-radar-ble';
 import { DEFAULT_BLE_PARSE_CONFIG } from '@/lib/chrono/fx-radar-ble';
 import { detectWebBluetoothSupport } from '@/lib/chrono/web-bluetooth-support';

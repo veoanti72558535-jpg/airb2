@@ -48,6 +48,13 @@ function snapshot(over: Partial<BleDeviceDiagnostic> = {}): BleDeviceDiagnostic 
 beforeEach(() => {
   // Stub Web Bluetooth support detection.
   vi.spyOn(bleModule, 'isWebBluetoothSupported').mockReturnValue(true);
+  // Reset the saved-default localStorage between tests.
+  try {
+    localStorage.removeItem('fx_radar_device_id');
+    localStorage.removeItem('fx_radar_device_name');
+  } catch {
+    /* noop */
+  }
 });
 
 describe('ChronoBleDiagnostic', () => {
@@ -166,5 +173,48 @@ describe('ChronoBleDiagnostic', () => {
     fireEvent.click(screen.getByTestId('chrono-ble-clear-btn'));
     expect(screen.getByTestId('chrono-ble-stat-success')).toHaveTextContent('0');
     expect(screen.getByTestId('chrono-ble-stat-fail')).toHaveTextContent('0');
+  });
+
+  it('persists the device as default and shows a saved banner + per-row badge', async () => {
+    vi.spyOn(bleModule, 'diagnoseBleDevice').mockResolvedValue(
+      snapshot({ id: 'fx-1', name: 'FX Radar' }),
+    );
+    renderWith();
+
+    // No banner before scanning.
+    expect(screen.queryByTestId('chrono-ble-saved-banner')).toBeNull();
+
+    fireEvent.click(screen.getByTestId('chrono-ble-scan-btn'));
+    await waitFor(() => screen.getByTestId('chrono-ble-device-fx-1'));
+
+    // Save button visible inside the (auto-expanded) panel.
+    const saveBtn = screen.getByTestId('chrono-ble-save-fx-1');
+    fireEvent.click(saveBtn);
+
+    // localStorage updated.
+    expect(localStorage.getItem('fx_radar_device_id')).toBe('fx-1');
+    expect(localStorage.getItem('fx_radar_device_name')).toBe('FX Radar');
+
+    // Banner + per-row badge appear.
+    expect(screen.getByTestId('chrono-ble-saved-banner')).toBeInTheDocument();
+    expect(screen.getByTestId('chrono-ble-device-fx-1-saved')).toBeInTheDocument();
+    // Save button replaced by Forget button.
+    expect(screen.queryByTestId('chrono-ble-save-fx-1')).toBeNull();
+    expect(screen.getByTestId('chrono-ble-forget-fx-1')).toBeInTheDocument();
+  });
+
+  it('forgets the default device from the banner', async () => {
+    // Pre-seed a saved default.
+    localStorage.setItem('fx_radar_device_id', 'fx-old');
+    localStorage.setItem('fx_radar_device_name', 'Old Radar');
+
+    renderWith();
+    const banner = screen.getByTestId('chrono-ble-saved-banner');
+    expect(banner).toHaveTextContent('fx-old');
+
+    fireEvent.click(screen.getByTestId('chrono-ble-forget-default-btn'));
+
+    expect(localStorage.getItem('fx_radar_device_id')).toBeNull();
+    expect(screen.queryByTestId('chrono-ble-saved-banner')).toBeNull();
   });
 });

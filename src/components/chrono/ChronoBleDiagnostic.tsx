@@ -1,20 +1,19 @@
 import React, { useState, useCallback } from 'react';
-import { ChevronDown, ChevronRight, Bluetooth, AlertTriangle, Battery, RefreshCw, Trash2, HelpCircle, Sparkles, RotateCw } from 'lucide-react';
+import { ChevronDown, ChevronRight, Bluetooth, AlertTriangle, Battery, RefreshCw, Trash2, CheckCircle2, XCircle, Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useI18n } from '@/lib/i18n';
 import {
   diagnoseBleDevice,
   isWebBluetoothSupported,
   type BleDeviceDiagnostic,
 } from '@/lib/chrono/fx-radar-ble';
-import {
-  guessFxModel,
-  bucketConfidence,
-  type FxModelGuess,
-  type FxModelSignal,
-} from '@/lib/chrono/fx-model-heuristic';
+
+type LastGattState =
+  | { kind: 'idle' }
+  | { kind: 'connected'; deviceName: string; at: string }
+  | { kind: 'disconnected'; deviceName: string; at: string }
+  | { kind: 'error'; message: string; at: string };
 
 /**
  * Diagnostic BLE — affiche les devices scannés successivement par
@@ -34,6 +33,9 @@ export default function ChronoBleDiagnostic() {
   const [scanning, setScanning] = useState(false);
   const [error, setError] = useState<string>('');
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [successCount, setSuccessCount] = useState(0);
+  const [failCount, setFailCount] = useState(0);
+  const [lastState, setLastState] = useState<LastGattState>({ kind: 'idle' });
 
   const handleScan = useCallback(async () => {
     setError('');
@@ -45,13 +47,23 @@ export default function ChronoBleDiagnostic() {
         return [snapshot, ...others];
       });
       setExpanded((prev) => new Set(prev).add(snapshot.id));
+      setSuccessCount((n) => n + 1);
+      const label = snapshot.name || snapshot.id;
+      setLastState(
+        snapshot.connected
+          ? { kind: 'connected', deviceName: label, at: snapshot.scannedAt }
+          : { kind: 'disconnected', deviceName: label, at: snapshot.scannedAt },
+      );
     } catch (err: unknown) {
       const e = err as { name?: string; message?: string };
       // User cancelled the picker — silent.
       if (e?.name === 'NotFoundError') {
         return;
       }
-      setError(e?.message ?? String(err));
+      const msg = e?.message ?? String(err);
+      setError(msg);
+      setFailCount((n) => n + 1);
+      setLastState({ kind: 'error', message: msg, at: new Date().toISOString() });
     } finally {
       setScanning(false);
     }
@@ -70,21 +82,12 @@ export default function ChronoBleDiagnostic() {
     setDevices([]);
     setExpanded(new Set());
     setError('');
+    setSuccessCount(0);
+    setFailCount(0);
+    setLastState({ kind: 'idle' });
   };
 
   if (!supported) return null;
-
-  // Translation helper for signal codes — keeps the JSX terse.
-  const signalLabel = (s: FxModelSignal): string => {
-    const key = `chrono.diag.fxGuess.signal.${s.code}` as Parameters<typeof t>[0];
-    return t(key);
-  };
-
-  const modelLabel = (g: FxModelGuess): string => {
-    if (g.model === 'fx-radar') return t('chrono.diag.fxGuess.modelRadar');
-    if (g.model === 'fx-chrono') return t('chrono.diag.fxGuess.modelChrono');
-    return t('chrono.diag.fxGuess.modelUnknown');
-  };
 
   return (
     <section
@@ -130,6 +133,58 @@ export default function ChronoBleDiagnostic() {
         </div>
       </header>
 
+      {/* Compteurs + dernier état GATT */}
+      <div
+        className="flex flex-wrap items-center gap-1.5"
+        data-testid="chrono-ble-stats"
+      >
+        <Badge
+          variant="outline"
+          className="text-[10px] px-1.5 py-0 h-5 inline-flex items-center gap-1 border-primary/40 text-primary"
+          data-testid="chrono-ble-stat-success"
+        >
+          <CheckCircle2 className="h-3 w-3" />
+          {t('chrono.diag.stats.success')}: {successCount}
+        </Badge>
+        <Badge
+          variant="outline"
+          className="text-[10px] px-1.5 py-0 h-5 inline-flex items-center gap-1 border-destructive/40 text-destructive"
+          data-testid="chrono-ble-stat-fail"
+        >
+          <XCircle className="h-3 w-3" />
+          {t('chrono.diag.stats.fail')}: {failCount}
+        </Badge>
+        <Badge
+          variant="secondary"
+          className="text-[10px] px-1.5 py-0 h-5 inline-flex items-center gap-1"
+          data-testid="chrono-ble-stat-last"
+        >
+          <Activity className="h-3 w-3" />
+          {t('chrono.diag.stats.lastState')}:{' '}
+          {lastState.kind === 'idle' && (
+            <span className="text-muted-foreground italic">
+              {t('chrono.diag.stats.idle')}
+            </span>
+          )}
+          {lastState.kind === 'connected' && (
+            <span className="text-primary">
+              {t('chrono.diag.connected')} · {lastState.deviceName}
+            </span>
+          )}
+          {lastState.kind === 'disconnected' && (
+            <span>
+              {t('chrono.diag.disconnected')} · {lastState.deviceName}
+            </span>
+          )}
+          {lastState.kind === 'error' && (
+            <span className="text-destructive truncate max-w-[180px]">
+              {t('chrono.diag.stats.error')} ·{' '}
+              {lastState.message}
+            </span>
+          )}
+        </Badge>
+      </div>
+
       <p className="text-[10px] text-muted-foreground italic border-l-2 border-border pl-2">
         {t('chrono.diag.rssiNote')}
       </p>
@@ -146,19 +201,9 @@ export default function ChronoBleDiagnostic() {
           {t('chrono.diag.empty')}
         </p>
       ) : (
-        <>
         <ul className="space-y-2" data-testid="chrono-ble-device-list">
           {devices.map((d) => {
             const isOpen = expanded.has(d.id);
-            const guess = guessFxModel(d);
-            const bucket = bucketConfidence(guess.confidence);
-            const showGuess = guess.model !== 'unknown';
-            const bucketClass =
-              bucket === 'high'
-                ? 'bg-primary/15 text-primary border-primary/40'
-                : bucket === 'medium'
-                  ? 'bg-accent/15 text-accent-foreground border-accent/40'
-                  : 'bg-muted text-muted-foreground border-border';
             return (
               <li
                 key={d.id}
@@ -188,67 +233,6 @@ export default function ChronoBleDiagnostic() {
                       {d.id}
                     </div>
                     <div className="flex flex-wrap gap-1 mt-1">
-                      {showGuess && (
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Badge
-                              variant="outline"
-                              className={`text-[9px] px-1.5 py-0 h-4 inline-flex items-center gap-0.5 cursor-help ${bucketClass}`}
-                              onClick={(e) => e.stopPropagation()}
-                              data-testid={`chrono-ble-guess-${d.id}`}
-                            >
-                              <Sparkles className="h-2.5 w-2.5" />
-                              {t('chrono.diag.fxGuess.probable')}: {modelLabel(guess)}
-                              <HelpCircle className="h-2.5 w-2.5 opacity-60" />
-                            </Badge>
-                          </PopoverTrigger>
-                          <PopoverContent
-                            className="w-72 text-xs space-y-2"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <div className="space-y-1">
-                              <p className="font-semibold">
-                                {modelLabel(guess)}{' '}
-                                <span className="font-normal text-muted-foreground">
-                                  ({Math.round(guess.confidence * 100)}%)
-                                </span>
-                              </p>
-                              <p className="text-muted-foreground">
-                                {t('chrono.diag.fxGuess.disclaimer')}
-                              </p>
-                            </div>
-                            {guess.signals.length > 0 && (
-                              <div className="space-y-1">
-                                <p className="font-medium text-[11px]">
-                                  {t('chrono.diag.fxGuess.signalsTitle')}
-                                </p>
-                                <ul className="space-y-0.5">
-                                  {guess.signals.map((s, i) => (
-                                    <li
-                                      key={`${s.code}-${i}`}
-                                      className="flex items-start justify-between gap-2 text-[11px]"
-                                    >
-                                      <span className="text-foreground">
-                                        {signalLabel(s)}
-                                      </span>
-                                      <span
-                                        className={`font-mono shrink-0 ${
-                                          s.weight >= 0
-                                            ? 'text-primary'
-                                            : 'text-destructive'
-                                        }`}
-                                      >
-                                        {s.weight >= 0 ? '+' : ''}
-                                        {s.weight.toFixed(2)}
-                                      </span>
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
-                          </PopoverContent>
-                        </Popover>
-                      )}
                       <Badge
                         variant={d.connected ? 'default' : 'secondary'}
                         className="text-[9px] px-1.5 py-0 h-4"
@@ -336,21 +320,6 @@ export default function ChronoBleDiagnostic() {
             );
           })}
         </ul>
-        <div className="pt-1 flex justify-center">
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={handleScan}
-            disabled={scanning}
-            data-testid="chrono-ble-retry-btn"
-            className="gap-1.5"
-          >
-            <RotateCw className={`h-3.5 w-3.5 ${scanning ? 'animate-spin' : ''}`} />
-            {scanning ? t('chrono.diag.scanning') : t('chrono.diag.retry')}
-          </Button>
-        </div>
-        </>
       )}
     </section>
   );

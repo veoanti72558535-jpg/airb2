@@ -120,7 +120,51 @@ describe('ChronoBleDiagnostic', () => {
     renderWith();
     fireEvent.click(screen.getByTestId('chrono-ble-scan-btn'));
     await waitFor(() =>
-      expect(screen.getByText(/GATT server unavailable/)).toBeInTheDocument(),
+      expect(screen.getAllByText(/GATT server unavailable/).length).toBeGreaterThan(0),
     );
+  });
+
+  it('increments success/fail counters and surfaces the last GATT state', async () => {
+    const stub = vi
+      .spyOn(bleModule, 'diagnoseBleDevice')
+      .mockResolvedValueOnce(snapshot({ id: 'dev-ok-1', name: 'Radar OK' }))
+      .mockRejectedValueOnce(new Error('GATT timeout'))
+      .mockResolvedValueOnce(
+        snapshot({ id: 'dev-ok-2', name: 'Radar OK 2', connected: false }),
+      );
+
+    renderWith();
+    const btn = screen.getByTestId('chrono-ble-scan-btn');
+
+    fireEvent.click(btn);
+    await waitFor(() => screen.getByTestId('chrono-ble-device-dev-ok-1'));
+    expect(screen.getByTestId('chrono-ble-stat-success')).toHaveTextContent('1');
+    expect(screen.getByTestId('chrono-ble-stat-fail')).toHaveTextContent('0');
+    expect(screen.getByTestId('chrono-ble-stat-last')).toHaveTextContent(/Radar OK/);
+
+    fireEvent.click(btn);
+    await waitFor(() =>
+      expect(screen.getByTestId('chrono-ble-stat-fail')).toHaveTextContent('1'),
+    );
+    expect(screen.getByTestId('chrono-ble-stat-last')).toHaveTextContent(/GATT timeout/);
+
+    fireEvent.click(btn);
+    await waitFor(() => screen.getByTestId('chrono-ble-device-dev-ok-2'));
+    expect(screen.getByTestId('chrono-ble-stat-success')).toHaveTextContent('2');
+    expect(screen.getByTestId('chrono-ble-stat-last')).toHaveTextContent(/Radar OK 2/);
+
+    expect(stub).toHaveBeenCalledTimes(3);
+  });
+
+  it('resets counters and last state when clearing the list', async () => {
+    vi.spyOn(bleModule, 'diagnoseBleDevice').mockResolvedValue(snapshot());
+    renderWith();
+    fireEvent.click(screen.getByTestId('chrono-ble-scan-btn'));
+    await waitFor(() =>
+      expect(screen.getByTestId('chrono-ble-stat-success')).toHaveTextContent('1'),
+    );
+    fireEvent.click(screen.getByTestId('chrono-ble-clear-btn'));
+    expect(screen.getByTestId('chrono-ble-stat-success')).toHaveTextContent('0');
+    expect(screen.getByTestId('chrono-ble-stat-fail')).toHaveTextContent('0');
   });
 });

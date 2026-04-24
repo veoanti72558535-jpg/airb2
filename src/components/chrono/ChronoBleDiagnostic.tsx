@@ -1,13 +1,22 @@
-import React, { useState, useCallback } from 'react';
-import { ChevronDown, ChevronRight, Bluetooth, AlertTriangle, Battery, RefreshCw, Trash2, CheckCircle2, XCircle, Activity } from 'lucide-react';
+import React, { useState, useCallback, useMemo } from 'react';
+import {
+  ChevronDown, ChevronRight, Bluetooth, AlertTriangle, Battery,
+  RefreshCw, Trash2, CheckCircle2, XCircle, Activity, Star, ShieldAlert,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useI18n } from '@/lib/i18n';
 import {
   diagnoseBleDevice,
   isWebBluetoothSupported,
+  validateFxRadarCandidate,
+  saveFxRadarDeviceById,
+  forgetSavedFxRadarDevice,
+  getSavedFxRadarDevice,
   type BleDeviceDiagnostic,
+  type FxRadarValidation,
 } from '@/lib/chrono/fx-radar-ble';
+import { toast } from 'sonner';
 
 type LastGattState =
   | { kind: 'idle' }

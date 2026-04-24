@@ -75,6 +75,7 @@ import { AdvancedTrajectoryChart } from '@/components/calc/AdvancedTrajectoryCha
 import { PbrCard } from '@/components/calc/PbrCard';
 import { ZeroIntersectionsCard } from '@/components/calc/ZeroIntersectionsCard';
 import { ReticleAssistPanel } from '@/components/calc/ReticleAssistPanel';
+import { IntegratorCompareCard } from '@/components/sessions/IntegratorCompareCard';
 
 /**
  * Détail SESSION — route dédiée /sessions/:id.
@@ -500,7 +501,7 @@ export default function SessionDetailPage() {
         </TabsList>
 
         <TabsContent value="trajectory" className="space-y-3 mt-3">
-          <SessionTrajectoryTab session={session} />
+          <SessionTrajectoryTab session={session} advanced={isAdvanced} />
         </TabsContent>
 
         <TabsContent value="table" className="space-y-3 mt-3">
@@ -700,7 +701,7 @@ function Kpi({ label, value, unit }: { label: string; value: string; unit?: stri
 }
 
 /** Onglet trajectoire : mini chart, advanced chart, PBR, zero intersections. */
-function SessionTrajectoryTab({ session }: { session: Session }) {
+function SessionTrajectoryTab({ session, advanced }: { session: Session; advanced: boolean }) {
   const { vitalZoneM } = usePbrPrefs();
   const zeroIntersections = useMemo(
     () => computeZeroIntersections(session.results),
@@ -745,6 +746,7 @@ function SessionTrajectoryTab({ session }: { session: Session }) {
           endDistance: pbrOverlay.endDistance,
         }}
       />
+      {advanced && <IntegratorCompareCard session={session} />}
     </>
   );
 }

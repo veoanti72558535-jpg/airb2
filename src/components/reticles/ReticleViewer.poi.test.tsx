@@ -53,7 +53,13 @@ describe('ReticleViewer — POI overlay', () => {
   });
 
   it('applies SFP scaling: doubling current mag halves the POI offset', () => {
-    const sfpReticle = { ...baseReticle, focal_plane: 'SFP' as const, true_magnification: 10 };
+    // ReticleCatalogEntry-like shape : doit avoir reticle_id + pattern_type
+    const sfpReticle = {
+      ...baseReticle,
+      reticle_id: 'test-sfp',
+      focal_plane: 'SFP' as const,
+      true_magnification: 10,
+    };
     const { container: c1, unmount: u1 } = render(
       <ReticleViewer reticle={sfpReticle as any} size={400}
         currentMagnification={10}

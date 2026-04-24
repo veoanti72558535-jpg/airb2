@@ -282,6 +282,31 @@ export default function ChronoBleDiagnostic() {
         {t('chrono.diag.rssiNote')}
       </p>
 
+      {/* Default-device banner — shows the currently-pinned FX device. */}
+      {savedId && (
+        <div
+          className="flex items-center gap-2 p-2 rounded bg-primary/10 text-primary text-xs"
+          data-testid="chrono-ble-default-banner"
+        >
+          <Star className="h-3.5 w-3.5 shrink-0" />
+          <span className="flex-1 truncate">
+            {t('chrono.diag.savedBanner', {
+              name: savedName || savedId,
+            })}
+          </span>
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            onClick={handleForget}
+            data-testid="chrono-ble-forget-default-btn"
+            className="h-6 px-2 text-[11px]"
+          >
+            {t('chrono.diag.forgetDefault')}
+          </Button>
+        </div>
+      )}
+
       {error && (
         <div className="flex items-start gap-2 p-2 rounded bg-destructive/10 text-destructive text-xs">
           <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />

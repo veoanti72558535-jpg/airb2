@@ -10,10 +10,13 @@
 import type { Integrator } from '../types';
 import { eulerStep, type DecelFn, type IntegratorState } from './euler';
 import { trapezoidalStep } from './trapezoidal';
+import { heunStep } from './heun';
 
 export type StepFn = (s: IntegratorState, dt: number, decelFn: DecelFn) => void;
 export type { DecelFn, IntegratorState };
 
 export function getIntegrator(kind: Integrator): StepFn {
-  return kind === 'trapezoidal' ? trapezoidalStep : eulerStep;
+  if (kind === 'trapezoidal') return trapezoidalStep;
+  if (kind === 'heun') return heunStep;
+  return eulerStep;
 }

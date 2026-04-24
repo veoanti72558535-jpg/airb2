@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { ChevronDown, ChevronRight, Bluetooth, AlertTriangle, Battery, RefreshCw, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, Bluetooth, AlertTriangle, Battery, RefreshCw, Trash2, CheckCircle2, XCircle, Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useI18n } from '@/lib/i18n';
@@ -8,6 +8,12 @@ import {
   isWebBluetoothSupported,
   type BleDeviceDiagnostic,
 } from '@/lib/chrono/fx-radar-ble';
+
+type LastGattState =
+  | { kind: 'idle' }
+  | { kind: 'connected'; deviceName: string; at: string }
+  | { kind: 'disconnected'; deviceName: string; at: string }
+  | { kind: 'error'; message: string; at: string };
 
 /**
  * Diagnostic BLE — affiche les devices scannés successivement par
@@ -27,6 +33,9 @@ export default function ChronoBleDiagnostic() {
   const [scanning, setScanning] = useState(false);
   const [error, setError] = useState<string>('');
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [successCount, setSuccessCount] = useState(0);
+  const [failCount, setFailCount] = useState(0);
+  const [lastState, setLastState] = useState<LastGattState>({ kind: 'idle' });
 
   const handleScan = useCallback(async () => {
     setError('');
@@ -38,13 +47,23 @@ export default function ChronoBleDiagnostic() {
         return [snapshot, ...others];
       });
       setExpanded((prev) => new Set(prev).add(snapshot.id));
+      setSuccessCount((n) => n + 1);
+      const label = snapshot.name || snapshot.id;
+      setLastState(
+        snapshot.connected
+          ? { kind: 'connected', deviceName: label, at: snapshot.scannedAt }
+          : { kind: 'disconnected', deviceName: label, at: snapshot.scannedAt },
+      );
     } catch (err: unknown) {
       const e = err as { name?: string; message?: string };
       // User cancelled the picker — silent.
       if (e?.name === 'NotFoundError') {
         return;
       }
-      setError(e?.message ?? String(err));
+      const msg = e?.message ?? String(err);
+      setError(msg);
+      setFailCount((n) => n + 1);
+      setLastState({ kind: 'error', message: msg, at: new Date().toISOString() });
     } finally {
       setScanning(false);
     }
@@ -63,6 +82,9 @@ export default function ChronoBleDiagnostic() {
     setDevices([]);
     setExpanded(new Set());
     setError('');
+    setSuccessCount(0);
+    setFailCount(0);
+    setLastState({ kind: 'idle' });
   };
 
   if (!supported) return null;
@@ -110,6 +132,58 @@ export default function ChronoBleDiagnostic() {
           )}
         </div>
       </header>
+
+      {/* Compteurs + dernier état GATT */}
+      <div
+        className="flex flex-wrap items-center gap-1.5"
+        data-testid="chrono-ble-stats"
+      >
+        <Badge
+          variant="outline"
+          className="text-[10px] px-1.5 py-0 h-5 inline-flex items-center gap-1 border-success/40 text-success"
+          data-testid="chrono-ble-stat-success"
+        >
+          <CheckCircle2 className="h-3 w-3" />
+          {t('chrono.diag.stats.success' as any) || 'Réussis'}: {successCount}
+        </Badge>
+        <Badge
+          variant="outline"
+          className="text-[10px] px-1.5 py-0 h-5 inline-flex items-center gap-1 border-destructive/40 text-destructive"
+          data-testid="chrono-ble-stat-fail"
+        >
+          <XCircle className="h-3 w-3" />
+          {t('chrono.diag.stats.fail' as any) || 'Échoués'}: {failCount}
+        </Badge>
+        <Badge
+          variant="secondary"
+          className="text-[10px] px-1.5 py-0 h-5 inline-flex items-center gap-1"
+          data-testid="chrono-ble-stat-last"
+        >
+          <Activity className="h-3 w-3" />
+          {(t('chrono.diag.stats.lastState' as any) || 'Dernier état')}:{' '}
+          {lastState.kind === 'idle' && (
+            <span className="text-muted-foreground italic">
+              {t('chrono.diag.stats.idle' as any) || '—'}
+            </span>
+          )}
+          {lastState.kind === 'connected' && (
+            <span className="text-success">
+              {t('chrono.diag.connected')} · {lastState.deviceName}
+            </span>
+          )}
+          {lastState.kind === 'disconnected' && (
+            <span>
+              {t('chrono.diag.disconnected')} · {lastState.deviceName}
+            </span>
+          )}
+          {lastState.kind === 'error' && (
+            <span className="text-destructive truncate max-w-[180px]">
+              {t('chrono.diag.stats.error' as any) || 'Erreur'} ·{' '}
+              {lastState.message}
+            </span>
+          )}
+        </Badge>
+      </div>
 
       <p className="text-[10px] text-muted-foreground italic border-l-2 border-border pl-2">
         {t('chrono.diag.rssiNote')}

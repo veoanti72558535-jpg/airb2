@@ -36,6 +36,7 @@ import {
   getSettings,
   opticStore,
   projectileStore,
+  reticleStore,
   sessionStore,
 } from '@/lib/storage';
 import { normalizeSession } from '@/lib/session-normalize';
@@ -55,7 +56,6 @@ import {
   type BallisticTableConfig,
 } from '@/lib/ballistic-table';
 import { EngineBadge } from '@/components/sessions/EngineBadge';
-import { G1SourceBadge } from '@/components/calc/G1SourcePicker';
 import { CalculationMetadataBlock } from '@/components/sessions/CalculationMetadataBlock';
 import { CalibrationHistoryBlock } from '@/components/sessions/CalibrationHistoryBlock';
 import { FieldValidation } from '@/components/sessions/FieldValidation';
@@ -75,7 +75,7 @@ import { AdvancedTrajectoryChart } from '@/components/calc/AdvancedTrajectoryCha
 import { PbrCard } from '@/components/calc/PbrCard';
 import { ZeroIntersectionsCard } from '@/components/calc/ZeroIntersectionsCard';
 import { ReticleAssistPanel } from '@/components/calc/ReticleAssistPanel';
-import { IntegratorCompareCard } from '@/components/sessions/IntegratorCompareCard';
+import { TurretScopeView } from '@/components/sessions/TurretScopeView';
 
 /**
  * Détail SESSION — route dédiée /sessions/:id.
@@ -282,11 +282,6 @@ export default function SessionDetailPage() {
             </p>
             <div className="flex items-center gap-1.5 mt-2 flex-wrap">
               <EngineBadge session={session} size="xs" />
-              <G1SourceBadge
-                g1Source={session.input.g1Source}
-                dragModel={session.input.dragModel}
-                hasCustomTable={!!session.input.customDragTable && session.input.customDragTable.length > 0}
-              />
               {session.calibrationHistory && session.calibrationHistory.length > 0 && (
                 <span className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded bg-primary/15 text-primary">
                   <Target className="h-2.5 w-2.5" />
@@ -501,7 +496,7 @@ export default function SessionDetailPage() {
         </TabsList>
 
         <TabsContent value="trajectory" className="space-y-3 mt-3">
-          <SessionTrajectoryTab session={session} advanced={isAdvanced} />
+          <SessionTrajectoryTab session={session} />
         </TabsContent>
 
         <TabsContent value="table" className="space-y-3 mt-3">
@@ -701,7 +696,7 @@ function Kpi({ label, value, unit }: { label: string; value: string; unit?: stri
 }
 
 /** Onglet trajectoire : mini chart, advanced chart, PBR, zero intersections. */
-function SessionTrajectoryTab({ session, advanced }: { session: Session; advanced: boolean }) {
+function SessionTrajectoryTab({ session }: { session: Session }) {
   const { vitalZoneM } = usePbrPrefs();
   const zeroIntersections = useMemo(
     () => computeZeroIntersections(session.results),
@@ -746,7 +741,6 @@ function SessionTrajectoryTab({ session, advanced }: { session: Session; advance
           endDistance: pbrOverlay.endDistance,
         }}
       />
-      {advanced && <IntegratorCompareCard session={session} />}
     </>
   );
 }
@@ -790,6 +784,10 @@ function SessionReticleTab({ session }: { session: Session }) {
     () => (session.opticId ? opticStore.getById(session.opticId) ?? null : null),
     [session.opticId],
   );
+  const reticle = useMemo(
+    () => (optic?.reticleId ? reticleStore.getById(optic.reticleId) ?? null : null),
+    [optic?.reticleId],
+  );
   const distances = useMemo(
     () => buildDistanceList(tableConfig).filter(d => d > 0),
     [tableConfig],
@@ -802,11 +800,14 @@ function SessionReticleTab({ session }: { session: Session }) {
     );
   }
   return (
-    <ReticleAssistPanel
-      optic={optic}
-      results={session.results}
-      distances={distances}
-    />
+    <div className="space-y-3">
+      <TurretScopeView session={session} optic={optic} reticle={reticle} />
+      <ReticleAssistPanel
+        optic={optic}
+        results={session.results}
+        distances={distances}
+      />
+    </div>
   );
 }
 

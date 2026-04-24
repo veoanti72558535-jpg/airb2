@@ -24,39 +24,24 @@ import { spinDriftMm } from './spin-drift';
 import { findZeroAngle } from './zero-solver';
 import { getIntegrator, type IntegratorState } from './integrators';
 import { cdFromMero, hasMeroTable } from './drag/mero-tables';
-import { cdFromG1Table } from './drag/g1-table';
-import { cdFor } from './drag/standard-models';
 import type { EngineConfig } from './types';
-import type { G1Source } from '../types';
 
 const GRAVITY = 9.80665; // m/s²
 const GRAINS_TO_KG = 0.00006479891;
 
 /**
- * Build the Cd resolver for a given config + G1 source preference.
+ * Build the Cd resolver for a given config. When the atmosphere model is
+ * `tetens-full` we *also* swap the Cd source to MERO tables — because the
+ * `mero` profile is the only consumer of `tetens-full`, and we want both
+ * physics changes to land together.
  *
- * Resolution priority (first match wins):
- *  1. `tetens-full` atmosphere ⇒ MERO 169-pt tables (P2 `mero` profile).
- *  2. `g1Source === 'chairgun-table'` ⇒ ChairGun 79-pt G1 table for the
- *     `G1` law only ; other laws fall back to the legacy piecewise.
- *  3. Otherwise ⇒ `undefined` (the engine then uses `defaultResolver`
- *     in `retardation.ts`, i.e. the historical piecewise — bit-exact).
- *
- * IMPORTANT — DRAG_K and the LOS formula are NOT touched here. This
- * resolver only changes which Cd value is read for a given Mach.
+ * Returning `undefined` means "use the legacy default" (piecewise Cd from
+ * `standard-models`), which keeps the legacy profile bit-exact.
  */
-function buildCdResolver(
-  config: EngineConfig | undefined,
-  g1Source: G1Source | undefined,
-): CdResolver | undefined {
-  if (config?.atmosphereModel === 'tetens-full') {
-    return (model, mach) => (hasMeroTable(model) ? cdFromMero(model, mach) : 0);
-  }
-  if (g1Source === 'chairgun-table') {
-    return (model, mach) =>
-      model === 'G1' ? cdFromG1Table(mach) : cdFor(model, mach);
-  }
-  return undefined;
+function buildCdResolver(config: EngineConfig | undefined): CdResolver | undefined {
+  if (!config) return undefined;
+  if (config.atmosphereModel !== 'tetens-full') return undefined;
+  return (model, mach) => (hasMeroTable(model) ? cdFromMero(model, mach) : 0);
 }
 
 export function calculateTrajectory(input: BallisticInput): BallisticResult[] {
@@ -80,7 +65,6 @@ export function calculateTrajectory(input: BallisticInput): BallisticResult[] {
     projectileDiameter,
     zeroWeather,
     customDragTable,
-    g1Source,
     engineConfig,
   } = input;
 
@@ -100,7 +84,7 @@ export function calculateTrajectory(input: BallisticInput): BallisticResult[] {
       ? magCalibration / currentMag
       : 1;
 
-  const cdResolver = buildCdResolver(engineConfig, g1Source);
+  const cdResolver = buildCdResolver(engineConfig);
 
   const zeroAngle = findZeroAngle(
     muzzleVelocity,

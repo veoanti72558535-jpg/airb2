@@ -8,23 +8,6 @@
  * by any selector and remain engine-only until validated.
  */
 export type DragModel = 'G1' | 'G7' | 'GA' | 'GS' | 'RA4' | 'GA2' | 'SLG0' | 'SLG1';
-
-/**
- * Source de la table Cd(Mach) pour la loi G1.
- *
- *  - `'legacy-piecewise'` : approximation polynomiale historique en 4
- *    segments (`cdG1` dans `standard-models.ts`). Bit-exact avec toutes
- *    les sessions sauvegardées avant l'introduction du champ — c'est le
- *    DÉFAUT et le seul comportement quand le champ est absent.
- *  - `'chairgun-table'`   : table de référence ChairGun Elite à 79 points
- *    (`G1_DRAG_TABLE` dans `drag/g1-table.ts`), interpolation linéaire.
- *    Plus précise sur le subsonique haut / transsonique bas (≤ Mach 1.0).
- *
- * IMPORTANT — N'AGIT QUE sur la résolution Cd quand `dragModel === 'G1'`
- * et qu'aucune `customDragTable` n'est fournie. DRAG_K, la formule LOS,
- * l'intégrateur et le zero-solver restent strictement inchangés.
- */
-export type G1Source = 'legacy-piecewise' | 'chairgun-table';
 /**
  * Catégorie projectile. Étendu pour accepter la taxonomie bullets4 :
  * `bb` (billes acier) et `dart` (fléchettes), en plus de `pellet`/`slug`/`other`.
@@ -344,12 +327,6 @@ export interface BallisticInput {
    * the entire trajectory (linear interpolation between provided points).
    */
   customDragTable?: DragTablePoint[];
-  /**
-   * Source de la table Cd pour la loi G1 (cf. `G1Source`). Optionnel —
-   * absent ⇒ comportement legacy bit-exact (`'legacy-piecewise'`). N'a
-   * d'effet que pour `dragModel === 'G1'` ET sans `customDragTable`.
-   */
-  g1Source?: G1Source;
   /**
    * Optional engine configuration (P2). When omitted, the engine runs in
    * legacy bit-exact mode (Euler dt=5e-4, ICAO-simple atmosphere, piecewise

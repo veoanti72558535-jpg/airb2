@@ -5,7 +5,6 @@ import { Crosshair, RotateCcw, Save, Sparkles, Settings2, Zap, ArrowLeftRight } 
 import { SessionPickerDialog } from '@/components/compare/SessionPickerDialog';
 import { toast } from 'sonner';
 import { useI18n } from '@/lib/i18n';
-import { G1SourcePicker, G1SourceBadge } from '@/components/calc/G1SourcePicker';
 import { calculateTrajectory } from '@/lib/ballistics';
 import {
   Airgun,
@@ -13,7 +12,6 @@ import {
   BallisticResult,
   DragModel,
   DragTablePoint,
-  G1Source,
   Optic,
   OpticFocalPlane,
   Projectile,
@@ -67,12 +65,6 @@ interface FormState {
   projectileLength?: number;
   projectileDiameter?: number;
   customDragTable?: DragTablePoint[];
-  /**
-   * Source de la table Cd pour la loi G1 (legacy piecewise vs ChairGun
-   * 79 pts). N'a d'effet que pour `dragModel === 'G1'` et sans
-   * `customDragTable`. Géré dans la zone Avancé uniquement.
-   */
-  g1Source: G1Source;
   // Velocity
   muzzleVelocity: number;
   // Weapon
@@ -122,7 +114,6 @@ function defaultForm(): FormState {
     projectileWeight: 18,
     dragModel: 'G1',
     projectileType: 'pellet',
-    g1Source: 'legacy-piecewise',
     projectileLength: 7.5,
     projectileDiameter: 5.5,
     muzzleVelocity: 280,
@@ -244,7 +235,6 @@ export default function QuickCalc() {
       projectileWeight: i.projectileWeight,
       dragModel: i.dragModel ?? proj?.bcModel ?? 'G1',
       projectileType: proj?.projectileType ?? 'pellet',
-      g1Source: i.g1Source ?? 'legacy-piecewise',
       projectileLength: i.projectileLength ?? proj?.length,
       projectileDiameter: i.projectileDiameter ?? proj?.diameter,
       muzzleVelocity: i.muzzleVelocity,
@@ -487,7 +477,6 @@ export default function QuickCalc() {
       projectileDiameter: form.projectileDiameter,
       zeroWeather: form.useZeroWeather ? form.zeroWeather : undefined,
       customDragTable: form.customDragTable,
-      g1Source: form.g1Source,
     };
   };
 
@@ -726,20 +715,6 @@ export default function QuickCalc() {
         </div>
       )}
 
-      {advanced && (
-        <G1SourcePicker
-          value={form.g1Source}
-          onChange={next => update({ g1Source: next })}
-          disabledReason={
-            form.dragModel !== 'G1'
-              ? t('g1Source.disabledNonG1')
-              : form.customDragTable && form.customDragTable.length > 0
-                ? t('g1Source.disabledCustomTable')
-                : null
-          }
-        />
-      )}
-
       <div className="sticky bottom-0 z-10 -mx-4 px-4 py-3 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/70 border-t border-border md:static md:mx-0 md:px-0 md:py-0 md:bg-transparent md:border-0">
         <div className="flex flex-col sm:flex-row gap-2">
           <button
@@ -769,13 +744,6 @@ export default function QuickCalc() {
           animate={{ opacity: 1, y: 0 }}
           className="space-y-4"
         >
-          <div className="flex items-center justify-end">
-            <G1SourceBadge
-              g1Source={form.g1Source}
-              dragModel={form.dragModel}
-              hasCustomTable={!!form.customDragTable && form.customDragTable.length > 0}
-            />
-          </div>
           <ResultsCard
             result={heroResult}
             rows={tableRows}

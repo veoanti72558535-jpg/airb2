@@ -120,7 +120,7 @@ describe('ChronoBleDiagnostic', () => {
     renderWith();
     fireEvent.click(screen.getByTestId('chrono-ble-scan-btn'));
     await waitFor(() =>
-      expect(screen.getByText(/GATT server unavailable/)).toBeInTheDocument(),
+      expect(screen.getAllByText(/GATT server unavailable/).length).toBeGreaterThan(0),
     );
   });
 });

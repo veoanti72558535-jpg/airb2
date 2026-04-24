@@ -48,6 +48,8 @@ function snapshot(over: Partial<BleDeviceDiagnostic> = {}): BleDeviceDiagnostic 
 beforeEach(() => {
   // Stub Web Bluetooth support detection.
   vi.spyOn(bleModule, 'isWebBluetoothSupported').mockReturnValue(true);
+  // Always start without a saved default and clear any previous spies.
+  try { localStorage.clear(); } catch { /* noop */ }
 });
 
 describe('ChronoBleDiagnostic', () => {

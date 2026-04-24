@@ -70,6 +70,123 @@ export interface BleDiscoveryLog {
   characteristics: string[];
 }
 
+/**
+ * Diagnostic view of a single characteristic: UUID + GATT properties exposed
+ * by the peripheral. Used by the ChronoBleDiagnostic panel to help the user
+ * identify the right characteristic when the candidate UUID is wrong.
+ */
+export interface BleCharDescriptor {
+  uuid: string;
+  properties: {
+    read: boolean;
+    write: boolean;
+    writeWithoutResponse: boolean;
+    notify: boolean;
+    indicate: boolean;
+  };
+}
+
+export interface BleServiceDescriptor {
+  uuid: string;
+  characteristics: BleCharDescriptor[];
+}
+
+/**
+ * Detailed diagnostic snapshot of a connected BLE device.
+ *
+ * Note on RSSI: the Web Bluetooth API does NOT expose RSSI for already
+ * connected devices, and Chromium's `requestDevice` picker is the only
+ * way to discover devices (no passive scan API). RSSI is therefore not
+ * available — we surface the limitation rather than fake a value.
+ */
+export interface BleDeviceDiagnostic {
+  /** Stable id assigned by the browser for this origin. */
+  id: string;
+  /** Advertised name when available — may be empty for some peripherals. */
+  name: string;
+  /** True once the GATT server connection is established. */
+  connected: boolean;
+  /** ISO timestamp at which the snapshot was taken. */
+  scannedAt: string;
+  /** Optional decoded battery level (0–100 %) when battery_service is exposed. */
+  batteryPct?: number;
+  /** All primary services + their characteristics. */
+  services: BleServiceDescriptor[];
+  /** Filled when service enumeration failed (e.g. user disconnected). */
+  error?: string;
+}
+
+/**
+ * Connect to ANY BLE device the user picks and return a structured
+ * diagnostic snapshot (services, characteristics, properties, battery).
+ * Always disconnects before returning so the picker can be reused.
+ */
+export async function diagnoseBleDevice(): Promise<BleDeviceDiagnostic> {
+  const device = await navigator.bluetooth.requestDevice({
+    acceptAllDevices: true,
+    optionalServices: [
+      CANDIDATE_SERVICE,
+      '00001523-1212-efde-1523-785feabcd123',
+      'battery_service',
+      'generic_access',
+      'device_information',
+    ],
+  });
+
+  const snapshot: BleDeviceDiagnostic = {
+    id: device.id,
+    name: device.name ?? '',
+    connected: false,
+    scannedAt: new Date().toISOString(),
+    services: [],
+  };
+
+  try {
+    const gatt = device.gatt;
+    if (!gatt) throw new Error('GATT server unavailable');
+    if (!gatt.connected) await gatt.connect();
+    snapshot.connected = gatt.connected;
+
+    const services = await gatt.getPrimaryServices();
+    for (const svc of services) {
+      const chars = await svc.getCharacteristics();
+      snapshot.services.push({
+        uuid: svc.uuid,
+        characteristics: chars.map((c) => ({
+          uuid: c.uuid,
+          properties: {
+            read: c.properties.read,
+            write: c.properties.write,
+            writeWithoutResponse: c.properties.writeWithoutResponse,
+            notify: c.properties.notify,
+            indicate: c.properties.indicate,
+          },
+        })),
+      });
+    }
+
+    // Best-effort battery read — many BLE peripherals expose this.
+    try {
+      const battSvc = await gatt.getPrimaryService('battery_service');
+      const battChar = await battSvc.getCharacteristic('battery_level');
+      const value = await battChar.readValue();
+      if (value.byteLength >= 1) snapshot.batteryPct = value.getUint8(0);
+    } catch {
+      // No battery service — silent.
+    }
+  } catch (err) {
+    snapshot.error = err instanceof Error ? err.message : String(err);
+  } finally {
+    try {
+      device.gatt?.disconnect();
+    } catch {
+      // ignore
+    }
+  }
+
+  return snapshot;
+}
+
 export function isWebBluetoothSupported(): boolean {
   return typeof navigator !== 'undefined'
     && 'bluetooth' in navigator

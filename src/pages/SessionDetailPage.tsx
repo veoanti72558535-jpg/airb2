@@ -6,8 +6,10 @@ import {
   ArrowLeft,
   ArrowLeftRight,
   Camera,
+  Check,
   Crosshair,
   History,
+  Loader2,
   Pencil,
   Play,
   RotateCcw,
@@ -15,6 +17,7 @@ import {
   Tag,
   Target,
   Trash2,
+  TriangleAlert,
   X,
 } from 'lucide-react';
 import {
@@ -102,6 +105,7 @@ export default function SessionDetailPage() {
   const [draftNotes, setDraftNotes] = useState('');
   const [draftTags, setDraftTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
 
   // Dialogues secondaires
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -164,12 +168,15 @@ export default function SessionDetailPage() {
     setDraftName(session.name);
     setDraftNotes(session.notes ?? '');
     setDraftTags(session.tags ?? []);
+    setSaveStatus('idle');
     setEditing(true);
   };
 
   const cancelEdit = () => {
+    if (saveStatus === 'saving') return;
     setEditing(false);
     setTagInput('');
+    setSaveStatus('idle');
   };
 
   const commitTag = () => {
@@ -182,17 +189,34 @@ export default function SessionDetailPage() {
   const removeTag = (tag: string) =>
     setDraftTags(prev => prev.filter(t => t !== tag));
 
-  const saveEdit = () => {
+  const saveEdit = async () => {
+    if (saveStatus === 'saving') return;
+    setSaveStatus('saving');
     const name = draftName.trim() || session.name;
-    sessionStore.update(session.id, {
-      name,
-      notes: draftNotes.trim() || undefined,
-      tags: draftTags,
-    });
-    setEditing(false);
-    setTagInput('');
-    refresh();
-    toast.success(t('sessionDetail.saved'));
+    try {
+      // Yield to the event loop so the "saving" state is visible even though
+      // sessionStore.update is synchronous. This also leaves room to plug an
+      // async backend later without touching the UX.
+      await Promise.resolve();
+      sessionStore.update(session.id, {
+        name,
+        notes: draftNotes.trim() || undefined,
+        tags: draftTags,
+      });
+      refresh();
+      setSaveStatus('saved');
+      setTagInput('');
+      toast.success(t('sessionDetail.saved'));
+      // Auto-close edit mode after a short confirmation window.
+      window.setTimeout(() => {
+        setEditing(false);
+        setSaveStatus('idle');
+      }, 900);
+    } catch (e) {
+      console.error('[session-detail] save failed', e);
+      setSaveStatus('error');
+      toast.error(t('sessionDetail.saveError'));
+    }
   };
 
   const launchCompare = (other: Session) => {
@@ -299,16 +323,39 @@ export default function SessionDetailPage() {
             <>
               <button
                 onClick={saveEdit}
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-[11px] font-medium bg-primary text-primary-foreground hover:opacity-90"
+                disabled={saveStatus === 'saving'}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-[11px] font-medium bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                {t('sessionDetail.save')}
+                {saveStatus === 'saving' ? (
+                  <>
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    {t('sessionDetail.saving')}
+                  </>
+                ) : saveStatus === 'saved' ? (
+                  <>
+                    <Check className="h-3 w-3" />
+                    {t('sessionDetail.savedInline')}
+                  </>
+                ) : (
+                  t('sessionDetail.save')
+                )}
               </button>
               <button
                 onClick={cancelEdit}
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-[11px] font-medium border border-border text-muted-foreground hover:bg-muted/40"
+                disabled={saveStatus === 'saving'}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-[11px] font-medium border border-border text-muted-foreground hover:bg-muted/40 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {t('common.cancel')}
               </button>
+              {saveStatus === 'error' && (
+                <span
+                  role="status"
+                  className="inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium text-destructive bg-destructive/10 border border-destructive/30"
+                >
+                  <TriangleAlert className="h-3 w-3" />
+                  {t('sessionDetail.saveError')}
+                </span>
+              )}
             </>
           )}
           <button

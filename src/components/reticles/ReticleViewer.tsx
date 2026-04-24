@@ -7,10 +7,21 @@
  */
 import React, { useMemo, useRef } from 'react';
 import type { ReticleCatalogEntry } from '@/lib/reticles-catalog-repo';
+import type { ChairgunElement, ChairgunReticle } from '@/lib/chairgun-reticles-repo';
 import type { Reticle } from '@/lib/types';
 
 interface Props {
-  reticle: ReticleCatalogEntry | Reticle | { pattern_type: string; focal_plane?: string | null; click_units?: string | null; click_vertical?: number | null; illuminated?: boolean; true_magnification?: number | null; name?: string };
+  reticle: ReticleCatalogEntry | ChairgunReticle | Reticle | { pattern_type: string; focal_plane?: string | null; click_units?: string | null; click_vertical?: number | null; illuminated?: boolean; true_magnification?: number | null; name?: string };
+  /**
+   * MODE A — Géométrie ChairGun exacte. Si fourni et non vide, court-circuite
+   * le rendu pattern générique (mode B).
+   */
+  elements?: ChairgunElement[];
+  /**
+   * Étendue angulaire visible de part et d'autre du centre (en unités du
+   * réticule). Défaut : 10 (donc viewport ±10 unités).
+   */
+  viewportRange?: number;
   size?: number;
   darkMode?: boolean;
   currentMagnification?: number;
@@ -28,7 +39,9 @@ function getPatternType(r: Props['reticle']): string {
 }
 
 function isCatalog(r: Props['reticle']): r is ReticleCatalogEntry {
-  return 'reticle_id' in r;
+  // ReticleCatalogEntry possède `pattern_type` ET `reticle_id`.
+  // ChairgunReticle a `reticle_id` mais PAS `pattern_type`.
+  return 'reticle_id' in r && 'pattern_type' in r;
 }
 
 interface ReticleParams {

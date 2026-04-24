@@ -102,3 +102,7 @@ export {
 // `node:fs` et n'est utilisable que côté tests / runner Node. L'importer
 // ici casserait le bundle navigateur. Les consommateurs Node l'importent
 // directement : `import { loadAllCases } from '@/lib/cross-validation/fixture-discovery'`.
+
+// NOTE: `golden-validator` n'est PAS ré-exporté ici pour la même raison
+// (il dépend de `fixture-discovery` → `node:fs`). Importer côté Node :
+// `import { validateGoldenCases } from '@/lib/cross-validation/golden-validator'`.

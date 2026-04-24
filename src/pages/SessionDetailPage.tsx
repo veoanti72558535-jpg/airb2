@@ -55,6 +55,7 @@ import {
   type BallisticTableConfig,
 } from '@/lib/ballistic-table';
 import { EngineBadge } from '@/components/sessions/EngineBadge';
+import { G1SourceBadge } from '@/components/calc/G1SourcePicker';
 import { CalculationMetadataBlock } from '@/components/sessions/CalculationMetadataBlock';
 import { CalibrationHistoryBlock } from '@/components/sessions/CalibrationHistoryBlock';
 import { FieldValidation } from '@/components/sessions/FieldValidation';

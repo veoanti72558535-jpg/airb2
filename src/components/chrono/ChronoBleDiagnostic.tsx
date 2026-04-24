@@ -140,7 +140,7 @@ export default function ChronoBleDiagnostic() {
       >
         <Badge
           variant="outline"
-          className="text-[10px] px-1.5 py-0 h-5 inline-flex items-center gap-1 border-success/40 text-success"
+          className="text-[10px] px-1.5 py-0 h-5 inline-flex items-center gap-1 border-primary/40 text-primary"
           data-testid="chrono-ble-stat-success"
         >
           <CheckCircle2 className="h-3 w-3" />
@@ -167,7 +167,7 @@ export default function ChronoBleDiagnostic() {
             </span>
           )}
           {lastState.kind === 'connected' && (
-            <span className="text-success">
+            <span className="text-primary">
               {t('chrono.diag.connected')} · {lastState.deviceName}
             </span>
           )}

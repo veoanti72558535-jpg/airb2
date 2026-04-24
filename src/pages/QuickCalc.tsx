@@ -12,6 +12,7 @@ import {
   BallisticResult,
   DragModel,
   DragTablePoint,
+  G1Source,
   Optic,
   OpticFocalPlane,
   Projectile,

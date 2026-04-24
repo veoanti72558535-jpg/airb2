@@ -155,6 +155,31 @@ export default function ChronoBleDiagnostic() {
     toast.success(t('chrono.diag.forgottenToast'));
   }, [t]);
 
+  /** Render a validator reason code as a localized human-readable string. */
+  const reasonLabel = useCallback(
+    (code: string): string | null => {
+      // Positive signals are not surfaced as "warnings" — only refusals matter.
+      if (code.startsWith('fx-service-uuid:')) return null;
+      if (code.startsWith('name-hint:')) return null;
+      if (code === 'has-notifiable-characteristic') return null;
+      if (code === 'no-known-fx-service-uuid') return t('chrono.diag.guard.reason.noFxService');
+      if (code === 'unnamed-device') return t('chrono.diag.guard.reason.unnamed');
+      if (code.startsWith('name-mismatch:')) {
+        return t('chrono.diag.guard.reason.nameMismatch', {
+          name: code.slice('name-mismatch:'.length) || '—',
+        });
+      }
+      if (code === 'no-notifiable-characteristic') return t('chrono.diag.guard.reason.noNotify');
+      if (code.startsWith('enumeration failed:')) {
+        return t('chrono.diag.guard.reason.enumError', {
+          msg: code.slice('enumeration failed:'.length).trim() || '—',
+        });
+      }
+      return null;
+    },
+    [t],
+  );
+
   if (!supported) return null;
 
   return (

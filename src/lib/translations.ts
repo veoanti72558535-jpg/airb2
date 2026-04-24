@@ -3298,6 +3298,13 @@ const en: Record<keyof typeof fr, string> = {
   'reticles.catalog.favoriteAdded': 'Added to favorites',
   'reticles.catalog.favoriteRemoved': 'Removed from favorites',
   'reticles.catalog.favorites': 'Catalog favorites',
+  // ── ChairGun Elite catalog ──
+  'reticles.sources.chairgun': 'ChairGun Elite',
+  'reticles.chairgun.tab': 'ChairGun (1944)',
+  'reticles.chairgun.geometry': 'Geometry available',
+  'reticles.chairgun.elements': '{n} elements',
+  'reticles.viewer.chairgunBadge': 'ChairGun',
+  'reticles.viewer.crosshairAuto': 'Auto crosshair',
   // ── Truing (BC calibration) ───────────────────────────────────────────
   'truing.title': 'BC Calibration (Truing)',
   'truing.subtitle': 'Real-world shot calibration',

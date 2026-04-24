@@ -1,13 +1,20 @@
 import React, { useState, useCallback } from 'react';
-import { ChevronDown, ChevronRight, Bluetooth, AlertTriangle, Battery, RefreshCw, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, Bluetooth, AlertTriangle, Battery, RefreshCw, Trash2, HelpCircle, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useI18n } from '@/lib/i18n';
 import {
   diagnoseBleDevice,
   isWebBluetoothSupported,
   type BleDeviceDiagnostic,
 } from '@/lib/chrono/fx-radar-ble';
+import {
+  guessFxModel,
+  bucketConfidence,
+  type FxModelGuess,
+  type FxModelSignal,
+} from '@/lib/chrono/fx-model-heuristic';
 
 /**
  * Diagnostic BLE — affiche les devices scannés successivement par
@@ -66,6 +73,18 @@ export default function ChronoBleDiagnostic() {
   };
 
   if (!supported) return null;
+
+  // Translation helper for signal codes — keeps the JSX terse.
+  const signalLabel = (s: FxModelSignal): string => {
+    const key = `chrono.diag.fxGuess.signal.${s.code}` as Parameters<typeof t>[0];
+    return t(key);
+  };
+
+  const modelLabel = (g: FxModelGuess): string => {
+    if (g.model === 'fx-radar') return t('chrono.diag.fxGuess.modelRadar');
+    if (g.model === 'fx-chrono') return t('chrono.diag.fxGuess.modelChrono');
+    return t('chrono.diag.fxGuess.modelUnknown');
+  };
 
   return (
     <section
@@ -130,6 +149,15 @@ export default function ChronoBleDiagnostic() {
         <ul className="space-y-2" data-testid="chrono-ble-device-list">
           {devices.map((d) => {
             const isOpen = expanded.has(d.id);
+            const guess = guessFxModel(d);
+            const bucket = bucketConfidence(guess.confidence);
+            const showGuess = guess.model !== 'unknown';
+            const bucketClass =
+              bucket === 'high'
+                ? 'bg-primary/15 text-primary border-primary/40'
+                : bucket === 'medium'
+                  ? 'bg-accent/15 text-accent-foreground border-accent/40'
+                  : 'bg-muted text-muted-foreground border-border';
             return (
               <li
                 key={d.id}
@@ -159,6 +187,67 @@ export default function ChronoBleDiagnostic() {
                       {d.id}
                     </div>
                     <div className="flex flex-wrap gap-1 mt-1">
+                      {showGuess && (
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Badge
+                              variant="outline"
+                              className={`text-[9px] px-1.5 py-0 h-4 inline-flex items-center gap-0.5 cursor-help ${bucketClass}`}
+                              onClick={(e) => e.stopPropagation()}
+                              data-testid={`chrono-ble-guess-${d.id}`}
+                            >
+                              <Sparkles className="h-2.5 w-2.5" />
+                              {t('chrono.diag.fxGuess.probable')}: {modelLabel(guess)}
+                              <HelpCircle className="h-2.5 w-2.5 opacity-60" />
+                            </Badge>
+                          </PopoverTrigger>
+                          <PopoverContent
+                            className="w-72 text-xs space-y-2"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <div className="space-y-1">
+                              <p className="font-semibold">
+                                {modelLabel(guess)}{' '}
+                                <span className="font-normal text-muted-foreground">
+                                  ({Math.round(guess.confidence * 100)}%)
+                                </span>
+                              </p>
+                              <p className="text-muted-foreground">
+                                {t('chrono.diag.fxGuess.disclaimer')}
+                              </p>
+                            </div>
+                            {guess.signals.length > 0 && (
+                              <div className="space-y-1">
+                                <p className="font-medium text-[11px]">
+                                  {t('chrono.diag.fxGuess.signalsTitle')}
+                                </p>
+                                <ul className="space-y-0.5">
+                                  {guess.signals.map((s, i) => (
+                                    <li
+                                      key={`${s.code}-${i}`}
+                                      className="flex items-start justify-between gap-2 text-[11px]"
+                                    >
+                                      <span className="text-foreground">
+                                        {signalLabel(s)}
+                                      </span>
+                                      <span
+                                        className={`font-mono shrink-0 ${
+                                          s.weight >= 0
+                                            ? 'text-primary'
+                                            : 'text-destructive'
+                                        }`}
+                                      >
+                                        {s.weight >= 0 ? '+' : ''}
+                                        {s.weight.toFixed(2)}
+                                      </span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                          </PopoverContent>
+                        </Popover>
+                      )}
                       <Badge
                         variant={d.connected ? 'default' : 'secondary'}
                         className="text-[9px] px-1.5 py-0 h-4"

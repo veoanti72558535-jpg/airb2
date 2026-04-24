@@ -327,3 +327,105 @@
     min-width: 44px;
   }
 }
+
+/* ─────────────────────────────────────────────────────────────────────
+ * Print view — utilisé par SessionPrintView pour produire un PDF via
+ * window.print(). À l'écran : .print-only est masqué. À l'impression :
+ * tout est masqué SAUF .print-only et ses descendants.
+ * ───────────────────────────────────────────────────────────────────── */
+.print-only {
+  display: none;
+}
+
+@media print {
+  /* Masquer toute l'app sauf l'arbre print-only */
+  body * {
+    visibility: hidden !important;
+  }
+  .print-only,
+  .print-only * {
+    visibility: visible !important;
+  }
+  .print-only {
+    display: block !important;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 16mm 12mm;
+    color: #000;
+    background: #fff;
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-size: 10pt;
+    line-height: 1.4;
+  }
+  .print-only h1 {
+    font-size: 18pt;
+    margin: 0 0 4pt 0;
+  }
+  .print-only h2 {
+    font-size: 12pt;
+    margin: 14pt 0 4pt 0;
+    border-bottom: 1px solid #999;
+    padding-bottom: 2pt;
+  }
+  .print-only .meta-line {
+    font-size: 8pt;
+    color: #444;
+    margin: 0 0 2pt 0;
+  }
+  .print-only section {
+    page-break-inside: avoid;
+    margin-bottom: 8pt;
+  }
+  .print-only table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9pt;
+  }
+  .print-only .kpi-table th {
+    text-align: left;
+    color: #555;
+    font-weight: 500;
+    width: 18%;
+    padding: 2pt 6pt 2pt 0;
+  }
+  .print-only .kpi-table td {
+    padding: 2pt 12pt 2pt 0;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    width: 32%;
+  }
+  .print-only .ballistic-table th,
+  .print-only .ballistic-table td {
+    border-bottom: 0.5pt solid #ccc;
+    padding: 2pt 4pt;
+    text-align: right;
+  }
+  .print-only .ballistic-table th {
+    background: #eee;
+    font-weight: 600;
+    text-align: center;
+  }
+  .print-only .ballistic-table td {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  .print-only .ballistic-table tbody tr:nth-child(odd) td {
+    background: #fafafa;
+  }
+  .print-only .footnote {
+    font-size: 8pt;
+    color: #666;
+    margin-top: 4pt;
+  }
+  .print-only .notes {
+    white-space: pre-wrap;
+    font-size: 9.5pt;
+    border-left: 2pt solid #999;
+    padding: 2pt 0 2pt 8pt;
+    color: #222;
+  }
+  @page {
+    size: A4;
+    margin: 0;
+  }
+}

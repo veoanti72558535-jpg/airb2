@@ -8,6 +8,7 @@ import {
   Camera,
   Check,
   Crosshair,
+  FileDown,
   History,
   Loader2,
   Pencil,
@@ -63,6 +64,7 @@ import { TruingPanel } from '@/components/sessions/TruingPanel';
 import { TargetPhotoAnalyzer } from '@/components/sessions/TargetPhotoAnalyzer';
 import { TargetAnalysesHistory } from '@/components/sessions/TargetAnalysesHistory';
 import { RecalculateDialog } from '@/components/sessions/RecalculateDialog';
+import { SessionPrintView } from '@/components/sessions/SessionPrintView';
 import { SessionPickerDialog } from '@/components/compare/SessionPickerDialog';
 import { InlineFullDeltaView } from '@/components/compare/InlineFullDeltaView';
 import { SessionReportButton } from '@/components/ai/agents/SessionReportButton';
@@ -163,6 +165,13 @@ export default function SessionDetailPage() {
     if (!confirm(t('sessions.delete') + ' ?')) return;
     sessionStore.delete(session.id);
     navigate('/sessions');
+  };
+
+  const handleExportPdf = () => {
+    // Le composant SessionPrintView est monté en permanence (display:none
+    // hors impression), il suffit donc de déclencher la dialog d'impression
+    // native — l'utilisateur choisit "Enregistrer en PDF".
+    window.print();
   };
 
   const startEdit = () => {
@@ -361,8 +370,16 @@ export default function SessionDetailPage() {
             </>
           )}
           <button
+            onClick={handleExportPdf}
+            title={t('sessionDetail.exportPdfHint')}
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-[11px] font-medium border border-border text-muted-foreground hover:text-foreground hover:bg-muted/40 ml-auto"
+          >
+            <FileDown className="h-3 w-3" />
+            {t('sessionDetail.exportPdf')}
+          </button>
+          <button
             onClick={handleDelete}
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-[11px] font-medium border border-destructive/30 text-destructive hover:bg-destructive/10 ml-auto"
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-[11px] font-medium border border-destructive/30 text-destructive hover:bg-destructive/10"
           >
             <Trash2 className="h-3 w-3" />
             {t('sessions.delete')}
@@ -638,6 +655,9 @@ export default function SessionDetailPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Vue d'impression — masquée à l'écran, rendue par window.print(). */}
+      <SessionPrintView session={session} />
     </motion.div>
   );
 }

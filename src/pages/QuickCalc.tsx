@@ -486,6 +486,7 @@ export default function QuickCalc() {
       projectileDiameter: form.projectileDiameter,
       zeroWeather: form.useZeroWeather ? form.zeroWeather : undefined,
       customDragTable: form.customDragTable,
+      g1Source: form.g1Source,
     };
   };
 

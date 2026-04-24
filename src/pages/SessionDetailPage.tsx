@@ -61,6 +61,7 @@ import { TargetPhotoAnalyzer } from '@/components/sessions/TargetPhotoAnalyzer';
 import { TargetAnalysesHistory } from '@/components/sessions/TargetAnalysesHistory';
 import { RecalculateDialog } from '@/components/sessions/RecalculateDialog';
 import { SessionPickerDialog } from '@/components/compare/SessionPickerDialog';
+import { InlineFullDeltaView } from '@/components/compare/InlineFullDeltaView';
 import { SessionReportButton } from '@/components/ai/agents/SessionReportButton';
 import { BallisticTable } from '@/components/calc/BallisticTable';
 import { TrajectoryMiniChart } from '@/components/calc/TrajectoryMiniChart';

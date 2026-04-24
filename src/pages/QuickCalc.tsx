@@ -769,6 +769,13 @@ export default function QuickCalc() {
           animate={{ opacity: 1, y: 0 }}
           className="space-y-4"
         >
+          <div className="flex items-center justify-end">
+            <G1SourceBadge
+              g1Source={form.g1Source}
+              dragModel={form.dragModel}
+              hasCustomTable={!!form.customDragTable && form.customDragTable.length > 0}
+            />
+          </div>
           <ResultsCard
             result={heroResult}
             rows={tableRows}

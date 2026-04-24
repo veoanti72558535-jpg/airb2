@@ -55,6 +55,7 @@ import {
   type BallisticTableConfig,
 } from '@/lib/ballistic-table';
 import { EngineBadge } from '@/components/sessions/EngineBadge';
+import { G1SourceBadge } from '@/components/calc/G1SourcePicker';
 import { CalculationMetadataBlock } from '@/components/sessions/CalculationMetadataBlock';
 import { CalibrationHistoryBlock } from '@/components/sessions/CalibrationHistoryBlock';
 import { FieldValidation } from '@/components/sessions/FieldValidation';
@@ -280,6 +281,11 @@ export default function SessionDetailPage() {
             </p>
             <div className="flex items-center gap-1.5 mt-2 flex-wrap">
               <EngineBadge session={session} size="xs" />
+              <G1SourceBadge
+                g1Source={session.input.g1Source}
+                dragModel={session.input.dragModel}
+                hasCustomTable={!!session.input.customDragTable && session.input.customDragTable.length > 0}
+              />
               {session.calibrationHistory && session.calibrationHistory.length > 0 && (
                 <span className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded bg-primary/15 text-primary">
                   <Target className="h-2.5 w-2.5" />

@@ -655,6 +655,9 @@ export default function SessionDetailPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Vue d'impression — masquée à l'écran, rendue par window.print(). */}
+      <SessionPrintView session={session} />
     </motion.div>
   );
 }

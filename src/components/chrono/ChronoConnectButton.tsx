@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Bluetooth, Loader2, AlertTriangle, Wifi, WifiOff, X, Info } from 'lucide-react';
+import { Bluetooth, Loader2, AlertTriangle, Wifi, WifiOff, X, Info, CheckCircle2, Circle, XCircle } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import {
   isWebBluetoothSupported,
@@ -13,12 +13,27 @@ import {
   getSavedFxRadarDevice,
   tryReconnectSavedFxRadar,
 } from '@/lib/chrono/fx-radar-ble';
-import type { BleParseConfig } from '@/lib/chrono/fx-radar-ble';
+import type {
+  BleParseConfig,
+  GattStage,
+  GattStageEvent,
+  GattStageStatus,
+} from '@/lib/chrono/fx-radar-ble';
 import { DEFAULT_BLE_PARSE_CONFIG } from '@/lib/chrono/fx-radar-ble';
 import { detectWebBluetoothSupport } from '@/lib/chrono/web-bluetooth-support';
 import WebBluetoothCompatGuide from './WebBluetoothCompatGuide';
 
 type BleState = 'unsupported' | 'disconnected' | 'scanning' | 'connected' | 'error';
+
+/** Ordered list used to render the stage timeline. */
+const STAGE_ORDER: GattStage[] = [
+  'request-device',
+  'connect-gatt',
+  'discover-services',
+  'find-characteristic',
+  'start-notifications',
+  'streaming',
+];
 
 interface ChronoConnectButtonProps {
   onVelocity: (v: number) => void;
@@ -41,6 +56,18 @@ export default function ChronoConnectButton({ onVelocity, onStateChange, bleConf
     () => getSavedFxRadarDevice()?.name ?? null,
   );
   const autoTriedRef = useRef(false);
+  /** Latest status per stage — drives the timeline UI. */
+  const [stages, setStages] = useState<Record<GattStage, GattStageEvent | undefined>>(
+    {} as Record<GattStage, GattStageEvent | undefined>,
+  );
+
+  const handleStage = useCallback((ev: GattStageEvent) => {
+    setStages(prev => ({ ...prev, [ev.stage]: ev }));
+  }, []);
+
+  const resetStages = useCallback(() => {
+    setStages({} as Record<GattStage, GattStageEvent | undefined>);
+  }, []);
 
   const updateState = useCallback((s: BleState) => {
     setState(s);
@@ -59,27 +86,52 @@ export default function ChronoConnectButton({ onVelocity, onStateChange, bleConf
         updateState('error');
       },
       bleConfig ?? DEFAULT_BLE_PARSE_CONFIG,
+      handleStage,
     );
     setStopFn(() => stop);
     updateState('connected');
-  }, [bleConfig, onVelocity, updateState]);
+  }, [bleConfig, onVelocity, updateState, handleStage]);
 
   const handleConnect = useCallback(async () => {
+    resetStages();
+    handleStage({
+      stage: 'request-device',
+      status: 'in-progress',
+      at: new Date().toISOString(),
+    });
     updateState('scanning');
     setError('');
     try {
       const dev = await connectFxRadar();
+      handleStage({
+        stage: 'request-device',
+        status: 'ok',
+        detail: dev.name ?? dev.id,
+        at: new Date().toISOString(),
+      });
       await startStream(dev);
     } catch (err: any) {
       if (err?.name === 'NotFoundError') {
         // User cancelled the picker
+        handleStage({
+          stage: 'request-device',
+          status: 'error',
+          detail: 'user-cancelled',
+          at: new Date().toISOString(),
+        });
         updateState('disconnected');
         return;
       }
       setError(err?.message ?? String(err));
+      handleStage({
+        stage: 'request-device',
+        status: 'error',
+        detail: err?.message ?? String(err),
+        at: new Date().toISOString(),
+      });
       updateState('error');
     }
-  }, [startStream, updateState]);
+  }, [startStream, updateState, handleStage, resetStages]);
 
   // On mount: attempt silent reconnect to the saved device, if any.
   useEffect(() => {
@@ -111,7 +163,8 @@ export default function ChronoConnectButton({ onVelocity, onStateChange, bleConf
     setDevice(null);
     setStopFn(null);
     updateState('disconnected');
-  }, [device, stopFn, updateState]);
+    resetStages();
+  }, [device, stopFn, updateState, resetStages]);
 
   const handleForget = useCallback(() => {
     forgetSavedFxRadarDevice();

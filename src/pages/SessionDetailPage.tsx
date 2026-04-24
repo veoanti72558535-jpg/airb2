@@ -252,6 +252,7 @@ export default function SessionDetailPage() {
               <Input
                 value={draftName}
                 onChange={e => setDraftName(e.target.value)}
+                disabled={saveStatus === 'saving'}
                 className="h-8 text-base font-semibold"
               />
             ) : (
@@ -409,13 +410,15 @@ export default function SessionDetailPage() {
                         commitTag();
                       }
                     }}
+                    disabled={saveStatus === 'saving'}
                     placeholder={t('sessionDetail.addTagPlaceholder')}
                     className="h-7 text-xs w-32"
                   />
                   <button
                     type="button"
                     onClick={commitTag}
-                    className="px-2 py-1 rounded text-[11px] border border-border text-muted-foreground hover:bg-muted/40"
+                    disabled={saveStatus === 'saving'}
+                    className="px-2 py-1 rounded text-[11px] border border-border text-muted-foreground hover:bg-muted/40 disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     +
                   </button>
@@ -432,6 +435,7 @@ export default function SessionDetailPage() {
                 value={draftNotes}
                 onChange={e => setDraftNotes(e.target.value)}
                 rows={3}
+                disabled={saveStatus === 'saving'}
                 className="w-full bg-muted border border-border rounded-md px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
                 placeholder={t('sessionDetail.notesPlaceholder')}
               />

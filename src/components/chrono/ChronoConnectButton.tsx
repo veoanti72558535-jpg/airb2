@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Bluetooth, Loader2, AlertTriangle, Wifi, WifiOff, X } from 'lucide-react';
+import { Bluetooth, Loader2, AlertTriangle, Wifi, WifiOff, X, Info, MousePointerClick } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import {
   isWebBluetoothSupported,
@@ -148,6 +148,34 @@ export default function ChronoConnectButton({ onVelocity, onStateChange, bleConf
 
   return (
     <div className="flex flex-col gap-2">
+      {/* First-time onboarding: shown only when no device has been paired yet */}
+      {!savedName && (
+        <div
+          className="rounded-lg border border-primary/30 bg-primary/5 p-3 text-xs space-y-2"
+          data-testid="ble-first-connect-help"
+        >
+          <div className="flex items-start gap-2">
+            <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+            <div className="space-y-1 min-w-0">
+              <p className="font-semibold text-foreground">
+                {t('chrono.firstConnect.title')}
+              </p>
+              <p className="text-muted-foreground">
+                {t('chrono.firstConnect.body')}
+              </p>
+            </div>
+          </div>
+          <ol className="ml-6 list-decimal space-y-0.5 text-muted-foreground">
+            <li>{t('chrono.firstConnect.step1')}</li>
+            <li>{t('chrono.firstConnect.step2')}</li>
+            <li>{t('chrono.firstConnect.step3')}</li>
+          </ol>
+          <p className="ml-6 text-[11px] text-muted-foreground italic">
+            {t('chrono.firstConnect.tip')}
+          </p>
+        </div>
+      )}
+
       <div className="flex items-center gap-2">
         <Button onClick={handleConnect}>
           <Bluetooth className="h-4 w-4 mr-2" />

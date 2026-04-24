@@ -19,6 +19,19 @@
 const CANDIDATE_SERVICE = '0000fff0-0000-1000-8000-00805f9b34fb';
 const CANDIDATE_CHAR    = '0000fff1-0000-1000-8000-00805f9b34fb';
 
+/**
+ * Service UUIDs that strongly indicate an FX Radar / FX Pocket Chrono.
+ * Sourced from community reverse-engineering and the candidate UUIDs above.
+ * Keep lowercase — Web Bluetooth normalizes UUIDs to lowercase.
+ */
+export const FX_RADAR_SERVICE_HINTS: readonly string[] = [
+  '0000fff0-0000-1000-8000-00805f9b34fb',
+  '00001523-1212-efde-1523-785feabcd123',
+];
+
+/** Substrings (case-insensitive) that suggest an FX peripheral by name. */
+export const FX_RADAR_NAME_HINTS: readonly string[] = ['fx', 'radar', 'pocket'];
+
 /** localStorage key for the last-paired FX Radar device id. */
 const SAVED_DEVICE_KEY = 'fx_radar_device_id';
 /** localStorage key for the last-paired FX Radar device name (display only). */
@@ -55,22 +68,19 @@ export function saveFxRadarDevice(device: BluetoothDevice): void {
 }
 
 /**
- * Persist a device id/name pair directly (e.g. from a diagnostic snapshot
- * where we have the metadata but not a live `BluetoothDevice` instance).
- * The stored id is the canonical Web Bluetooth device id and is reused by
- * `tryReconnectSavedFxRadar()` for silent reconnects.
+ * Persist a device using only its id + name (e.g. coming from a diagnostic
+ * snapshot, where we no longer hold the live `BluetoothDevice` instance).
+ * Returns true if the write succeeded, false otherwise.
  */
-export function saveFxRadarDeviceById(id: string, name?: string | null): void {
-  if (!id) return;
+export function saveFxRadarDeviceById(id: string, name?: string | null): boolean {
+  if (!id) return false;
   try {
     localStorage.setItem(SAVED_DEVICE_KEY, id);
-    if (name) {
-      localStorage.setItem(SAVED_DEVICE_NAME_KEY, name);
-    } else {
-      localStorage.removeItem(SAVED_DEVICE_NAME_KEY);
-    }
+    if (name) localStorage.setItem(SAVED_DEVICE_NAME_KEY, name);
+    else localStorage.removeItem(SAVED_DEVICE_NAME_KEY);
+    return true;
   } catch {
-    // ignore (private mode, quota)
+    return false;
   }
 }
 
@@ -208,6 +218,74 @@ export interface BleDeviceDiagnostic {
   services: BleServiceDescriptor[];
   /** Filled when service enumeration failed (e.g. user disconnected). */
   error?: string;
+}
+
+/**
+ * Result of validating a diagnostic snapshot against known FX Radar
+ * fingerprints. `ok` is conservative: it only returns true when the
+ * device exposes a known FX service UUID OR a notifiable characteristic
+ * AND has a matching name. Reasons are surfaced to the user verbatim.
+ */
+export interface FxRadarValidation {
+  ok: boolean;
+  score: number;
+  reasons: string[];
+}
+
+/**
+ * Heuristic guardrail used by the BLE diagnostic before saving a device
+ * as the default FX Radar. We deliberately err on the side of refusing
+ * (the user can still force, but with a clear warning) rather than
+ * silently pinning a random peripheral that would later fail to stream
+ * velocity data.
+ */
+export function validateFxRadarCandidate(
+  snapshot: Pick<BleDeviceDiagnostic, 'name' | 'services' | 'error'>,
+): FxRadarValidation {
+  const reasons: string[] = [];
+  let score = 0;
+
+  if (snapshot.error) {
+    reasons.push(`enumeration failed: ${snapshot.error}`);
+  }
+
+  const serviceUuids = (snapshot.services ?? []).map((s) => s.uuid.toLowerCase());
+  const matchedServices = FX_RADAR_SERVICE_HINTS.filter((u) => serviceUuids.includes(u));
+  if (matchedServices.length > 0) {
+    score += 3;
+    reasons.push(`fx-service-uuid:${matchedServices.join(',')}`);
+  } else {
+    reasons.push('no-known-fx-service-uuid');
+  }
+
+  const name = (snapshot.name ?? '').toLowerCase();
+  const matchedName = FX_RADAR_NAME_HINTS.find((h) => name.includes(h));
+  if (matchedName) {
+    score += 2;
+    reasons.push(`name-hint:${matchedName}`);
+  } else if (!name) {
+    reasons.push('unnamed-device');
+  } else {
+    reasons.push(`name-mismatch:${snapshot.name}`);
+  }
+
+  const hasNotify = (snapshot.services ?? []).some((svc) =>
+    svc.characteristics.some((c) => c.properties.notify),
+  );
+  if (hasNotify) {
+    score += 1;
+    reasons.push('has-notifiable-characteristic');
+  } else {
+    reasons.push('no-notifiable-characteristic');
+  }
+
+  // Decision: a known FX service is sufficient on its own; otherwise
+  // require both a name hint AND a notifiable characteristic.
+  const ok =
+    matchedServices.length > 0 ||
+    (Boolean(matchedName) && hasNotify);
+
+  return { ok, score, reasons };
 }
 
 /**

@@ -1,17 +1,22 @@
-import React, { useState, useCallback } from 'react';
-import { ChevronDown, ChevronRight, Bluetooth, AlertTriangle, Battery, RefreshCw, Trash2, CheckCircle2, XCircle, Activity, Star, StarOff } from 'lucide-react';
+import React, { useState, useCallback, useMemo } from 'react';
+import {
+  ChevronDown, ChevronRight, Bluetooth, AlertTriangle, Battery,
+  RefreshCw, Trash2, CheckCircle2, XCircle, Activity, Star, ShieldAlert,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useI18n } from '@/lib/i18n';
-import { toast } from 'sonner';
 import {
   diagnoseBleDevice,
   isWebBluetoothSupported,
-  getSavedFxRadarDevice,
+  validateFxRadarCandidate,
   saveFxRadarDeviceById,
   forgetSavedFxRadarDevice,
+  getSavedFxRadarDevice,
   type BleDeviceDiagnostic,
+  type FxRadarValidation,
 } from '@/lib/chrono/fx-radar-ble';
+import { toast } from 'sonner';
 
 type LastGattState =
   | { kind: 'idle' }
@@ -43,6 +48,18 @@ export default function ChronoBleDiagnostic() {
   const [savedId, setSavedId] = useState<string | null>(
     () => getSavedFxRadarDevice()?.id ?? null,
   );
+  const [savedName, setSavedName] = useState<string | null>(
+    () => getSavedFxRadarDevice()?.name ?? null,
+  );
+  /** Devices for which the user explicitly chose to bypass the FX guardrail. */
+  const [forcePending, setForcePending] = useState<string | null>(null);
+
+  /** Memoized validation per device — keyed by id. */
+  const validations = useMemo(() => {
+    const map = new Map<string, FxRadarValidation>();
+    for (const d of devices) map.set(d.id, validateFxRadarCandidate(d));
+    return map;
+  }, [devices]);
 
   const handleScan = useCallback(async () => {
     setError('');
@@ -92,24 +109,76 @@ export default function ChronoBleDiagnostic() {
     setSuccessCount(0);
     setFailCount(0);
     setLastState({ kind: 'idle' });
+    setForcePending(null);
   };
 
-  const handleSaveDefault = useCallback(
+  const persistDefault = useCallback(
     (d: BleDeviceDiagnostic) => {
-      saveFxRadarDeviceById(d.id, d.name);
+      const ok = saveFxRadarDeviceById(d.id, d.name || null);
+      if (!ok) {
+        toast.error(t('chrono.diag.saveFailed'));
+        return;
+      }
       setSavedId(d.id);
-      toast.success(
-        t('chrono.diag.saveDefaultDone').replace('{name}', d.name || d.id),
-      );
+      setSavedName(d.name || null);
+      setForcePending(null);
+      toast.success(t('chrono.diag.savedToast', { name: d.name || d.id }));
     },
     [t],
   );
 
-  const handleForgetDefault = useCallback(() => {
+  const handleSetDefault = useCallback(
+    (d: BleDeviceDiagnostic) => {
+      const v = validations.get(d.id);
+      if (v && !v.ok) {
+        // Guardrail: do NOT save silently. Surface the warning and ask the
+        // user to explicitly confirm a force-save.
+        setForcePending(d.id);
+        return;
+      }
+      persistDefault(d);
+    },
+    [validations, persistDefault],
+  );
+
+  const handleForceDefault = useCallback(
+    (d: BleDeviceDiagnostic) => {
+      persistDefault(d);
+    },
+    [persistDefault],
+  );
+
+  const handleForget = useCallback(() => {
     forgetSavedFxRadarDevice();
     setSavedId(null);
-    toast.success(t('chrono.diag.forgetDefaultDone'));
+    setSavedName(null);
+    toast.success(t('chrono.diag.forgottenToast'));
   }, [t]);
+
+  /** Render a validator reason code as a localized human-readable string. */
+  const reasonLabel = useCallback(
+    (code: string): string | null => {
+      // Positive signals are not surfaced as "warnings" — only refusals matter.
+      if (code.startsWith('fx-service-uuid:')) return null;
+      if (code.startsWith('name-hint:')) return null;
+      if (code === 'has-notifiable-characteristic') return null;
+      if (code === 'no-known-fx-service-uuid') return t('chrono.diag.guard.reason.noFxService');
+      if (code === 'unnamed-device') return t('chrono.diag.guard.reason.unnamed');
+      if (code.startsWith('name-mismatch:')) {
+        return t('chrono.diag.guard.reason.nameMismatch', {
+          name: code.slice('name-mismatch:'.length) || '—',
+        });
+      }
+      if (code === 'no-notifiable-characteristic') return t('chrono.diag.guard.reason.noNotify');
+      if (code.startsWith('enumeration failed:')) {
+        return t('chrono.diag.guard.reason.enumError', {
+          msg: code.slice('enumeration failed:'.length).trim() || '—',
+        });
+      }
+      return null;
+    },
+    [t],
+  );
 
   if (!supported) return null;
 
@@ -213,30 +282,26 @@ export default function ChronoBleDiagnostic() {
         {t('chrono.diag.rssiNote')}
       </p>
 
-      {/* Banner du device par défaut sauvegardé */}
+      {/* Default-device banner — shows the currently-pinned FX device. */}
       {savedId && (
         <div
-          className="flex items-center justify-between gap-2 p-2 rounded bg-primary/10 border border-primary/30 text-[11px]"
-          data-testid="chrono-ble-saved-banner"
+          className="flex items-center gap-2 p-2 rounded bg-primary/10 text-primary text-xs"
+          data-testid="chrono-ble-default-banner"
         >
-          <div className="flex items-center gap-1.5 min-w-0">
-            <Star className="h-3.5 w-3.5 shrink-0 fill-primary text-primary" />
-            <span className="truncate">
-              <span className="font-medium">
-                {t('chrono.diag.savedBadge')}:
-              </span>{' '}
-              <span className="font-mono text-muted-foreground">{savedId}</span>
-            </span>
-          </div>
+          <Star className="h-3.5 w-3.5 shrink-0" />
+          <span className="flex-1 truncate">
+            {t('chrono.diag.savedBanner', {
+              name: savedName || savedId,
+            })}
+          </span>
           <Button
             type="button"
             size="sm"
             variant="ghost"
-            className="h-6 px-2 shrink-0"
-            onClick={handleForgetDefault}
+            onClick={handleForget}
             data-testid="chrono-ble-forget-default-btn"
+            className="h-6 px-2 text-[11px]"
           >
-            <StarOff className="h-3 w-3 mr-1" />
             {t('chrono.diag.forgetDefault')}
           </Button>
         </div>
@@ -313,11 +378,11 @@ export default function ChronoBleDiagnostic() {
                       )}
                       {savedId === d.id && (
                         <Badge
-                          variant="default"
-                          className="text-[9px] px-1.5 py-0 h-4 inline-flex items-center gap-0.5"
-                          data-testid={`chrono-ble-device-${d.id}-saved`}
+                          variant="outline"
+                          className="text-[9px] px-1.5 py-0 h-4 inline-flex items-center gap-0.5 border-primary/40 text-primary"
+                          data-testid={`chrono-ble-saved-badge-${d.id}`}
                         >
-                          <Star className="h-2.5 w-2.5 fill-current" />
+                          <Star className="h-2.5 w-2.5" />
                           {t('chrono.diag.savedBadge')}
                         </Badge>
                       )}
@@ -333,37 +398,6 @@ export default function ChronoBleDiagnostic() {
                         <span>{d.error}</span>
                       </div>
                     )}
-                    {/* Action: Set / Forget as default FX device */}
-                    <div className="flex items-center justify-between gap-2 flex-wrap">
-                      <p className="text-[10px] text-muted-foreground italic flex-1 min-w-[140px]">
-                        {t('chrono.diag.savedHint')}
-                      </p>
-                      {savedId === d.id ? (
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          className="h-7"
-                          onClick={handleForgetDefault}
-                          data-testid={`chrono-ble-forget-${d.id}`}
-                        >
-                          <StarOff className="h-3 w-3 mr-1" />
-                          {t('chrono.diag.forgetDefault')}
-                        </Button>
-                      ) : (
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="default"
-                          className="h-7"
-                          onClick={() => handleSaveDefault(d)}
-                          data-testid={`chrono-ble-save-${d.id}`}
-                        >
-                          <Star className="h-3 w-3 mr-1" />
-                          {t('chrono.diag.saveDefault')}
-                        </Button>
-                      )}
-                    </div>
                     {d.services.length === 0 ? (
                       <p className="text-[11px] text-muted-foreground italic">
                         {t('chrono.diag.noServices')}
@@ -408,6 +442,108 @@ export default function ChronoBleDiagnostic() {
                       {t('chrono.diag.scannedAt')}:{' '}
                       {new Date(d.scannedAt).toLocaleString()}
                     </div>
+
+                    {/* Set-as-default action with FX guardrail. */}
+                    {(() => {
+                      const v = validations.get(d.id);
+                      const isSaved = savedId === d.id;
+                      const isForcing = forcePending === d.id;
+                      const warnings = (v?.reasons ?? [])
+                        .map(reasonLabel)
+                        .filter((s): s is string => Boolean(s));
+
+                      if (isSaved) {
+                        return (
+                          <div className="flex items-center justify-between gap-2 pt-1 border-t border-border">
+                            <span className="text-[10px] text-primary inline-flex items-center gap-1">
+                              <Star className="h-3 w-3" />
+                              {t('chrono.diag.savedBadge')}
+                            </span>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="ghost"
+                              className="h-6 px-2 text-[11px]"
+                              onClick={handleForget}
+                              data-testid={`chrono-ble-forget-row-${d.id}`}
+                            >
+                              {t('chrono.diag.forgetDefault')}
+                            </Button>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div className="space-y-2 pt-1 border-t border-border">
+                          <div className="flex justify-end">
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant={v?.ok ? 'default' : 'outline'}
+                              className="h-7 px-2 text-[11px]"
+                              onClick={() => handleSetDefault(d)}
+                              data-testid={`chrono-ble-set-default-${d.id}`}
+                            >
+                              <Star className="h-3 w-3 mr-1" />
+                              {t('chrono.diag.setDefault')}
+                            </Button>
+                          </div>
+
+                          {isForcing && v && !v.ok && (
+                            <div
+                              className="rounded border border-destructive/40 bg-destructive/10 p-2 space-y-2"
+                              data-testid={`chrono-ble-guard-${d.id}`}
+                            >
+                              <div className="flex items-start gap-2 text-[11px] text-destructive">
+                                <ShieldAlert className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                                <div className="space-y-1">
+                                  <div className="font-semibold">
+                                    {t('chrono.diag.guard.title')}
+                                  </div>
+                                  <div className="text-foreground/80">
+                                    {t('chrono.diag.guard.body')}
+                                  </div>
+                                  {warnings.length > 0 && (
+                                    <div>
+                                      <div className="text-muted-foreground">
+                                        {t('chrono.diag.guard.reasonsLabel')}
+                                      </div>
+                                      <ul className="list-disc list-inside text-muted-foreground">
+                                        {warnings.map((w, i) => (
+                                          <li key={i}>{w}</li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex justify-end gap-1.5">
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-6 px-2 text-[11px]"
+                                  onClick={() => setForcePending(null)}
+                                  data-testid={`chrono-ble-guard-cancel-${d.id}`}
+                                >
+                                  {t('chrono.diag.guard.cancel')}
+                                </Button>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="destructive"
+                                  className="h-6 px-2 text-[11px]"
+                                  onClick={() => handleForceDefault(d)}
+                                  data-testid={`chrono-ble-guard-force-${d.id}`}
+                                >
+                                  {t('chrono.diag.guard.force')}
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </div>
                 )}
               </li>

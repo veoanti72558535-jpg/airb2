@@ -501,7 +501,7 @@ export default function SessionDetailPage() {
         </TabsList>
 
         <TabsContent value="trajectory" className="space-y-3 mt-3">
-          <SessionTrajectoryTab session={session} />
+          <SessionTrajectoryTab session={session} advanced={isAdvanced} />
         </TabsContent>
 
         <TabsContent value="table" className="space-y-3 mt-3">

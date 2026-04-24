@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Zap, Plus, Trash2, Edit2, Download, GitCompare, X, Layers, Sparkles, Database, Search } from 'lucide-react';
+import { Zap, Plus, Trash2, Edit2, Download, GitCompare, X, Layers, Sparkles, Database, Search, Star } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { projectileStore } from '@/lib/storage';
 import { useUnits } from '@/hooks/use-units';
@@ -101,6 +101,7 @@ export default function ProjectilesPage() {
   const [typeFilter, setTypeFilter] = useState<'all' | ProjectileType>('all');
   const [importedFilter, setImportedFilter] = useState(false);
   const [bcZonesFilter, setBcZonesFilter] = useState(false);
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [sortKey, setSortKey] = useState<'name' | 'weight' | 'bc' | 'caliber'>('name');
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [showCompare, setShowCompare] = useState(false);
@@ -145,6 +146,7 @@ export default function ProjectilesPage() {
       if (typeFilter !== 'all' && (p.projectileType ?? 'pellet') !== typeFilter) return false;
       if (importedFilter && !p.importedFrom) return false;
       if (bcZonesFilter && !hasBcZones(p)) return false;
+      if (favoritesOnly && !p.favorite) return false;
       if (tokens.length) {
         const hay = `${p.brand} ${p.model} ${p.notes ?? ''} ${p.caliber} ${p.weight} ${p.bc}`.toLowerCase();
         if (!tokens.every(tok => hay.includes(tok))) return false;
@@ -156,8 +158,19 @@ export default function ProjectilesPage() {
     else if (sortKey === 'bc') sorted.sort((a, b) => b.bc - a.bc);
     else if (sortKey === 'caliber') sorted.sort((a, b) => calToken(a.caliber).localeCompare(calToken(b.caliber)) || `${a.brand} ${a.model}`.localeCompare(`${b.brand} ${b.model}`));
     else sorted.sort((a, b) => `${a.brand} ${a.model}`.localeCompare(`${b.brand} ${b.model}`));
+    // Pin favorites to the top while preserving the chosen sort within each group.
+    sorted.sort((a, b) => {
+      const fa = a.favorite ? 1 : 0;
+      const fb = b.favorite ? 1 : 0;
+      return fb - fa;
+    });
     return sorted;
-  }, [projectiles, searchQuery, brandFilter, caliberFilter, typeFilter, importedFilter, bcZonesFilter, sortKey]);
+  }, [projectiles, searchQuery, brandFilter, caliberFilter, typeFilter, importedFilter, bcZonesFilter, favoritesOnly, sortKey]);
+
+  const toggleFavorite = (p: Projectile) => {
+    projectileStore.update(p.id, { favorite: !p.favorite });
+    refresh();
+  };
 
   const hasAnyFilter = (brandFilter !== null && brandFilter !== '') || (caliberFilter !== null && caliberFilter !== '') || typeFilter !== 'all' || importedFilter || bcZonesFilter || searchQuery.trim() !== '';
   const resetAllFilters = () => { setBrandFilter(null); setCaliberFilter(null); setSearchQuery(''); setTypeFilter('all'); setImportedFilter(false); setBcZonesFilter(false); };
@@ -343,6 +356,24 @@ export default function ProjectilesPage() {
         />
       )}
 
+      {projectiles.length > 0 && (
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            aria-pressed={favoritesOnly}
+            onClick={() => setFavoritesOnly(v => !v)}
+            data-testid="projectiles-favorites-only"
+            className={`px-2.5 py-1 rounded text-xs font-medium border inline-flex items-center gap-1 transition-colors ${
+              favoritesOnly
+                ? 'bg-primary/10 text-primary border-primary/40'
+                : 'bg-muted text-muted-foreground border-border hover:bg-muted/70'
+            }`}
+          >
+            {t('favorites.onlyFavorites')}
+          </button>
+        </div>
+      )}
+
       {projectiles.length > 0 && brandCounts.length > 0 && (
         <FilterChips
           label={t('optics.filterBrand')}
@@ -510,6 +541,16 @@ export default function ProjectilesPage() {
                       {p.notes && <p className="text-[11px] text-muted-foreground mt-1 italic line-clamp-2">{p.notes}</p>}
                     </div>
                     <div className="flex gap-1 shrink-0">
+                      <button
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFavorite(p); }}
+                        title={p.favorite ? t('favorites.remove') : t('favorites.add')}
+                        aria-label={p.favorite ? t('favorites.remove') : t('favorites.add')}
+                        aria-pressed={!!p.favorite}
+                        data-testid={`projectile-fav-${p.id}`}
+                        className={`p-1.5 rounded transition-colors duration-150 ${p.favorite ? 'text-primary hover:bg-primary/10' : 'text-muted-foreground hover:bg-muted hover:text-primary'}`}
+                      >
+                        <Star className="h-3.5 w-3.5" fill={p.favorite ? 'currentColor' : 'none'} />
+                      </button>
                       <button
                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleCompare(p.id); }}
                         title={t('projectiles.compare')}

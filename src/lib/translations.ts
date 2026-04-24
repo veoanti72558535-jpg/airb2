@@ -1689,6 +1689,10 @@ const fr = {
   'agents2.usageUnspecified': 'Non précisé',
   'agents2.caliberConstraintHint': 'Contrainte (budget, bruit...)',
   'nav.competitionPrep': 'Préparation compétition',
+  // Library favorites — Tranche favoris bibliothèque
+  'favorites.add': 'Ajouter aux favoris',
+  'favorites.remove': 'Retirer des favoris',
+  'favorites.onlyFavorites': '⭐ Favoris uniquement',
 } as const;
 
 const en: Record<keyof typeof fr, string> = {
@@ -3356,6 +3360,9 @@ const en: Record<keyof typeof fr, string> = {
   'agents2.usageUnspecified': 'Unspecified',
   'agents2.caliberConstraintHint': 'Constraint (budget, noise...)',
   'nav.competitionPrep': 'Competition prep',
+  'favorites.add': 'Add to favorites',
+  'favorites.remove': 'Remove from favorites',
+  'favorites.onlyFavorites': '⭐ Favorites only',
 };
 
 // Append paste-import keys (EN) — kept after object literal would be a TS

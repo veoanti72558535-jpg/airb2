@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Target, Plus, Trash2, Edit2, Download } from 'lucide-react';
+import { Target, Plus, Trash2, Edit2, Download, Star } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { airgunStore } from '@/lib/storage';
 import { useUnits } from '@/hooks/use-units';
@@ -66,6 +66,7 @@ export default function AirgunsPage() {
   const [showImport, setShowImport] = useState(false);
   const [editing, setEditing] = useState<Airgun | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
   // AI agent dialogs
   const [aiOpen, setAiOpen] = useState<null | 'tune' | 'review'>(null);
   const [aiSeed, setAiSeed] = useState<string>('');
@@ -83,15 +84,29 @@ export default function AirgunsPage() {
     const q = searchQuery.trim().toLowerCase();
     const bf = brandFilter?.toLowerCase() ?? null;
     const cf = caliberFilter ?? null;
-    return airguns.filter(a => {
+    const list = airguns.filter(a => {
       if (bf && (a.brand ?? '').toLowerCase() !== bf) return false;
       if (cf && calToken(a.caliber) !== cf) return false;
+      if (favoritesOnly && !a.favorite) return false;
       if (q && !`${a.brand} ${a.model} ${a.notes ?? ''}`.toLowerCase().includes(q)) return false;
       return true;
     });
-  }, [airguns, searchQuery, brandFilter, caliberFilter]);
+    // Sort: favorites first, then by updatedAt DESC
+    return [...list].sort((a, b) => {
+      const fa = a.favorite ? 1 : 0;
+      const fb = b.favorite ? 1 : 0;
+      if (fa !== fb) return fb - fa;
+      return (b.updatedAt ?? '').localeCompare(a.updatedAt ?? '');
+    });
+  }, [airguns, searchQuery, brandFilter, caliberFilter, favoritesOnly]);
+
+  const toggleFavorite = (a: Airgun) => {
+    airgunStore.update(a.id, { favorite: !a.favorite });
+    refresh();
+  };
 
   const refresh = () => setAirguns(airgunStore.getAll());
+
 
   const handleSave = () => {
     if (!form.brand || !form.model) return;
@@ -265,6 +280,24 @@ export default function AirgunsPage() {
         />
       )}
 
+      {airguns.length > 0 && (
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            aria-pressed={favoritesOnly}
+            onClick={() => setFavoritesOnly(v => !v)}
+            data-testid="airguns-favorites-only"
+            className={`px-2.5 py-1 rounded text-xs font-medium border inline-flex items-center gap-1 transition-colors ${
+              favoritesOnly
+                ? 'bg-primary/10 text-primary border-primary/40'
+                : 'bg-muted text-muted-foreground border-border hover:bg-muted/70'
+            }`}
+          >
+            {t('favorites.onlyFavorites')}
+          </button>
+        </div>
+      )}
+
       {airguns.length > 0 && brandCounts.length > 0 && (
         <FilterChips
           label={t('optics.filterBrand')}
@@ -310,6 +343,16 @@ export default function AirgunsPage() {
                   </div>
                 </div>
                 <div className="flex gap-1 shrink-0">
+                  <button
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFavorite(a); }}
+                    title={a.favorite ? t('favorites.remove') : t('favorites.add')}
+                    aria-label={a.favorite ? t('favorites.remove') : t('favorites.add')}
+                    aria-pressed={!!a.favorite}
+                    data-testid={`airgun-fav-${a.id}`}
+                    className={`p-1.5 rounded transition-colors duration-150 ${a.favorite ? 'text-primary hover:bg-primary/10' : 'text-muted-foreground hover:bg-muted hover:text-primary'}`}
+                  >
+                    <Star className="h-3.5 w-3.5" fill={a.favorite ? 'currentColor' : 'none'} />
+                  </button>
                   <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleEdit(a); }} className="p-1.5 rounded hover:bg-muted text-muted-foreground"><Edit2 className="h-3.5 w-3.5" /></button>
                   <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDelete(a.id); }} className="p-1.5 rounded hover:bg-destructive/10 text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
                 </div>

@@ -94,6 +94,8 @@ export interface Airgun {
   defaultSightHeight?: number; // mm
   defaultZeroRange?: number; // m
   notes?: string;
+  /** UX favorite flag — pinned to top of lists, filterable. Not persisted if absent. */
+  favorite?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -178,6 +180,8 @@ export interface Projectile {
   sourceDbId?: string;
   /** Table source dans la base externe (ex: "bullets4_pellets"). */
   sourceTable?: string;
+  /** UX favorite flag — pinned to top of lists, filterable. Not persisted if absent. */
+  favorite?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -210,6 +214,8 @@ export interface Optic {
    *    persistant côté `Reticle`).
    */
   reticleId?: string;
+  /** UX favorite flag — pinned to top of lists, filterable. Not persisted if absent. */
+  favorite?: boolean;
   createdAt: string;
   updatedAt: string;
 }

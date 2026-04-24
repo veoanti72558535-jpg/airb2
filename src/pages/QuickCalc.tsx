@@ -121,6 +121,7 @@ function defaultForm(): FormState {
     projectileWeight: 18,
     dragModel: 'G1',
     projectileType: 'pellet',
+    g1Source: 'legacy-piecewise',
     projectileLength: 7.5,
     projectileDiameter: 5.5,
     muzzleVelocity: 280,

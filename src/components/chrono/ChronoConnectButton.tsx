@@ -1,7 +1,7 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Bluetooth, BluetoothOff, Loader2, AlertTriangle, Wifi, WifiOff, X } from 'lucide-react';
+import { Bluetooth, Loader2, AlertTriangle, Wifi, WifiOff, X } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import {
   isWebBluetoothSupported,
@@ -15,6 +15,8 @@ import {
 } from '@/lib/chrono/fx-radar-ble';
 import type { BleParseConfig } from '@/lib/chrono/fx-radar-ble';
 import { DEFAULT_BLE_PARSE_CONFIG } from '@/lib/chrono/fx-radar-ble';
+import { detectWebBluetoothSupport } from '@/lib/chrono/web-bluetooth-support';
+import WebBluetoothCompatGuide from './WebBluetoothCompatGuide';
 
 type BleState = 'unsupported' | 'disconnected' | 'scanning' | 'connected' | 'error';
 
@@ -26,8 +28,11 @@ interface ChronoConnectButtonProps {
 
 export default function ChronoConnectButton({ onVelocity, onStateChange, bleConfig }: ChronoConnectButtonProps) {
   const { t } = useI18n();
+  const support = useMemo(() => detectWebBluetoothSupport(), []);
   const [state, setState] = useState<BleState>(
-    isWebBluetoothSupported() ? 'disconnected' : 'unsupported',
+    support.level === 'supported' || support.level === 'partial'
+      ? 'disconnected'
+      : 'unsupported',
   );
   const [error, setError] = useState<string>('');
   const [device, setDevice] = useState<BluetoothDevice | null>(null);
@@ -114,12 +119,7 @@ export default function ChronoConnectButton({ onVelocity, onStateChange, bleConf
   }, []);
 
   if (state === 'unsupported') {
-    return (
-      <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
-        <BluetoothOff className="h-4 w-4 shrink-0" />
-        <span>{t('chrono.unsupported')}</span>
-      </div>
-    );
+    return <WebBluetoothCompatGuide support={support} />;
   }
 
   if (state === 'connected') {

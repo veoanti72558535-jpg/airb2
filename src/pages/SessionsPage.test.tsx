@@ -4,6 +4,7 @@ import { render, screen, fireEvent, within } from '@testing-library/react';
 import { MemoryRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { I18nProvider } from '@/lib/i18n';
 import { ThemeProvider } from '@/lib/theme';
+import { AuthProvider } from '@/lib/auth-context';
 import SessionsPage from '@/pages/SessionsPage';
 import type { Session } from '@/lib/types';
 
@@ -62,12 +63,14 @@ function renderApp() {
   return render(
     <ThemeProvider>
       <I18nProvider>
-        <MemoryRouter initialEntries={['/sessions']}>
-          <Routes>
-            <Route path="/sessions" element={<SessionsPage />} />
-            <Route path="/compare" element={<ComparePathProbe />} />
-          </Routes>
-        </MemoryRouter>
+        <AuthProvider>
+          <MemoryRouter initialEntries={['/sessions']}>
+            <Routes>
+              <Route path="/sessions" element={<SessionsPage />} />
+              <Route path="/compare" element={<ComparePathProbe />} />
+            </Routes>
+          </MemoryRouter>
+        </AuthProvider>
       </I18nProvider>
     </ThemeProvider>,
   );

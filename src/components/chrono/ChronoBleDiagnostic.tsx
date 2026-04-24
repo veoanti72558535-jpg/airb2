@@ -109,7 +109,51 @@ export default function ChronoBleDiagnostic() {
     setSuccessCount(0);
     setFailCount(0);
     setLastState({ kind: 'idle' });
+    setForcePending(null);
   };
+
+  const persistDefault = useCallback(
+    (d: BleDeviceDiagnostic) => {
+      const ok = saveFxRadarDeviceById(d.id, d.name || null);
+      if (!ok) {
+        toast.error(t('chrono.diag.saveFailed'));
+        return;
+      }
+      setSavedId(d.id);
+      setSavedName(d.name || null);
+      setForcePending(null);
+      toast.success(t('chrono.diag.savedToast', { name: d.name || d.id }));
+    },
+    [t],
+  );
+
+  const handleSetDefault = useCallback(
+    (d: BleDeviceDiagnostic) => {
+      const v = validations.get(d.id);
+      if (v && !v.ok) {
+        // Guardrail: do NOT save silently. Surface the warning and ask the
+        // user to explicitly confirm a force-save.
+        setForcePending(d.id);
+        return;
+      }
+      persistDefault(d);
+    },
+    [validations, persistDefault],
+  );
+
+  const handleForceDefault = useCallback(
+    (d: BleDeviceDiagnostic) => {
+      persistDefault(d);
+    },
+    [persistDefault],
+  );
+
+  const handleForget = useCallback(() => {
+    forgetSavedFxRadarDevice();
+    setSavedId(null);
+    setSavedName(null);
+    toast.success(t('chrono.diag.forgottenToast'));
+  }, [t]);
 
   if (!supported) return null;
 

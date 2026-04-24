@@ -345,6 +345,12 @@ export interface BallisticInput {
    */
   customDragTable?: DragTablePoint[];
   /**
+   * Source de la table Cd pour la loi G1 (cf. `G1Source`). Optionnel —
+   * absent ⇒ comportement legacy bit-exact (`'legacy-piecewise'`). N'a
+   * d'effet que pour `dragModel === 'G1'` ET sans `customDragTable`.
+   */
+  g1Source?: G1Source;
+  /**
    * Optional engine configuration (P2). When omitted, the engine runs in
    * legacy bit-exact mode (Euler dt=5e-4, ICAO-simple atmosphere, piecewise
    * Cd) so existing sessions/tests reproduce identically. When present, the

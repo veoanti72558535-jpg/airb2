@@ -5,6 +5,7 @@ import ChronoBleSettings from '@/components/chrono/ChronoBleSettings';
 import { useI18n } from '@/lib/i18n';
 import { useAuth } from '@/lib/auth-context';
 import ChronoConnectButton from '@/components/chrono/ChronoConnectButton';
+import ChronoBleDiagnostic from '@/components/chrono/ChronoBleDiagnostic';
 import ChronoMeasurementsList from '@/components/chrono/ChronoMeasurementsList';
 import type { ChronoMeasurement } from '@/lib/chrono/chrono-repo';
 import { saveChronoMeasurements } from '@/lib/chrono/chrono-repo';
@@ -91,6 +92,8 @@ export default function ChronoPage() {
         onChange={setBleConfig}
         disabled={bleConnected}
       />
+
+      <ChronoBleDiagnostic />
 
       <ChronoMeasurementsList
         measurements={measurements}

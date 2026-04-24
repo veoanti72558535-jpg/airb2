@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Target, Plus, Trash2, Edit2, Download } from 'lucide-react';
+import { Target, Plus, Trash2, Edit2, Download, Star } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { airgunStore } from '@/lib/storage';
 import { useUnits } from '@/hooks/use-units';
@@ -66,6 +66,7 @@ export default function AirgunsPage() {
   const [showImport, setShowImport] = useState(false);
   const [editing, setEditing] = useState<Airgun | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
   // AI agent dialogs
   const [aiOpen, setAiOpen] = useState<null | 'tune' | 'review'>(null);
   const [aiSeed, setAiSeed] = useState<string>('');
@@ -83,15 +84,27 @@ export default function AirgunsPage() {
     const q = searchQuery.trim().toLowerCase();
     const bf = brandFilter?.toLowerCase() ?? null;
     const cf = caliberFilter ?? null;
-    return airguns.filter(a => {
+    const list = airguns.filter(a => {
       if (bf && (a.brand ?? '').toLowerCase() !== bf) return false;
       if (cf && calToken(a.caliber) !== cf) return false;
+      if (favoritesOnly && !a.favorite) return false;
       if (q && !`${a.brand} ${a.model} ${a.notes ?? ''}`.toLowerCase().includes(q)) return false;
       return true;
     });
-  }, [airguns, searchQuery, brandFilter, caliberFilter]);
+    // Sort: favorites first, then by updatedAt DESC
+    return [...list].sort((a, b) => {
+      const fa = a.favorite ? 1 : 0;
+      const fb = b.favorite ? 1 : 0;
+      if (fa !== fb) return fb - fa;
+      return (b.updatedAt ?? '').localeCompare(a.updatedAt ?? '');
+    });
+  }, [airguns, searchQuery, brandFilter, caliberFilter, favoritesOnly]);
 
-  const refresh = () => setAirguns(airgunStore.getAll());
+  const toggleFavorite = (a: Airgun) => {
+    airgunStore.update(a.id, { favorite: !a.favorite });
+    refresh();
+  };
+
 
   const handleSave = () => {
     if (!form.brand || !form.model) return;

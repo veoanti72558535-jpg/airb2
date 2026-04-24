@@ -7,10 +7,21 @@
  */
 import React, { useMemo, useRef } from 'react';
 import type { ReticleCatalogEntry } from '@/lib/reticles-catalog-repo';
+import type { ChairgunElement, ChairgunReticle } from '@/lib/chairgun-reticles-repo';
 import type { Reticle } from '@/lib/types';
 
 interface Props {
-  reticle: ReticleCatalogEntry | Reticle | { pattern_type: string; focal_plane?: string | null; click_units?: string | null; click_vertical?: number | null; illuminated?: boolean; true_magnification?: number | null; name?: string };
+  reticle: ReticleCatalogEntry | ChairgunReticle | Reticle | { pattern_type: string; focal_plane?: string | null; click_units?: string | null; click_vertical?: number | null; illuminated?: boolean; true_magnification?: number | null; name?: string };
+  /**
+   * MODE A — Géométrie ChairGun exacte. Si fourni et non vide, court-circuite
+   * le rendu pattern générique (mode B).
+   */
+  elements?: ChairgunElement[];
+  /**
+   * Étendue angulaire visible de part et d'autre du centre (en unités du
+   * réticule). Défaut : 10 (donc viewport ±10 unités).
+   */
+  viewportRange?: number;
   size?: number;
   darkMode?: boolean;
   currentMagnification?: number;
@@ -28,7 +39,9 @@ function getPatternType(r: Props['reticle']): string {
 }
 
 function isCatalog(r: Props['reticle']): r is ReticleCatalogEntry {
-  return 'reticle_id' in r;
+  // ReticleCatalogEntry possède `pattern_type` ET `reticle_id`.
+  // ChairgunReticle a `reticle_id` mais PAS `pattern_type`.
+  return 'reticle_id' in r && 'pattern_type' in r;
 }
 
 interface ReticleParams {
@@ -313,7 +326,84 @@ export function svgBuildCount() { return _svgBuildCount; }
 /** Exposed for testing — resets build counter */
 export function resetSvgBuildCount() { _svgBuildCount = 0; }
 
-const ReticleViewer = React.memo(function ReticleViewer({ reticle, size = 400, darkMode = true, currentMagnification, performanceMode = false }: Props) {
+// ── MODE A — Géométrie ChairGun exacte ──
+// Convention coordonnées : (0,0) = centre, +X droite, +Y bas (déjà
+// convention image SVG, pas d'inversion Y comme en mode B).
+function buildChairgunSvg(
+  els: ChairgunElement[],
+  size: number,
+  darkMode: boolean,
+  viewportRange: number,
+): { svgEls: React.ReactNode[]; autoCrosshair: boolean } {
+  const center = size / 2;
+  const pixelsPerUnit = size / (2 * viewportRange);
+  const lineWidth = Math.max(0.5, size * 0.003);
+  const color = darkMode ? '#00FF00' : '#1a1a1a';
+
+  const toPx = (ang: number) => center + ang * pixelsPerUnit;
+
+  // Détecte si une ligne « longue » > 5 unités existe (proxy d'une croix).
+  let hasLongLine = false;
+  for (const e of els) {
+    if (e.type !== 'line') continue;
+    const x1 = e.x1 ?? 0, y1 = e.y1 ?? 0, x2 = e.x2 ?? 0, y2 = e.y2 ?? 0;
+    const len = Math.hypot(x2 - x1, y2 - y1);
+    if (len > 5) { hasLongLine = true; break; }
+  }
+  const autoCrosshair = !hasLongLine;
+
+  const svgEls: React.ReactNode[] = [];
+
+  if (autoCrosshair) {
+    svgEls.push(
+      <line key="auto-h"
+        x1={toPx(-viewportRange)} y1={toPx(0)}
+        x2={toPx(viewportRange)} y2={toPx(0)}
+        stroke={color} strokeWidth={lineWidth} opacity={0.7}
+        data-testid="cg-auto-crosshair-h" />,
+      <line key="auto-v"
+        x1={toPx(0)} y1={toPx(-viewportRange)}
+        x2={toPx(0)} y2={toPx(viewportRange)}
+        stroke={color} strokeWidth={lineWidth} opacity={0.7}
+        data-testid="cg-auto-crosshair-v" />,
+    );
+  }
+
+  els.forEach((e, idx) => {
+    if (e.type === 'line') {
+      const x1 = e.x1 ?? 0, y1 = e.y1 ?? 0, x2 = e.x2 ?? 0, y2 = e.y2 ?? 0;
+      svgEls.push(
+        <line key={`cg-line-${idx}`}
+          x1={toPx(x1)} y1={toPx(y1)} x2={toPx(x2)} y2={toPx(y2)}
+          stroke={color} strokeWidth={lineWidth} />,
+      );
+    } else {
+      const x = e.x ?? 0, y = e.y ?? 0, r = e.radius ?? 0;
+      if (r === 0) {
+        svgEls.push(
+          <circle key={`cg-tick-${idx}`}
+            cx={toPx(x)} cy={toPx(y)} r={2}
+            fill={color}
+            data-cg-tick="1" />,
+        );
+      } else {
+        svgEls.push(
+          <circle key={`cg-circle-${idx}`}
+            cx={toPx(x)} cy={toPx(y)} r={r * pixelsPerUnit}
+            fill="none" stroke={color} strokeWidth={lineWidth}
+            data-cg-circle="1" />,
+        );
+      }
+    }
+  });
+
+  return { svgEls, autoCrosshair };
+}
+
+const ReticleViewer = React.memo(function ReticleViewer({
+  reticle, size = 400, darkMode = true, currentMagnification,
+  performanceMode = false, elements: chairgunElements, viewportRange = 10,
+}: Props) {
   // Stabilise extracted params: only update the object ref when a scalar value actually changes
   const raw = extractReticleParams(reticle);
   const prevRef = useRef<ReticleParams>(raw);
@@ -330,12 +420,26 @@ const ReticleViewer = React.memo(function ReticleViewer({ reticle, size = 400, d
 
   const { pattern, fp, trueMag, clickUnits, clickVal, illum, name } = params;
 
-  const { elements, badges } = useMemo(
-    () => cachedBuild(pattern, size, darkMode, fp, trueMag, currentMagnification, illum, clickVal, clickUnits, performanceMode),
-    [pattern, size, darkMode, fp, trueMag, currentMagnification, illum, clickVal, clickUnits, performanceMode],
+  // MODE A actif si géométrie ChairGun fournie et non vide, sinon MODE B (fallback).
+  const useChairgun = Array.isArray(chairgunElements) && chairgunElements.length > 0;
+
+  const genericBuild = useMemo(
+    () => useChairgun
+      ? { elements: [] as React.ReactNode[], badges: [] as React.ReactNode[] }
+      : cachedBuild(pattern, size, darkMode, fp, trueMag, currentMagnification, illum, clickVal, clickUnits, performanceMode),
+    [useChairgun, pattern, size, darkMode, fp, trueMag, currentMagnification, illum, clickVal, clickUnits, performanceMode],
+  );
+
+  const chairgunBuild = useMemo(
+    () => useChairgun
+      ? buildChairgunSvg(chairgunElements!, size, darkMode, viewportRange)
+      : null,
+    [useChairgun, chairgunElements, size, darkMode, viewportRange],
   );
 
   const bg = darkMode ? '#0a0a0a' : '#f5f5f5';
+  const badgeColor = darkMode ? '#00FF00' : '#1a1a1a';
+  const cgBadgeFontSize = Math.max(7, size * 0.025);
 
   return (
     <svg
@@ -344,14 +448,31 @@ const ReticleViewer = React.memo(function ReticleViewer({ reticle, size = 400, d
       viewBox={`0 0 ${size} ${size}`}
       xmlns="http://www.w3.org/2000/svg"
       data-testid="reticle-viewer"
-      data-pattern={pattern}
+      data-pattern={useChairgun ? 'chairgun' : pattern}
+      data-render-mode={useChairgun ? 'chairgun' : 'generic'}
+      data-cg-auto-crosshair={useChairgun && chairgunBuild?.autoCrosshair ? '1' : undefined}
       role="img"
       aria-label={name}
     >
       <rect width={size} height={size} fill={bg} rx={2} />
       <circle cx={size / 2} cy={size / 2} r={size / 2 - 2} stroke={darkMode ? '#333' : '#ccc'} strokeWidth={1} fill="none" />
-      {elements.map((el, i) => <React.Fragment key={i}>{el}</React.Fragment>)}
-      {badges}
+      {useChairgun
+        ? chairgunBuild!.svgEls.map((el, i) => <React.Fragment key={i}>{el}</React.Fragment>)
+        : genericBuild.elements.map((el, i) => <React.Fragment key={i}>{el}</React.Fragment>)
+      }
+      {!useChairgun && genericBuild.badges}
+      {useChairgun && !performanceMode && (
+        <>
+          <text
+            data-testid="cg-badge"
+            x={size - 4} y={cgBadgeFontSize + 2}
+            fill={badgeColor} fontSize={cgBadgeFontSize}
+            textAnchor="end" opacity={0.85}
+          >
+            ChairGun · {chairgunElements!.length}
+          </text>
+        </>
+      )}
     </svg>
   );
 });

@@ -19,6 +19,19 @@
 const CANDIDATE_SERVICE = '0000fff0-0000-1000-8000-00805f9b34fb';
 const CANDIDATE_CHAR    = '0000fff1-0000-1000-8000-00805f9b34fb';
 
+/**
+ * Service UUIDs that strongly indicate an FX Radar / FX Pocket Chrono.
+ * Sourced from community reverse-engineering and the candidate UUIDs above.
+ * Keep lowercase — Web Bluetooth normalizes UUIDs to lowercase.
+ */
+export const FX_RADAR_SERVICE_HINTS: readonly string[] = [
+  '0000fff0-0000-1000-8000-00805f9b34fb',
+  '00001523-1212-efde-1523-785feabcd123',
+];
+
+/** Substrings (case-insensitive) that suggest an FX peripheral by name. */
+export const FX_RADAR_NAME_HINTS: readonly string[] = ['fx', 'radar', 'pocket'];
+
 /** localStorage key for the last-paired FX Radar device id. */
 const SAVED_DEVICE_KEY = 'fx_radar_device_id';
 /** localStorage key for the last-paired FX Radar device name (display only). */
@@ -51,6 +64,23 @@ export function saveFxRadarDevice(device: BluetoothDevice): void {
     }
   } catch {
     // ignore persistence errors (private mode, quota)
+  }
+}
+
+/**
+ * Persist a device using only its id + name (e.g. coming from a diagnostic
+ * snapshot, where we no longer hold the live `BluetoothDevice` instance).
+ * Returns true if the write succeeded, false otherwise.
+ */
+export function saveFxRadarDeviceById(id: string, name?: string | null): boolean {
+  if (!id) return false;
+  try {
+    localStorage.setItem(SAVED_DEVICE_KEY, id);
+    if (name) localStorage.setItem(SAVED_DEVICE_NAME_KEY, name);
+    else localStorage.removeItem(SAVED_DEVICE_NAME_KEY);
+    return true;
+  } catch {
+    return false;
   }
 }
 

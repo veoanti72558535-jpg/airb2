@@ -376,6 +376,16 @@ export default function ChronoBleDiagnostic() {
                           {d.batteryPct}%
                         </Badge>
                       )}
+                      {savedId === d.id && (
+                        <Badge
+                          variant="outline"
+                          className="text-[9px] px-1.5 py-0 h-4 inline-flex items-center gap-0.5 border-primary/40 text-primary"
+                          data-testid={`chrono-ble-saved-badge-${d.id}`}
+                        >
+                          <Star className="h-2.5 w-2.5" />
+                          {t('chrono.diag.savedBadge')}
+                        </Badge>
+                      )}
                     </div>
                   </div>
                 </button>

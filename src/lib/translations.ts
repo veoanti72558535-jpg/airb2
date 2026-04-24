@@ -2811,6 +2811,18 @@ const en: Record<keyof typeof fr, string> = {
   'reticleAssist.notAvailable': 'Mark assistance unavailable for this reticle (SFP not calibrated).',
   'reticleAssist.moa': 'MOA',
   'reticleAssist.mrad': 'MRAD',
+  // Turret scope view (interactive POI on reticle)
+  'turretScope.title': 'Interactive scope view',
+  'turretScope.subtitle': 'Adjust the turrets to see the POI move live.',
+  'turretScope.distance': 'Preview distance',
+  'turretScope.elevation': 'Elevation',
+  'turretScope.windage': 'Windage',
+  'turretScope.snap': 'Snap to crosshair',
+  'turretScope.snapHint': 'Computes the values that bring the POI back to centre.',
+  'turretScope.reset': 'Reset',
+  'turretScope.poiOff': 'POI off-screen — use Snap or adjust the turrets.',
+  'turretScope.unsupported': 'No session results available.',
+  'turretScope.units': 'MOA',
 
   // Cross-validation tab (BUILD-C bis)
   'nav.crossValidation': 'Cross-validation',

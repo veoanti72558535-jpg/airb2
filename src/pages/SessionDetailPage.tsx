@@ -8,6 +8,7 @@ import {
   Camera,
   Check,
   Crosshair,
+  FileDown,
   History,
   Loader2,
   Pencil,
@@ -63,6 +64,7 @@ import { TruingPanel } from '@/components/sessions/TruingPanel';
 import { TargetPhotoAnalyzer } from '@/components/sessions/TargetPhotoAnalyzer';
 import { TargetAnalysesHistory } from '@/components/sessions/TargetAnalysesHistory';
 import { RecalculateDialog } from '@/components/sessions/RecalculateDialog';
+import { SessionPrintView } from '@/components/sessions/SessionPrintView';
 import { SessionPickerDialog } from '@/components/compare/SessionPickerDialog';
 import { InlineFullDeltaView } from '@/components/compare/InlineFullDeltaView';
 import { SessionReportButton } from '@/components/ai/agents/SessionReportButton';
@@ -163,6 +165,13 @@ export default function SessionDetailPage() {
     if (!confirm(t('sessions.delete') + ' ?')) return;
     sessionStore.delete(session.id);
     navigate('/sessions');
+  };
+
+  const handleExportPdf = () => {
+    // Le composant SessionPrintView est monté en permanence (display:none
+    // hors impression), il suffit donc de déclencher la dialog d'impression
+    // native — l'utilisateur choisit "Enregistrer en PDF".
+    window.print();
   };
 
   const startEdit = () => {

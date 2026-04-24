@@ -22,6 +22,7 @@ import type {
 import { DEFAULT_BLE_PARSE_CONFIG } from '@/lib/chrono/fx-radar-ble';
 import { detectWebBluetoothSupport } from '@/lib/chrono/web-bluetooth-support';
 import WebBluetoothCompatGuide from './WebBluetoothCompatGuide';
+import GattStageTimeline from './GattStageTimeline';
 
 type BleState = 'unsupported' | 'disconnected' | 'scanning' | 'connected' | 'error';
 
@@ -177,15 +178,18 @@ export default function ChronoConnectButton({ onVelocity, onStateChange, bleConf
 
   if (state === 'connected') {
     return (
-      <div className="flex items-center gap-3">
-        <Badge variant="default" className="bg-primary text-primary-foreground gap-1.5">
-          <Wifi className="h-3 w-3" />
-          {device?.name ?? savedName ?? t('chrono.connected')}
-        </Badge>
-        <Button variant="outline" size="sm" onClick={handleDisconnect}>
-          <WifiOff className="h-4 w-4 mr-1" />
-          {t('chrono.disconnect')}
-        </Button>
+      <div className="space-y-2">
+        <div className="flex items-center gap-3">
+          <Badge variant="default" className="bg-primary text-primary-foreground gap-1.5">
+            <Wifi className="h-3 w-3" />
+            {device?.name ?? savedName ?? t('chrono.connected')}
+          </Badge>
+          <Button variant="outline" size="sm" onClick={handleDisconnect}>
+            <WifiOff className="h-4 w-4 mr-1" />
+            {t('chrono.disconnect')}
+          </Button>
+        </div>
+        <GattStageTimeline order={STAGE_ORDER} stages={stages} />
       </div>
     );
   }
@@ -205,6 +209,7 @@ export default function ChronoConnectButton({ onVelocity, onStateChange, bleConf
             </span>
           </div>
         )}
+        <GattStageTimeline order={STAGE_ORDER} stages={stages} />
       </div>
     );
   }
@@ -260,13 +265,16 @@ export default function ChronoConnectButton({ onVelocity, onStateChange, bleConf
         )}
       </div>
       {state === 'error' && (
-        <div className="flex items-center gap-2 p-2 rounded bg-destructive/10 text-destructive text-xs">
-          <AlertTriangle className="h-3 w-3 shrink-0" />
-          <span>{error}</span>
-          <Button variant="ghost" size="sm" className="ml-auto h-6 text-xs" onClick={handleConnect}>
-            ↻
-          </Button>
-        </div>
+        <>
+          <div className="flex items-center gap-2 p-2 rounded bg-destructive/10 text-destructive text-xs">
+            <AlertTriangle className="h-3 w-3 shrink-0" />
+            <span className="flex-1">{error}</span>
+            <Button variant="ghost" size="sm" className="ml-auto h-6 text-xs" onClick={handleConnect}>
+              ↻
+            </Button>
+          </div>
+          <GattStageTimeline order={STAGE_ORDER} stages={stages} error={error} />
+        </>
       )}
     </div>
   );

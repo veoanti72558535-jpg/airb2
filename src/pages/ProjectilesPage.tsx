@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Zap, Plus, Trash2, Edit2, Download, GitCompare, X, Layers, Sparkles, Database, Search } from 'lucide-react';
+import { Zap, Plus, Trash2, Edit2, Download, GitCompare, X, Layers, Sparkles, Database, Search, Star } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { projectileStore } from '@/lib/storage';
 import { useUnits } from '@/hooks/use-units';
@@ -101,6 +101,7 @@ export default function ProjectilesPage() {
   const [typeFilter, setTypeFilter] = useState<'all' | ProjectileType>('all');
   const [importedFilter, setImportedFilter] = useState(false);
   const [bcZonesFilter, setBcZonesFilter] = useState(false);
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [sortKey, setSortKey] = useState<'name' | 'weight' | 'bc' | 'caliber'>('name');
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [showCompare, setShowCompare] = useState(false);
@@ -145,6 +146,7 @@ export default function ProjectilesPage() {
       if (typeFilter !== 'all' && (p.projectileType ?? 'pellet') !== typeFilter) return false;
       if (importedFilter && !p.importedFrom) return false;
       if (bcZonesFilter && !hasBcZones(p)) return false;
+      if (favoritesOnly && !p.favorite) return false;
       if (tokens.length) {
         const hay = `${p.brand} ${p.model} ${p.notes ?? ''} ${p.caliber} ${p.weight} ${p.bc}`.toLowerCase();
         if (!tokens.every(tok => hay.includes(tok))) return false;
@@ -156,8 +158,19 @@ export default function ProjectilesPage() {
     else if (sortKey === 'bc') sorted.sort((a, b) => b.bc - a.bc);
     else if (sortKey === 'caliber') sorted.sort((a, b) => calToken(a.caliber).localeCompare(calToken(b.caliber)) || `${a.brand} ${a.model}`.localeCompare(`${b.brand} ${b.model}`));
     else sorted.sort((a, b) => `${a.brand} ${a.model}`.localeCompare(`${b.brand} ${b.model}`));
+    // Pin favorites to the top while preserving the chosen sort within each group.
+    sorted.sort((a, b) => {
+      const fa = a.favorite ? 1 : 0;
+      const fb = b.favorite ? 1 : 0;
+      return fb - fa;
+    });
     return sorted;
-  }, [projectiles, searchQuery, brandFilter, caliberFilter, typeFilter, importedFilter, bcZonesFilter, sortKey]);
+  }, [projectiles, searchQuery, brandFilter, caliberFilter, typeFilter, importedFilter, bcZonesFilter, favoritesOnly, sortKey]);
+
+  const toggleFavorite = (p: Projectile) => {
+    projectileStore.update(p.id, { favorite: !p.favorite });
+    refresh();
+  };
 
   const hasAnyFilter = (brandFilter !== null && brandFilter !== '') || (caliberFilter !== null && caliberFilter !== '') || typeFilter !== 'all' || importedFilter || bcZonesFilter || searchQuery.trim() !== '';
   const resetAllFilters = () => { setBrandFilter(null); setCaliberFilter(null); setSearchQuery(''); setTypeFilter('all'); setImportedFilter(false); setBcZonesFilter(false); };

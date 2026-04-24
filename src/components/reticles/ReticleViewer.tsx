@@ -27,6 +27,19 @@ interface Props {
   currentMagnification?: number;
   /** Performance mode: skip badges, labels, and fine ticks for faster rendering during drag/scroll */
   performanceMode?: boolean;
+  /**
+   * Optional turret elevation adjustment (clicks already applied) in MOA.
+   * Subtracted from the predicted drop angle before rendering the POI.
+   */
+  turretElevationMoa?: number;
+  /** Optional turret windage adjustment in MOA (subtracted from drift). */
+  turretWindageMoa?: number;
+  /**
+   * One-shot POI to render (ChairGun-style scope view). If provided,
+   * renders a red dot at the predicted point of impact for the given
+   * distance, applying SFP scaling and turret offsets.
+   */
+  showPoiAt?: { distanceM: number; dropMm: number; driftMm: number };
 }
 
 function getPatternType(r: Props['reticle']): string {

@@ -19,6 +19,7 @@ import OpticDetailPage from "@/pages/OpticDetailPage";
 import ReticlesPage from "@/pages/ReticlesPage";
 import ReticleDetailPage from "@/pages/ReticleDetailPage";
 import SessionsPage from "@/pages/SessionsPage";
+import SessionDetailPage from "@/pages/SessionDetailPage";
 import ComparePage from "@/pages/ComparePage";
 import ConversionsPage from "@/pages/ConversionsPage";
 import DocsPage from "@/pages/DocsPage";
@@ -70,6 +71,7 @@ const App = () => (
                 <Route path="/library/reticles" element={<ReticlesPage />} />
                 <Route path="/library/reticles/:id" element={<ReticleDetailPage />} />
                 <Route path="/sessions" element={<SessionsPage />} />
+                <Route path="/sessions/:id" element={<SessionDetailPage />} />
                 <Route path="/compare" element={<ComparePage />} />
                 <Route path="/conversions" element={<ConversionsPage />} />
                 <Route path="/docs" element={<DocsPage />} />

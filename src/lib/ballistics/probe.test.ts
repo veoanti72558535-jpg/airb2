@@ -9,7 +9,7 @@ function inp(mv: number, cfg?: any): BallisticInput {
 }
 const baseCfg = { dt: 0.0005, atmosphereModel: 'icao-simple' as const, windModel: 'lateral-only' as const, postProcess: { spinDrift: false, coriolis: false, cant: false, slopeAngle: false } };
 
-describe.skip('PROBE — Heun/Euler comparison', () => {
+describe('PROBE — Heun/Euler comparison', () => {
   it('prints reference scenarios', () => {
     const cfgs: Array<[string, any]> = [
       ['legacy(undef)', undefined],

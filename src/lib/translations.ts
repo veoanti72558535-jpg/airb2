@@ -1046,6 +1046,18 @@ const fr = {
   'reticleAssist.notAvailable': 'Aide repères indisponible pour ce réticule (SFP non calibré).',
   'reticleAssist.moa': 'MOA',
   'reticleAssist.mrad': 'MRAD',
+  // Turret scope view (interactive POI on reticle)
+  'turretScope.title': 'Vue lunette interactive',
+  'turretScope.subtitle': 'Ajustez les tourelles pour voir le POI bouger en direct.',
+  'turretScope.distance': 'Distance prévisualisée',
+  'turretScope.elevation': 'Élévation',
+  'turretScope.windage': 'Dérive',
+  'turretScope.snap': 'Snap sur croix',
+  'turretScope.snapHint': 'Calcule les valeurs qui ramènent le POI au centre.',
+  'turretScope.reset': 'Remettre à zéro',
+  'turretScope.poiOff': 'POI hors champ — utilisez Snap ou ajustez les tourelles.',
+  'turretScope.unsupported': 'Aucun résultat disponible pour cette session.',
+  'turretScope.units': 'MOA',
 
   // Cross-validation tab (BUILD-C bis)
   'nav.crossValidation': 'Validation externe',

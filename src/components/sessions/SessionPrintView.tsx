@@ -112,7 +112,7 @@ export function SessionPrintView({ session }: { session: Session }) {
 
       {/* KPIs */}
       <section>
-        <h2>{t('common.summary' as never)}</h2>
+        <h2>Summary</h2>
         <table className="kpi-table">
           <tbody>
             <tr>
@@ -128,7 +128,7 @@ export function SessionPrintView({ session }: { session: Session }) {
               <td>{zeroRow ? fmt(zeroRow.energy, 1) + ' J' : '—'}</td>
             </tr>
             <tr>
-              <th>{t('calc.projectileWeight' as never)}</th>
+              <th>Weight</th>
               <td>{session.input.projectileWeight} gr</td>
               <th>{t('calc.maxRange')}</th>
               <td>{session.input.maxRange} m</td>
@@ -206,7 +206,7 @@ export function SessionPrintView({ session }: { session: Session }) {
           </table>
           {rows.length !== tableRows.length && (
             <p className="footnote">
-              {tableRows.length}/{rows.length} {t('table.rowsSampled' as never)}
+              {tableRows.length}/{rows.length} rows sampled
             </p>
           )}
         </section>

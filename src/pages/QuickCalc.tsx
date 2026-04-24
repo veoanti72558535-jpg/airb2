@@ -66,6 +66,12 @@ interface FormState {
   projectileLength?: number;
   projectileDiameter?: number;
   customDragTable?: DragTablePoint[];
+  /**
+   * Source de la table Cd pour la loi G1 (legacy piecewise vs ChairGun
+   * 79 pts). N'a d'effet que pour `dragModel === 'G1'` et sans
+   * `customDragTable`. Géré dans la zone Avancé uniquement.
+   */
+  g1Source: G1Source;
   // Velocity
   muzzleVelocity: number;
   // Weapon

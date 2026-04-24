@@ -752,6 +752,17 @@ const fr = {
   'compare.tableA': 'Tableau A',
   'compare.tableB': 'Tableau B',
 
+  // Compare — vue inline complète multi-distances + courbe de deltas
+  'compare.fullDelta.toggleShow': 'Voir comparaison complète',
+  'compare.fullDelta.toggleHide': 'Masquer comparaison complète',
+  'compare.fullDelta.range': 'Plage',
+  'compare.fullDelta.points': 'points',
+  'compare.fullDelta.maxDropDelta': 'Δ drop max',
+  'compare.fullDelta.maxVelDelta': 'Δ V max',
+  'compare.fullDelta.chartTitle': 'Courbe des deltas (B − A) par distance',
+  'compare.fullDelta.footnote': 'Aligné sur la grille de la session avec le pas le plus fin. Les cellules vides correspondent à des distances absentes d\'un côté.',
+  'compare.noOverlap': 'Pas de distances communes entre les deux sessions.',
+
   // Compare — Tranche S : lecture comparative zero / near / far / PBR
   'compare.pbrZeroTitle': 'Zéro & PBR',
   'compare.zeroRange': 'Zéro',

@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Eye, Plus, Trash2, Edit2, Download } from 'lucide-react';
+import { Eye, Plus, Trash2, Edit2, Download, Star } from 'lucide-react';
 import { SearchBar } from '@/components/SearchBar';
 import { FilterChips } from '@/components/FilterChips';
 import { useI18n } from '@/lib/i18n';
@@ -62,6 +62,7 @@ export default function OpticsPage() {
   const [showImport, setShowImport] = useState(false);
   const [editing, setEditing] = useState<Optic | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
 
   const existingNames = useMemo(() => new Set(optics.map(o => o.name)), [optics]);
 
@@ -148,16 +149,28 @@ export default function OpticsPage() {
 
   const filteredOptics = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    return optics.filter(o => {
+    const list = optics.filter(o => {
       if (tubeFilter && o.tubeDiameter !== tubeFilter) return false;
       if (brandFilter && detectBrand(o.name) !== brandFilter) return false;
+      if (favoritesOnly && !o.favorite) return false;
       if (q) {
         const hay = `${o.name} ${o.notes ?? ''}`.toLowerCase();
         if (!hay.includes(q)) return false;
       }
       return true;
     });
-  }, [optics, tubeFilter, brandFilter, searchQuery]);
+    return [...list].sort((a, b) => {
+      const fa = a.favorite ? 1 : 0;
+      const fb = b.favorite ? 1 : 0;
+      if (fa !== fb) return fb - fa;
+      return (b.updatedAt ?? '').localeCompare(a.updatedAt ?? '');
+    });
+  }, [optics, tubeFilter, brandFilter, searchQuery, favoritesOnly]);
+
+  const toggleFavorite = (o: Optic) => {
+    opticStore.update(o.id, { favorite: !o.favorite });
+    refresh();
+  };
 
   const isSFP = form.focalPlane === 'SFP';
 
@@ -269,6 +282,24 @@ export default function OpticsPage() {
       )}
 
       {optics.length > 0 && (
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            aria-pressed={favoritesOnly}
+            onClick={() => setFavoritesOnly(v => !v)}
+            data-testid="optics-favorites-only"
+            className={`px-2.5 py-1 rounded text-xs font-medium border inline-flex items-center gap-1 transition-colors ${
+              favoritesOnly
+                ? 'bg-primary/10 text-primary border-primary/40'
+                : 'bg-muted text-muted-foreground border-border hover:bg-muted/70'
+            }`}
+          >
+            {t('favorites.onlyFavorites')}
+          </button>
+        </div>
+      )}
+
+      {optics.length > 0 && (
         <FilterChips
           label={t('optics.tubeDiameter')}
           value={tubeFilter === null ? null : String(tubeFilter)}
@@ -332,6 +363,16 @@ export default function OpticsPage() {
                     {o.notes && <div className="text-[11px] text-muted-foreground mt-1 line-clamp-2">{o.notes}</div>}
                   </div>
                   <div className="flex gap-1 shrink-0">
+                    <button
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFavorite(o); }}
+                      title={o.favorite ? t('favorites.remove') : t('favorites.add')}
+                      aria-label={o.favorite ? t('favorites.remove') : t('favorites.add')}
+                      aria-pressed={!!o.favorite}
+                      data-testid={`optic-fav-${o.id}`}
+                      className={`p-1.5 rounded transition-colors duration-150 ${o.favorite ? 'text-primary hover:bg-primary/10' : 'text-muted-foreground hover:bg-muted hover:text-primary'}`}
+                    >
+                      <Star className="h-3.5 w-3.5" fill={o.favorite ? 'currentColor' : 'none'} />
+                    </button>
                     <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleEdit(o); }} className="p-1.5 rounded hover:bg-muted text-muted-foreground"><Edit2 className="h-3.5 w-3.5" /></button>
                     <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDelete(o.id); }} className="p-1.5 rounded hover:bg-destructive/10 text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
                   </div>

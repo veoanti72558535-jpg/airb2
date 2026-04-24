@@ -5,6 +5,7 @@ import { Crosshair, RotateCcw, Save, Sparkles, Settings2, Zap, ArrowLeftRight } 
 import { SessionPickerDialog } from '@/components/compare/SessionPickerDialog';
 import { toast } from 'sonner';
 import { useI18n } from '@/lib/i18n';
+import { G1SourcePicker, G1SourceBadge } from '@/components/calc/G1SourcePicker';
 import { calculateTrajectory } from '@/lib/ballistics';
 import {
   Airgun,

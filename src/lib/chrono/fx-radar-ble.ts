@@ -19,6 +19,80 @@
 const CANDIDATE_SERVICE = '0000fff0-0000-1000-8000-00805f9b34fb';
 const CANDIDATE_CHAR    = '0000fff1-0000-1000-8000-00805f9b34fb';
 
+/** localStorage key for the last-paired FX Radar device id. */
+const SAVED_DEVICE_KEY = 'fx_radar_device_id';
+/** localStorage key for the last-paired FX Radar device name (display only). */
+const SAVED_DEVICE_NAME_KEY = 'fx_radar_device_name';
+
+export interface SavedFxRadarDevice {
+  id: string;
+  name: string | null;
+}
+
+/** Read the previously-saved FX Radar device id, if any. */
+export function getSavedFxRadarDevice(): SavedFxRadarDevice | null {
+  try {
+    const id = localStorage.getItem(SAVED_DEVICE_KEY);
+    if (!id) return null;
+    return { id, name: localStorage.getItem(SAVED_DEVICE_NAME_KEY) };
+  } catch {
+    return null;
+  }
+}
+
+/** Persist the chosen FX Radar device for future silent reconnects. */
+export function saveFxRadarDevice(device: BluetoothDevice): void {
+  try {
+    localStorage.setItem(SAVED_DEVICE_KEY, device.id);
+    if (device.name) {
+      localStorage.setItem(SAVED_DEVICE_NAME_KEY, device.name);
+    } else {
+      localStorage.removeItem(SAVED_DEVICE_NAME_KEY);
+    }
+  } catch {
+    // ignore persistence errors (private mode, quota)
+  }
+}
+
+/** Forget the saved FX Radar device (next connect will show the picker again). */
+export function forgetSavedFxRadarDevice(): void {
+  try {
+    localStorage.removeItem(SAVED_DEVICE_KEY);
+    localStorage.removeItem(SAVED_DEVICE_NAME_KEY);
+  } catch {
+    // ignore
+  }
+}
+
+/**
+ * Try to silently reconnect to the previously-paired FX Radar without
+ * showing the chooser. Requires `navigator.bluetooth.getDevices()` (Chrome
+ * desktop / Android with the experimental Web Bluetooth flag, or Bluetooth
+ * permissions already granted). Returns null if unavailable, no saved id,
+ * or the device is not currently in range / no longer authorized.
+ */
+export async function tryReconnectSavedFxRadar(): Promise<BluetoothDevice | null> {
+  const saved = getSavedFxRadarDevice();
+  if (!saved) return null;
+  if (typeof navigator === 'undefined' || !navigator.bluetooth) return null;
+  // getDevices() may not exist in all Chromium versions
+  const getDevices = (navigator.bluetooth as unknown as {
+    getDevices?: () => Promise<BluetoothDevice[]>;
+  }).getDevices;
+  if (typeof getDevices !== 'function') return null;
+  try {
+    const devices = await getDevices.call(navigator.bluetooth);
+    const match = devices.find(d => d.id === saved.id);
+    if (!match) return null;
+    // Try to connect GATT silently. If the device is out of range this throws.
+    await match.gatt?.connect();
+    return match;
+  } catch (err) {
+    console.info('[FX Radar] Silent reconnect failed:', err);
+    return null;
+  }
+}
+
 export type BleDataFormat = 'float32' | 'uint16' | 'uint8' | 'auto';
 export type BleEndian = 'little' | 'big';
 

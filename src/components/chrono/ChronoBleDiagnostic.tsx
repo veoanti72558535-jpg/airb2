@@ -213,6 +213,35 @@ export default function ChronoBleDiagnostic() {
         {t('chrono.diag.rssiNote')}
       </p>
 
+      {/* Banner du device par défaut sauvegardé */}
+      {savedId && (
+        <div
+          className="flex items-center justify-between gap-2 p-2 rounded bg-primary/10 border border-primary/30 text-[11px]"
+          data-testid="chrono-ble-saved-banner"
+        >
+          <div className="flex items-center gap-1.5 min-w-0">
+            <Star className="h-3.5 w-3.5 shrink-0 fill-primary text-primary" />
+            <span className="truncate">
+              <span className="font-medium">
+                {t('chrono.diag.savedBadge')}:
+              </span>{' '}
+              <span className="font-mono text-muted-foreground">{savedId}</span>
+            </span>
+          </div>
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            className="h-6 px-2 shrink-0"
+            onClick={handleForgetDefault}
+            data-testid="chrono-ble-forget-default-btn"
+          >
+            <StarOff className="h-3 w-3 mr-1" />
+            {t('chrono.diag.forgetDefault')}
+          </Button>
+        </div>
+      )}
+
       {error && (
         <div className="flex items-start gap-2 p-2 rounded bg-destructive/10 text-destructive text-xs">
           <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
@@ -282,6 +311,16 @@ export default function ChronoBleDiagnostic() {
                           {d.batteryPct}%
                         </Badge>
                       )}
+                      {savedId === d.id && (
+                        <Badge
+                          variant="default"
+                          className="text-[9px] px-1.5 py-0 h-4 inline-flex items-center gap-0.5"
+                          data-testid={`chrono-ble-device-${d.id}-saved`}
+                        >
+                          <Star className="h-2.5 w-2.5 fill-current" />
+                          {t('chrono.diag.savedBadge')}
+                        </Badge>
+                      )}
                     </div>
                   </div>
                 </button>
@@ -294,6 +333,37 @@ export default function ChronoBleDiagnostic() {
                         <span>{d.error}</span>
                       </div>
                     )}
+                    {/* Action: Set / Forget as default FX device */}
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <p className="text-[10px] text-muted-foreground italic flex-1 min-w-[140px]">
+                        {t('chrono.diag.savedHint')}
+                      </p>
+                      {savedId === d.id ? (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="h-7"
+                          onClick={handleForgetDefault}
+                          data-testid={`chrono-ble-forget-${d.id}`}
+                        >
+                          <StarOff className="h-3 w-3 mr-1" />
+                          {t('chrono.diag.forgetDefault')}
+                        </Button>
+                      ) : (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="default"
+                          className="h-7"
+                          onClick={() => handleSaveDefault(d)}
+                          data-testid={`chrono-ble-save-${d.id}`}
+                        >
+                          <Star className="h-3 w-3 mr-1" />
+                          {t('chrono.diag.saveDefault')}
+                        </Button>
+                      )}
+                    </div>
                     {d.services.length === 0 ? (
                       <p className="text-[11px] text-muted-foreground italic">
                         {t('chrono.diag.noServices')}

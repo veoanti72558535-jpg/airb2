@@ -14,6 +14,10 @@ import { I18nProvider } from '@/lib/i18n';
 import { TurretScopeView } from './TurretScopeView';
 import type { BallisticResult, Optic, Session, WeatherSnapshot } from '@/lib/types';
 
+// Radix Slider needs ResizeObserver in jsdom
+class RO { observe() {} unobserve() {} disconnect() {} }
+(globalThis as any).ResizeObserver = (globalThis as any).ResizeObserver || RO;
+
 function w(): WeatherSnapshot {
   return {
     temperature: 15, humidity: 50, pressure: 1013.25, altitude: 0,

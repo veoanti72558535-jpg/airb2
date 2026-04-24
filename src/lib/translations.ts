@@ -1738,6 +1738,22 @@ const fr = {
   'favorites.add': 'Ajouter aux favoris',
   'favorites.remove': 'Retirer des favoris',
   'favorites.onlyFavorites': '⭐ Favoris uniquement',
+  // Session detail page (route /sessions/:id)
+  'sessionDetail.saved': 'Modifications enregistrées',
+  'sessionDetail.save': 'Enregistrer',
+  'sessionDetail.notes': 'Notes',
+  'sessionDetail.noNotes': 'Aucune note',
+  'sessionDetail.notesPlaceholder': 'Conditions, observations, sensations…',
+  'sessionDetail.noTags': 'Aucun tag',
+  'sessionDetail.addTagPlaceholder': 'Nouveau tag…',
+  'sessionDetail.tabTrajectory': 'Trajectoire',
+  'sessionDetail.tabTable': 'Tableau',
+  'sessionDetail.tabReticle': 'Réticule',
+  'sessionDetail.tabMeta': 'Métadonnées',
+  'sessionDetail.quickCompare': 'Comparaison rapide',
+  'sessionDetail.openFullCompare': 'Vue complète',
+  'sessionDetail.pickToCompare': 'Choisir une session…',
+  'sessionDetail.noOptic': 'Aucune optique liée à cette session.',
 } as const;
 
 const en: Record<keyof typeof fr, string> = {
@@ -3452,6 +3468,21 @@ const en: Record<keyof typeof fr, string> = {
   'favorites.add': 'Add to favorites',
   'favorites.remove': 'Remove from favorites',
   'favorites.onlyFavorites': '⭐ Favorites only',
+  'sessionDetail.saved': 'Changes saved',
+  'sessionDetail.save': 'Save',
+  'sessionDetail.notes': 'Notes',
+  'sessionDetail.noNotes': 'No notes',
+  'sessionDetail.notesPlaceholder': 'Conditions, observations, feel…',
+  'sessionDetail.noTags': 'No tags',
+  'sessionDetail.addTagPlaceholder': 'New tag…',
+  'sessionDetail.tabTrajectory': 'Trajectory',
+  'sessionDetail.tabTable': 'Table',
+  'sessionDetail.tabReticle': 'Reticle',
+  'sessionDetail.tabMeta': 'Metadata',
+  'sessionDetail.quickCompare': 'Quick compare',
+  'sessionDetail.openFullCompare': 'Full view',
+  'sessionDetail.pickToCompare': 'Pick a session…',
+  'sessionDetail.noOptic': 'No optic linked to this session.',
 };
 
 // Append paste-import keys (EN) — kept after object literal would be a TS

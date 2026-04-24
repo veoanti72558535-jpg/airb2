@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { History, Star, Trash2, Search, Crosshair, Play, Filter, X, ArrowLeftRight, CheckSquare, RotateCcw, Target, Camera } from 'lucide-react';
+import { History, Star, Trash2, Search, Crosshair, Play, Filter, X, ArrowLeftRight, CheckSquare, RotateCcw, Target, Camera, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { useI18n } from '@/lib/i18n';
 import { calculateTrajectory } from '@/lib/ballistics';
@@ -329,7 +329,17 @@ export default function SessionsPage() {
                     onClick={() => selectionMode && toggleSelection(s.id)}
                   >
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="font-semibold text-sm truncate">{s.name}</span>
+                      {selectionMode ? (
+                        <span className="font-semibold text-sm truncate">{s.name}</span>
+                      ) : (
+                        <Link
+                          to={`/sessions/${s.id}`}
+                          className="font-semibold text-sm truncate hover:text-primary transition-colors"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {s.name}
+                        </Link>
+                      )}
                       <EngineBadge session={s} size="xs" />
                      {s.calibrationHistory && s.calibrationHistory.length > 0 && (
                        <span className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded bg-primary/15 text-primary">
@@ -356,6 +366,13 @@ export default function SessionsPage() {
                   </div>
                   {!selectionMode && (
                     <div className="flex gap-1 shrink-0">
+                      <Link
+                        to={`/sessions/${s.id}`}
+                        title={t('sessions.view')}
+                        className="p-1.5 rounded hover:bg-primary/10 text-muted-foreground hover:text-primary"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </Link>
                       <Link
                         to={`/calc?session=${s.id}`}
                         title={t('sessions.openInCalc')}

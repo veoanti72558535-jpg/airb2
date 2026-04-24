@@ -61,6 +61,7 @@ import { TargetPhotoAnalyzer } from '@/components/sessions/TargetPhotoAnalyzer';
 import { TargetAnalysesHistory } from '@/components/sessions/TargetAnalysesHistory';
 import { RecalculateDialog } from '@/components/sessions/RecalculateDialog';
 import { SessionPickerDialog } from '@/components/compare/SessionPickerDialog';
+import { InlineFullDeltaView } from '@/components/compare/InlineFullDeltaView';
 import { SessionReportButton } from '@/components/ai/agents/SessionReportButton';
 import { BallisticTable } from '@/components/calc/BallisticTable';
 import { TrajectoryMiniChart } from '@/components/calc/TrajectoryMiniChart';
@@ -733,6 +734,7 @@ function SessionReticleTab({ session }: { session: Session }) {
 /** Bloc compact : 3 distances (zéro, médian, max) avec deltas A vs B. */
 function InlineCompareBlock({ a, b }: { a: Session; b: Session }) {
   const { t } = useI18n();
+  const [fullOpen, setFullOpen] = useState(false);
   const range = useMemo(() => defaultRange(a, b), [a, b]);
   const rows = useMemo(
     () => buildComparisonRows(a, b, range),
@@ -813,6 +815,25 @@ function InlineCompareBlock({ a, b }: { a: Session; b: Session }) {
           </ul>
         </div>
       )}
+
+      {/* Toggle vers vue complète multi-distances + courbe deltas */}
+      <div className="border-t border-border/40 pt-2">
+        <button
+          type="button"
+          onClick={() => setFullOpen(v => !v)}
+          className="text-[11px] text-primary hover:underline inline-flex items-center gap-1"
+          aria-expanded={fullOpen}
+        >
+          {fullOpen
+            ? t('compare.fullDelta.toggleHide')
+            : t('compare.fullDelta.toggleShow')}
+        </button>
+        {fullOpen && (
+          <div className="mt-3">
+            <InlineFullDeltaView a={a} b={b} />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -752,6 +752,17 @@ const fr = {
   'compare.tableA': 'Tableau A',
   'compare.tableB': 'Tableau B',
 
+  // Compare — vue inline complète multi-distances + courbe de deltas
+  'compare.fullDelta.toggleShow': 'Voir comparaison complète',
+  'compare.fullDelta.toggleHide': 'Masquer comparaison complète',
+  'compare.fullDelta.range': 'Plage',
+  'compare.fullDelta.points': 'points',
+  'compare.fullDelta.maxDropDelta': 'Δ drop max',
+  'compare.fullDelta.maxVelDelta': 'Δ V max',
+  'compare.fullDelta.chartTitle': 'Courbe des deltas (B − A) par distance',
+  'compare.fullDelta.footnote': 'Aligné sur la grille de la session avec le pas le plus fin. Les cellules vides correspondent à des distances absentes d\'un côté.',
+  'compare.noOverlap': 'Pas de distances communes entre les deux sessions.',
+
   // Compare — Tranche S : lecture comparative zero / near / far / PBR
   'compare.pbrZeroTitle': 'Zéro & PBR',
   'compare.zeroRange': 'Zéro',
@@ -2490,6 +2501,17 @@ const en: Record<keyof typeof fr, string> = {
   'compare.compareFromCalcCta': 'Compare with another session',
   'compare.tableA': 'Table A',
   'compare.tableB': 'Table B',
+
+  // Compare — inline full multi-distance view with delta chart
+  'compare.fullDelta.toggleShow': 'Show full comparison',
+  'compare.fullDelta.toggleHide': 'Hide full comparison',
+  'compare.fullDelta.range': 'Range',
+  'compare.fullDelta.points': 'points',
+  'compare.fullDelta.maxDropDelta': 'Max Δ drop',
+  'compare.fullDelta.maxVelDelta': 'Max Δ V',
+  'compare.fullDelta.chartTitle': 'Delta curve (B − A) by distance',
+  'compare.fullDelta.footnote': 'Aligned on the finer-step session grid. Empty cells mean the distance is missing on one side.',
+  'compare.noOverlap': 'No common distances between both sessions.',
 
   // Compare — Tranche S: comparative zero / near / far / PBR readout
   'compare.pbrZeroTitle': 'Zero & PBR',

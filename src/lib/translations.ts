@@ -1717,6 +1717,12 @@ const fr = {
   'chrono.diag.stats.lastState': 'Dernier état',
   'chrono.diag.stats.idle': 'Aucun scan',
   'chrono.diag.stats.error': 'Erreur',
+  'chrono.diag.savedBadge': 'Sauvegardé par défaut',
+  'chrono.diag.saveDefault': 'Définir par défaut',
+  'chrono.diag.saveDefaultDone': '« {name} » sauvegardé pour le prochain connect',
+  'chrono.diag.forgetDefault': 'Oublier le défaut',
+  'chrono.diag.forgetDefaultDone': 'Device par défaut oublié',
+  'chrono.diag.savedHint': 'Le prochain connect tentera une reconnexion silencieuse à ce device.',
   // Library favorites — Tranche favoris bibliothèque
   'favorites.add': 'Ajouter aux favoris',
   'favorites.remove': 'Retirer des favoris',

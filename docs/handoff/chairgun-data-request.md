@@ -45,6 +45,10 @@
 
 #### 1.1 — Golden cases au format pivot
 
+> 📎 **Document dédié** : voir `docs/handoff/golden-cases-request.md`
+> (mono-sujet, prêt à envoyer FR + EN, template JSON joint, canal sans IA).
+> La présente section reste comme résumé dans le catalogue P1→P4.
+
 - **Quoi** : 10 à 20 cas complets « tir A → tir Z », chacun avec inputs
   exacts (projectile, MV, BC, sight height, zero, atmosphère, vent) et
   trajectoire mesurée ou calculée par ChairGun (drop, drift, velocity,

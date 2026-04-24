@@ -11,6 +11,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { I18nProvider } from '@/lib/i18n';
 import { ThemeProvider } from '@/lib/theme';
+import { AuthProvider } from '@/lib/auth-context';
 import SessionsPage from '@/pages/SessionsPage';
 import { reticleStore } from '@/lib/storage';
 import type { BallisticResult, Optic, Reticle, Session } from '@/lib/types';
@@ -87,9 +88,11 @@ function renderPage() {
   return render(
     <ThemeProvider>
       <I18nProvider>
-        <MemoryRouter initialEntries={['/sessions']}>
-          <SessionsPage />
-        </MemoryRouter>
+        <AuthProvider>
+          <MemoryRouter initialEntries={['/sessions']}>
+            <SessionsPage />
+          </MemoryRouter>
+        </AuthProvider>
       </I18nProvider>
     </ThemeProvider>,
   );

@@ -1,11 +1,15 @@
 import React, { useState, useCallback } from 'react';
-import { ChevronDown, ChevronRight, Bluetooth, AlertTriangle, Battery, RefreshCw, Trash2, CheckCircle2, XCircle, Activity } from 'lucide-react';
+import { ChevronDown, ChevronRight, Bluetooth, AlertTriangle, Battery, RefreshCw, Trash2, CheckCircle2, XCircle, Activity, Star, StarOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useI18n } from '@/lib/i18n';
+import { toast } from 'sonner';
 import {
   diagnoseBleDevice,
   isWebBluetoothSupported,
+  getSavedFxRadarDevice,
+  saveFxRadarDeviceById,
+  forgetSavedFxRadarDevice,
   type BleDeviceDiagnostic,
 } from '@/lib/chrono/fx-radar-ble';
 
@@ -36,6 +40,9 @@ export default function ChronoBleDiagnostic() {
   const [successCount, setSuccessCount] = useState(0);
   const [failCount, setFailCount] = useState(0);
   const [lastState, setLastState] = useState<LastGattState>({ kind: 'idle' });
+  const [savedId, setSavedId] = useState<string | null>(
+    () => getSavedFxRadarDevice()?.id ?? null,
+  );
 
   const handleScan = useCallback(async () => {
     setError('');
@@ -86,6 +93,23 @@ export default function ChronoBleDiagnostic() {
     setFailCount(0);
     setLastState({ kind: 'idle' });
   };
+
+  const handleSaveDefault = useCallback(
+    (d: BleDeviceDiagnostic) => {
+      saveFxRadarDeviceById(d.id, d.name);
+      setSavedId(d.id);
+      toast.success(
+        t('chrono.diag.saveDefaultDone').replace('{name}', d.name || d.id),
+      );
+    },
+    [t],
+  );
+
+  const handleForgetDefault = useCallback(() => {
+    forgetSavedFxRadarDevice();
+    setSavedId(null);
+    toast.success(t('chrono.diag.forgetDefaultDone'));
+  }, [t]);
 
   if (!supported) return null;
 

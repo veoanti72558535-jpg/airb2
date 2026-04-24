@@ -280,6 +280,24 @@ export default function AirgunsPage() {
         />
       )}
 
+      {airguns.length > 0 && (
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            aria-pressed={favoritesOnly}
+            onClick={() => setFavoritesOnly(v => !v)}
+            data-testid="airguns-favorites-only"
+            className={`px-2.5 py-1 rounded text-xs font-medium border inline-flex items-center gap-1 transition-colors ${
+              favoritesOnly
+                ? 'bg-primary/10 text-primary border-primary/40'
+                : 'bg-muted text-muted-foreground border-border hover:bg-muted/70'
+            }`}
+          >
+            {t('favorites.onlyFavorites')}
+          </button>
+        </div>
+      )}
+
       {airguns.length > 0 && brandCounts.length > 0 && (
         <FilterChips
           label={t('optics.filterBrand')}
@@ -325,6 +343,16 @@ export default function AirgunsPage() {
                   </div>
                 </div>
                 <div className="flex gap-1 shrink-0">
+                  <button
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFavorite(a); }}
+                    title={a.favorite ? t('favorites.remove') : t('favorites.add')}
+                    aria-label={a.favorite ? t('favorites.remove') : t('favorites.add')}
+                    aria-pressed={!!a.favorite}
+                    data-testid={`airgun-fav-${a.id}`}
+                    className={`p-1.5 rounded transition-colors duration-150 ${a.favorite ? 'text-primary hover:bg-primary/10' : 'text-muted-foreground hover:bg-muted hover:text-primary'}`}
+                  >
+                    <Star className="h-3.5 w-3.5" fill={a.favorite ? 'currentColor' : 'none'} />
+                  </button>
                   <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleEdit(a); }} className="p-1.5 rounded hover:bg-muted text-muted-foreground"><Edit2 className="h-3.5 w-3.5" /></button>
                   <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDelete(a.id); }} className="p-1.5 rounded hover:bg-destructive/10 text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
                 </div>

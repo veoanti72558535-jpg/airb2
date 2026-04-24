@@ -416,6 +416,7 @@ function buildChairgunSvg(
 const ReticleViewer = React.memo(function ReticleViewer({
   reticle, size = 400, darkMode = true, currentMagnification,
   performanceMode = false, elements: chairgunElements, viewportRange = 10,
+  turretElevationMoa = 0, turretWindageMoa = 0, showPoiAt,
 }: Props) {
   // Stabilise extracted params: only update the object ref when a scalar value actually changes
   const raw = extractReticleParams(reticle);

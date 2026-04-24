@@ -356,6 +356,24 @@ export default function ProjectilesPage() {
         />
       )}
 
+      {projectiles.length > 0 && (
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            aria-pressed={favoritesOnly}
+            onClick={() => setFavoritesOnly(v => !v)}
+            data-testid="projectiles-favorites-only"
+            className={`px-2.5 py-1 rounded text-xs font-medium border inline-flex items-center gap-1 transition-colors ${
+              favoritesOnly
+                ? 'bg-primary/10 text-primary border-primary/40'
+                : 'bg-muted text-muted-foreground border-border hover:bg-muted/70'
+            }`}
+          >
+            {t('favorites.onlyFavorites')}
+          </button>
+        </div>
+      )}
+
       {projectiles.length > 0 && brandCounts.length > 0 && (
         <FilterChips
           label={t('optics.filterBrand')}
@@ -523,6 +541,16 @@ export default function ProjectilesPage() {
                       {p.notes && <p className="text-[11px] text-muted-foreground mt-1 italic line-clamp-2">{p.notes}</p>}
                     </div>
                     <div className="flex gap-1 shrink-0">
+                      <button
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFavorite(p); }}
+                        title={p.favorite ? t('favorites.remove') : t('favorites.add')}
+                        aria-label={p.favorite ? t('favorites.remove') : t('favorites.add')}
+                        aria-pressed={!!p.favorite}
+                        data-testid={`projectile-fav-${p.id}`}
+                        className={`p-1.5 rounded transition-colors duration-150 ${p.favorite ? 'text-primary hover:bg-primary/10' : 'text-muted-foreground hover:bg-muted hover:text-primary'}`}
+                      >
+                        <Star className="h-3.5 w-3.5" fill={p.favorite ? 'currentColor' : 'none'} />
+                      </button>
                       <button
                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleCompare(p.id); }}
                         title={t('projectiles.compare')}

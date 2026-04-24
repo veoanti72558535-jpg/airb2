@@ -784,6 +784,10 @@ function SessionReticleTab({ session }: { session: Session }) {
     () => (session.opticId ? opticStore.getById(session.opticId) ?? null : null),
     [session.opticId],
   );
+  const reticle = useMemo(
+    () => (optic?.reticleId ? reticleStore.getById(optic.reticleId) ?? null : null),
+    [optic?.reticleId],
+  );
   const distances = useMemo(
     () => buildDistanceList(tableConfig).filter(d => d > 0),
     [tableConfig],
@@ -796,11 +800,14 @@ function SessionReticleTab({ session }: { session: Session }) {
     );
   }
   return (
-    <ReticleAssistPanel
-      optic={optic}
-      results={session.results}
-      distances={distances}
-    />
+    <div className="space-y-3">
+      <TurretScopeView session={session} optic={optic} reticle={reticle} />
+      <ReticleAssistPanel
+        optic={optic}
+        results={session.results}
+        distances={distances}
+      />
+    </div>
   );
 }
 

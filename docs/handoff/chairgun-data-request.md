@@ -218,6 +218,163 @@ Quand reçu : nouveau dossier `docs/apk-analysis/chairgun-elite/scope-view-spec.
 de cibles). Le composant React viendra dans une tranche BUILD séparée,
 gated par feature flag.
 
+#### 2.4.bis — Système de coordonnées « clic cible sur réticule » (turret clicks + SFP scaling)
+
+> Sous-demande **chirurgicale** dérivée de §2.4. Elle isole le seul point
+> qui bloque une réimplémentation propre côté React : la **chaîne de
+> conversion** entre un clic souris/tap dans le SVG du réticule et une
+> commande balistique (correction tourelle ou ré-interrogation moteur).
+>
+> Tout le reste de §2.4 (catalogue cibles, dérive affichée, code de
+> rendu) peut attendre — celui-ci est le minimum vital pour une vue
+> scope interactive correcte.
+
+##### a) Pourquoi on l'isole
+
+Sans spec explicite de cette chaîne, deux pièges classiques :
+
+1. **SFP non scalé** ou scalé du mauvais côté → la cible cliquée à 30×
+   atterrit à la mauvaise distance angulaire à 10×.
+2. **Convention turret floue** (UP positif vs DOWN positif, MOA réelle
+   vs `IPHY` 1″/100yd, fraction de click hardware vs click logique) →
+   le `clicks elevation` affiché diverge silencieusement de ce que
+   l'utilisateur compose réellement sur la tourelle.
+
+##### b) Chaîne canonique attendue (4 étapes)
+
+On voudrait confirmation (ou correction) du pipeline suivant, exprimé en
+pseudocode neutre. C'est la version qu'on implémenterait par défaut faute
+de réponse — d'où l'intérêt d'un go/no-go explicite.
+
+```text
+// Étape 1 — clic SVG → coordonnées viewport normalisées
+(px, py)              = mouseEventToSvgUserSpace(event)
+(cx, cy)              = svgCenter()                       // centre optique du viewport
+(dxPx, dyPx)          = (px - cx, py - cy)                // y vers le haut = positif
+
+// Étape 2 — pixels → unité angulaire APPARENTE du réticule
+// (pxPerUnitAtCalMag est mesuré une fois sur le SVG, à magCalibration)
+(dxApparent, dyApparent) = (dxPx / pxPerUnitAtCalMag,
+                            dyPx / pxPerUnitAtCalMag)
+
+// Étape 3 — apparente → unité angulaire VRAIE (correction SFP)
+if (focalPlane === 'SFP') {
+  scale = currentMag / magCalibration                    // > 1 si zoom au-dessus du cal
+  (dxTrue, dyTrue) = (dxApparent / scale,
+                      dyApparent / scale)
+} else { // FFP
+  (dxTrue, dyTrue) = (dxApparent, dyApparent)            // pas de scaling
+}
+
+// Étape 4a — vraie subtension → clicks tourelle
+clicksWindage   = round( dxTrue / clickValueWindage )    // sign convention: clic à droite = +
+clicksElevation = round( -dyTrue / clickValueElevation ) // clic en HAUT du réticule = HOLDUP
+                                                         // = besoin de DESCENDRE le POI
+                                                         // = tourelle "DOWN" ou holdover positif ?
+                                                         // ← CONVENTION À CONFIRMER
+
+// Étape 4b — alternative : ré-interrogation moteur
+// Si la cible est cliquée comme "POI souhaité", on cherche la distance R
+// telle que (drop(R), windDrift(R)) ≈ (-dyTrue × R, dxTrue × R) en projection.
+// → solver 1D sur R, borné par [rangeMin, rangeMax].
+```
+
+##### c) Questions précises (Yes / No / formule corrigée)
+
+1. **Unité du réticule** : `pxPerUnitAtCalMag` est-il mesuré en
+   **MIL** ou en **MOA** ? Le réticule SCB 2 du screenshot 1 est en
+   `MTC Optics 5–30×`, qu'est-ce qui fait foi : la nomenclature du
+   réticule, ou un toggle utilisateur ?
+2. **Magnification de calibration** : `magCalibration` est-il un
+   attribut **par modèle de réticule** (champ du catalogue) ou **par
+   optique utilisateur** (réglage perso) ? Dans `Scale = 0.33` à 30×, on
+   déduit `magCalibration ≈ 10` — c'est bien la mag « SFP true » du
+   modèle SCB 2 ?
+3. **Convention de signe Y** : un clic **au-dessus** du centre du
+   réticule représente-t-il (a) un **holdover** (« je vise plus haut
+   parce que la cible tombera ») ou (b) un **POI** plus haut que la
+   ligne de visée ? Les deux conventions existent dans la nature et
+   inversent le signe de `clicksElevation`.
+4. **Convention de signe X** : clic **à droite** = **windage RIGHT**
+   tourelle, ou windage tourelle pour **compenser un vent venant de
+   droite** (donc tourelle gauche) ?
+5. **Click value** : la valeur exposée à l'utilisateur (ex : `1/4 MOA`,
+   `0.1 MIL`) correspond-elle à **1 click hardware** ou à **1 click
+   logique** (parfois 1 logique = 2 hardware sur certaines optiques) ?
+   Distingues-tu les deux ?
+6. **Arrondi** : `round`, `floor` ou `nearest-even` pour la conversion
+   subtension → clicks ? Important pour la reproductibilité numérique.
+7. **Interaction effective** : le clic met-il à jour (a) la **tourelle
+   simulée** (ré-affiche le réticule centré sur ce nouveau zero), ou
+   (b) seulement un **marqueur POI** sans toucher au moteur, ou (c) il
+   **résout la distance** pour laquelle ce point est le POI naturel
+   (étape 4b ci-dessus) ?
+8. **Bornes & saturation** : que se passe-t-il quand le clic tombe en
+   dehors de la course tourelle disponible (`elevationTravelMOA`,
+   `windageTravelMOA`) ? Affichage d'erreur, clamp silencieux, warning ?
+
+##### d) Cas d'exemple chiffré demandé
+
+Idéal : 1 trace numérique complète sur le scénario du screenshot 1.
+
+```text
+Inputs :
+  réticule       = SCB 2 (MTC Optics)
+  focalPlane     = SFP
+  magCalibration = ?                          ← à fournir
+  currentMag     = 30
+  clickValue     = 1/4 MOA   (à confirmer)
+  cible cliquée  = round target affichée à 70 m, vent 5 m/s
+  drop(70m)      = ? mm                       ← à fournir
+  windDrift(70m) = 23 mm                      (= 2.3 cm visible à l'écran)
+
+Sorties attendues :
+  (dxPx, dyPx)             = (?, ?)
+  (dxApparent, dyApparent) = (?, ?)  en MIL ou MOA
+  scale                    = 30 / magCal
+  (dxTrue, dyTrue)         = (?, ?)
+  clicksElevation          = ?  (signé)
+  clicksWindage            = ?  (signé)
+```
+
+Ce qu'on cherche n'est **pas** la valeur exacte du drop ChairGun (déjà
+couvert par les golden cases §1.1) — c'est la **chaîne de conversion**
+et **les conventions de signe**. Avec ces 8 réponses + 1 trace, la
+réimplémentation React est mécanique.
+
+##### e) Format de réponse acceptable
+
+- 8 lignes « Q1 → réponse, Q2 → réponse… » suffisent.
+- Ou 1 paragraphe libre + 1 trace chiffrée.
+- Ou un extrait de code commenté de la fonction
+  `screenToTurretClicks(...)` (ou son équivalent).
+
+Pas besoin de doc formelle — l'objectif est de **lever l'ambiguïté**, pas
+de produire un livrable de qualité publication.
+
+##### f) Impact côté AirBallistik
+
+Sans cette spec, on documente la chaîne par défaut ci-dessus dans
+`docs/apk-analysis/chairgun-elite/scope-view-spec.md` avec un
+avertissement « conventions à valider ». Avec la spec, on gagne :
+
+- Des **tests d'unité déterministes** sur `screenToTurretClicks()` (un
+  jeu de fixtures par convention validée).
+- Une **non-régression visuelle** entre la vue scope React et celle de
+  ChairGun (au niveau du placement, pas du rendu artistique).
+- Une **réutilisation immédiate** de `BallisticResult.clicksElevation` /
+  `.clicksWindage` déjà calculés par le moteur, sans nouveau code de
+  conversion.
+
+##### g) Cible repo (quand reçu)
+
+- Spec : `docs/apk-analysis/chairgun-elite/scope-view-spec.md` —
+  section dédiée « Coordinate system & turret mapping ».
+- Tests : futur module `src/lib/scope-coords.ts` + `src/lib/scope-coords.test.ts`
+  (tranche BUILD séparée, hors `src/lib/ballistics/`).
+- Pas d'impact sur le moteur, pas d'impact sur la base, pas d'impact
+  sur les fixtures golden.
+
 ---
 
 ### P3 — Données structurelles

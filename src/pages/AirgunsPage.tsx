@@ -105,6 +105,8 @@ export default function AirgunsPage() {
     refresh();
   };
 
+  const refresh = () => setAirguns(airgunStore.getAll());
+
 
   const handleSave = () => {
     if (!form.brand || !form.model) return;

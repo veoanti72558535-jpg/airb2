@@ -4,6 +4,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { I18nProvider } from '@/lib/i18n';
 import { ThemeProvider } from '@/lib/theme';
+import { AuthProvider } from '@/lib/auth-context';
 import QuickCalc from '@/pages/QuickCalc';
 import { sessionStore } from '@/lib/storage';
 import type { Session } from '@/lib/types';
@@ -64,15 +65,17 @@ vi.mock('sonner', () => ({
 
 function renderAt(path: string) {
   return render(
-    <ThemeProvider>
-      <I18nProvider>
-        <MemoryRouter initialEntries={[path]}>
-          <Routes>
-            <Route path="/calc" element={<QuickCalc />} />
-          </Routes>
-        </MemoryRouter>
-      </I18nProvider>
-    </ThemeProvider>,
+    <AuthProvider>
+      <ThemeProvider>
+        <I18nProvider>
+          <MemoryRouter initialEntries={[path]}>
+            <Routes>
+              <Route path="/calc" element={<QuickCalc />} />
+            </Routes>
+          </MemoryRouter>
+        </I18nProvider>
+      </ThemeProvider>
+    </AuthProvider>,
   );
 }
 

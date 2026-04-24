@@ -4,6 +4,7 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { I18nProvider } from '@/lib/i18n';
 import { ThemeProvider } from '@/lib/theme';
+import { AuthProvider } from '@/lib/auth-context';
 import ComparePage from '@/pages/ComparePage';
 import type { Session } from '@/lib/types';
 
@@ -75,15 +76,17 @@ function makeSession(
 
 function renderAt(path: string) {
   return render(
-    <ThemeProvider>
-      <I18nProvider>
-        <MemoryRouter initialEntries={[path]}>
-          <Routes>
-            <Route path="/compare" element={<ComparePage />} />
-          </Routes>
-        </MemoryRouter>
-      </I18nProvider>
-    </ThemeProvider>,
+    <AuthProvider>
+      <ThemeProvider>
+        <I18nProvider>
+          <MemoryRouter initialEntries={[path]}>
+            <Routes>
+              <Route path="/compare" element={<ComparePage />} />
+            </Routes>
+          </MemoryRouter>
+        </I18nProvider>
+      </ThemeProvider>
+    </AuthProvider>,
   );
 }
 

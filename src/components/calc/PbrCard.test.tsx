@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { PbrCard } from './PbrCard';
 import { I18nProvider } from '@/lib/i18n';
+import { AuthProvider } from '@/lib/auth-context';
 import type { BallisticResult } from '@/lib/types';
 
 function mkRow(range: number, dropMm: number): BallisticResult {
@@ -49,9 +50,11 @@ beforeEach(() => {
 
 function renderCard(props: Partial<React.ComponentProps<typeof PbrCard>> = {}) {
   return render(
-    <I18nProvider>
-      <PbrCard rows={ROWS_OK} initialVitalZoneM={0.06} {...props} />
-    </I18nProvider>,
+    <AuthProvider>
+      <I18nProvider>
+        <PbrCard rows={ROWS_OK} initialVitalZoneM={0.06} {...props} />
+      </I18nProvider>
+    </AuthProvider>,
   );
 }
 
@@ -77,9 +80,11 @@ describe('PbrCard — Tranche P (UI)', () => {
 
   it('affiche l\'état "non déterminable" quand la trajectoire ne rentre jamais', () => {
     render(
-      <I18nProvider>
-        <PbrCard rows={ROWS_NEVER_IN} initialVitalZoneM={0.06} />
-      </I18nProvider>,
+      <AuthProvider>
+        <I18nProvider>
+          <PbrCard rows={ROWS_NEVER_IN} initialVitalZoneM={0.06} />
+        </I18nProvider>
+      </AuthProvider>,
     );
     expect(screen.getByTestId('pbr-never-entered')).toBeInTheDocument();
     expect(screen.queryByTestId('pbr-range')).toBeNull();
@@ -87,18 +92,22 @@ describe('PbrCard — Tranche P (UI)', () => {
 
   it('affiche le suffixe "borné par la plage calculée" quand applicable', () => {
     render(
-      <I18nProvider>
-        <PbrCard rows={ROWS_LIMITED} initialVitalZoneM={0.08} />
-      </I18nProvider>,
+      <AuthProvider>
+        <I18nProvider>
+          <PbrCard rows={ROWS_LIMITED} initialVitalZoneM={0.08} />
+        </I18nProvider>
+      </AuthProvider>,
     );
     expect(screen.getByTestId('pbr-end-suffix')).toBeInTheDocument();
   });
 
   it("affiche l'état indisponible avec moins de 2 lignes", () => {
     render(
-      <I18nProvider>
-        <PbrCard rows={[mkRow(0, -50)]} initialVitalZoneM={0.05} />
-      </I18nProvider>,
+      <AuthProvider>
+        <I18nProvider>
+          <PbrCard rows={[mkRow(0, -50)]} initialVitalZoneM={0.05} />
+        </I18nProvider>
+      </AuthProvider>,
     );
     expect(screen.getByTestId('pbr-empty')).toBeInTheDocument();
   });
@@ -116,15 +125,17 @@ describe('PbrCard — Tranche P (UI)', () => {
   it('appelle onVitalZoneChange en mètres quand l\'utilisateur édite', () => {
     let captured: number | null = null;
     render(
-      <I18nProvider>
-        <PbrCard
-          rows={ROWS_OK}
-          initialVitalZoneM={0.05}
-          onVitalZoneChange={m => {
-            captured = m;
-          }}
-        />
-      </I18nProvider>,
+      <AuthProvider>
+        <I18nProvider>
+          <PbrCard
+            rows={ROWS_OK}
+            initialVitalZoneM={0.05}
+            onVitalZoneChange={m => {
+              captured = m;
+            }}
+          />
+        </I18nProvider>
+      </AuthProvider>,
     );
     fireEvent.change(screen.getByTestId('pbr-vital-input'), {
       target: { value: '8' },
@@ -168,9 +179,11 @@ describe('PbrCard — Tranche P (UI)', () => {
     // Pré-seed du storage avec 0.09 m.
     localStorage.setItem('pbr-vital-zone-m-v1', JSON.stringify(0.09));
     render(
-      <I18nProvider>
-        <PbrCard rows={ROWS_OK} />
-      </I18nProvider>,
+      <AuthProvider>
+        <I18nProvider>
+          <PbrCard rows={ROWS_OK} />
+        </I18nProvider>
+      </AuthProvider>,
     );
     const input = screen.getByTestId('pbr-vital-input') as HTMLInputElement;
     // L'input doit refléter 0.09 m dans l'unité d'affichage (cm par défaut → 9).
@@ -180,14 +193,18 @@ describe('PbrCard — Tranche P (UI)', () => {
   it('Tranche Q — deux instances montées simultanément voient la même valeur', () => {
     localStorage.setItem('pbr-vital-zone-m-v1', JSON.stringify(0.07));
     const { container: c1 } = render(
-      <I18nProvider>
-        <PbrCard rows={ROWS_OK} />
-      </I18nProvider>,
+      <AuthProvider>
+        <I18nProvider>
+          <PbrCard rows={ROWS_OK} />
+        </I18nProvider>
+      </AuthProvider>,
     );
     const { container: c2 } = render(
-      <I18nProvider>
-        <PbrCard rows={ROWS_OK} />
-      </I18nProvider>,
+      <AuthProvider>
+        <I18nProvider>
+          <PbrCard rows={ROWS_OK} />
+        </I18nProvider>
+      </AuthProvider>,
     );
     const v1 = (c1.querySelector('[data-testid="pbr-vital-input"]') as HTMLInputElement).value;
     const v2 = (c2.querySelector('[data-testid="pbr-vital-input"]') as HTMLInputElement).value;

@@ -726,6 +726,20 @@ export default function QuickCalc() {
         </div>
       )}
 
+      {advanced && (
+        <G1SourcePicker
+          value={form.g1Source}
+          onChange={next => update({ g1Source: next })}
+          disabledReason={
+            form.dragModel !== 'G1'
+              ? t('g1Source.disabledNonG1')
+              : form.customDragTable && form.customDragTable.length > 0
+                ? t('g1Source.disabledCustomTable')
+                : null
+          }
+        />
+      )}
+
       <div className="sticky bottom-0 z-10 -mx-4 px-4 py-3 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/70 border-t border-border md:static md:mx-0 md:px-0 md:py-0 md:bg-transparent md:border-0">
         <div className="flex flex-col sm:flex-row gap-2">
           <button

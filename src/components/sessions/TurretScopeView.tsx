@@ -151,12 +151,12 @@ export function TurretScopeView({ session, optic, reticle }: Props) {
               click_units: optic.clickUnit,
               click_vertical: optic.clickValue,
               illuminated: false,
-              true_magnification: optic.trueMagnification ?? null,
-              name: `${optic.brand} ${optic.model}`,
+              true_magnification: optic.magCalibration ?? null,
+              name: optic.name,
             }}
             size={280}
             darkMode
-            currentMagnification={optic.trueMagnification ?? undefined}
+            currentMagnification={optic.magCalibration ?? undefined}
             turretElevationMoa={elevationMoa}
             turretWindageMoa={windageMoa}
             showPoiAt={{

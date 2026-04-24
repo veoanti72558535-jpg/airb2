@@ -36,6 +36,7 @@ import {
   getSettings,
   opticStore,
   projectileStore,
+  reticleStore,
   sessionStore,
 } from '@/lib/storage';
 import { normalizeSession } from '@/lib/session-normalize';
@@ -74,6 +75,7 @@ import { AdvancedTrajectoryChart } from '@/components/calc/AdvancedTrajectoryCha
 import { PbrCard } from '@/components/calc/PbrCard';
 import { ZeroIntersectionsCard } from '@/components/calc/ZeroIntersectionsCard';
 import { ReticleAssistPanel } from '@/components/calc/ReticleAssistPanel';
+import { TurretScopeView } from '@/components/sessions/TurretScopeView';
 
 /**
  * Détail SESSION — route dédiée /sessions/:id.

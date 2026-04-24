@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Bluetooth, Loader2, AlertTriangle, Wifi, WifiOff, X, Info, MousePointerClick } from 'lucide-react';
+import { Bluetooth, Loader2, AlertTriangle, Wifi, WifiOff, X, Info } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import {
   isWebBluetoothSupported,
@@ -139,10 +139,20 @@ export default function ChronoConnectButton({ onVelocity, onStateChange, bleConf
 
   if (state === 'scanning') {
     return (
-      <Button disabled>
-        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-        {t('chrono.scanning')}
-      </Button>
+      <div className="flex flex-col gap-2">
+        <Button disabled>
+          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          {t('chrono.scanning')}
+        </Button>
+        {!savedName && (
+          <div className="rounded-md border border-primary/30 bg-primary/5 p-2.5 text-xs flex items-start gap-2">
+            <Info className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
+            <span className="text-foreground">
+              {t('chrono.firstConnect.scanningHint')}
+            </span>
+          </div>
+        )}
+      </div>
     );
   }
 

@@ -102,8 +102,8 @@ export function SessionPrintView({ session }: { session: Session }) {
       <header>
         <h1>{session.name}</h1>
         <p className="meta-line">
-          {t('sessionDetail.exportPdf')} · {new Date().toLocaleString(locale)} ·{' '}
-          {t('sessions.calculated')}: {calcAt}
+          {t('sessionDetail.exportPdf')} · {new Date().toLocaleString(locale)} · calc:{' '}
+          {calcAt}
         </p>
         {session.tags.length > 0 && (
           <p className="meta-line">{t('sessions.tags')}: {session.tags.join(', ')}</p>
@@ -139,25 +139,25 @@ export function SessionPrintView({ session }: { session: Session }) {
 
       {/* Météo */}
       <section>
-        <h2>{t('calc.weather')}</h2>
+        <h2>Weather / Météo</h2>
         <table className="kpi-table">
           <tbody>
             <tr>
-              <th>{t('weather.temperature')}</th>
+              <th>Temp</th>
               <td>{fmt(w.temperature, 1)} °C</td>
-              <th>{t('weather.pressure')}</th>
+              <th>Pressure</th>
               <td>{fmt(w.pressure, 0)} hPa</td>
             </tr>
             <tr>
-              <th>{t('weather.humidity')}</th>
+              <th>Humidity</th>
               <td>{fmt(w.humidity, 0)} %</td>
-              <th>{t('weather.altitude')}</th>
+              <th>Altitude</th>
               <td>{fmt(w.altitude, 0)} m</td>
             </tr>
             <tr>
-              <th>{t('weather.windSpeed')}</th>
+              <th>Wind speed</th>
               <td>{fmt(w.windSpeed, 1)} m/s</td>
-              <th>{t('weather.windAngle')}</th>
+              <th>Wind angle</th>
               <td>{fmt(w.windAngle, 0)}°</td>
             </tr>
           </tbody>
@@ -179,14 +179,14 @@ export function SessionPrintView({ session }: { session: Session }) {
           <table className="ballistic-table">
             <thead>
               <tr>
-                <th>{t('table.range')}</th>
-                <th>{t('table.drop')}</th>
-                <th>{t('table.velocity' as never)}</th>
-                <th>{t('table.energy' as never)}</th>
+                <th>Range</th>
+                <th>Drop</th>
+                <th>Velocity</th>
+                <th>Energy</th>
                 <th>MRAD</th>
                 <th>MOA</th>
-                <th>{t('table.windDrift' as never)}</th>
-                <th>{t('table.tof' as never)}</th>
+                <th>Wind</th>
+                <th>TOF</th>
               </tr>
             </thead>
             <tbody>
@@ -245,7 +245,7 @@ export function SessionPrintView({ session }: { session: Session }) {
             <tr>
               <th>Max range</th>
               <td>{lastRow?.range ?? '—'} m</td>
-              <th>{t('sessions.created')}</th>
+              <th>Created</th>
               <td>{new Date(session.createdAt).toLocaleString(locale)}</td>
             </tr>
           </tbody>

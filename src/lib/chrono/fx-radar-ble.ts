@@ -79,9 +79,13 @@ export function isWebBluetoothSupported(): boolean {
 
 export async function connectFxRadar(): Promise<BluetoothDevice> {
   const device = await navigator.bluetooth.requestDevice({
-    filters: [{ namePrefix: 'FX' }],
-    optionalServices: [CANDIDATE_SERVICE],
-    // acceptAllDevices + optionalServices is the fallback if filters fail
+    acceptAllDevices: true,
+    optionalServices: [
+      CANDIDATE_SERVICE,
+      '00001523-1212-efde-1523-785feabcd123',
+      'battery_service',
+      'generic_access',
+    ],
   });
   return device;
 }

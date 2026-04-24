@@ -86,6 +86,7 @@ function airgunToRow(a: Airgun, userId: string): Record<string, unknown> {
     default_sight_height: a.defaultSightHeight ?? null,
     default_zero_range: a.defaultZeroRange ?? null,
     notes: a.notes ?? null,
+    favorite: a.favorite ?? false,
     created_at: a.createdAt,
     updated_at: a.updatedAt,
   };
@@ -125,6 +126,7 @@ function projectileToRow(p: Projectile, userId: string): Record<string, unknown>
     data_source: p.dataSource ?? null,
     custom_drag_table: p.customDragTable ? JSON.stringify(p.customDragTable) : null,
     imported_from: p.importedFrom ?? null,
+    favorite: p.favorite ?? false,
     created_at: p.createdAt,
     updated_at: p.updatedAt,
   };
@@ -145,6 +147,7 @@ function opticToRow(o: Optic, userId: string): Record<string, unknown> {
     notes: o.notes ?? null,
     imported_from: o.importedFrom ?? null,
     reticle_id: o.reticleId ?? null,
+    favorite: o.favorite ?? false,
     created_at: o.createdAt,
     updated_at: o.updatedAt,
   };
@@ -219,6 +222,7 @@ function rowToAirgun(r: Record<string, any>): Airgun {
     defaultSightHeight: r.default_sight_height ?? undefined,
     defaultZeroRange: r.default_zero_range ?? undefined,
     notes: r.notes ?? undefined,
+    favorite: r.favorite ?? undefined,
     createdAt: r.created_at, updatedAt: r.updated_at,
   };
 }
@@ -244,6 +248,7 @@ function rowToProjectile(r: Record<string, any>): Projectile {
     dataSource: r.data_source ?? undefined,
     customDragTable: r.custom_drag_table ? JSON.parse(r.custom_drag_table) : undefined,
     importedFrom: r.imported_from ?? undefined,
+    favorite: r.favorite ?? undefined,
     createdAt: r.created_at, updatedAt: r.updated_at,
   };
 }
@@ -257,6 +262,7 @@ function rowToOptic(r: Record<string, any>): Optic {
     magCalibration: r.mag_calibration ?? undefined,
     notes: r.notes ?? undefined, importedFrom: r.imported_from ?? undefined,
     reticleId: r.reticle_id ?? undefined,
+    favorite: r.favorite ?? undefined,
     createdAt: r.created_at, updatedAt: r.updated_at,
   };
 }

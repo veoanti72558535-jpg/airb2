@@ -45,6 +45,21 @@ export default function ChronoBleDiagnostic() {
   const [successCount, setSuccessCount] = useState(0);
   const [failCount, setFailCount] = useState(0);
   const [lastState, setLastState] = useState<LastGattState>({ kind: 'idle' });
+  const [savedId, setSavedId] = useState<string | null>(
+    () => getSavedFxRadarDevice()?.id ?? null,
+  );
+  const [savedName, setSavedName] = useState<string | null>(
+    () => getSavedFxRadarDevice()?.name ?? null,
+  );
+  /** Devices for which the user explicitly chose to bypass the FX guardrail. */
+  const [forcePending, setForcePending] = useState<string | null>(null);
+
+  /** Memoized validation per device — keyed by id. */
+  const validations = useMemo(() => {
+    const map = new Map<string, FxRadarValidation>();
+    for (const d of devices) map.set(d.id, validateFxRadarCandidate(d));
+    return map;
+  }, [devices]);
 
   const handleScan = useCallback(async () => {
     setError('');

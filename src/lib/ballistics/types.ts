@@ -29,7 +29,7 @@ export type EngineVersion = typeof ENGINE_VERSION;
 export type ProfileId = 'legacy' | 'mero' | 'chairgun' | 'strelok' | 'hybrid';
 
 /** Numerical integrator used by the flight loop. */
-export type Integrator = 'euler' | 'trapezoidal';
+export type Integrator = 'euler' | 'trapezoidal' | 'heun';
 
 /** Atmospheric density model. */
 export type AtmosphereModel = 'icao-simple' | 'tetens-full';

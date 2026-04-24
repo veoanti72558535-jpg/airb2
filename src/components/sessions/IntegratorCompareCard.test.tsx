@@ -37,6 +37,8 @@ function mkSession(): Session {
     name: 'Test',
     createdAt: '2026-01-01',
     updatedAt: '2026-01-01',
+    tags: [],
+    favorite: false,
     input: {
       muzzleVelocity: 280, bc: 0.025, projectileWeight: 18,
       sightHeight: 47, zeroRange: 30, maxRange: 100, rangeStep: 10,

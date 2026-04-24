@@ -1705,6 +1705,11 @@ const fr = {
   'chrono.diag.servicesCount': '{n} service(s)',
   'chrono.diag.scannedAt': 'Scanné',
   'chrono.diag.rssiNote': 'Le RSSI n\'est pas exposé par l\'API Web Bluetooth ; il n\'y a pas non plus de scan passif — chaque device doit être choisi manuellement dans le sélecteur natif.',
+  'chrono.diag.stats.success': 'Réussis',
+  'chrono.diag.stats.fail': 'Échoués',
+  'chrono.diag.stats.lastState': 'Dernier état',
+  'chrono.diag.stats.idle': 'Aucun scan',
+  'chrono.diag.stats.error': 'Erreur',
   // Library favorites — Tranche favoris bibliothèque
   'favorites.add': 'Ajouter aux favoris',
   'favorites.remove': 'Retirer des favoris',

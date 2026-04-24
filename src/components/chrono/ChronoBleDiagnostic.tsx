@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { ChevronDown, ChevronRight, Bluetooth, AlertTriangle, Battery, RefreshCw, Trash2, HelpCircle, Sparkles } from 'lucide-react';
+import { ChevronDown, ChevronRight, Bluetooth, AlertTriangle, Battery, RefreshCw, Trash2, HelpCircle, Sparkles, RotateCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -146,6 +146,7 @@ export default function ChronoBleDiagnostic() {
           {t('chrono.diag.empty')}
         </p>
       ) : (
+        <>
         <ul className="space-y-2" data-testid="chrono-ble-device-list">
           {devices.map((d) => {
             const isOpen = expanded.has(d.id);
@@ -335,6 +336,21 @@ export default function ChronoBleDiagnostic() {
             );
           })}
         </ul>
+        <div className="pt-1 flex justify-center">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={handleScan}
+            disabled={scanning}
+            data-testid="chrono-ble-retry-btn"
+            className="gap-1.5"
+          >
+            <RotateCw className={`h-3.5 w-3.5 ${scanning ? 'animate-spin' : ''}`} />
+            {scanning ? t('chrono.diag.scanning') : t('chrono.diag.retry')}
+          </Button>
+        </div>
+        </>
       )}
     </section>
   );

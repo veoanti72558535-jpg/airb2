@@ -1596,6 +1596,7 @@ const fr = {
   'chrono.diag.fxGuess.signal.svc-device-info': 'Service Device Information',
   'chrono.diag.fxGuess.signal.svc-battery': 'Service Battery',
   'chrono.diag.fxGuess.signal.no-services': 'Aucun service GATT exposé',
+  'chrono.diag.retry': 'Réessayer le diagnostic',
   // GATT pipeline stage timeline
   'chrono.gatt.title': 'Statut connexion GATT',
   'chrono.gatt.status.inProgress': 'En cours',
@@ -3344,6 +3345,7 @@ const en: Record<keyof typeof fr, string> = {
   'chrono.diag.fxGuess.signal.svc-device-info': 'Device Information service',
   'chrono.diag.fxGuess.signal.svc-battery': 'Battery service',
   'chrono.diag.fxGuess.signal.no-services': 'No GATT service exposed',
+  'chrono.diag.retry': 'Retry diagnostic',
   // GATT pipeline stage timeline
   'chrono.gatt.title': 'GATT connection status',
   'chrono.gatt.status.inProgress': 'In progress',

@@ -54,6 +54,26 @@ export function saveFxRadarDevice(device: BluetoothDevice): void {
   }
 }
 
+/**
+ * Persist a device id/name pair directly (e.g. from a diagnostic snapshot
+ * where we have the metadata but not a live `BluetoothDevice` instance).
+ * The stored id is the canonical Web Bluetooth device id and is reused by
+ * `tryReconnectSavedFxRadar()` for silent reconnects.
+ */
+export function saveFxRadarDeviceById(id: string, name?: string | null): void {
+  if (!id) return;
+  try {
+    localStorage.setItem(SAVED_DEVICE_KEY, id);
+    if (name) {
+      localStorage.setItem(SAVED_DEVICE_NAME_KEY, name);
+    } else {
+      localStorage.removeItem(SAVED_DEVICE_NAME_KEY);
+    }
+  } catch {
+    // ignore (private mode, quota)
+  }
+}
+
 /** Forget the saved FX Radar device (next connect will show the picker again). */
 export function forgetSavedFxRadarDevice(): void {
   try {

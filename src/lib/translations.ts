@@ -2502,6 +2502,17 @@ const en: Record<keyof typeof fr, string> = {
   'compare.tableA': 'Table A',
   'compare.tableB': 'Table B',
 
+  // Compare — inline full multi-distance view with delta chart
+  'compare.fullDelta.toggleShow': 'Show full comparison',
+  'compare.fullDelta.toggleHide': 'Hide full comparison',
+  'compare.fullDelta.range': 'Range',
+  'compare.fullDelta.points': 'points',
+  'compare.fullDelta.maxDropDelta': 'Max Δ drop',
+  'compare.fullDelta.maxVelDelta': 'Max Δ V',
+  'compare.fullDelta.chartTitle': 'Delta curve (B − A) by distance',
+  'compare.fullDelta.footnote': 'Aligned on the finer-step session grid. Empty cells mean the distance is missing on one side.',
+  'compare.noOverlap': 'No common distances between both sessions.',
+
   // Compare — Tranche S: comparative zero / near / far / PBR readout
   'compare.pbrZeroTitle': 'Zero & PBR',
   'compare.zeroRange': 'Zero',

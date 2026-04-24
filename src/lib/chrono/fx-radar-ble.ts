@@ -103,6 +103,33 @@ export interface BleParseConfig {
   divisor: number;
 }
 
+/**
+ * Stages of the GATT connection / streaming pipeline. Used by the UI to
+ * surface exactly where a connection failed.
+ */
+export type GattStage =
+  | 'request-device'        // navigator.bluetooth.requestDevice()
+  | 'connect-gatt'          // gatt.connect()
+  | 'discover-services'     // getPrimaryServices() / getPrimaryService()
+  | 'find-characteristic'   // getCharacteristic() — try candidate or scan
+  | 'start-notifications'   // characteristic.startNotifications()
+  | 'streaming'             // notifications active, awaiting velocity events
+  | 'disconnected'          // gatt.disconnect() or remote drop
+  | 'error';                // any stage threw
+
+export type GattStageStatus = 'pending' | 'in-progress' | 'ok' | 'error';
+
+export interface GattStageEvent {
+  stage: GattStage;
+  status: GattStageStatus;
+  /** Free-form human-readable detail (UUID picked, error message, etc.). */
+  detail?: string;
+  /** ISO timestamp when this transition happened. */
+  at: string;
+}
+
+export type GattStageListener = (event: GattStageEvent) => void;
+
 export const DEFAULT_BLE_PARSE_CONFIG: BleParseConfig = {
   format: 'auto',
   endian: 'little',
@@ -322,21 +349,47 @@ export async function startVelocityStream(
   onVelocity: (velocityMs: number) => void,
   onError: (error: Error) => void,
   config: BleParseConfig = DEFAULT_BLE_PARSE_CONFIG,
+  onStage?: GattStageListener,
 ): Promise<() => void> {
+  const emit = (
+    stage: GattStage,
+    status: GattStageStatus,
+    detail?: string,
+  ) => {
+    onStage?.({
+      stage,
+      status,
+      detail,
+      at: new Date().toISOString(),
+    });
+  };
   try {
     const gatt = device.gatt!;
-    if (!gatt.connected) await gatt.connect();
+    if (!gatt.connected) {
+      emit('connect-gatt', 'in-progress');
+      await gatt.connect();
+      emit('connect-gatt', 'ok');
+    } else {
+      emit('connect-gatt', 'ok', 'already-connected');
+    }
 
     let characteristic: BluetoothRemoteGATTCharacteristic | null = null;
 
     // Try candidate UUID first
+    emit('discover-services', 'in-progress');
     try {
       const service = await gatt.getPrimaryService(CANDIDATE_SERVICE);
+      emit('discover-services', 'ok', `candidate ${CANDIDATE_SERVICE}`);
+      emit('find-characteristic', 'in-progress');
       characteristic = await service.getCharacteristic(CANDIDATE_CHAR);
+      emit('find-characteristic', 'ok', `candidate ${CANDIDATE_CHAR}`);
       console.info('[FX Radar] Using candidate characteristic', CANDIDATE_CHAR);
     } catch {
       console.warn('[FX Radar] Candidate UUID not found, running discovery...');
+      emit('discover-services', 'in-progress', 'fallback: full discovery');
       const logs = await discoverServices(device);
+      emit('discover-services', 'ok', `${logs.length} services found`);
+      emit('find-characteristic', 'in-progress', 'scanning for notifiable');
       // Try to find any notifiable characteristic
       for (const log of logs) {
         const svc = await gatt.getPrimaryService(log.service);
@@ -344,6 +397,8 @@ export async function startVelocityStream(
           const c = await svc.getCharacteristic(charUuid);
           if (c.properties.notify) {
             characteristic = c;
+            emit('find-characteristic', 'ok',
+              `discovered ${charUuid} on ${log.service}`);
             console.info('[FX Radar] Using discovered characteristic', charUuid,
               'from service', log.service);
             break;
@@ -354,6 +409,7 @@ export async function startVelocityStream(
     }
 
     if (!characteristic) {
+      emit('find-characteristic', 'error', 'no notifiable characteristic');
       throw new Error('No notifiable characteristic found on FX Radar');
     }
 
@@ -370,10 +426,14 @@ export async function startVelocityStream(
     };
 
     characteristic.addEventListener('characteristicvaluechanged', handler);
+    emit('start-notifications', 'in-progress');
     await characteristic.startNotifications();
+    emit('start-notifications', 'ok');
+    emit('streaming', 'ok');
 
     // Disconnection listener
     const onDisconnect = () => {
+      emit('disconnected', 'error', 'remote disconnect');
       onError(new Error('FX Radar disconnected'));
     };
     device.addEventListener('gattserverdisconnected', onDisconnect);
@@ -384,8 +444,11 @@ export async function startVelocityStream(
       device.removeEventListener('gattserverdisconnected', onDisconnect);
       characteristic!.stopNotifications().catch(() => {});
       gatt.disconnect();
+      emit('disconnected', 'ok', 'user disconnect');
     };
   } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    emit('error', 'error', msg);
     onError(err instanceof Error ? err : new Error(String(err)));
     return () => {};
   }

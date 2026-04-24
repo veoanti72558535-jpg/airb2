@@ -144,7 +144,7 @@ export default function ChronoBleDiagnostic() {
           data-testid="chrono-ble-stat-success"
         >
           <CheckCircle2 className="h-3 w-3" />
-          {t('chrono.diag.stats.success' as any) || 'Réussis'}: {successCount}
+          {t('chrono.diag.stats.success')}: {successCount}
         </Badge>
         <Badge
           variant="outline"
@@ -152,7 +152,7 @@ export default function ChronoBleDiagnostic() {
           data-testid="chrono-ble-stat-fail"
         >
           <XCircle className="h-3 w-3" />
-          {t('chrono.diag.stats.fail' as any) || 'Échoués'}: {failCount}
+          {t('chrono.diag.stats.fail')}: {failCount}
         </Badge>
         <Badge
           variant="secondary"
@@ -160,10 +160,10 @@ export default function ChronoBleDiagnostic() {
           data-testid="chrono-ble-stat-last"
         >
           <Activity className="h-3 w-3" />
-          {(t('chrono.diag.stats.lastState' as any) || 'Dernier état')}:{' '}
+          {t('chrono.diag.stats.lastState')}:{' '}
           {lastState.kind === 'idle' && (
             <span className="text-muted-foreground italic">
-              {t('chrono.diag.stats.idle' as any) || '—'}
+              {t('chrono.diag.stats.idle')}
             </span>
           )}
           {lastState.kind === 'connected' && (
@@ -178,7 +178,7 @@ export default function ChronoBleDiagnostic() {
           )}
           {lastState.kind === 'error' && (
             <span className="text-destructive truncate max-w-[180px]">
-              {t('chrono.diag.stats.error' as any) || 'Erreur'} ·{' '}
+              {t('chrono.diag.stats.error')} ·{' '}
               {lastState.message}
             </span>
           )}

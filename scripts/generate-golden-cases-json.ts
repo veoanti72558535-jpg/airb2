@@ -232,35 +232,37 @@ function buildEngineRows(spec: CaseSpec) {
 function buildPivotCase(spec: CaseSpec) {
   const w = spec.weather;
   const rows = buildEngineRows(spec);
+  const inputs: Record<string, unknown> = {
+    projectileName: spec.projectile.name,
+    projectileType: spec.projectile.type,
+    caliber: spec.projectile.caliber,
+    diameterMm: spec.projectile.diameterMm,
+    weightGrains: spec.projectile.weightGrains,
+    bc: spec.projectile.bc,
+    bcModel: spec.projectile.bcModel,
+    muzzleVelocity: spec.muzzleVelocity,
+    sightHeight: spec.optic.sightHeight,
+    zeroDistance: spec.optic.zeroDistance,
+    temperatureC: w.temperature,
+    pressureHpaAbsolute: w.pressure,
+    humidityPercent: w.humidity,
+    altitudeM: w.altitude,
+    windSpeed: w.windSpeed,
+    windDirection: w.windAngle,
+    windConvention: '0deg=12h-headwind',
+    rangeStart: spec.range.rangeStart,
+    rangeMax: spec.range.rangeMax,
+    rangeStep: spec.range.rangeStep,
+    sourceUnitsNote: 'm, mm, m/s, hPa absolu',
+  };
+  if (spec.comment) inputs.comment = spec.comment;
+
   return {
     caseId: spec.caseId,
     title: spec.title,
     description: spec.description,
     tags: spec.tags,
-    inputs: {
-      projectileName: spec.projectile.name,
-      projectileType: spec.projectile.type,
-      caliber: spec.projectile.caliber,
-      diameterMm: spec.projectile.diameterMm,
-      weightGrains: spec.projectile.weightGrains,
-      bc: spec.projectile.bc,
-      bcModel: spec.projectile.bcModel,
-      muzzleVelocity: spec.muzzleVelocity,
-      sightHeight: spec.optic.sightHeight,
-      zeroDistance: spec.optic.zeroDistance,
-      temperatureC: w.temperature,
-      pressureHpaAbsolute: w.pressure,
-      humidityPercent: w.humidity,
-      altitudeM: w.altitude,
-      windSpeed: w.windSpeed,
-      windDirection: w.windAngle,
-      windConvention: '0deg=12h-headwind',
-      rangeStart: spec.range.rangeStart,
-      rangeMax: spec.range.rangeMax,
-      rangeStep: spec.range.rangeStep,
-      sourceUnitsNote: 'm, mm, m/s, hPa absolu',
-      comment: spec.comment ?? null,
-    },
+    inputs,
     references: [
       {
         meta: {
@@ -284,7 +286,6 @@ function buildPivotCase(spec: CaseSpec) {
         rows,
       },
     ],
-    notes: null as string | null,
     schemaVersion: 1 as const,
   };
 }

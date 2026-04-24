@@ -1,13 +1,17 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Bluetooth, BluetoothOff, Loader2, AlertTriangle, Wifi, WifiOff } from 'lucide-react';
+import { Bluetooth, BluetoothOff, Loader2, AlertTriangle, Wifi, WifiOff, X } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import {
   isWebBluetoothSupported,
   connectFxRadar,
   startVelocityStream,
   disconnect,
+  saveFxRadarDevice,
+  forgetSavedFxRadarDevice,
+  getSavedFxRadarDevice,
+  tryReconnectSavedFxRadar,
 } from '@/lib/chrono/fx-radar-ble';
 import type { BleParseConfig } from '@/lib/chrono/fx-radar-ble';
 import { DEFAULT_BLE_PARSE_CONFIG } from '@/lib/chrono/fx-radar-ble';
@@ -28,29 +32,39 @@ export default function ChronoConnectButton({ onVelocity, onStateChange, bleConf
   const [error, setError] = useState<string>('');
   const [device, setDevice] = useState<BluetoothDevice | null>(null);
   const [stopFn, setStopFn] = useState<(() => void) | null>(null);
+  const [savedName, setSavedName] = useState<string | null>(
+    () => getSavedFxRadarDevice()?.name ?? null,
+  );
+  const autoTriedRef = useRef(false);
 
   const updateState = useCallback((s: BleState) => {
     setState(s);
     onStateChange?.(s);
   }, [onStateChange]);
 
+  const startStream = useCallback(async (dev: BluetoothDevice) => {
+    setDevice(dev);
+    saveFxRadarDevice(dev);
+    setSavedName(dev.name ?? null);
+    const stop = await startVelocityStream(
+      dev,
+      (v) => onVelocity(v),
+      (err) => {
+        setError(err.message);
+        updateState('error');
+      },
+      bleConfig ?? DEFAULT_BLE_PARSE_CONFIG,
+    );
+    setStopFn(() => stop);
+    updateState('connected');
+  }, [bleConfig, onVelocity, updateState]);
+
   const handleConnect = useCallback(async () => {
     updateState('scanning');
     setError('');
     try {
       const dev = await connectFxRadar();
-      setDevice(dev);
-      const stop = await startVelocityStream(
-        dev,
-        (v) => onVelocity(v),
-        (err) => {
-          setError(err.message);
-          updateState('error');
-        },
-        bleConfig ?? DEFAULT_BLE_PARSE_CONFIG,
-      );
-      setStopFn(() => stop);
-      updateState('connected');
+      await startStream(dev);
     } catch (err: any) {
       if (err?.name === 'NotFoundError') {
         // User cancelled the picker
@@ -60,7 +74,31 @@ export default function ChronoConnectButton({ onVelocity, onStateChange, bleConf
       setError(err?.message ?? String(err));
       updateState('error');
     }
-  }, [onVelocity, updateState]);
+  }, [startStream, updateState]);
+
+  // On mount: attempt silent reconnect to the saved device, if any.
+  useEffect(() => {
+    if (autoTriedRef.current) return;
+    autoTriedRef.current = true;
+    if (!isWebBluetoothSupported()) return;
+    if (!getSavedFxRadarDevice()) return;
+    let cancelled = false;
+    (async () => {
+      updateState('scanning');
+      try {
+        const dev = await tryReconnectSavedFxRadar();
+        if (cancelled) return;
+        if (dev) {
+          await startStream(dev);
+        } else {
+          updateState('disconnected');
+        }
+      } catch {
+        if (!cancelled) updateState('disconnected');
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [startStream, updateState]);
 
   const handleDisconnect = useCallback(async () => {
     stopFn?.();
@@ -69,6 +107,11 @@ export default function ChronoConnectButton({ onVelocity, onStateChange, bleConf
     setStopFn(null);
     updateState('disconnected');
   }, [device, stopFn, updateState]);
+
+  const handleForget = useCallback(() => {
+    forgetSavedFxRadarDevice();
+    setSavedName(null);
+  }, []);
 
   if (state === 'unsupported') {
     return (
@@ -84,7 +127,7 @@ export default function ChronoConnectButton({ onVelocity, onStateChange, bleConf
       <div className="flex items-center gap-3">
         <Badge variant="default" className="bg-primary text-primary-foreground gap-1.5">
           <Wifi className="h-3 w-3" />
-          {t('chrono.connected')}
+          {device?.name ?? savedName ?? t('chrono.connected')}
         </Badge>
         <Button variant="outline" size="sm" onClick={handleDisconnect}>
           <WifiOff className="h-4 w-4 mr-1" />
@@ -105,10 +148,26 @@ export default function ChronoConnectButton({ onVelocity, onStateChange, bleConf
 
   return (
     <div className="flex flex-col gap-2">
-      <Button onClick={handleConnect}>
-        <Bluetooth className="h-4 w-4 mr-2" />
-        {t('chrono.connect')}
-      </Button>
+      <div className="flex items-center gap-2">
+        <Button onClick={handleConnect}>
+          <Bluetooth className="h-4 w-4 mr-2" />
+          {savedName ? t('chrono.reconnectSaved') : t('chrono.connect')}
+        </Button>
+        {savedName && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleForget}
+            title={t('chrono.forgetDevice')}
+            aria-label={t('chrono.forgetDevice')}
+          >
+            <X className="h-3 w-3 mr-1" />
+            <span className="text-xs text-muted-foreground truncate max-w-[140px]">
+              {savedName}
+            </span>
+          </Button>
+        )}
+      </div>
       {state === 'error' && (
         <div className="flex items-center gap-2 p-2 rounded bg-destructive/10 text-destructive text-xs">
           <AlertTriangle className="h-3 w-3 shrink-0" />

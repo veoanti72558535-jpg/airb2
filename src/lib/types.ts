@@ -385,7 +385,7 @@ export type CdProvenance = 'legacy-piecewise' | 'derived-p2' | 'mero-official';
  * Session at save time and never recomputed — this is the audit trail.
  */
 export interface SessionEngineMetadata {
-  integrator: 'euler' | 'trapezoidal';
+  integrator: 'euler' | 'trapezoidal' | 'heun';
   atmosphereModel: 'icao-simple' | 'tetens-full';
   /** Integration time-step in seconds. */
   dt: number;

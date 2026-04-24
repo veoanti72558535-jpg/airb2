@@ -455,6 +455,45 @@ const ReticleViewer = React.memo(function ReticleViewer({
   const badgeColor = darkMode ? '#00FF00' : '#1a1a1a';
   const cgBadgeFontSize = Math.max(7, size * 0.025);
 
+  // ── POI overlay (ChairGun scope view) ──────────────────────────────
+  // dropMm/driftMm → MOA → pixels. Mode B : viewport ±10 MIL ; Mode A :
+  // viewport ±viewportRange unités (assumées MIL côté caller).
+  const poiNode = (() => {
+    if (!showPoiAt) return null;
+    const { distanceM, dropMm, driftMm } = showPoiAt;
+    if (distanceM <= 0) return null;
+    const pxPerMil = useChairgun ? size / (2 * viewportRange) : size / 20;
+    const pxPerMoa = pxPerMil / 3.4377;
+    const dropMoa = Math.atan(dropMm / 1000 / distanceM) * 3437.75;
+    const driftMoa = Math.atan(driftMm / 1000 / distanceM) * 3437.75;
+    const adjDropMoa = dropMoa - turretElevationMoa;
+    const adjDriftMoa = driftMoa - turretWindageMoa;
+    const sfpScale = (fp === 'SFP' && trueMag && currentMagnification && currentMagnification > 0)
+      ? trueMag / currentMagnification
+      : 1;
+    const cx = size / 2;
+    const cy = size / 2;
+    const poiX = cx + adjDriftMoa * pxPerMoa * sfpScale;
+    const poiY = cy - adjDropMoa * pxPerMoa * sfpScale;
+    const r = Math.max(3, size * 0.012);
+    const showLine = Math.hypot(poiX - cx, poiY - cy) > 2;
+    const fontSize = Math.max(8, size * 0.028);
+    return (
+      <g data-testid="reticle-poi" pointerEvents="none">
+        {showLine && (
+          <line x1={cx} y1={cy} x2={poiX} y2={poiY}
+            stroke="#ff4d4d" strokeWidth={1} strokeDasharray="3 3" opacity={0.7} />
+        )}
+        <circle cx={poiX} cy={poiY} r={r} fill="#ff4d4d" stroke="#fff" strokeWidth={1} />
+        <text x={poiX} y={poiY + r + fontSize}
+          fill="#ff4d4d" fontSize={fontSize}
+          textAnchor="middle" fontWeight="bold">
+          {Math.round(distanceM)}m
+        </text>
+      </g>
+    );
+  })();
+
   return (
     <svg
       width={size}
@@ -487,6 +526,7 @@ const ReticleViewer = React.memo(function ReticleViewer({
           </text>
         </>
       )}
+      {poiNode}
     </svg>
   );
 });

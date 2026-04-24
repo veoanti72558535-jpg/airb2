@@ -370,8 +370,16 @@ export default function SessionDetailPage() {
             </>
           )}
           <button
+            onClick={handleExportPdf}
+            title={t('sessionDetail.exportPdfHint')}
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-[11px] font-medium border border-border text-muted-foreground hover:text-foreground hover:bg-muted/40 ml-auto"
+          >
+            <FileDown className="h-3 w-3" />
+            {t('sessionDetail.exportPdf')}
+          </button>
+          <button
             onClick={handleDelete}
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-[11px] font-medium border border-destructive/30 text-destructive hover:bg-destructive/10 ml-auto"
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-[11px] font-medium border border-destructive/30 text-destructive hover:bg-destructive/10"
           >
             <Trash2 className="h-3 w-3" />
             {t('sessions.delete')}

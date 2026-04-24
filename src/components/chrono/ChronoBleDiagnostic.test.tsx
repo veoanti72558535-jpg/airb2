@@ -95,8 +95,8 @@ describe('ChronoBleDiagnostic', () => {
     fireEvent.click(btn);
     await waitFor(() => screen.getByText('Device A renamed'));
 
-    // dev-1 must not be duplicated.
-    expect(screen.getAllByTestId(/^chrono-ble-device-/)).toHaveLength(2);
+    // dev-1 must not be duplicated (`-list` wrapper excluded).
+    expect(screen.getAllByTestId(/^chrono-ble-device-dev-/)).toHaveLength(2);
     expect(stub).toHaveBeenCalledTimes(3);
   });
 

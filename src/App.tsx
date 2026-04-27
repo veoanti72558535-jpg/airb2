@@ -31,6 +31,7 @@ import CrossValidationPage from "@/pages/CrossValidationPage";
 import ChronoPage from "@/pages/ChronoPage";
 import TargetAnalysisPage from "@/pages/TargetAnalysisPage";
 import CompetitionPrepPage from "@/pages/CompetitionPrepPage";
+import ScopeViewPage from "@/pages/ScopeViewPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -83,6 +84,7 @@ const App = () => (
                 <Route path="/chrono" element={<ChronoPage />} />
                 <Route path="/target-analysis" element={<TargetAnalysisPage />} />
                 <Route path="/competition-prep" element={<CompetitionPrepPage />} />
+                <Route path="/scope-view" element={<ScopeViewPage />} />
                 {/* Legacy routes */}
                 <Route path="/airguns" element={<LibraryPage />} />
                 <Route path="/projectiles" element={<LibraryPage />} />

@@ -42,15 +42,17 @@ describe('profiles — P1 registry', () => {
   });
 
   it('resolveProfile falls back to legacy for unknown ids', () => {
-    expect(resolveProfile('chairgun' as any)).toBe(LEGACY_PROFILE);
-    expect(getProfile('chairgun' as any)).toBeUndefined();
+    expect(resolveProfile('nonexistent' as any)).toBe(LEGACY_PROFILE);
+    expect(getProfile('nonexistent' as any)).toBeUndefined();
   });
 
-  it('listProfiles returns at least legacy + mero in P2', () => {
+  it('listProfiles returns legacy + mero + chairgun + strelok in P3', () => {
     const all = listProfiles();
-    expect(all.length).toBeGreaterThanOrEqual(2);
+    expect(all.length).toBeGreaterThanOrEqual(4);
     expect(all.find((p) => p.id === 'legacy')).toBeDefined();
     expect(all.find((p) => p.id === 'mero')).toBeDefined();
+    expect(all.find((p) => p.id === 'chairgun')).toBeDefined();
+    expect(all.find((p) => p.id === 'strelok')).toBeDefined();
   });
 });
 

@@ -7,12 +7,13 @@
  * calibration tooling, tests) keep working byte-for-byte.
  *
  * P2 additions are exported alongside the P1 surface; nothing has been
- * removed.
+ * removed. P3 adds ChairGun/Strelok profiles, Coriolis, and the ChairGun
+ * drag table.
  */
 
 export { calcAtmosphericFactor } from './atmosphere';
 export { cdFor, cdFromTable } from './drag/standard-models';
-export { dragDecel, type CdResolver } from './drag/retardation';
+export { dragDecel, type CdResolver, type RetardationMode } from './drag/retardation';
 export { decomposeWind, type WindComponents } from './wind';
 export { findZeroAngle } from './zero-solver';
 export { calculateTrajectory } from './engine';
@@ -31,6 +32,8 @@ export {
 export {
   LEGACY_PROFILE,
   MERO_PROFILE,
+  CHAIRGUN_PROFILE,
+  STRELOK_PROFILE,
   DEFAULT_PROFILE_ID,
   getProfile,
   resolveProfile,
@@ -45,3 +48,15 @@ export {
   getMeroTableRaw,
   type Provenance,
 } from './drag/mero-tables';
+
+// ChairGun drag table (P3 — exported for cross-validation tooling).
+export {
+  cdFromChairgun,
+  chairgunRetardation,
+  CHAIRGUN_DRAG_TABLE,
+  CHAIRGUN_SOUND_MS,
+} from './drag/chairgun-drag-table';
+
+// Coriolis (P3).
+export { coriolisLateralMm, coriolisVerticalMm } from './coriolis';
+

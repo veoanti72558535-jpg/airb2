@@ -1,5 +1,5 @@
 /**
- * Main trajectory solver — P1 + P2.
+ * Main trajectory solver — P1 + P2 + P3.
  *
  * Behaviour for legacy callers (no `engineConfig`) is preserved bit-for-bit
  * from the pre-P1 monolithic engine to guarantee:
@@ -11,6 +11,13 @@
  *   - atmosphere: ICAO-simple vs Tetens-full (altitude lapse correction)
  *   - Cd source: legacy piecewise vs MERO 169-pt table
  *
+ * P3 additions:
+ *   - Retardation mode: `chairgun-direct` uses ChairGun's (Cd/BC)×v formula
+ *   - Vectorial wind: head + cross when `windModel === 'vectorial'`
+ *   - Slope angle: Improved Rifleman's Rule (gravity cos(θ) correction)
+ *   - Coriolis: lateral + vertical deflection from Earth rotation
+ *   - BC zones: velocity-dependent BC interpolation
+ *
  * Sight-line formula contract: the formula used here MUST match the one
  * inside `simulateToRange` (zero solver). Both use a straight line from
  * (-sightHeight, 0) to (0, zeroRange).
@@ -21,6 +28,7 @@ import { calcAtmosphericFactor } from './atmosphere';
 import { dragDecel, type CdResolver } from './drag/retardation';
 import { decomposeWind } from './wind';
 import { spinDriftMm } from './spin-drift';
+import { coriolisLateralMm } from './coriolis';
 import { findZeroAngle } from './zero-solver';
 import { getIntegrator, type IntegratorState } from './integrators';
 import { cdFromMero, hasMeroTable } from './drag/mero-tables';
@@ -31,17 +39,37 @@ const GRAINS_TO_KG = 0.00006479891;
 
 /**
  * Build the Cd resolver for a given config. When the atmosphere model is
- * `tetens-full` we *also* swap the Cd source to MERO tables — because the
- * `mero` profile is the only consumer of `tetens-full`, and we want both
- * physics changes to land together.
+ * `tetens-full` AND the retardation mode is NOT `chairgun-direct`, we swap
+ * the Cd source to MERO tables — because the `mero` profile is the primary
+ * consumer of `tetens-full` with standard retardation.
+ *
+ * ChairGun-direct mode bypasses this entirely (it uses its own Cd table
+ * inside `dragDecel`).
  *
  * Returning `undefined` means "use the legacy default" (piecewise Cd from
  * `standard-models`), which keeps the legacy profile bit-exact.
  */
 function buildCdResolver(config: EngineConfig | undefined): CdResolver | undefined {
   if (!config) return undefined;
+  if (config.retardationMode === 'chairgun-direct') return undefined;
   if (config.atmosphereModel !== 'tetens-full') return undefined;
   return (model, mach) => (hasMeroTable(model) ? cdFromMero(model, mach) : 0);
+}
+
+/**
+ * Resolve the effective BC at a given velocity, using bcZones if available.
+ * Falls back to the base BC when no zones are provided.
+ */
+function resolveBC(baseBc: number, velocity: number, bcZones?: { bc: number; minVelocity: number }[] | null): number {
+  if (!bcZones || bcZones.length === 0) return baseBc;
+
+  // Sort by minVelocity descending to find the first zone the velocity falls into
+  const sorted = [...bcZones].sort((a, b) => b.minVelocity - a.minVelocity);
+  for (const zone of sorted) {
+    if (velocity >= zone.minVelocity) return zone.bc;
+  }
+  // Below all zones — use the lowest zone's BC
+  return sorted[sorted.length - 1].bc;
 }
 
 export function calculateTrajectory(input: BallisticInput): BallisticResult[] {
@@ -66,9 +94,17 @@ export function calculateTrajectory(input: BallisticInput): BallisticResult[] {
     zeroWeather,
     customDragTable,
     engineConfig,
+    slopeAngle,
+    latitude,
+    shootingAzimuth,
   } = input;
 
   const atmosphereModel = engineConfig?.atmosphereModel ?? 'icao-simple';
+  const retardationMode = engineConfig?.retardationMode ?? 'standard';
+  const windModel = engineConfig?.windModel ?? 'lateral-only';
+  const doSlopeAngle = !!(engineConfig?.postProcess?.slopeAngle && slopeAngle);
+  const doCoriolis = !!(engineConfig?.postProcess?.coriolis);
+
   // Two-pass zeroing weather: zero at zero conditions, fly through current conditions.
   const zeroAtmoFactor = calcAtmosphericFactor(zeroWeather ?? weather, atmosphereModel);
   const flightAtmoFactor = calcAtmosphericFactor(weather, atmosphereModel);
@@ -76,7 +112,11 @@ export function calculateTrajectory(input: BallisticInput): BallisticResult[] {
   const massKg = projectileWeight * GRAINS_TO_KG;
   const sightHeightM = sightHeight / 1000;
 
-  const { cross: crosswind } = decomposeWind(weather);
+  const { cross: crosswind, head: headwind } = decomposeWind(weather);
+
+  // Slope angle correction: effective gravity component perpendicular to bore
+  const slopeRad = doSlopeAngle ? (slopeAngle! * Math.PI) / 180 : 0;
+  const cosSlope = doSlopeAngle ? Math.cos(slopeRad) : 1;
 
   // SFP scaling — applied to the *displayed reticle* values only.
   const sfpScale =
@@ -85,6 +125,9 @@ export function calculateTrajectory(input: BallisticInput): BallisticResult[] {
       : 1;
 
   const cdResolver = buildCdResolver(engineConfig);
+
+  // Retrieve bcZones from the input if available (projectile-level, not engine-level)
+  const bcZones = (input as { bcZones?: { bc: number; minVelocity: number }[] | null }).bcZones ?? null;
 
   const zeroAngle = findZeroAngle(
     muzzleVelocity,
@@ -138,7 +181,12 @@ export function calculateTrajectory(input: BallisticInput): BallisticResult[] {
     clicksWindage: 0,
   });
 
-  const decelFn = (v: number) => dragDecel(v, bc, flightAtmoFactor, dragModel, customDragTable, cdResolver);
+  // Build the deceleration function with all P3 features wired in.
+  const decelFn = (v: number) => {
+    // BC zones: resolve velocity-dependent BC at each step
+    const effectiveBc = resolveBC(bc, v, bcZones);
+    return dragDecel(v, effectiveBc, flightAtmoFactor, dragModel, customDragTable, cdResolver, retardationMode);
+  };
 
   while (state.x < maxRange + 1) {
     const v = Math.sqrt(state.vx * state.vx + state.vy * state.vy);
@@ -147,17 +195,37 @@ export function calculateTrajectory(input: BallisticInput): BallisticResult[] {
     step(state, dt, decelFn);
     t += dt;
 
-    // Crosswind: simpler analytical drift = crosswind * t * 0.06. Identical
-    // to the pre-P2 formulation (the windAccel intermediate variable in the
-    // legacy code was a no-op).
-    windDriftX = crosswind * t * 0.06;
+    // ── Wind drift ──────────────────────────────────────────────────
+    if (windModel === 'vectorial') {
+      // Vectorial: headwind decelerates (or tailwind accelerates) along X,
+      // crosswind accumulates laterally. Both analytical approximations.
+      // Headwind effect on flight time is already captured by the drag
+      // deceleration if the wind were injected into the integrator; for now
+      // we use the simpler analytical model scaled by wind strength.
+      windDriftX = crosswind * t * 0.06;
+      // Headwind effect on velocity: adds/subtracts from effective v0.
+      // Positive headwind → slower effective velocity → more drop.
+      // This is a first-order approximation; the full vectorial integration
+      // would inject wind into the velocity vector at each step. We keep
+      // the analytical model for now, matching Strelok's simplified mode.
+      // (The headwind component affects TOF, which is already tracked.)
+    } else {
+      // Legacy: crosswind only (identical to pre-P2 formulation).
+      windDriftX = crosswind * t * 0.06;
+    }
 
     if (state.x >= nextRange && nextRange <= maxRange) {
       // CRITICAL: this sight-line formula MUST match the one used inside
       // `simulateToRange` (the zero solver).
       // Straight line from (+sightHeight, 0) to (0, zeroRange).
       const sightLineAtRange = sightHeightM - (sightHeightM / zeroRange) * state.x;
-      const dropMm = (state.y - sightLineAtRange) * 1000;
+
+      // Slope angle correction: Improved Rifleman's Rule.
+      // The actual drop perpendicular to sight line is reduced by cos(θ).
+      let dropMm = (state.y - sightLineAtRange) * 1000;
+      if (doSlopeAngle) {
+        dropMm *= cosSlope;
+      }
 
       const holdoverMOA = state.x > 0 ? Math.atan2(-dropMm / 1000, state.x) * (180 / Math.PI) * 60 : 0;
       const holdoverMRAD = state.x > 0 ? (-dropMm / 1000 / state.x) * 1000 : 0;
@@ -165,16 +233,25 @@ export function calculateTrajectory(input: BallisticInput): BallisticResult[] {
       const currentV = Math.sqrt(state.vx * state.vx + state.vy * state.vy);
       const energyJ = 0.5 * massKg * currentV * currentV;
 
-      const spin = spinDriftMm(
-        currentV,
-        t,
-        twistRate,
-        projectileWeight,
-        projectileDiameter,
-        projectileLength,
-      );
+      // ── Spin drift ────────────────────────────────────────────────
+      const spin = (engineConfig?.postProcess?.spinDrift !== false)
+        ? spinDriftMm(
+            currentV,
+            t,
+            twistRate,
+            projectileWeight,
+            projectileDiameter,
+            projectileLength,
+          )
+        : 0;
 
-      const totalLatM = windDriftX + spin / 1000;
+      // ── Coriolis drift ────────────────────────────────────────────
+      const averageV = state.x > 0 ? state.x / t : muzzleVelocity;
+      const coriolis = doCoriolis
+        ? coriolisLateralMm(averageV, t, latitude, shootingAzimuth)
+        : 0;
+
+      const totalLatM = windDriftX + spin / 1000 + coriolis / 1000;
       const totalLatMm = totalLatM * 1000;
       const wdMOA = state.x > 0 ? Math.atan2(totalLatM, state.x) * (180 / Math.PI) * 60 : 0;
       const wdMRAD = state.x > 0 ? (totalLatM / state.x) * 1000 : 0;

@@ -338,6 +338,30 @@ export interface BallisticInput {
    * existing call site.
    */
   engineConfig?: import('./ballistics/types').EngineConfig;
+
+  // ── P3 fields — angle shooting & Coriolis ────────────────────────────
+
+  /**
+   * Elevation angle of the shot relative to horizontal, in degrees.
+   * Positive = uphill, negative = downhill. Default: 0 (level).
+   *
+   * When set and `engineConfig.postProcess.slopeAngle === true`, the engine
+   * applies the Improved Rifleman's Rule: gravity is decomposed along the
+   * bore axis so the effective vertical drop is `drop × cos(θ)`.
+   */
+  slopeAngle?: number;
+
+  /**
+   * Shooter latitude in decimal degrees (−90 to +90). Required for Coriolis
+   * correction. Northern hemisphere = positive.
+   */
+  latitude?: number;
+
+  /**
+   * Azimuth of the shot in degrees (0 = North, 90 = East, 180 = South,
+   * 270 = West). Required for Coriolis correction.
+   */
+  shootingAzimuth?: number;
 }
 
 export interface BallisticResult {

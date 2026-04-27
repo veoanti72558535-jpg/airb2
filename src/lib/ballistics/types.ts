@@ -1,5 +1,5 @@
 /**
- * Core engine types — P1.
+ * Core engine types — P1 + P3 (ChairGun / Strelok profiles).
  *
  * These types live alongside the engine modules and intentionally avoid
  * any React / storage import. Public ballistic types (`BallisticInput`,
@@ -9,6 +9,7 @@
  */
 
 import type { DragModel } from '../types';
+import type { RetardationMode } from './drag/retardation';
 
 /**
  * Engine version baked into every `calculateTrajectory` output / Session.
@@ -50,6 +51,14 @@ export interface EngineConfig {
   dt: number;
   atmosphereModel: AtmosphereModel;
   windModel: WindModel;
+  /**
+   * Retardation formula selector (P3).
+   *
+   * - `'standard'` (default): legacy `(Cd × atmo × v² × DRAG_K) / BC`.
+   * - `'chairgun-direct'`: ChairGun Elite `(Cd / BC) × v` — no DRAG_K,
+   *   no atmosphere factor. Uses the ChairGun 14-point Cd table.
+   */
+  retardationMode?: RetardationMode;
   postProcess: {
     spinDrift: boolean;
     coriolis: boolean;

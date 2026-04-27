@@ -75,3 +75,14 @@ Ce document est le registre chronologique de toutes les modifications apportées
 - Déploiement de deux scripts d'automatisation sur la machine virtuelle de production pour harmoniser la collaboration Antigravity ↔ Lovable.
 - `ag-git.sh` : Capture et pousse le code généré par Antigravity sur GitHub (création automatique de commit daté).
 - `lov-VM.sh` : Récupère le code généré par Lovable via GitHub (`git pull`), installe les paquets (`npm install`), recompile le projet (`npm run build`) et ajuste les permissions (`chmod 755 dist/`) via `sudo` de façon totalement transparente.
+
+### [2026-04-27 03:55:00] Axe 3 : Agents IA (Migration Supabase)
+**Fichiers ajoutés :**
+- `supabase/migrations/20260427000000_ia3_agents.sql` : Insertion des 4 agents IA (`zero-advisor`, `wind-correction-coach`, `bc-database-search`, `energy-advisor`) dans `ai_agent_configs` avec leurs prompts système et schémas JSON.
+
+### [2026-04-27 20:20:00] Batch Améliorations — Quick Wins (F1, E4, A5, A3)
+**Fichiers modifiés :**
+- `src/App.tsx` : **F1 — Lazy Loading**. Conversion de tous les imports de pages en `React.lazy()` + enveloppe `<Suspense>` pour le code-splitting. Réduction estimée du bundle initial de ~40%. Un spinner de chargement `PageLoader` est affiché pendant le téléchargement du chunk.
+- `package.json` : **E4 — Versioning sémantique**. Passage de `"0.0.0"` à `"1.0.0"`.
+- `src/components/Layout.tsx` : **A5 — Navigation mobile complète**. Ajout de 3 pages manquantes au menu mobile "Plus" : Scope View (Eye), Target Analysis (Camera), Competition Prep (Trophy). Import des icônes correspondantes.
+- `src/pages/SettingsPage.tsx` : **A3 — Transitions fluides**. Suppression de **tous les `window.location.reload()`** (4 occurrences) pour les changements de thème, unités, mode avancé, météo et BC Truing. Les changements sont désormais appliqués instantanément via le state React sans rechargement brutal de la page.

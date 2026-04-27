@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -10,31 +11,42 @@ import { warnIfNotConfigured } from "@/lib/supabase-check";
 import AuthPage from "@/pages/AuthPage";
 import { useAuth } from "@/lib/auth-context";
 import Layout from "@/components/Layout";
-import Dashboard from "@/pages/Dashboard";
-import QuickCalc from "@/pages/QuickCalc";
-import LibraryPage from "@/pages/LibraryPage";
-import AirgunDetailPage from "@/pages/AirgunDetailPage";
-import ProjectileDetailPage from "@/pages/ProjectileDetailPage";
-import OpticDetailPage from "@/pages/OpticDetailPage";
-import ReticlesPage from "@/pages/ReticlesPage";
-import ReticleDetailPage from "@/pages/ReticleDetailPage";
-import SessionsPage from "@/pages/SessionsPage";
-import SessionDetailPage from "@/pages/SessionDetailPage";
-import ComparePage from "@/pages/ComparePage";
-import ConversionsPage from "@/pages/ConversionsPage";
-import DocsPage from "@/pages/DocsPage";
-import SearchPage from "@/pages/SearchPage";
-import SettingsPage from "@/pages/SettingsPage";
-import AdminPage from "@/pages/AdminPage";
-import AdminAiPage from "@/pages/AdminAiPage";
-import CrossValidationPage from "@/pages/CrossValidationPage";
-import ChronoPage from "@/pages/ChronoPage";
-import TargetAnalysisPage from "@/pages/TargetAnalysisPage";
-import CompetitionPrepPage from "@/pages/CompetitionPrepPage";
-import ScopeViewPage from "@/pages/ScopeViewPage";
-import NotFound from "./pages/NotFound";
+
+// ── Lazy-loaded pages (F1 — code splitting) ──────────────────────────────
+const Dashboard = lazy(() => import("@/pages/Dashboard"));
+const QuickCalc = lazy(() => import("@/pages/QuickCalc"));
+const LibraryPage = lazy(() => import("@/pages/LibraryPage"));
+const AirgunDetailPage = lazy(() => import("@/pages/AirgunDetailPage"));
+const ProjectileDetailPage = lazy(() => import("@/pages/ProjectileDetailPage"));
+const OpticDetailPage = lazy(() => import("@/pages/OpticDetailPage"));
+const ReticlesPage = lazy(() => import("@/pages/ReticlesPage"));
+const ReticleDetailPage = lazy(() => import("@/pages/ReticleDetailPage"));
+const SessionsPage = lazy(() => import("@/pages/SessionsPage"));
+const SessionDetailPage = lazy(() => import("@/pages/SessionDetailPage"));
+const ComparePage = lazy(() => import("@/pages/ComparePage"));
+const ConversionsPage = lazy(() => import("@/pages/ConversionsPage"));
+const DocsPage = lazy(() => import("@/pages/DocsPage"));
+const SearchPage = lazy(() => import("@/pages/SearchPage"));
+const SettingsPage = lazy(() => import("@/pages/SettingsPage"));
+const AdminPage = lazy(() => import("@/pages/AdminPage"));
+const AdminAiPage = lazy(() => import("@/pages/AdminAiPage"));
+const CrossValidationPage = lazy(() => import("@/pages/CrossValidationPage"));
+const ChronoPage = lazy(() => import("@/pages/ChronoPage"));
+const TargetAnalysisPage = lazy(() => import("@/pages/TargetAnalysisPage"));
+const CompetitionPrepPage = lazy(() => import("@/pages/CompetitionPrepPage"));
+const ScopeViewPage = lazy(() => import("@/pages/ScopeViewPage"));
+const NotFound = lazy(() => import("@/pages/NotFound"));
 
 const queryClient = new QueryClient();
+
+/** Suspense fallback — shown while a lazy-loaded page chunk is fetched. */
+function PageLoader() {
+  return (
+    <div className="flex items-center justify-center py-24">
+      <div className="h-6 w-6 animate-spin rounded-full border-3 border-primary border-t-transparent" />
+    </div>
+  );
+}
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -62,6 +74,7 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <Layout>
+              <Suspense fallback={<PageLoader />}>
               <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/calc" element={<QuickCalc />} />
@@ -91,6 +104,7 @@ const App = () => (
                 <Route path="/optics" element={<LibraryPage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              </Suspense>
             </Layout>
           </BrowserRouter>
           </TooltipProvider>

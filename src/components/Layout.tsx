@@ -6,6 +6,7 @@ import {
   ArrowLeftRight, GitCompare, Cpu, MoreHorizontal,
   Sun, Moon, Globe, X, ChevronRight, FlaskConical,
   LogOut, FileText, Search, Settings, Shield,
+  Camera, Trophy, Eye,
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { useTheme } from '@/lib/theme';
@@ -32,6 +33,9 @@ const moreNav = [
   { path: '/chrono', icon: Timer, labelKey: 'chrono.title' as const },
   { path: '/compare', icon: GitCompare, labelKey: 'nav.compare' as const },
   { path: '/conversions', icon: ArrowLeftRight, labelKey: 'nav.conversions' as const },
+  { path: '/scope-view', icon: Eye, labelKey: 'nav.scopeView' as const },
+  { path: '/target-analysis', icon: Camera, labelKey: 'nav.targetAnalysis' as const },
+  { path: '/competition-prep', icon: Trophy, labelKey: 'nav.competitionPrep' as const },
   { path: '/cross-validation', icon: FlaskConical, labelKey: 'nav.crossValidation' as const },
   { path: '/docs', icon: FileText, labelKey: 'nav.docs' as const },
   { path: '/search', icon: Search, labelKey: 'nav.search' as const },

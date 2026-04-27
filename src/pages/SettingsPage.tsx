@@ -68,7 +68,6 @@ export default function SettingsPage() {
 
   const toggleAdvanced = () => {
     saveSettings({ ...settings, advancedMode: !settings.advancedMode });
-    window.location.reload();
   };
 
   const toggleUnits = () => {
@@ -76,7 +75,6 @@ export default function SettingsPage() {
     saveSettings({ ...settings, unitSystem: newSystem });
     markLocalUpdated();
     if (user) savePreferenceToSupabase(user.id, 'unit_system', newSystem).catch(() => {});
-    window.location.reload();
   };
 
   return (
@@ -189,7 +187,6 @@ export default function SettingsPage() {
             <button
               onClick={() => {
                 saveSettings({ ...settings, weatherAutoSuggest: !(settings.weatherAutoSuggest !== false) });
-                window.location.reload();
               }}
               className={cn('px-3 py-1 rounded-md text-xs font-medium', settings.weatherAutoSuggest !== false ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted')}
             >
@@ -214,7 +211,6 @@ export default function SettingsPage() {
                 const current = settings.featureFlags.truing !== false;
                 saveSettings({ ...settings, featureFlags: { ...settings.featureFlags, truing: !current } });
                 markLocalUpdated();
-                window.location.reload();
               }}
               className={cn('px-3 py-1 rounded-md text-xs font-medium', settings.featureFlags.truing !== false ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted')}
             >

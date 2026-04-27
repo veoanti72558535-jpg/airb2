@@ -111,3 +111,23 @@ Ce document est le registre chronologique de toutes les modifications apportées
 **Notes techniques :**
 - B1 (Heun zero-solver) : Déjà implémenté — le zero-solver délègue à `getIntegrator(config?.integrator)`.
 - B3 (Multi-BC zones) : Déjà implémenté — `resolveBC()` dans engine.ts + `bcZones` dans le type Projectile.
+
+### [2026-04-27 22:30:00] Batch 3 — Améliorations avancées (⭐⭐⭐⭐ → ⭐)
+
+**Fichiers ajoutés (pages) :**
+- `src/pages/RangeSimulatorPage.tsx` : **G3 — Simulateur de portée interactif (⭐⭐⭐⭐)**. Canvas HTML5 avec cible Field Target, kill zones variables par distance, flèche de vent oscillante, tir au clic, calcul d'impact via le moteur balistique, erreur humaine gaussienne, statistiques de précision.
+- `src/pages/BallisticChatPage.tsx` : **D5 — Chat balistique interactif (⭐⭐⭐⭐)**. Interface conversationnelle avec historique persistant (localStorage, 100 messages). Comprend les requêtes sur les sessions, armes, projectiles, simulations "Et si..." (MV, vent), favoris. Bulles animées, suggestions de prompts, rendu markdown inline.
+- `src/pages/FieldTargetCompPage.tsx` : **G4 — Mode compétition Field Target (⭐⭐⭐)**. Constructeur de parcours : lanes éditables (distance, taille kill zone), calcul automatique des corrections (clics, MRAD/MOA, chute, énergie) par lane, résumé du parcours.
+- `src/pages/ShootingDiaryPage.tsx` : **G2 — Carnet de tir numérique (⭐⭐⭐)**. Vue calendrier avec jours d'activité marqués, stats 30/90 jours, liste des sessions récentes, navigation par mois.
+
+**Fichiers ajoutés (composants & lib) :**
+- `src/components/DashboardWidgets.tsx` : **A1 — Dashboard enrichi (⭐⭐⭐)**. 7 widgets drag-and-drop (@dnd-kit) : Quick Actions, Dernière Session, Stats bibliothèque, Favoris, Conditions météo, Progression activité, Statut IA. Ordre persisté dans localStorage.
+- `src/lib/session-share.ts` : **G5 — Partage de sessions (⭐⭐⭐)**. Encodage Base64 des données de session, URL partageable, import depuis token.
+- `src/lib/csv-import.ts` : **C2 — Import CSV/Excel (⭐⭐)**. Parser CSV avec détection automatique du séparateur et du header, mapping de colonnes flexible.
+- `src/lib/tts.ts` : **D4 — Text-to-Speech (⭐)**. Module TTS utilisant SpeechSynthesis du navigateur, FR/EN.
+- `src/lib/trajectory-cache.ts` : **F3 — Cache moteur balistique (⭐)**. Cache LRU (50 entrées) avec hash djb2 des inputs pour éviter les recalculs redondants.
+
+**Fichiers modifiés :**
+- `src/App.tsx` : Ajout de 4 routes lazy-loaded (`/range-simulator`, `/chat`, `/ft-competition`, `/diary`).
+- `src/components/Layout.tsx` : Ajout de 4 entrées navigation mobile (Simulateur, Chat, Carnet, FT Competition).
+- `src/pages/Dashboard.tsx` : Intégration du système de widgets DnD.

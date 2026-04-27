@@ -10,6 +10,7 @@ import { BallisticValue } from '@/components/ui/BallisticValue';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { TrajectoryMiniChart } from '@/components/calc/TrajectoryMiniChart';
 import { OnboardingWizard, useOnboarding } from '@/components/OnboardingWizard';
+import { DashboardWidgets } from '@/components/DashboardWidgets';
 
 export default function Dashboard() {
   const { t } = useI18n();
@@ -44,6 +45,9 @@ export default function Dashboard() {
         </h1>
         <p className="text-sm text-muted-foreground mt-0.5">{t('dashboard.subtitle')}</p>
       </div>
+
+      {/* A1 — Drag-and-drop dashboard widgets */}
+      <DashboardWidgets />
 
       {/* Metric cards */}
       <div className="grid grid-cols-3 gap-3">

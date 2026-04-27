@@ -36,6 +36,10 @@ const TargetAnalysisPage = lazy(() => import("@/pages/TargetAnalysisPage"));
 const CompetitionPrepPage = lazy(() => import("@/pages/CompetitionPrepPage"));
 const ScopeViewPage = lazy(() => import("@/pages/ScopeViewPage"));
 const FieldModePage = lazy(() => import("@/pages/FieldModePage"));
+const RangeSimulatorPage = lazy(() => import("@/pages/RangeSimulatorPage"));
+const BallisticChatPage = lazy(() => import("@/pages/BallisticChatPage"));
+const FieldTargetCompPage = lazy(() => import("@/pages/FieldTargetCompPage"));
+const ShootingDiaryPage = lazy(() => import("@/pages/ShootingDiaryPage"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -100,6 +104,10 @@ const App = () => (
                 <Route path="/competition-prep" element={<CompetitionPrepPage />} />
                 <Route path="/scope-view" element={<ScopeViewPage />} />
                 <Route path="/field-mode" element={<FieldModePage />} />
+                <Route path="/range-simulator" element={<RangeSimulatorPage />} />
+                <Route path="/chat" element={<BallisticChatPage />} />
+                <Route path="/ft-competition" element={<FieldTargetCompPage />} />
+                <Route path="/diary" element={<ShootingDiaryPage />} />
                 {/* Legacy routes */}
                 <Route path="/airguns" element={<LibraryPage />} />
                 <Route path="/projectiles" element={<LibraryPage />} />

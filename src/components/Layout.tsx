@@ -6,7 +6,7 @@ import {
   ArrowLeftRight, GitCompare, Cpu, MoreHorizontal,
   Sun, Moon, Globe, X, ChevronRight, FlaskConical,
   LogOut, FileText, Search, Settings, Shield,
-  Camera, Trophy, Eye, Crosshair,
+  Camera, Trophy, Eye, Crosshair, MessageCircle, Calendar,
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { useTheme } from '@/lib/theme';
@@ -30,6 +30,10 @@ const bottomNav = [
 
 const moreNav = [
   { path: '/field-mode', icon: Crosshair, labelKey: 'nav.fieldMode' as const },
+  { path: '/range-simulator', icon: Target, labelKey: 'nav.rangeSimulator' as const },
+  { path: '/chat', icon: MessageCircle, labelKey: 'nav.chat' as const },
+  { path: '/diary', icon: Calendar, labelKey: 'nav.diary' as const },
+  { path: '/ft-competition', icon: Trophy, labelKey: 'nav.ftCompetition' as const },
   { path: '/library', icon: Package, labelKey: 'nav.library' as const },
   { path: '/chrono', icon: Timer, labelKey: 'chrono.title' as const },
   { path: '/compare', icon: GitCompare, labelKey: 'nav.compare' as const },

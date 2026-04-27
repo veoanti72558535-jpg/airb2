@@ -76,6 +76,7 @@ import { PbrCard } from '@/components/calc/PbrCard';
 import { ZeroIntersectionsCard } from '@/components/calc/ZeroIntersectionsCard';
 import { ReticleAssistPanel } from '@/components/calc/ReticleAssistPanel';
 import { TurretScopeView } from '@/components/sessions/TurretScopeView';
+import { generateDopeCardPDF } from '@/lib/dope-card-pdf';
 
 /**
  * Détail SESSION — route dédiée /sessions/:id.
@@ -378,6 +379,14 @@ export default function SessionDetailPage() {
           >
             <FileDown className="h-3 w-3" />
             {t('sessionDetail.exportPdf')}
+          </button>
+          <button
+            onClick={() => generateDopeCardPDF({ session, results: session.results, locale: locale as 'fr' | 'en' })}
+            title="Dope Card PDF (A5)"
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-[11px] font-medium border border-primary/30 text-primary hover:bg-primary/10 transition-colors"
+          >
+            <FileDown className="h-3 w-3" />
+            Dope Card
           </button>
           <button
             onClick={handleDelete}

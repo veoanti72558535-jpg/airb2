@@ -86,3 +86,28 @@ Ce document est le registre chronologique de toutes les modifications apportées
 - `package.json` : **E4 — Versioning sémantique**. Passage de `"0.0.0"` à `"1.0.0"`.
 - `src/components/Layout.tsx` : **A5 — Navigation mobile complète**. Ajout de 3 pages manquantes au menu mobile "Plus" : Scope View (Eye), Target Analysis (Camera), Competition Prep (Trophy). Import des icônes correspondantes.
 - `src/pages/SettingsPage.tsx` : **A3 — Transitions fluides**. Suppression de **tous les `window.location.reload()`** (4 occurrences) pour les changements de thème, unités, mode avancé, météo et BC Truing. Les changements sont désormais appliqués instantanément via le state React sans rechargement brutal de la page.
+
+### [2026-04-27 21:55:00] Batch Améliorations — Priorités Critiques & Hautes
+
+**Fichiers ajoutés :**
+- `public/manifest.json` : **A4 — PWA**. Manifeste d'application web progressive (installable sur mobile).
+- `public/sw.js` : Service Worker avec stratégie cache-first pour assets, network-first pour pages. Support offline.
+- `public/icons/icon-192.png`, `icon-512.png` : Icônes PWA (réticule vert sur fond carbone).
+- `.github/workflows/ci.yml` : **E1 — CI/CD GitHub Actions**. Pipeline type check → tests → build → deploy SSH sur la VM.
+- `scripts/backup-supabase.sh` : **E3 — Backup automatique**. pg_dump compressé avec rotation 7 jours, déployable via crontab.
+- `src/lib/dope-card-pdf.ts` : **G7 — Dope Card PDF**. Générateur PDF A5 paysage avec thème tactique dark, tableau trajectoire, conditions météo, metadata.
+- `src/lib/bc-estimator.ts` : **D1 — BC Estimator inversé**. Méthode de la sécante (Newton-Raphson) itérant sur le moteur balistique pour estimer le BC depuis une chute mesurée.
+- `src/components/ai/agents/BcEstimatorButton.tsx` : Composant UI pour le BC Estimator (entrée distance + chute → BC estimé).
+- `src/pages/FieldModePage.tsx` : **G1 — Mode Terrain**. Interface plein écran ultra-simplifiée : sélecteur de distance tactile, corrections en clics (affichées en grand), journal de tir avec statistiques (touché/manqué).
+- `src/components/OnboardingWizard.tsx` : **A2 — Onboarding**. Assistant 4 étapes au premier lancement (Welcome → Arme → Projectile → Premier Calcul). Progression animée, skip possible.
+
+**Fichiers modifiés :**
+- `index.html` : Métadonnées PWA, balises Apple, Service Worker registration, titre/description corrigés ("AirBallistiK" au lieu de "Bouzidi").
+- `src/App.tsx` : Ajout route `/field-mode` (lazy-loaded).
+- `src/components/Layout.tsx` : Ajout "Mode Terrain" en tête du menu mobile "Plus".
+- `src/pages/Dashboard.tsx` : Intégration du OnboardingWizard au premier lancement.
+- `src/pages/SessionDetailPage.tsx` : Ajout bouton "Dope Card" pour export PDF A5 professionnel à côté du bouton print existant.
+
+**Notes techniques :**
+- B1 (Heun zero-solver) : Déjà implémenté — le zero-solver délègue à `getIntegrator(config?.integrator)`.
+- B3 (Multi-BC zones) : Déjà implémenté — `resolveBC()` dans engine.ts + `bcZones` dans le type Projectile.

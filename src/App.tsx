@@ -35,6 +35,7 @@ const ChronoPage = lazy(() => import("@/pages/ChronoPage"));
 const TargetAnalysisPage = lazy(() => import("@/pages/TargetAnalysisPage"));
 const CompetitionPrepPage = lazy(() => import("@/pages/CompetitionPrepPage"));
 const ScopeViewPage = lazy(() => import("@/pages/ScopeViewPage"));
+const FieldModePage = lazy(() => import("@/pages/FieldModePage"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -98,6 +99,7 @@ const App = () => (
                 <Route path="/target-analysis" element={<TargetAnalysisPage />} />
                 <Route path="/competition-prep" element={<CompetitionPrepPage />} />
                 <Route path="/scope-view" element={<ScopeViewPage />} />
+                <Route path="/field-mode" element={<FieldModePage />} />
                 {/* Legacy routes */}
                 <Route path="/airguns" element={<LibraryPage />} />
                 <Route path="/projectiles" element={<LibraryPage />} />

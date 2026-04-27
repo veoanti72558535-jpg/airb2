@@ -1,31 +1,44 @@
 <!doctype html>
-<html lang="en">
+<html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- TODO: Set the document title to the name of your application -->
-    <title>Bouzidi</title>
-    <meta name="description" content="Ballistic Precision is a mobile-first web app for PCP airgun users, offering precise ballistic calculations and data management.">
-    <meta name="author" content="Lovable" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>AirBallistiK — Calculateur Balistique PCP</title>
+    <meta name="description" content="Calculateur balistique professionnel pour carabines PCP. Calculs précis, gestion de sessions, scope viewer, agents IA. Mobile-first, FR/EN.">
+    <meta name="author" content="AirBallistiK" />
 
-    <!-- TODO: Update og:title to match your application name -->
-    
-    
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#22C55E" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="AirBallistiK" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+
+    <!-- Open Graph -->
     <meta property="og:type" content="website" />
-    
+    <meta property="og:title" content="AirBallistiK — Calculateur Balistique PCP">
+    <meta property="og:description" content="Calculateur balistique professionnel pour carabines PCP. Mobile-first, FR/EN.">
 
+    <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@Lovable" />
-    
-    <meta property="og:title" content="Bouzidi">
-  <meta name="twitter:title" content="Bouzidi">
-  <meta property="og:description" content="Ballistic Precision is a mobile-first web app for PCP airgun users, offering precise ballistic calculations and data management.">
-  <meta name="twitter:description" content="Ballistic Precision is a mobile-first web app for PCP airgun users, offering precise ballistic calculations and data management.">
-  <link rel="icon" type="image/x-icon" href="/favicon.ico">
-</head>
+    <meta name="twitter:title" content="AirBallistiK">
+    <meta name="twitter:description" content="Calculateur balistique professionnel pour carabines PCP. Mobile-first, FR/EN.">
+
+    <link rel="icon" type="image/png" href="/icons/icon-192.png">
+  </head>
 
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Service Worker registration (PWA A4)
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(() => {});
+        });
+      }
+    </script>
   </body>
 </html>
+

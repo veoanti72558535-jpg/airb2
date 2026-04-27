@@ -9,11 +9,13 @@ import { AppCard } from '@/components/ui/AppCard';
 import { BallisticValue } from '@/components/ui/BallisticValue';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { TrajectoryMiniChart } from '@/components/calc/TrajectoryMiniChart';
+import { OnboardingWizard, useOnboarding } from '@/components/OnboardingWizard';
 
 export default function Dashboard() {
   const { t } = useI18n();
   const sessions = sessionStore.getAll();
   const last = sessions.length > 0 ? sessions[sessions.length - 1] : null;
+  const { shouldShow: showOnboarding, markDone } = useOnboarding();
 
   // Compute stats from last session
   const lastResult = useMemo(() => {
@@ -32,6 +34,9 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-5">
+      {/* A2 — Onboarding wizard (first visit only) */}
+      {showOnboarding && <OnboardingWizard onComplete={markDone} />}
+
       {/* Header */}
       <div className="pt-2">
         <h1 className="text-xl font-heading font-semibold">

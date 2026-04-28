@@ -339,9 +339,26 @@ export function svgBuildCount() { return _svgBuildCount; }
 /** Exposed for testing — resets build counter */
 export function resetSvgBuildCount() { _svgBuildCount = 0; }
 
-// ── MODE A — Géométrie ChairGun exacte ──
-// Convention coordonnées : (0,0) = centre, +X droite, +Y bas (déjà
-// convention image SVG, pas d'inversion Y comme en mode B).
+// ── MODE A — Géométrie ChairGun/Strelok exacte ──
+//
+// Format de données décodé par reverse-engineering :
+//
+// DOT elements: { type: 'dot', x: armWidth, y: position, radius: circleRadius }
+//   - armWidth (x) : épaisseur angulaire du bras de la croix à cette position.
+//     0 = pas de bras (cercle/point seul). > 0 = trait de croix dessiné.
+//   - position (y) : distance angulaire signée depuis le centre (en unités MIL/MOA).
+//   - circleRadius (radius) : rayon du cercle/point à cette position.
+//     0 = micro-point (tick), > 0 = cercle plein de ce rayon angulaire.
+//
+//   Chaque dot est rendu sur LES DEUX AXES (vertical et horizontal) symétriquement.
+//   Un dot à position=3 génère un élément à (3, 0) et un à (0, 3).
+//
+// LINE elements: { type: 'line', x1: gap, y1: axis, x2: extent, y2: thickness }
+//   - gap (x1) : début de la ligne (distance angulaire depuis le centre).
+//   - axis (y1) : 0 = vertical, 1 = horizontal.
+//   - extent (x2) : fin de la ligne (distance angulaire depuis le centre).
+//   - thickness (y2) : épaisseur angulaire de la ligne.
+//
 function buildChairgunSvg(
   els: ChairgunElement[],
   size: number,
@@ -349,97 +366,167 @@ function buildChairgunSvg(
   viewportRange: number,
 ): { svgEls: React.ReactNode[]; autoCrosshair: boolean } {
   const center = size / 2;
-  const pixelsPerUnit = size / (2 * viewportRange);
-  const lineWidth = Math.max(0.5, size * 0.003);
-  const color = darkMode ? '#00FF00' : '#1a1a1a';
+  const ppu = size / (2 * viewportRange); // pixels per unit
+  const baseLineWidth = Math.max(0.5, size * 0.002);
+  const color = darkMode ? '#ccc' : '#1a1a1a';
 
-  const toPx = (ang: number) => center + ang * pixelsPerUnit;
-
-  // Détecte si une ligne « longue » > 5 unités existe (proxy d'une croix).
-  let hasLongLine = false;
-  for (const e of els) {
-    if (e.type !== 'line') continue;
-    const x1 = e.x1 ?? 0, y1 = e.y1 ?? 0, x2 = e.x2 ?? 0, y2 = e.y2 ?? 0;
-    const len = Math.hypot(x2 - x1, y2 - y1);
-    if (len > 5) { hasLongLine = true; break; }
-  }
-  const autoCrosshair = !hasLongLine;
+  // Convert angular units to pixel position (from center)
+  const toPixel = (angularOffset: number) => center + angularOffset * ppu;
 
   const svgEls: React.ReactNode[] = [];
 
-  if (autoCrosshair) {
-    svgEls.push(
-      <line key="auto-h"
-        x1={toPx(-viewportRange)} y1={toPx(0)}
-        x2={toPx(viewportRange)} y2={toPx(0)}
-        stroke={color} strokeWidth={lineWidth} opacity={0.7}
-        data-testid="cg-auto-crosshair-h" />,
-      <line key="auto-v"
-        x1={toPx(0)} y1={toPx(-viewportRange)}
-        x2={toPx(0)} y2={toPx(viewportRange)}
-        stroke={color} strokeWidth={lineWidth} opacity={0.7}
-        data-testid="cg-auto-crosshair-v" />,
-    );
-  }
-
+  // ── Pass 1: Draw LINE elements (crosshair arms) ──
   els.forEach((e, idx) => {
-    if (e.type === 'line') {
-      const x1 = e.x1 ?? 0, y1 = e.y1 ?? 0, x2 = e.x2 ?? 0, y2 = e.y2 ?? 0;
+    if (e.type !== 'line') return;
+    const gap = e.x1 ?? 0;
+    const axis = e.y1 ?? 0;    // 0 = vertical, 1 = horizontal
+    const extent = e.x2 ?? 0;
+    const thickness = e.y2 ?? 0;
+
+    const sw = thickness > 0 ? Math.max(thickness * ppu, baseLineWidth) : baseLineWidth;
+
+    if (gap >= extent && extent > 0) return; // degenerate
+
+    if (axis === 1 || axis === 1.0) {
+      // Horizontal arms: positive (right) and negative (left)
       svgEls.push(
-        <line key={`cg-line-${idx}`}
-          x1={toPx(x1)} y1={toPx(y1)} x2={toPx(x2)} y2={toPx(y2)}
-          stroke={color} strokeWidth={lineWidth} />,
+        <line key={`cg-line-h+${idx}`}
+          x1={toPixel(gap)} y1={center} x2={toPixel(extent)} y2={center}
+          stroke={color} strokeWidth={sw} />,
+        <line key={`cg-line-h-${idx}`}
+          x1={toPixel(-gap)} y1={center} x2={toPixel(-extent)} y2={center}
+          stroke={color} strokeWidth={sw} />,
       );
     } else {
-      const axis = e.x ?? 0;
-      const pos = e.y ?? 0;
-      const r = e.radius ?? 0;
+      // Vertical arms: positive (down) and negative (up)
+      svgEls.push(
+        <line key={`cg-line-v+${idx}`}
+          x1={center} y1={toPixel(gap)} x2={center} y2={toPixel(extent)}
+          stroke={color} strokeWidth={sw} />,
+        <line key={`cg-line-v-${idx}`}
+          x1={center} y1={toPixel(-gap)} x2={center} y2={toPixel(-extent)}
+          stroke={color} strokeWidth={sw} />,
+      );
+    }
+  });
+
+  // ── Pass 2: Collect DOT elements, deduplicate, and render ──
+  // Track already-drawn positions to avoid double-rendering
+  const drawn = new Set<string>();
+
+  els.forEach((e, idx) => {
+    if (e.type !== 'dot') return;
+    const armWidth = e.x ?? 0;
+    const pos = e.y ?? 0;
+    const r = e.radius ?? 0;
+
+    // Determine visual radius in pixels
+    let visualRadiusPx: number;
+    if (r === 0) {
+      visualRadiusPx = Math.max(0.8, baseLineWidth * 0.4); // tiny tick
+    } else {
+      // r is in angular units — convert to pixels, but cap at reasonable size
+      // For standard mil-dots (r=1.0 in MIL), this gives a dot about 2px radius
+      // For large circles (r=6..10), this gives visible circles
+      visualRadiusPx = Math.max(1.5, r * ppu * 0.1);
+    }
+
+    // Determine arm stroke width
+    const armStrokeWidth = armWidth > 0 
+      ? Math.max(armWidth * ppu, baseLineWidth) 
+      : 0;
+
+    // Draw on BOTH axes symmetrically
+    // Vertical axis: element at (0, pos) — center-X, offset along Y
+    const vKey = `v|${pos}|${r}`;
+    if (!drawn.has(vKey)) {
+      drawn.add(vKey);
+      const px = center;
+      const py = toPixel(pos);
       
-      // ChairGun 'x' for dots is actually an Axis identifier (0 = Vertical, 1 = Horizontal)
-      // and 'y' is the position along that axis.
-      // (Exception: if axis is not exactly 0 or 1, we might need a fallback, but ChairGun uses 0 and 1)
-      let realX = 0;
-      let realY = 0;
-      if (axis === 1 || axis === 1.0) {
-        realX = pos;
-        realY = 0;
-      } else {
-        // axis === 0
-        realX = 0;
-        realY = pos;
+      // Draw arm segment (horizontal tick mark on vertical axis)
+      if (armStrokeWidth > 0 && r === 0) {
+        const halfArm = armWidth * ppu * 0.5;
+        svgEls.push(
+          <line key={`cg-arm-v-${idx}`}
+            x1={px - halfArm} y1={py} x2={px + halfArm} y2={py}
+            stroke={color} strokeWidth={baseLineWidth} />,
+        );
       }
 
-      // Dans ChairGun, le "radius" des dots est souvent un index de style, pas une vraie taille en MIL/MOA.
-      if (r === 0) {
-        // Point fin (souvent utilisé en série pour faire des pointillés ou des hash marks)
+      // Draw circle/dot
+      if (r > 0) {
+        const isBigCircle = visualRadiusPx > ppu * 0.3;
+        if (isBigCircle) {
+          // Large circle: render as hollow ring
+          svgEls.push(
+            <circle key={`cg-circ-v-${idx}`}
+              cx={px} cy={py} r={visualRadiusPx}
+              fill="none" stroke={color} strokeWidth={baseLineWidth} />,
+          );
+        } else {
+          // Small dot: render as filled circle
+          svgEls.push(
+            <circle key={`cg-dot-v-${idx}`}
+              cx={px} cy={py} r={visualRadiusPx}
+              fill={color} />,
+          );
+        }
+      } else if (armStrokeWidth === 0) {
+        // Pure tick with no arm — draw as tiny point
         svgEls.push(
-          <circle key={`cg-tick-${idx}`}
-            cx={toPx(realX)} cy={toPx(realY)} r={Math.max(1, lineWidth * 0.5)}
-            fill={color}
-            data-cg-tick="1" />,
+          <circle key={`cg-tick-v-${idx}`}
+            cx={px} cy={py} r={visualRadiusPx}
+            fill={color} />,
         );
-      } else if (r === 1) {
-        // Mil-Dot plein standard (~0.2 unités de diamètre)
+      }
+    }
+
+    // Horizontal axis: element at (pos, 0) — offset along X, center-Y
+    const hKey = `h|${pos}|${r}`;
+    if (!drawn.has(hKey)) {
+      drawn.add(hKey);
+      const px = toPixel(pos);
+      const py = center;
+
+      // Draw arm segment (vertical tick mark on horizontal axis)
+      if (armStrokeWidth > 0 && r === 0) {
+        const halfArm = armWidth * ppu * 0.5;
         svgEls.push(
-          <circle key={`cg-dot-${idx}`}
-            cx={toPx(realX)} cy={toPx(realY)} r={pixelsPerUnit * 0.1}
-            fill={color}
-            data-cg-dot="1" />,
+          <line key={`cg-arm-h-${idx}`}
+            x1={px} y1={py - halfArm} x2={px} y2={py + halfArm}
+            stroke={color} strokeWidth={baseLineWidth} />,
         );
-      } else {
-        // Cercle creux pour les autres indices (r >= 2)
-        const scale = 0.1 + (r * 0.025);
+      }
+
+      // Draw circle/dot
+      if (r > 0) {
+        const isBigCircle = visualRadiusPx > ppu * 0.3;
+        if (isBigCircle) {
+          svgEls.push(
+            <circle key={`cg-circ-h-${idx}`}
+              cx={px} cy={py} r={visualRadiusPx}
+              fill="none" stroke={color} strokeWidth={baseLineWidth} />,
+          );
+        } else {
+          svgEls.push(
+            <circle key={`cg-dot-h-${idx}`}
+              cx={px} cy={py} r={visualRadiusPx}
+              fill={color} />,
+          );
+        }
+      } else if (armStrokeWidth === 0) {
         svgEls.push(
-          <circle key={`cg-circle-${idx}`}
-            cx={toPx(realX)} cy={toPx(realY)} r={pixelsPerUnit * scale}
-            fill="none" stroke={color} strokeWidth={lineWidth}
-            data-cg-circle={r} />,
+          <circle key={`cg-tick-h-${idx}`}
+            cx={px} cy={py} r={visualRadiusPx}
+            fill={color} />,
         );
       }
     }
   });
 
-  return { svgEls, autoCrosshair };
+  // The data fully defines the crosshair — no auto-crosshair needed
+  return { svgEls, autoCrosshair: false };
 }
 
 const ReticleViewer = React.memo(function ReticleViewer({

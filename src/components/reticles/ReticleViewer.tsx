@@ -391,18 +391,30 @@ function buildChairgunSvg(
           stroke={color} strokeWidth={lineWidth} />,
       );
     } else {
-      const x = e.x ?? 0, y = e.y ?? 0, r = e.radius ?? 0;
+      const axis = e.x ?? 0;
+      const pos = e.y ?? 0;
+      const r = e.radius ?? 0;
       
+      // ChairGun 'x' for dots is actually an Axis identifier (0 = Vertical, 1 = Horizontal)
+      // and 'y' is the position along that axis.
+      // (Exception: if axis is not exactly 0 or 1, we might need a fallback, but ChairGun uses 0 and 1)
+      let realX = 0;
+      let realY = 0;
+      if (axis === 1 || axis === 1.0) {
+        realX = pos;
+        realY = 0;
+      } else {
+        // axis === 0
+        realX = 0;
+        realY = pos;
+      }
+
       // Dans ChairGun, le "radius" des dots est souvent un index de style, pas une vraie taille en MIL/MOA.
-      // r = 0 -> petit point de construction (tick ou point formant une ligne)
-      // r = 1 -> Mil-Dot standard plein (généralement 0.2 MIL de diamètre, donc r=0.1)
-      // r = 2+ -> Cercle vide (hollow) ou plus gros point
-      
       if (r === 0) {
         // Point fin (souvent utilisé en série pour faire des pointillés ou des hash marks)
         svgEls.push(
           <circle key={`cg-tick-${idx}`}
-            cx={toPx(x)} cy={toPx(y)} r={Math.max(1, lineWidth * 0.5)}
+            cx={toPx(realX)} cy={toPx(realY)} r={Math.max(1, lineWidth * 0.5)}
             fill={color}
             data-cg-tick="1" />,
         );
@@ -410,17 +422,16 @@ function buildChairgunSvg(
         // Mil-Dot plein standard (~0.2 unités de diamètre)
         svgEls.push(
           <circle key={`cg-dot-${idx}`}
-            cx={toPx(x)} cy={toPx(y)} r={pixelsPerUnit * 0.1}
+            cx={toPx(realX)} cy={toPx(realY)} r={pixelsPerUnit * 0.1}
             fill={color}
             data-cg-dot="1" />,
         );
       } else {
         // Cercle creux pour les autres indices (r >= 2)
-        // La taille augmente légèrement avec l'index pour différencier
         const scale = 0.1 + (r * 0.025);
         svgEls.push(
           <circle key={`cg-circle-${idx}`}
-            cx={toPx(x)} cy={toPx(y)} r={pixelsPerUnit * scale}
+            cx={toPx(realX)} cy={toPx(realY)} r={pixelsPerUnit * scale}
             fill="none" stroke={color} strokeWidth={lineWidth}
             data-cg-circle={r} />,
         );

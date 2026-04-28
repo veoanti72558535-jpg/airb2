@@ -392,19 +392,37 @@ function buildChairgunSvg(
       );
     } else {
       const x = e.x ?? 0, y = e.y ?? 0, r = e.radius ?? 0;
+      
+      // Dans ChairGun, le "radius" des dots est souvent un index de style, pas une vraie taille en MIL/MOA.
+      // r = 0 -> petit point de construction (tick ou point formant une ligne)
+      // r = 1 -> Mil-Dot standard plein (généralement 0.2 MIL de diamètre, donc r=0.1)
+      // r = 2+ -> Cercle vide (hollow) ou plus gros point
+      
       if (r === 0) {
+        // Point fin (souvent utilisé en série pour faire des pointillés ou des hash marks)
         svgEls.push(
           <circle key={`cg-tick-${idx}`}
-            cx={toPx(x)} cy={toPx(y)} r={2}
+            cx={toPx(x)} cy={toPx(y)} r={Math.max(1, lineWidth * 0.5)}
             fill={color}
             data-cg-tick="1" />,
         );
+      } else if (r === 1) {
+        // Mil-Dot plein standard (~0.2 unités de diamètre)
+        svgEls.push(
+          <circle key={`cg-dot-${idx}`}
+            cx={toPx(x)} cy={toPx(y)} r={pixelsPerUnit * 0.1}
+            fill={color}
+            data-cg-dot="1" />,
+        );
       } else {
+        // Cercle creux pour les autres indices (r >= 2)
+        // La taille augmente légèrement avec l'index pour différencier
+        const scale = 0.1 + (r * 0.025);
         svgEls.push(
           <circle key={`cg-circle-${idx}`}
-            cx={toPx(x)} cy={toPx(y)} r={r * pixelsPerUnit}
+            cx={toPx(x)} cy={toPx(y)} r={pixelsPerUnit * scale}
             fill="none" stroke={color} strokeWidth={lineWidth}
-            data-cg-circle="1" />,
+            data-cg-circle={r} />,
         );
       }
     }

@@ -410,118 +410,75 @@ function buildChairgunSvg(
     }
   });
 
-  // ── Pass 2: Collect DOT elements, deduplicate, and render ──
-  // Track already-drawn positions to avoid double-rendering
-  const drawn = new Set<string>();
+  // ── Pass 2: DOT elements ──
+  // ChairGun encoding: x=0 → place on VERTICAL axis, x>0 → place on HORIZONTAL axis.
+  // The 'x' value also encodes the arm width for crosshair tick marks.
+  // 'y' = position (distance from center along the axis, in angular units).
+  // 'radius' = size of circle/dot drawn at this position.
 
   els.forEach((e, idx) => {
     if (e.type !== 'dot') return;
-    const armWidth = e.x ?? 0;
+    const axisAndWidth = e.x ?? 0;
     const pos = e.y ?? 0;
     const r = e.radius ?? 0;
 
-    // Determine visual radius in pixels
-    let visualRadiusPx: number;
-    if (r === 0) {
-      visualRadiusPx = Math.max(0.8, baseLineWidth * 0.4); // tiny tick
+    // Determine which axis: x=0 → vertical, x>0 → horizontal
+    const isHorizontal = axisAndWidth > 0;
+
+    // Pixel position for this element
+    let px: number, py: number;
+    if (isHorizontal) {
+      px = toPixel(pos);  // offset along X
+      py = center;        // center Y
     } else {
-      // r is in angular units — convert to pixels, but cap at reasonable size
-      // For standard mil-dots (r=1.0 in MIL), this gives a dot about 2px radius
-      // For large circles (r=6..10), this gives visible circles
-      visualRadiusPx = Math.max(1.5, r * ppu * 0.1);
+      px = center;        // center X
+      py = toPixel(pos);  // offset along Y
     }
 
-    // Determine arm stroke width
-    const armStrokeWidth = armWidth > 0 
-      ? Math.max(armWidth * ppu, baseLineWidth) 
-      : 0;
-
-    // Draw on BOTH axes symmetrically
-    // Vertical axis: element at (0, pos) — center-X, offset along Y
-    const vKey = `v|${pos}|${r}`;
-    if (!drawn.has(vKey)) {
-      drawn.add(vKey);
-      const px = center;
-      const py = toPixel(pos);
-      
-      // Draw arm segment (horizontal tick mark on vertical axis)
-      if (armStrokeWidth > 0 && r === 0) {
-        const halfArm = armWidth * ppu * 0.5;
+    // Draw arm/tick mark if x > 0 and radius = 0
+    // These form the visible crosshair line segments
+    if (axisAndWidth > 0 && r === 0) {
+      const halfArm = Math.max(axisAndWidth * ppu * 0.5, baseLineWidth * 0.5);
+      if (isHorizontal) {
+        // Vertical tick mark on the horizontal axis
         svgEls.push(
-          <line key={`cg-arm-v-${idx}`}
-            x1={px - halfArm} y1={py} x2={px + halfArm} y2={py}
-            stroke={color} strokeWidth={baseLineWidth} />,
-        );
-      }
-
-      // Draw circle/dot
-      if (r > 0) {
-        const isBigCircle = visualRadiusPx > ppu * 0.3;
-        if (isBigCircle) {
-          // Large circle: render as hollow ring
-          svgEls.push(
-            <circle key={`cg-circ-v-${idx}`}
-              cx={px} cy={py} r={visualRadiusPx}
-              fill="none" stroke={color} strokeWidth={baseLineWidth} />,
-          );
-        } else {
-          // Small dot: render as filled circle
-          svgEls.push(
-            <circle key={`cg-dot-v-${idx}`}
-              cx={px} cy={py} r={visualRadiusPx}
-              fill={color} />,
-          );
-        }
-      } else if (armStrokeWidth === 0) {
-        // Pure tick with no arm — draw as tiny point
-        svgEls.push(
-          <circle key={`cg-tick-v-${idx}`}
-            cx={px} cy={py} r={visualRadiusPx}
-            fill={color} />,
-        );
-      }
-    }
-
-    // Horizontal axis: element at (pos, 0) — offset along X, center-Y
-    const hKey = `h|${pos}|${r}`;
-    if (!drawn.has(hKey)) {
-      drawn.add(hKey);
-      const px = toPixel(pos);
-      const py = center;
-
-      // Draw arm segment (vertical tick mark on horizontal axis)
-      if (armStrokeWidth > 0 && r === 0) {
-        const halfArm = armWidth * ppu * 0.5;
-        svgEls.push(
-          <line key={`cg-arm-h-${idx}`}
+          <line key={`cg-arm-${idx}`}
             x1={px} y1={py - halfArm} x2={px} y2={py + halfArm}
             stroke={color} strokeWidth={baseLineWidth} />,
         );
       }
+    }
 
-      // Draw circle/dot
-      if (r > 0) {
-        const isBigCircle = visualRadiusPx > ppu * 0.3;
-        if (isBigCircle) {
-          svgEls.push(
-            <circle key={`cg-circ-h-${idx}`}
-              cx={px} cy={py} r={visualRadiusPx}
-              fill="none" stroke={color} strokeWidth={baseLineWidth} />,
-          );
-        } else {
-          svgEls.push(
-            <circle key={`cg-dot-h-${idx}`}
-              cx={px} cy={py} r={visualRadiusPx}
-              fill={color} />,
-          );
-        }
-      } else if (armStrokeWidth === 0) {
+    // Draw circle/dot
+    if (r > 0) {
+      // Radius in angular units → pixels.
+      // Standard mil-dot (r=1.0) should be small filled dot (~3px).
+      // Large circles (r > 2) should be hollow rings.
+      const dotRadiusPx = Math.max(1.5, r * ppu * 0.05);
+      const isLargeCircle = r > 2.0;
+
+      if (isLargeCircle) {
+        // Hollow ring (e.g., horseshoe circles, BDC circles)
         svgEls.push(
-          <circle key={`cg-tick-h-${idx}`}
-            cx={px} cy={py} r={visualRadiusPx}
+          <circle key={`cg-circ-${idx}`}
+            cx={px} cy={py} r={dotRadiusPx}
+            fill="none" stroke={color} strokeWidth={baseLineWidth} />,
+        );
+      } else {
+        // Small filled dot
+        svgEls.push(
+          <circle key={`cg-dot-${idx}`}
+            cx={px} cy={py} r={dotRadiusPx}
             fill={color} />,
         );
       }
+    } else if (axisAndWidth === 0) {
+      // Tiny tick on vertical axis (no arm width)
+      svgEls.push(
+        <circle key={`cg-tick-${idx}`}
+          cx={px} cy={py} r={Math.max(0.8, baseLineWidth * 0.4)}
+          fill={color} />,
+      );
     }
   });
 

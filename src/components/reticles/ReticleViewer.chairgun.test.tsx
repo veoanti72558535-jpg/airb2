@@ -39,9 +39,8 @@ describe('ReticleViewer — Mode A (ChairGun geometry)', () => {
     expect(svg.getAttribute('data-render-mode')).toBe('generic');
   });
 
-  it('renders dot radius=0 as small filled circles on both axes', () => {
-    // A dot at position=2 with radius=0 should render as tiny ticks
-    // on both vertical axis (0, 2) and horizontal axis (2, 0)
+  it('renders dot radius=0 as a small filled circle on the vertical axis', () => {
+    // A dot with x=0 (vertical axis) at position=2 with radius=0
     const { container } = render(
       <ReticleViewer
         reticle={chairgunReticle([{ type: 'dot', x: 0, y: 2, radius: 0 }])}
@@ -49,11 +48,11 @@ describe('ReticleViewer — Mode A (ChairGun geometry)', () => {
         size={400}
       />,
     );
-    // Should have circles drawn on both axes (exclude scope border circle)
+    // x=0 means vertical axis only → 1 filled circle
     const circles = [...container.querySelectorAll('circle')].filter(
       c => c.getAttribute('fill') !== 'none',
     );
-    expect(circles.length).toBeGreaterThanOrEqual(2); // one per axis
+    expect(circles.length).toBeGreaterThanOrEqual(1);
   });
 
   it('renders dot radius>0 as filled dots on both axes', () => {

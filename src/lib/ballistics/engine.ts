@@ -196,22 +196,24 @@ export function calculateTrajectory(input: BallisticInput): BallisticResult[] {
     t += dt;
 
     // ── Wind drift ──────────────────────────────────────────────────
+    // Didion lag-time model: drift = crosswind × (TOF_actual - Range/V₀).
+    // The lag is the difference between the actual time of flight (with drag)
+    // and the vacuum time of flight (without drag). This difference grows
+    // as drag slows the projectile, causing it to spend more time exposed
+    // to the crosswind.
+    //
+    // This matches ChairGun Elite and Strelok Pro's analytical wind model.
+    // The previous constant (0.06) overestimated wind drift by ~5×.
     if (windModel === 'vectorial') {
-      // Vectorial: headwind decelerates (or tailwind accelerates) along X,
-      // crosswind accumulates laterally. Both analytical approximations.
-      // Headwind effect on flight time is already captured by the drag
-      // deceleration if the wind were injected into the integrator; for now
-      // we use the simpler analytical model scaled by wind strength.
-      windDriftX = crosswind * t * 0.06;
-      // Headwind effect on velocity: adds/subtracts from effective v0.
-      // Positive headwind → slower effective velocity → more drop.
-      // This is a first-order approximation; the full vectorial integration
-      // would inject wind into the velocity vector at each step. We keep
-      // the analytical model for now, matching Strelok's simplified mode.
-      // (The headwind component affects TOF, which is already tracked.)
+      // Vectorial: same lag-time base plus headwind effect on effective V₀.
+      // Headwind reduces effective V₀ → more lag → more drift.
+      const effectiveV0 = muzzleVelocity - headwind;
+      const vacuumTof = effectiveV0 > 1 ? state.x / effectiveV0 : t;
+      windDriftX = crosswind * (t - vacuumTof);
     } else {
-      // Legacy: crosswind only (identical to pre-P2 formulation).
-      windDriftX = crosswind * t * 0.06;
+      // Legacy lateral-only: Didion lag-time formula.
+      const vacuumTof = state.x / muzzleVelocity;
+      windDriftX = crosswind * (t - vacuumTof);
     }
 
     if (state.x >= nextRange && nextRange <= maxRange) {

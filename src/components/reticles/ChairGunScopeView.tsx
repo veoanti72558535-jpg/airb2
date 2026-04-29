@@ -359,6 +359,21 @@ const ChairGunScopeView: React.FC<ChairGunScopeViewProps> = ({
       const poiPy = cy + poiMilY * pixelsPerMil;
       const dist = Math.hypot(poiPx - cx, poiPy - cy);
 
+      // Auto-crosshair if no long lines in geometry
+      if (!hasMainCross) {
+        ctx.save();
+        ctx.setLineDash([]); // Ensure solid line
+        ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+        ctx.lineWidth = Math.max(1, baseLineWidth * 0.8);
+        ctx.beginPath();
+        ctx.moveTo(cx - radius, cy);
+        ctx.lineTo(cx + radius, cy);
+        ctx.moveTo(cx, cy - radius);
+        ctx.lineTo(cx, cy + radius);
+        ctx.stroke();
+        ctx.restore();
+      }
+
       // Dashed line from center to POI
       if (dist > 3) {
         ctx.save();

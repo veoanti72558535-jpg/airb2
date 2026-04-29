@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { Link, useLocation } from 'react-router-dom';
 import {
@@ -91,6 +91,25 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   };
 
   const moreActive = moreFlat.some((n) => isActive(n.path));
+
+  // Close "More" on Escape, lock body scroll while open, auto-close on route change
+  useEffect(() => {
+    if (!moreOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMoreOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [moreOpen]);
+
+  useEffect(() => {
+    setMoreOpen(false);
+  }, [location.pathname, location.search]);
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -253,9 +272,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <div
             className={cn(
               'fixed z-[70] bg-card border-border animate-fade-in',
-              'bottom-0 left-0 right-0 border-t rounded-t-2xl safe-area-bottom max-h-[80vh] overflow-y-auto',
-              'md:bottom-auto md:right-auto md:left-20 md:top-0 md:h-screen md:w-80 md:rounded-none md:border-l md:border-t-0'
+              // Mobile: bottom sheet sitting above the 56px bottom nav
+              'left-0 right-0 bottom-14 border-t rounded-t-2xl safe-area-bottom max-h-[75vh] overflow-y-auto shadow-2xl',
+              // Desktop: docked side panel flush against the 5rem (w-20) sidebar
+              'md:bottom-0 md:right-auto md:left-20 md:top-0 md:h-screen md:w-80 md:max-h-none md:rounded-none md:border-l md:border-t-0'
             )}
+            role="dialog"
+            aria-modal="true"
+            aria-label={t('nav.more')}
           >
             <div className="flex items-center justify-between px-5 pt-4 pb-2 sticky top-0 bg-card z-10 border-b border-border/40">
               <span className="font-heading font-semibold text-sm">{t('nav.more')}</span>

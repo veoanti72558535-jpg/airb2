@@ -111,15 +111,33 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     setMoreOpen(false);
   }, [location.pathname, location.search]);
 
+  const railItemClass = (active: boolean) =>
+    cn(
+      'group/rail relative flex flex-col items-center justify-center gap-1 w-[68px] py-2 rounded-xl transition-all duration-150',
+      active
+        ? 'text-primary bg-primary/10 shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.18)]'
+        : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
+    );
+
+  const railLabelClass = (active: boolean) =>
+    cn(
+      'text-[10px] leading-tight text-center truncate max-w-full px-1 tracking-wide',
+      active ? 'font-semibold' : 'font-medium'
+    );
+
   return (
     <div className="min-h-screen bg-background flex">
-      {/* ── Desktop Sidebar (64px icons + labels) ── */}
-      <aside className="hidden md:flex flex-col w-20 border-r border-border bg-card sticky top-0 h-screen shrink-0">
-        <Link to="/" className="flex items-center justify-center h-14 border-b border-border" title="AirBallistik">
+      {/* ── Desktop Sidebar (premium icon-rail with labels) ── */}
+      <aside className="hidden md:flex flex-col w-20 border-r border-border bg-card/95 backdrop-blur-sm sticky top-0 h-screen shrink-0 shadow-[inset_-1px_0_0_0_hsl(var(--border)/0.4)]">
+        <Link
+          to="/"
+          className="flex items-center justify-center h-14 border-b border-border/70"
+          title="AirBallistik"
+        >
           <Target className="h-5 w-5 text-primary" />
         </Link>
 
-        <nav className="flex-1 flex flex-col items-center gap-0.5 py-2 overflow-y-auto">
+        <nav className="flex-1 flex flex-col items-center gap-1 py-3 overflow-y-auto scrollbar-thin">
           {sidebarNav.map(item => {
             const active = isActive(item.path);
             return (
@@ -127,25 +145,18 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 key={item.path}
                 to={item.path}
                 title={t(item.labelKey)}
-                className={cn(
-                  'flex flex-col items-center justify-center gap-1 w-16 py-2 rounded-lg transition-colors duration-150 relative',
-                  active
-                    ? 'bg-primary/10 text-primary'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                )}
+                className={railItemClass(active)}
               >
                 {active && (
-                  <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-0.5 rounded-r-full bg-primary" />
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 h-7 w-[3px] rounded-r-full bg-gradient-to-b from-primary/70 via-primary to-primary/70 shadow-[0_0_8px_hsl(var(--primary)/0.45)]" />
                 )}
-                <item.icon className="h-5 w-5" />
-                <span className="text-[10px] font-medium leading-tight text-center truncate max-w-full px-1">
-                  {t(item.labelKey)}
-                </span>
+                <item.icon className="h-[18px] w-[18px]" strokeWidth={active ? 2.25 : 1.85} />
+                <span className={railLabelClass(active)}>{t(item.labelKey)}</span>
               </Link>
             );
           })}
 
-          <div className="w-8 border-t border-border my-1.5" />
+          <div className="w-8 border-t border-border/60 my-2" />
 
           {adminNav.map(item => {
             const active = isActive(item.path);
@@ -154,20 +165,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 key={item.path}
                 to={item.path}
                 title={t(item.labelKey)}
-                className={cn(
-                  'flex flex-col items-center justify-center gap-1 w-16 py-2 rounded-lg transition-colors duration-150 relative',
-                  active
-                    ? 'bg-primary/10 text-primary'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                )}
+                className={railItemClass(active)}
               >
                 {active && (
-                  <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-0.5 rounded-r-full bg-primary" />
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 h-7 w-[3px] rounded-r-full bg-gradient-to-b from-primary/70 via-primary to-primary/70 shadow-[0_0_8px_hsl(var(--primary)/0.45)]" />
                 )}
-                <item.icon className="h-5 w-5" />
-                <span className="text-[10px] font-medium leading-tight text-center truncate max-w-full px-1">
-                  {t(item.labelKey)}
-                </span>
+                <item.icon className="h-[18px] w-[18px]" strokeWidth={active ? 2.25 : 1.85} />
+                <span className={railLabelClass(active)}>{t(item.labelKey)}</span>
               </Link>
             );
           })}
@@ -177,34 +181,29 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             onClick={() => setMoreOpen(true)}
             title={t('nav.more')}
             aria-label={t('nav.more')}
-            className={cn(
-              'flex flex-col items-center justify-center gap-1 w-16 py-2 rounded-lg transition-colors duration-150 relative',
-              moreActive
-                ? 'bg-primary/10 text-primary'
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-            )}
+            className={railItemClass(moreActive)}
           >
             {moreActive && (
-              <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-0.5 rounded-r-full bg-primary" />
+              <span className="absolute left-0 top-1/2 -translate-y-1/2 h-7 w-[3px] rounded-r-full bg-gradient-to-b from-primary/70 via-primary to-primary/70 shadow-[0_0_8px_hsl(var(--primary)/0.45)]" />
             )}
-            <MoreHorizontal className="h-5 w-5" />
-            <span className="text-[10px] font-medium leading-tight">{t('nav.more')}</span>
+            <MoreHorizontal className="h-[18px] w-[18px]" strokeWidth={moreActive ? 2.25 : 1.85} />
+            <span className={railLabelClass(moreActive)}>{t('nav.more')}</span>
           </button>
         </nav>
 
-        <div className="flex flex-col items-center gap-1.5 py-3 border-t border-border">
+        <div className="flex flex-col items-center gap-1.5 py-3 border-t border-border/70 bg-card/60">
           <button
             onClick={() => setLocale(locale === 'fr' ? 'en' : 'fr')}
             title={locale === 'fr' ? 'English' : 'Français'}
-            className="flex items-center justify-center gap-1 w-16 py-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors duration-150"
+            className="flex items-center justify-center gap-1.5 w-[68px] py-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors duration-150"
           >
-            <Globe className="h-4 w-4" />
-            <span className="text-[10px] font-semibold uppercase">{locale}</span>
+            <Globe className="h-3.5 w-3.5" />
+            <span className="text-[10px] font-semibold uppercase tracking-wider">{locale}</span>
           </button>
           <Link
             to="/settings"
             title={t('settings.theme' as any)}
-            className="flex items-center justify-center w-9 h-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors duration-150"
+            className="flex items-center justify-center w-9 h-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors duration-150"
           >
             {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </Link>

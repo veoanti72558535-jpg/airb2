@@ -16,6 +16,13 @@ const fr = {
   'nav.tunes': 'Tunes',
   'nav.compare': 'Comparer',
   'nav.adminAi': 'Admin IA',
+  'nav.chat': 'Assistant IA',
+  'nav.fieldMode': 'Mode terrain',
+  'nav.rangeSimulator': 'Simulateur',
+  'nav.diary': 'Carnet de tir',
+  'nav.ftCompetition': 'Compétition FT',
+  'nav.scopeView': 'Vue lunette',
+  'nav.targetAnalysis': 'Analyse cible',
 
   // Dashboard
   'dashboard.title': 'Tableau de bord',
@@ -1836,6 +1843,13 @@ const en: Record<keyof typeof fr, string> = {
   'nav.tunes': 'Tunes',
   'nav.compare': 'Compare',
   'nav.adminAi': 'AI Admin',
+  'nav.chat': 'AI Assistant',
+  'nav.fieldMode': 'Field mode',
+  'nav.rangeSimulator': 'Range simulator',
+  'nav.diary': 'Shooting diary',
+  'nav.ftCompetition': 'FT competition',
+  'nav.scopeView': 'Scope view',
+  'nav.targetAnalysis': 'Target analysis',
 
   'dashboard.title': 'Dashboard',
   'dashboard.welcome': 'Welcome to AirBallistik',

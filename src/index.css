@@ -251,6 +251,17 @@
   .tactical-badge {
     @apply bg-tactical/15 text-tactical text-xs font-medium px-2 py-0.5 rounded;
   }
+  
+  /* Modern Premium UI Utilities */
+  .glass-card {
+    @apply bg-card/60 backdrop-blur-md border border-border/50 rounded-xl shadow-[0_4px_24px_-8px_rgba(0,0,0,0.1)] transition-all duration-300;
+  }
+  .glass-card:hover {
+    @apply bg-card/80 border-primary/30 shadow-[0_8px_32px_-8px_rgba(var(--primary),0.15)] -translate-y-0.5;
+  }
+  .glass-panel {
+    @apply bg-background/60 backdrop-blur-xl border border-border/40;
+  }
 
   /* Smooth transitions for the compare-modal SVG chart when sliders change.
      Animates marker position/size and curve path morphing. */

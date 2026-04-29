@@ -331,12 +331,12 @@ export default function AirgunsPage() {
             <Link
               key={a.id}
               to={`/library/airgun/${a.id}`}
-              className="surface-elevated p-4 block hover:border-primary/40 transition-colors"
+              className="glass-card p-4 block hover:border-primary/40 transition-colors group"
             >
               <div className="flex items-start justify-between mb-2">
                 <div className="min-w-0 flex-1">
-                  <div className="font-semibold text-sm">{a.brand} {a.model}</div>
-                  <div className="flex flex-wrap gap-1.5 mt-1">
+                  <div className="font-heading font-bold text-base group-hover:text-primary transition-colors">{a.brand} {a.model}</div>
+                  <div className="flex flex-wrap gap-1.5 mt-1.5">
                     <span className="tactical-badge">{a.caliber}</span>
                     {a.barrelLength ? <span className="tactical-badge">{a.barrelLength}{lengthSym}</span> : null}
                     {a.twistRate ? <span className="tactical-badge">1:{a.twistRate}″</span> : null}

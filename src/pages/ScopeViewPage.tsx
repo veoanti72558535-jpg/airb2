@@ -136,10 +136,16 @@ export default function ScopeViewPage() {
 
   // Responsive size
   const [scopeSize, setScopeSize] = useState(560);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  
   useEffect(() => {
     const update = () => {
-      const available = Math.min(window.innerWidth - 380, window.innerHeight - 80);
-      setScopeSize(Math.max(300, Math.min(800, available)));
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      
+      const availableW = mobile ? window.innerWidth - 32 : window.innerWidth - 380;
+      const availableH = mobile ? window.innerHeight - 300 : window.innerHeight - 80;
+      setScopeSize(Math.max(250, Math.min(800, availableW, availableH)));
     };
     update();
     window.addEventListener('resize', update);
@@ -149,20 +155,22 @@ export default function ScopeViewPage() {
   return (
     <div style={{
       display: 'flex',
+      flexDirection: isMobile ? 'column' : 'row',
       height: '100vh',
       background: '#0a0a0a',
       color: '#e2e8f0',
       fontFamily: '"Inter", "Segoe UI", system-ui, sans-serif',
-      overflow: 'hidden',
+      overflow: isMobile ? 'auto' : 'hidden',
     }}>
       {/* ── Sidebar ─────────────────────────────────────────────── */}
       <aside style={{
-        width: 340,
+        width: isMobile ? '100%' : 340,
         background: 'linear-gradient(180deg, #111318 0%, #0d0f14 100%)',
-        borderRight: '1px solid #1e2330',
+        borderRight: isMobile ? 'none' : '1px solid #1e2330',
+        borderBottom: isMobile ? '1px solid #1e2330' : 'none',
         display: 'flex',
         flexDirection: 'column',
-        overflowY: 'auto',
+        overflowY: isMobile ? 'visible' : 'auto',
         padding: '16px',
         gap: '12px',
         flexShrink: 0,

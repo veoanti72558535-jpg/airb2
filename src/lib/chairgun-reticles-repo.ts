@@ -17,16 +17,18 @@ export type ChairgunUnit = 'MRAD' | 'MIL' | 'MOA' | 'CM/100M';
 export type ChairgunFocalPlane = 'FFP' | 'SFP';
 
 export interface ChairgunElement {
-  type: 'line' | 'dot';
+  type: 'line' | 'dot' | 'circle' | 'text';
   // line: x1,y1,x2,y2 en unités angulaires (MIL ou MOA)
   x1?: number; y1?: number; x2?: number; y2?: number;
-  // dot: x,y,radius en unités angulaires
+  // dot/circle/text: x,y en unités angulaires
   x?: number; y?: number; radius?: number;
+  text?: string;
 }
 
 export interface ChairgunReticle {
   reticle_id: number;
   name: string;
+  vendor?: string;
   focal_plane: ChairgunFocalPlane | null;
   unit: ChairgunUnit | null;
   true_magnification: number | null;
@@ -36,6 +38,7 @@ export interface ChairgunReticle {
 
 export interface ChairgunFilters {
   search?: string;
+  vendor?: string;
   focal_plane?: ChairgunFocalPlane;
   unit?: ChairgunUnit;
   /** Si true → ne renvoyer que les réticules avec géométrie (element_count > 0) */
@@ -56,19 +59,22 @@ function normalizeElements(raw: unknown): ChairgunElement[] {
   return raw
     .filter((e): e is Record<string, unknown> => !!e && typeof e === 'object')
     .map((e) => {
-      const t = e.type === 'dot' ? 'dot' : 'line';
-      const out: ChairgunElement = { type: t };
+      const t = (e.type as string) || 'line';
+      const out: any = { type: t };
       const num = (k: string): number | undefined => {
         const v = e[k];
         return typeof v === 'number' && Number.isFinite(v) ? v : undefined;
       };
+      
       if (t === 'line') {
         out.x1 = num('x1'); out.y1 = num('y1');
         out.x2 = num('x2'); out.y2 = num('y2');
-      } else {
+      } else if (t === 'circle' || t === 'dot') {
         out.x = num('x'); out.y = num('y'); out.radius = num('radius');
+      } else if (t === 'text') {
+        out.x = num('x'); out.y = num('y'); out.text = e.text as string;
       }
-      return out;
+      return out as ChairgunElement;
     });
 }
 
@@ -102,6 +108,7 @@ export async function getChairgunReticles(
       .select('*', { count: 'exact' });
 
     if (filters.search) query = query.ilike('name', `%${filters.search}%`);
+    if (filters.vendor) query = query.eq('vendor', filters.vendor);
     if (filters.focal_plane) query = query.eq('focal_plane', filters.focal_plane);
     if (filters.unit) query = query.eq('unit', filters.unit);
     if (filters.withGeometryOnly) query = query.gt('element_count', 0);

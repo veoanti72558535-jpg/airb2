@@ -131,14 +131,14 @@ const ChairGunScopeView: React.FC<ChairGunScopeViewProps> = ({
 
     // ── 1. Background ─────────────────────────────────────────────
     ctx.clearRect(0, 0, w, h);
-    ctx.fillStyle = '#000';
+    ctx.fillStyle = '#000'; // Outer black background
     ctx.fillRect(0, 0, w, h);
 
-    // Scope tube — dark circle with metallic ring
+    // Scope tube — daylight bright background instead of black
     ctx.save();
     ctx.beginPath();
     ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-    ctx.fillStyle = '#050505';
+    ctx.fillStyle = '#f8fafc'; // Daylight bright
     ctx.fill();
 
     // Metallic tube ring (gradient)
@@ -146,7 +146,7 @@ const ChairGunScopeView: React.FC<ChairGunScopeViewProps> = ({
     ringGrad.addColorStop(0, '#333');
     ringGrad.addColorStop(0.5, '#555');
     ringGrad.addColorStop(0.7, '#444');
-    ringGrad.addColorStop(1, '#1a1a1a');
+    ringGrad.addColorStop(1, '#000');
     ctx.lineWidth = 10;
     ctx.strokeStyle = ringGrad;
     ctx.stroke();
@@ -218,8 +218,10 @@ const ChairGunScopeView: React.FC<ChairGunScopeViewProps> = ({
     const visualScale = isFFP ? magnification / trueMag : 1;
     const ppm = pixelsPerMil * visualScale;
 
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+    // Use black reticle color to contrast with the daylight background
+    const reticleColor = 'rgba(0, 0, 0, 0.85)';
+    ctx.strokeStyle = reticleColor;
+    ctx.fillStyle = reticleColor;
     ctx.lineCap = 'round';
 
     const baseLineWidth = Math.max(0.5, size * 0.002);
@@ -243,18 +245,9 @@ const ChairGunScopeView: React.FC<ChairGunScopeViewProps> = ({
 
         if (gap >= extent && extent > 0) continue;
 
-        if (axis === 1 || axis === 1.0) {
-          // Horizontal arms
-          ctx.beginPath();
-          ctx.moveTo(cx + gap * ppm, cy);
-          ctx.lineTo(cx + extent * ppm, cy);
-          ctx.stroke();
-          
-          ctx.beginPath();
-          ctx.moveTo(cx - gap * ppm, cy);
-          ctx.lineTo(cx - extent * ppm, cy);
-          ctx.stroke();
-        } else {
+        const isVerticalAxis = axis > 0;
+
+        if (isVerticalAxis) {
           // Vertical arms
           ctx.beginPath();
           ctx.moveTo(cx, cy + gap * ppm);
@@ -265,69 +258,103 @@ const ChairGunScopeView: React.FC<ChairGunScopeViewProps> = ({
           ctx.moveTo(cx, cy - gap * ppm);
           ctx.lineTo(cx, cy - extent * ppm);
           ctx.stroke();
+        } else {
+          // Horizontal arms
+          ctx.beginPath();
+          ctx.moveTo(cx + gap * ppm, cy);
+          ctx.lineTo(cx + extent * ppm, cy);
+          ctx.stroke();
+          
+          ctx.beginPath();
+          ctx.moveTo(cx - gap * ppm, cy);
+          ctx.lineTo(cx - extent * ppm, cy);
+          ctx.stroke();
         }
       } else {
-        // dot/circle
-        const axisAndWidth = el.x ?? 0;
+        // "dot" in ChairGun actually represents tick marks/hashes (or dots) along an axis
+        const axisId = el.x ?? 0; // 0.0 = horizontal axis, 1.0 = vertical axis
         const pos = el.y ?? 0;
-        const r = el.radius ?? 0;
-        const isHorizontal = axisAndWidth > 0;
+        const radiusVal = el.radius ?? 0;
+        
+        // Horizontal axis means the tick marks are placed along X, and stick out vertically.
+        // Vertical axis means the tick marks are placed along Y, and stick out horizontally.
+        const isVerticalAxis = axisId > 0;
 
         let px: number, py: number;
-        if (isHorizontal) {
+        if (isVerticalAxis) {
+          px = cx;
+          py = cy + pos * ppm; // + pos because in Canvas +Y is down
+        } else {
           px = cx + pos * ppm;
           py = cy;
-        } else {
-          px = cx;
-          py = cy + pos * ppm; // Using + because in Canvas +Y is down
         }
 
-        const key = `${isHorizontal ? 'h' : 'v'}|${pos}|${r}`;
+        const key = `${isVerticalAxis ? 'v' : 'h'}|${pos}|${radiusVal}`;
         if (drawn.has(key)) continue;
         drawn.add(key);
 
-        // Draw arm/tick segment
-        if (axisAndWidth > 0 && r === 0) {
-          const halfArm = Math.max(axisAndWidth * ppm * 0.5, baseLineWidth * 0.5);
+        // Calculate tick length
+        // The radiusVal seems to act as a relative width for the hash mark.
+        // Usually, 1.0 is a full mil hash, 0.5 is a half mil hash.
+        let tickLengthPx = 0;
+        let isTrueDot = false;
+        
+        if (radiusVal === 0) {
+          // Sometimes 0 radius is used for very small dots to create solid lines or tiny ticks
+          tickLengthPx = Math.max(1, baseLineWidth);
+        } else {
+          // Map radiusVal to a physical length. A radius of 1.0 might mean 0.1 MIL or similar.
+          // Let's use radiusVal * ppm * 0.05 as the length, or a fixed ratio.
+          tickLengthPx = Math.max(3, radiusVal * ppm * 0.08); 
+          // If the radius is extremely small, it might actually be a round dot instead of a hash mark
+          if (radiusVal < 0.2) {
+             isTrueDot = true;
+          }
+        }
+
+        if (isTrueDot) {
+          const dotRadiusPx = Math.max(1.5, radiusVal * ppm * 0.05);
+          ctx.beginPath();
+          ctx.arc(px, py, dotRadiusPx, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          // Draw hash mark (line)
           ctx.lineWidth = baseLineWidth;
           ctx.beginPath();
-          if (isHorizontal) {
-            ctx.moveTo(px, py - halfArm);
-            ctx.lineTo(px, py + halfArm);
+          if (isVerticalAxis) {
+            // Hash marks on the vertical axis are drawn horizontally
+            ctx.moveTo(px - tickLengthPx, py);
+            ctx.lineTo(px + tickLengthPx, py);
           } else {
-            ctx.moveTo(px - halfArm, py);
-            ctx.lineTo(px + halfArm, py);
+            // Hash marks on the horizontal axis are drawn vertically
+            ctx.moveTo(px, py - tickLengthPx);
+            ctx.lineTo(px, py + tickLengthPx);
           }
           ctx.stroke();
         }
-
-        // Draw dot/circle
-        if (r > 0) {
-          const dotRadiusPx = Math.max(1.5, r * ppm * 0.05);
-          const isLargeCircle = r > 2.0;
-          ctx.beginPath();
-          ctx.arc(px, py, dotRadiusPx, 0, Math.PI * 2);
-          
-          if (isLargeCircle) {
-            ctx.lineWidth = baseLineWidth;
-            ctx.stroke();
-          } else {
-            ctx.fill();
-          }
-        } else if (axisAndWidth === 0) {
-          // Tiny tick on vertical
-          ctx.beginPath();
-          ctx.arc(px, py, Math.max(0.8, baseLineWidth * 0.4), 0, Math.PI * 2);
-          ctx.fill();
-        }
       }
+    }
+
+    // Auto-crosshair if no long lines in geometry
+    if (!hasMainCross) {
+      ctx.save();
+      ctx.setLineDash([]); // Ensure solid line
+      ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+      ctx.lineWidth = Math.max(1, baseLineWidth * 0.8);
+      ctx.beginPath();
+      ctx.moveTo(cx - radius, cy);
+      ctx.lineTo(cx + radius, cy);
+      ctx.moveTo(cx, cy - radius);
+      ctx.lineTo(cx, cy + radius);
+      ctx.stroke();
+      ctx.restore();
     }
 
     // ── 5. Range labels (ChairGun red numbers) ────────────────────
     if (trajectory && trajectory.length > 1) {
       ctx.font = `bold ${Math.max(10, size * 0.018)}px "Inter", "Roboto", sans-serif`;
       ctx.textAlign = 'left';
-      ctx.fillStyle = '#ff4444'; // ChairGun Red
+      ctx.fillStyle = '#dc2626'; // ChairGun Red
 
       // Show range labels at major MIL marks (1, 2, 3, 4, 5 MIL holdover)
       for (let milMark = 1; milMark <= 10; milMark++) {
@@ -359,26 +386,11 @@ const ChairGunScopeView: React.FC<ChairGunScopeViewProps> = ({
       const poiPy = cy + poiMilY * pixelsPerMil;
       const dist = Math.hypot(poiPx - cx, poiPy - cy);
 
-      // Auto-crosshair if no long lines in geometry
-      if (!hasMainCross) {
-        ctx.save();
-        ctx.setLineDash([]); // Ensure solid line
-        ctx.strokeStyle = 'rgba(255,255,255,0.4)';
-        ctx.lineWidth = Math.max(1, baseLineWidth * 0.8);
-        ctx.beginPath();
-        ctx.moveTo(cx - radius, cy);
-        ctx.lineTo(cx + radius, cy);
-        ctx.moveTo(cx, cy - radius);
-        ctx.lineTo(cx, cy + radius);
-        ctx.stroke();
-        ctx.restore();
-      }
-
       // Dashed line from center to POI
       if (dist > 3) {
         ctx.save();
         ctx.setLineDash([2, 3]);
-        ctx.strokeStyle = 'rgba(255,77,77,0.6)';
+        ctx.strokeStyle = 'rgba(220,38,38,0.6)';
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(cx, cy);
@@ -391,7 +403,7 @@ const ChairGunScopeView: React.FC<ChairGunScopeViewProps> = ({
       const poiR = Math.max(3, size * 0.008);
       ctx.beginPath();
       ctx.arc(poiPx, poiPy, poiR, 0, Math.PI * 2);
-      ctx.fillStyle = '#ff4d4d';
+      ctx.fillStyle = '#dc2626';
       ctx.fill();
       ctx.strokeStyle = '#fff';
       ctx.lineWidth = 1;
@@ -405,15 +417,16 @@ const ChairGunScopeView: React.FC<ChairGunScopeViewProps> = ({
     const hudSmall = `${Math.max(9, size * 0.016)}px "Inter", monospace`;
     const hudPad = size * 0.03;
 
+    // Darker HUD colors for light background
     // Top-left: Range & Drop
     ctx.font = hudFont;
     ctx.textAlign = 'left';
-    ctx.fillStyle = '#38bdf8'; // Sky blue
+    ctx.fillStyle = '#0ea5e9'; // Sky blue
     ctx.fillText(`Range: ${targetRange}m`, hudPad + 10, hudPad + 18);
 
     if (atRange) {
       ctx.font = hudSmall;
-      ctx.fillStyle = '#94a3b8';
+      ctx.fillStyle = '#475569';
       ctx.fillText(`Drop: ${atRange.drop.toFixed(1)} mm`, hudPad + 10, hudPad + 36);
       ctx.fillText(`Hold: ${Math.abs(atRange.holdoverMRAD).toFixed(2)} MIL`, hudPad + 10, hudPad + 52);
     }
@@ -422,10 +435,10 @@ const ChairGunScopeView: React.FC<ChairGunScopeViewProps> = ({
     if (atRange) {
       ctx.font = hudFont;
       ctx.textAlign = 'right';
-      ctx.fillStyle = '#a78bfa'; // Purple
+      ctx.fillStyle = '#8b5cf6'; // Purple
       ctx.fillText(`${atRange.velocity.toFixed(0)} m/s`, w - hudPad - 10, hudPad + 18);
       ctx.font = hudSmall;
-      ctx.fillStyle = '#94a3b8';
+      ctx.fillStyle = '#475569';
       ctx.fillText(`${atRange.energy.toFixed(1)} J`, w - hudPad - 10, hudPad + 36);
       ctx.fillText(`TOF: ${atRange.tof.toFixed(3)}s`, w - hudPad - 10, hudPad + 52);
     }
@@ -437,7 +450,7 @@ const ChairGunScopeView: React.FC<ChairGunScopeViewProps> = ({
       ctx.fillStyle = '#d946ef'; // Pink
       ctx.fillText(`Wind ${windSpeed.toFixed(1)} m/s @ ${windAngle}°`, hudPad + 10, h - hudPad - 20);
       if (atRange) {
-        ctx.fillStyle = '#94a3b8';
+        ctx.fillStyle = '#475569';
         ctx.fillText(`Drift: ${atRange.windDrift.toFixed(1)} mm`, hudPad + 10, h - hudPad - 4);
       }
     }
@@ -445,13 +458,13 @@ const ChairGunScopeView: React.FC<ChairGunScopeViewProps> = ({
     // Bottom-right: Magnification
     ctx.font = hudFont;
     ctx.textAlign = 'right';
-    ctx.fillStyle = '#fbbf24'; // Amber
+    ctx.fillStyle = '#d97706'; // Amber
     ctx.fillText(`${magnification.toFixed(1)}×`, w - hudPad - 10, h - hudPad - 4);
 
     // Bottom-center: Zero info
     ctx.font = hudSmall;
     ctx.textAlign = 'center';
-    ctx.fillStyle = '#475569';
+    ctx.fillStyle = '#334155';
     ctx.fillText(`Zero: ${zeroRange}m · MV: ${muzzleVelocity} m/s`, cx, h - hudPad - 4);
 
   }, [size, elements, reticle, magnification, trajectory, targetRange,
@@ -482,6 +495,9 @@ const ChairGunScopeView: React.FC<ChairGunScopeViewProps> = ({
       style={{
         borderRadius: '50%',
         boxShadow: '0 0 40px rgba(0,0,0,0.8), inset 0 0 20px rgba(0,0,0,0.5)',
+        maxWidth: '100%',
+        height: 'auto',
+        aspectRatio: '1 / 1'
       }}
     />
   );

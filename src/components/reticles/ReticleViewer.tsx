@@ -366,123 +366,65 @@ function buildChairgunSvg(
   viewportRange: number,
 ): { svgEls: React.ReactNode[]; autoCrosshair: boolean } {
   const center = size / 2;
-  const ppu = size / (2 * viewportRange); // pixels per unit
-  const baseLineWidth = Math.max(0.5, size * 0.002);
-  const color = darkMode ? '#ccc' : '#1a1a1a';
+  // Based on analysis, 10 units in the dump = 1 unit (MIL/MOA) in the reticle.
+  // We scale accordingly to match the viewportRange.
+  const dumpToUnitScale = 0.1;
+  const ppu = size / (2 * viewportRange); // pixels per unit (MIL/MOA)
+  const scale = dumpToUnitScale * ppu;    // pixels per dump unit
 
-  // Convert angular units to pixel position (from center)
-  const toPixel = (angularOffset: number) => center + angularOffset * ppu;
+  const baseLineWidth = Math.max(0.5, size * 0.0015);
+  const color = darkMode ? '#ccc' : '#1a1a1a';
 
   const svgEls: React.ReactNode[] = [];
 
-  // ── Pass 1: Draw LINE elements (crosshair arms) ──
   els.forEach((e, idx) => {
-    if (e.type !== 'line') return;
-    const gap = e.x1 ?? 0;
-    const axis = e.y1 ?? 0;    // 0 = vertical, 1 = horizontal
-    const extent = e.x2 ?? 0;
-    const thickness = e.y2 ?? 0;
-
-    const sw = thickness > 0 ? Math.max(thickness * ppu, baseLineWidth) : baseLineWidth;
-
-    if (gap >= extent && extent > 0) return; // degenerate
-
-    if (axis === 1 || axis === 1.0) {
-      // Horizontal arms: positive (right) and negative (left)
+    if (e.type === 'line') {
+      const x1 = center + (e.x1 ?? 0) * scale;
+      const y1 = center + (e.y1 ?? 0) * scale; // Note: Canvas Y is already Down-positive in our normalized dump
+      const x2 = center + (e.x2 ?? 0) * scale;
+      const y2 = center + (e.y2 ?? 0) * scale;
+      
       svgEls.push(
-        <line key={`cg-line-h+${idx}`}
-          x1={toPixel(gap)} y1={center} x2={toPixel(extent)} y2={center}
-          stroke={color} strokeWidth={sw} />,
-        <line key={`cg-line-h-${idx}`}
-          x1={toPixel(-gap)} y1={center} x2={toPixel(-extent)} y2={center}
-          stroke={color} strokeWidth={sw} />,
+        <line key={`cg-l-${idx}`}
+          x1={x1} y1={y1} x2={x2} y2={y2}
+          stroke={color} strokeWidth={baseLineWidth} strokeLinecap="round" />
       );
-    } else {
-      // Vertical arms: positive (down) and negative (up)
-      svgEls.push(
-        <line key={`cg-line-v+${idx}`}
-          x1={center} y1={toPixel(gap)} x2={center} y2={toPixel(extent)}
-          stroke={color} strokeWidth={sw} />,
-        <line key={`cg-line-v-${idx}`}
-          x1={center} y1={toPixel(-gap)} x2={center} y2={toPixel(-extent)}
-          stroke={color} strokeWidth={sw} />,
-      );
-    }
-  });
-
-  // ── Pass 2: DOT elements ──
-  // ChairGun encoding: x=0 → place on VERTICAL axis, x>0 → place on HORIZONTAL axis.
-  // The 'x' value also encodes the arm width for crosshair tick marks.
-  // 'y' = position (distance from center along the axis, in angular units).
-  // 'radius' = size of circle/dot drawn at this position.
-
-  els.forEach((e, idx) => {
-    if (e.type !== 'dot') return;
-    const axisAndWidth = e.x ?? 0;
-    const pos = e.y ?? 0;
-    const r = e.radius ?? 0;
-
-    // Determine which axis: x=0 → vertical, x>0 → horizontal
-    const isHorizontal = axisAndWidth > 0;
-
-    // Pixel position for this element
-    let px: number, py: number;
-    if (isHorizontal) {
-      px = toPixel(pos);  // offset along X
-      py = center;        // center Y
-    } else {
-      px = center;        // center X
-      py = toPixel(pos);  // offset along Y
-    }
-
-    // Draw arm/tick mark if x > 0 and radius = 0
-    // These form the visible crosshair line segments
-    if (axisAndWidth > 0 && r === 0) {
-      const halfArm = Math.max(axisAndWidth * ppu * 0.5, baseLineWidth * 0.5);
-      if (isHorizontal) {
-        // Vertical tick mark on the horizontal axis
+    } else if (e.type === 'circle' || e.type === 'dot') {
+      const cx = center + (e.x ?? 0) * scale;
+      const cy = center + (e.y ?? 0) * scale;
+      const r = (e.radius ?? 0) * scale;
+      
+      if (r > 0.5) {
         svgEls.push(
-          <line key={`cg-arm-${idx}`}
-            x1={px} y1={py - halfArm} x2={px} y2={py + halfArm}
-            stroke={color} strokeWidth={baseLineWidth} />,
-        );
-      }
-    }
-
-    // Draw circle/dot
-    if (r > 0) {
-      // Radius in angular units → pixels.
-      // Standard mil-dot (r=1.0) should be small filled dot (~3px).
-      // Large circles (r > 2) should be hollow rings.
-      const dotRadiusPx = Math.max(1.5, r * ppu * 0.05);
-      const isLargeCircle = r > 2.0;
-
-      if (isLargeCircle) {
-        // Hollow ring (e.g., horseshoe circles, BDC circles)
-        svgEls.push(
-          <circle key={`cg-circ-${idx}`}
-            cx={px} cy={py} r={dotRadiusPx}
-            fill="none" stroke={color} strokeWidth={baseLineWidth} />,
+          <circle key={`cg-c-${idx}`}
+            cx={cx} cy={cy} r={r}
+            fill="none" stroke={color} strokeWidth={baseLineWidth * 0.8} />
         );
       } else {
-        // Small filled dot
+        // Very small circles are rendered as solid dots
         svgEls.push(
-          <circle key={`cg-dot-${idx}`}
-            cx={px} cy={py} r={dotRadiusPx}
-            fill={color} />,
+          <circle key={`cg-d-${idx}`}
+            cx={cx} cy={cy} r={Math.max(1, baseLineWidth * 0.8)}
+            fill={color} />
         );
       }
-    } else if (axisAndWidth === 0) {
-      // Tiny tick on vertical axis (no arm width)
+    } else if (e.type === 'text' && e.text) {
+      const tx = center + (e.x ?? 0) * scale;
+      const ty = center + (e.y ?? 0) * scale;
+      const fontSize = Math.max(6, 12 * scale * 0.5); // Adjust font size based on scale
+      
       svgEls.push(
-        <circle key={`cg-tick-${idx}`}
-          cx={px} cy={py} r={Math.max(0.8, baseLineWidth * 0.4)}
-          fill={color} />,
+        <text key={`cg-t-${idx}`}
+          x={tx} y={ty}
+          fill={color} fontSize={fontSize} textAnchor="middle" alignmentBaseline="middle"
+          style={{ pointerEvents: 'none', userSelect: 'none' }}
+        >
+          {e.text}
+        </text>
       );
     }
   });
 
-  // The data fully defines the crosshair — no auto-crosshair needed
   return { svgEls, autoCrosshair: false };
 }
 

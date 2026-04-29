@@ -2,7 +2,7 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 
 interface AppCardProps extends React.HTMLAttributes<HTMLDivElement> {
-  variant?: 'default' | 'active' | 'ghost';
+  variant?: 'default' | 'active' | 'ghost' | 'glass';
 }
 
 export function AppCard({ variant = 'default', className, children, ...props }: AppCardProps) {
@@ -13,6 +13,7 @@ export function AppCard({ variant = 'default', className, children, ...props }: 
         variant === 'default' && 'bg-card border border-border',
         variant === 'active' && 'bg-card border border-primary/20',
         variant === 'ghost' && 'bg-transparent border border-border/50',
+        variant === 'glass' && 'glass-card',
         className
       )}
       {...props}

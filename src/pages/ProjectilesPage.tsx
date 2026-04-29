@@ -477,14 +477,14 @@ export default function ProjectilesPage() {
             return (
               <div
                 key={p.id}
-                className={`surface-elevated p-4 transition-colors relative ${
+                className={`glass-card p-4 transition-colors relative group ${
                   isCompared ? 'border-primary/60 ring-1 ring-primary/30' : 'hover:border-primary/40'
                 }`}
               >
                 <Link to={`/library/projectile/${p.id}`} className="block">
                   <div className="flex items-start justify-between mb-2">
                     <div className="min-w-0 flex-1 pr-2">
-                      <div className="font-semibold text-sm flex items-center gap-1.5 flex-wrap">
+                      <div className="font-heading font-bold text-base flex items-center gap-1.5 flex-wrap group-hover:text-primary transition-colors">
                         <span className="truncate">{p.brand} {p.model}</span>
                         {p.caliberLabel && p.caliberLabel !== p.caliber && (
                           <span className="text-[10px] font-mono text-muted-foreground">({p.caliberLabel})</span>

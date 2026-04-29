@@ -341,11 +341,11 @@ export default function OpticsPage() {
               <Link
                 key={o.id}
                 to={`/library/optic/${o.id}`}
-                className="surface-elevated p-4 block hover:border-primary/40 transition-colors"
+                className="glass-card p-4 block hover:border-primary/40 transition-colors group"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
-                    <div className="font-semibold text-sm">{o.name}</div>
+                    <div className="font-heading font-bold text-base group-hover:text-primary transition-colors">{o.name}</div>
                     <div className="flex flex-wrap gap-1.5 mt-1.5">
                       {fp && <span className="tactical-badge">{fp}</span>}
                       <span className="tactical-badge">{o.clickValue} {o.clickUnit}/click</span>

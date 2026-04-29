@@ -253,12 +253,12 @@ export default function ReticlesPage() {
           <h2 className="text-sm font-semibold text-muted-foreground">{t('reticles.catalog.favorites')}</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {favEntries.map(entry => (
-              <div key={entry.reticle_id} className="surface-elevated p-3 flex gap-3 items-start">
+              <div key={entry.reticle_id} className="glass-card p-3 flex gap-3 items-start group">
                 <div className="shrink-0">
                   <ReticleViewer reticle={entry} size={64} darkMode />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-xs truncate">{entry.name}</div>
+                  <div className="font-heading font-bold text-sm truncate group-hover:text-primary transition-colors">{entry.name}</div>
                   <div className="flex flex-wrap gap-1 mt-1">
                     {entry.focal_plane && <span className="tactical-badge">{entry.focal_plane}</span>}
                     {entry.click_units && <span className="tactical-badge">{entry.click_units}</span>}
@@ -288,13 +288,13 @@ export default function ReticlesPage() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {sorted.map(r => (
-            <div key={r.id} className="surface-elevated p-3 flex gap-3 items-start">
+            <div key={r.id} className="glass-card p-3 flex gap-3 items-start group">
               <Link
                 to={`/library/reticles/${r.id}`}
-                className="flex gap-3 items-start flex-1 min-w-0 hover:opacity-90"
+                className="flex gap-3 items-start flex-1 min-w-0"
                 data-testid={`reticles-item-${r.id}`}
               >
-                <div className="shrink-0 h-16 w-16 rounded-md overflow-hidden bg-muted border border-border flex items-center justify-center">
+                <div className="shrink-0 h-16 w-16 rounded-md overflow-hidden bg-background/50 border border-border/50 flex items-center justify-center">
                   {r.imageDataUrl ? (
                     <img
                       src={r.imageDataUrl}

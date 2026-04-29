@@ -1,5 +1,6 @@
 import React, { forwardRef } from 'react';
 import { Link } from 'react-router-dom';
+import type { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 /**
@@ -30,8 +31,13 @@ type Variant = 'rail' | 'footer';
 interface BaseProps {
   /** Active route / pressed state — drives accent bar, ring, icon weight. */
   active?: boolean;
-  /** Icon component (lucide-react). Optional for footer chips with custom content. */
-  icon?: React.ComponentType<{ className?: string; strokeWidth?: number | string }>;
+  /**
+   * Icon component (lucide-react). Optional for footer chips with custom
+   * content. Typed as the full `LucideIcon` so every SVG/lucide prop
+   * (`size`, `color`, `strokeWidth`, `absoluteStrokeWidth`, refs, …) is
+   * accepted without the previous narrowed signature mismatch.
+   */
+  icon?: LucideIcon;
   /** Visible label under the icon (rail variant). Footer variant uses children. */
   label?: string;
   /** Tooltip / aria-label fallback. */

@@ -19,6 +19,7 @@ import { Field } from '@/components/calc/Field';
 import { Switch } from '@/components/ui/switch';
 import { ResponsivePreview } from '@/components/devtools/ResponsivePreview';
 import { BallisticResult, WeatherSnapshot } from '@/lib/types';
+import { cn } from '@/lib/utils';
 
 /**
  * Internal design-system showcase. Mirrors what Claude Design documents in its
@@ -207,6 +208,15 @@ export default function DesignSystemPage() {
           clickUnit="MOA"
           energyThresholdJ={40}
         />
+
+        <DemoLabel>dense trajectory table — dual threshold (energy + velocity)</DemoLabel>
+        <DenseTrajectoryTableDemo rows={trajectoryRows} />
+
+        <DemoLabel>drop sparkline — inline SVG, threshold band</DemoLabel>
+        <DropSparklineDemo rows={trajectoryRows} thresholdMm={50} />
+
+        <DemoLabel>multi-axis chart — drop, wind, energy with threshold markers</DemoLabel>
+        <MultiAxisTrajectoryChartDemo rows={trajectoryRows} energyThresholdJ={20} />
       </article>
 
       <footer className="pt-6 border-t border-border/40 text-[11px] font-mono text-muted-foreground">
@@ -766,5 +776,447 @@ function Rules({ title, rules }: { title: string; rules: string[] }) {
         ))}
       </ul>
     </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// Threshold-aware trajectory visualisations
+// ─────────────────────────────────────────────────────────────────────
+
+/**
+ * Dense trajectory table — exposes BOTH an energy floor and a velocity floor
+ * to demonstrate how multiple thresholds compose visually. Each row paints
+ * its breach cell with the destructive token; rows that breach BOTH get a
+ * left ring to draw the eye.
+ */
+function DenseTrajectoryTableDemo({ rows }: { rows: BallisticResult[] }) {
+  const [energyMin, setEnergyMin] = useState(20);
+  const [velocityMin, setVelocityMin] = useState(220);
+
+  return (
+    <div className="rounded-xl border border-border bg-card/40 overflow-hidden">
+      <div className="flex flex-wrap items-center gap-3 px-3 py-2 border-b border-border bg-muted/20 text-[11px] font-mono">
+        <ThresholdControl
+          label="Energy floor"
+          unit="J"
+          value={energyMin}
+          step={1}
+          onChange={setEnergyMin}
+        />
+        <ThresholdControl
+          label="Velocity floor"
+          unit="m/s"
+          value={velocityMin}
+          step={5}
+          onChange={setVelocityMin}
+        />
+        <span className="ml-auto text-muted-foreground">
+          {rows.filter(r => r.energy < energyMin || r.velocity < velocityMin).length} /{' '}
+          {rows.length} row(s) below threshold
+        </span>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-[11px] font-mono">
+          <thead>
+            <tr className="border-b border-border text-muted-foreground uppercase text-[10px] tracking-wide">
+              <th className="text-left py-1.5 px-2">Range</th>
+              <th className="text-right py-1.5 px-2">Drop</th>
+              <th className="text-right py-1.5 px-2">Wind</th>
+              <th className="text-right py-1.5 px-2">Velocity</th>
+              <th className="text-right py-1.5 px-2">Energy</th>
+              <th className="text-right py-1.5 px-2">TOF</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(r => {
+              const energyBreach = r.energy < energyMin;
+              const velocityBreach = r.velocity < velocityMin;
+              const bothBreach = energyBreach && velocityBreach;
+              return (
+                <tr
+                  key={r.range}
+                  className={cn(
+                    'border-b border-border/30 last:border-0',
+                    bothBreach &&
+                      'bg-destructive/5 ring-1 ring-inset ring-destructive/30',
+                  )}
+                >
+                  <td className="py-1 px-2 tabular-nums">{r.range}m</td>
+                  <td className="text-right py-1 px-2 tabular-nums">
+                    {r.drop.toFixed(1)}
+                  </td>
+                  <td className="text-right py-1 px-2 tabular-nums">
+                    {r.windDrift.toFixed(1)}
+                  </td>
+                  <td
+                    className={cn(
+                      'text-right py-1 px-2 tabular-nums',
+                      velocityBreach &&
+                        'bg-destructive/15 text-destructive font-semibold',
+                    )}
+                    title={
+                      velocityBreach
+                        ? `${r.velocity.toFixed(0)} < ${velocityMin} m/s`
+                        : undefined
+                    }
+                  >
+                    {r.velocity.toFixed(0)}
+                  </td>
+                  <td
+                    className={cn(
+                      'text-right py-1 px-2 tabular-nums',
+                      energyBreach &&
+                        'bg-destructive/15 text-destructive font-semibold',
+                    )}
+                    title={
+                      energyBreach
+                        ? `${r.energy.toFixed(1)} < ${energyMin} J`
+                        : undefined
+                    }
+                  >
+                    {r.energy.toFixed(1)}
+                  </td>
+                  <td className="text-right py-1 px-2 tabular-nums">
+                    {r.tof.toFixed(3)}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      <div className="flex items-center gap-3 px-3 py-1.5 border-t border-border bg-muted/10 text-[10px] font-mono text-muted-foreground">
+        <Legend swatch="bg-destructive/15" label="cell breach" />
+        <Legend swatch="ring-1 ring-inset ring-destructive/30 bg-destructive/5" label="full-row breach" />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Inline SVG sparkline of drop vs range. Renders a translucent destructive
+ * band above the threshold and dots breaching points in the destructive
+ * token. ~120px tall — designed to live inline next to a stat tile.
+ */
+function DropSparklineDemo({
+  rows,
+  thresholdMm,
+}: {
+  rows: BallisticResult[];
+  thresholdMm: number;
+}) {
+  const W = 480;
+  const H = 140;
+  const PAD = { l: 36, r: 12, t: 10, b: 22 };
+  const innerW = W - PAD.l - PAD.r;
+  const innerH = H - PAD.t - PAD.b;
+
+  const xs = rows.map(r => r.range);
+  const ys = rows.map(r => Math.abs(r.drop));
+  const xMax = Math.max(...xs, 1);
+  const yMax = Math.max(...ys, thresholdMm * 1.2, 1);
+
+  const x = (v: number) => PAD.l + (v / xMax) * innerW;
+  const y = (v: number) => PAD.t + innerH - (v / yMax) * innerH;
+
+  const path = rows
+    .map((r, i) => `${i === 0 ? 'M' : 'L'} ${x(r.range).toFixed(1)} ${y(Math.abs(r.drop)).toFixed(1)}`)
+    .join(' ');
+
+  // Destructive band: drop ABOVE threshold (i.e. y < y(threshold) in SVG).
+  const yThreshold = y(thresholdMm);
+
+  return (
+    <div className="rounded-xl border border-border bg-card/40 p-3">
+      <div className="flex items-center justify-between mb-2 text-[11px] font-mono">
+        <span className="text-muted-foreground uppercase tracking-wide text-[10px]">
+          Drop vs range
+        </span>
+        <span className="text-destructive">
+          threshold {thresholdMm} mm
+        </span>
+      </div>
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        width="100%"
+        role="img"
+        aria-label={`Drop sparkline, threshold at ${thresholdMm} mm`}
+      >
+        {/* destructive band above threshold */}
+        <rect
+          x={PAD.l}
+          y={PAD.t}
+          width={innerW}
+          height={Math.max(0, yThreshold - PAD.t)}
+          fill="hsl(var(--destructive) / 0.08)"
+        />
+        {/* threshold line */}
+        <line
+          x1={PAD.l}
+          x2={PAD.l + innerW}
+          y1={yThreshold}
+          y2={yThreshold}
+          stroke="hsl(var(--destructive))"
+          strokeDasharray="4 3"
+          strokeWidth="1"
+        />
+        {/* axis baseline */}
+        <line
+          x1={PAD.l}
+          x2={PAD.l + innerW}
+          y1={PAD.t + innerH}
+          y2={PAD.t + innerH}
+          stroke="hsl(var(--border))"
+        />
+        {/* curve */}
+        <path
+          d={path}
+          fill="none"
+          stroke="hsl(var(--primary))"
+          strokeWidth="1.5"
+          strokeLinejoin="round"
+        />
+        {/* dots, breach in destructive */}
+        {rows.map(r => {
+          const breach = Math.abs(r.drop) > thresholdMm;
+          return (
+            <circle
+              key={r.range}
+              cx={x(r.range)}
+              cy={y(Math.abs(r.drop))}
+              r={breach ? 3 : 2}
+              fill={breach ? 'hsl(var(--destructive))' : 'hsl(var(--primary))'}
+            />
+          );
+        })}
+        {/* y-axis labels */}
+        <text x={4} y={PAD.t + 8} fill="hsl(var(--muted-foreground))" fontSize="9" fontFamily="JetBrains Mono">
+          {yMax.toFixed(0)}
+        </text>
+        <text x={4} y={yThreshold + 3} fill="hsl(var(--destructive))" fontSize="9" fontFamily="JetBrains Mono">
+          {thresholdMm}
+        </text>
+        <text x={4} y={PAD.t + innerH} fill="hsl(var(--muted-foreground))" fontSize="9" fontFamily="JetBrains Mono">
+          0
+        </text>
+        {/* x-axis ticks */}
+        {rows.filter((_, i) => i % 2 === 0).map(r => (
+          <text
+            key={r.range}
+            x={x(r.range)}
+            y={H - 6}
+            textAnchor="middle"
+            fill="hsl(var(--muted-foreground))"
+            fontSize="9"
+            fontFamily="JetBrains Mono"
+          >
+            {r.range}m
+          </text>
+        ))}
+      </svg>
+    </div>
+  );
+}
+
+/**
+ * Multi-series chart — drop (primary), wind drift (info), energy (warning)
+ * normalised to 0–1 each, plotted on a shared range axis. The energy
+ * threshold is rendered as a destructive marker on the energy series only.
+ * Toggleable series via legend buttons.
+ */
+function MultiAxisTrajectoryChartDemo({
+  rows,
+  energyThresholdJ,
+}: {
+  rows: BallisticResult[];
+  energyThresholdJ: number;
+}) {
+  const [visible, setVisible] = useState({ drop: true, wind: true, energy: true });
+
+  const W = 560;
+  const H = 220;
+  const PAD = { l: 14, r: 14, t: 14, b: 24 };
+  const innerW = W - PAD.l - PAD.r;
+  const innerH = H - PAD.t - PAD.b;
+
+  const xMax = Math.max(...rows.map(r => r.range), 1);
+  const x = (v: number) => PAD.l + (v / xMax) * innerW;
+
+  const series = [
+    {
+      key: 'drop' as const,
+      label: 'Drop',
+      color: 'hsl(var(--primary))',
+      values: rows.map(r => Math.abs(r.drop)),
+    },
+    {
+      key: 'wind' as const,
+      label: 'Wind',
+      color: 'hsl(var(--info, 200 90% 55%))',
+      values: rows.map(r => Math.abs(r.windDrift)),
+    },
+    {
+      key: 'energy' as const,
+      label: 'Energy',
+      color: 'hsl(var(--warning, 38 92% 50%))',
+      values: rows.map(r => r.energy),
+    },
+  ];
+
+  // Per-series normalisation so all three fit one chart.
+  const norm = (vals: number[], v: number) => {
+    const max = Math.max(...vals, 1);
+    return PAD.t + innerH - (v / max) * innerH;
+  };
+
+  return (
+    <div className="rounded-xl border border-border bg-card/40 p-3">
+      <div className="flex items-center gap-2 mb-2 flex-wrap">
+        {series.map(s => (
+          <button
+            key={s.key}
+            type="button"
+            onClick={() => setVisible(v => ({ ...v, [s.key]: !v[s.key] }))}
+            className={cn(
+              'flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-wide border transition-colors',
+              visible[s.key]
+                ? 'border-border bg-muted/40 text-foreground'
+                : 'border-border/50 bg-transparent text-muted-foreground line-through',
+            )}
+          >
+            <span
+              className="h-2 w-2 rounded-full"
+              style={{ background: s.color }}
+              aria-hidden
+            />
+            {s.label}
+          </button>
+        ))}
+        <span className="ml-auto text-[10px] font-mono text-destructive">
+          ⊘ energy &lt; {energyThresholdJ} J
+        </span>
+      </div>
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        width="100%"
+        role="img"
+        aria-label="Multi-series trajectory chart with energy threshold markers"
+      >
+        {/* gridlines */}
+        {[0, 0.25, 0.5, 0.75, 1].map(t => (
+          <line
+            key={t}
+            x1={PAD.l}
+            x2={PAD.l + innerW}
+            y1={PAD.t + innerH * t}
+            y2={PAD.t + innerH * t}
+            stroke="hsl(var(--border))"
+            strokeOpacity="0.4"
+          />
+        ))}
+
+        {/* series paths */}
+        {series.map(s => {
+          if (!visible[s.key]) return null;
+          const d = rows
+            .map((r, i) =>
+              `${i === 0 ? 'M' : 'L'} ${x(r.range).toFixed(1)} ${norm(s.values, s.values[i]).toFixed(1)}`,
+            )
+            .join(' ');
+          return (
+            <path
+              key={s.key}
+              d={d}
+              fill="none"
+              stroke={s.color}
+              strokeWidth="1.5"
+              strokeLinejoin="round"
+            />
+          );
+        })}
+
+        {/* energy threshold breach markers — rings on the energy series */}
+        {visible.energy &&
+          rows.map((r, i) => {
+            if (r.energy >= energyThresholdJ) return null;
+            return (
+              <g key={`breach-${r.range}`}>
+                <circle
+                  cx={x(r.range)}
+                  cy={norm(series[2].values, r.energy)}
+                  r={5}
+                  fill="none"
+                  stroke="hsl(var(--destructive))"
+                  strokeWidth="1.5"
+                />
+                <line
+                  x1={x(r.range)}
+                  x2={x(r.range)}
+                  y1={PAD.t}
+                  y2={PAD.t + innerH}
+                  stroke="hsl(var(--destructive))"
+                  strokeOpacity="0.25"
+                  strokeDasharray="3 3"
+                />
+              </g>
+            );
+          })}
+
+        {/* x labels */}
+        {rows.map(r => (
+          <text
+            key={r.range}
+            x={x(r.range)}
+            y={H - 6}
+            textAnchor="middle"
+            fill="hsl(var(--muted-foreground))"
+            fontSize="9"
+            fontFamily="JetBrains Mono"
+          >
+            {r.range}
+          </text>
+        ))}
+      </svg>
+      <div className="text-[10px] font-mono text-muted-foreground mt-1 text-center">
+        range (m) — each series is normalised to its own max
+      </div>
+    </div>
+  );
+}
+
+function ThresholdControl({
+  label,
+  unit,
+  value,
+  step,
+  onChange,
+}: {
+  label: string;
+  unit: string;
+  value: number;
+  step: number;
+  onChange: (v: number) => void;
+}) {
+  return (
+    <label className="flex items-center gap-1.5 text-muted-foreground">
+      <span className="uppercase tracking-wide text-[10px]">{label}</span>
+      <input
+        type="number"
+        value={value}
+        step={step}
+        onChange={e => onChange(Number(e.target.value) || 0)}
+        className="w-16 bg-muted/40 border border-border rounded px-1.5 py-0.5 text-right text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+      />
+      <span className="text-[10px]">{unit}</span>
+    </label>
+  );
+}
+
+function Legend({ swatch, label }: { swatch: string; label: string }) {
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <span className={cn('inline-block h-2.5 w-3 rounded-sm', swatch)} aria-hidden />
+      <span>{label}</span>
+    </span>
   );
 }

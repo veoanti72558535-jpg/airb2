@@ -53,7 +53,7 @@ export default function DesignSystemPage() {
     pressure: 1013,
     humidity: 62,
     windSpeed: 2.4,
-    windDirection: 90,
+    windAngle: 90,
     altitude: 120,
     timestamp: new Date(Date.now() - 12 * 60_000).toISOString(),
     source: 'auto',

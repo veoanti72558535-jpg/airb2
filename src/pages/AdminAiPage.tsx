@@ -194,22 +194,13 @@ function AdminAiInner() {
         />
       ) : admin.status === 'admin' ? (
         <AdminAiAuthenticated />
-      ) : admin.status === 'error' ? (
-        <AdminLockCard
-          tone="error"
-          title={t('admin.ai.lock.errorTitle')}
-          description={t('admin.ai.lock.errorDesc')}
-          email={admin.email}
-          onRecheck={admin.recheck}
-        />
       ) : (
-        <AdminLockCard
-          tone="denied"
-          title={t('admin.ai.lock.deniedTitle')}
-          description={t('admin.ai.lock.deniedDesc')}
-          email={admin.email}
-          onRecheck={admin.recheck}
-        />
+        // 'denied' / 'error' are handled upstream by <RequireAdmin> which
+        // performs a silent redirect. We render a neutral spinner here as a
+        // brief transition state so nothing about admin sources leaks.
+        <div className="flex items-center justify-center py-12" role="status" aria-live="polite">
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        </div>
       )}
     </div>
   );

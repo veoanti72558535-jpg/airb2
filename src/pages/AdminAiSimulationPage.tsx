@@ -19,8 +19,6 @@ import {
   RefreshCw,
   ShieldCheck,
   ShieldAlert,
-  Lock,
-  LogOut,
   Loader2,
   PlayCircle,
   CheckCircle2,
@@ -31,7 +29,6 @@ import {
   ListChecks,
   ArrowLeft,
 } from 'lucide-react';
-import type { Session } from '@supabase/supabase-js';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -41,7 +38,6 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useI18n } from '@/lib/i18n';
 import { isSupabaseConfigured, supabase } from '@/integrations/supabase/client';
-import { useIsAdmin } from '@/lib/hooks/useIsAdmin';
 import { AiGuardrailsCard } from '@/components/admin/AiGuardrailsCard';
 import { RUNBOOK_ITEMS, computeScore, type CheckStatus } from '@/components/admin/RunbookChecklist';
 import { toast } from 'sonner';
@@ -68,6 +64,13 @@ type TestMode = 'dry-run' | 'live';
 
 const RUNBOOK_SIMULATION_STORAGE_KEY = 'airballistik:runbook-validation:simulation';
 
+/**
+ * Admin role enforcement is handled UPSTREAM by <RequireAdmin> in App.tsx.
+ * This component is only mounted when `useIsAdmin().status === 'admin'`,
+ * so we don't repeat the role check here (and we don't render any
+ * "access denied" surface that could leak the existence of admin
+ * features to unauthorized users).
+ */
 export default function AdminAiSimulationPage() {
   const { t } = useI18n();
   const configured = isSupabaseConfigured();
@@ -84,7 +87,7 @@ export default function AdminAiSimulationPage() {
     );
   }
 
-  return <SimulationInner />;
+  return <SimulationDashboard />;
 }
 
 function Header() {
@@ -105,101 +108,6 @@ function Header() {
       </Link>
     </header>
   );
-}
-
-function SimulationInner() {
-  const { t } = useI18n();
-  const sb = supabase!;
-  const [session, setSession] = useState<Session | null>(null);
-  const [bootstrapped, setBootstrapped] = useState(false);
-  const admin = useIsAdmin();
-
-  useEffect(() => {
-    let alive = true;
-    sb.auth.getSession().then(({ data }) => {
-      if (!alive) return;
-      setSession(data.session ?? null);
-      setBootstrapped(true);
-    });
-    const { data: sub } = sb.auth.onAuthStateChange((_e, s) => setSession(s ?? null));
-    return () => {
-      alive = false;
-      sub.subscription.unsubscribe();
-    };
-  }, [sb]);
-
-  if (!bootstrapped) {
-    return (
-      <div className="space-y-4">
-        <Header />
-        <Card>
-          <CardContent className="p-4 text-sm text-muted-foreground">…</CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (!session) {
-    return (
-      <div className="space-y-4">
-        <Header />
-        <Alert>
-          <Lock className="h-4 w-4" />
-          <AlertDescription className="text-xs">{t('admin.ai.notAdmin')}</AlertDescription>
-        </Alert>
-        <Link to="/admin/ai" className="text-xs underline">/admin/ai</Link>
-      </div>
-    );
-  }
-
-  if (admin.status !== 'admin') {
-    const tone = admin.status === 'loading' ? 'checking' : admin.status === 'error' ? 'error' : 'denied';
-    return (
-      <div className="space-y-4">
-        <Header />
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-primary" />
-              {t('admin.ai.lock.title')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <Alert variant={tone === 'denied' || tone === 'error' ? 'destructive' : 'default'}>
-              {tone === 'checking' ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Lock className="h-4 w-4" />
-              )}
-              <AlertDescription className="text-xs">
-                {tone === 'checking'
-                  ? t('admin.ai.lock.checking')
-                  : tone === 'error'
-                  ? t('admin.ai.lock.errorDesc')
-                  : t('admin.ai.lock.deniedDesc')}
-              </AlertDescription>
-            </Alert>
-            <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
-              <Lock className="h-3 w-3" />
-              {t('admin.ai.lock.sourcesHidden')}
-            </p>
-            <div className="flex flex-wrap gap-2">
-              <Button size="sm" variant="secondary" onClick={() => void admin.recheck()}>
-                <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
-                {t('admin.ai.lock.recheck')}
-              </Button>
-              <Button size="sm" variant="ghost" onClick={() => void sb.auth.signOut()}>
-                <LogOut className="h-3.5 w-3.5 mr-1.5" />
-                {t('admin.ai.signOut')}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  return <SimulationDashboard />;
 }
 
 function SimulationDashboard() {

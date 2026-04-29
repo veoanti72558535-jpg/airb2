@@ -357,7 +357,7 @@ function KeyboardNavSimulator({ mode }: { mode: 'normal' | 'cyclic' }) {
   }, []);
 
   const onKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLDivElement>, idx: number) => {
+    (e: React.KeyboardEvent<HTMLButtonElement>, idx: number) => {
       const last = items.length - 1;
       if (e.key === 'Tab') {
         if (e.shiftKey) {

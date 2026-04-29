@@ -11,6 +11,7 @@ import { GripVertical, Star, Clock, Zap, Cloud, Brain, TrendingUp, Target } from
 import { useNavigate } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
 import { sessionStore, airgunStore, projectileStore, opticStore, getSettings } from '@/lib/storage';
+import { getSortedFavorites } from '@/lib/session-favorites';
 
 const WIDGET_ORDER_KEY = 'airballistik-widget-order';
 

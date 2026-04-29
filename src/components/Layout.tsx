@@ -127,12 +127,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   // Localised labels reused across rail items + announcer. Memoised against
   // locale changes only so we don't rebuild every render.
   const a11yActive = t('a11y.current' as any) || (locale === 'fr' ? 'page actuelle' : 'current page');
-  const a11yCollapsedHint = (() => {
-    if (typeof window === 'undefined') return undefined;
-    // Only attach the hint when the sidebar is collapsed AND we are on the
-    // desktop variant (mobile bottom-nav always shows labels).
-    return undefined; // placeholder, overridden below per-item
-  })();
 
   // Live-region announcement: route changes + sidebar expansion. We keep a
   // single string and bump it on either change so AT users hear a concise
@@ -152,7 +146,23 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     const newState = !isSidebarExpanded;
     setIsSidebarExpanded(newState);
     localStorage.setItem('airballistik_sidebar_expanded', String(newState));
+    // Announce the new sidebar state on the polite live region. Using a
+    // freshly-formatted string (with timestamp suffix when identical) is
+    // unnecessary here: collapsed → expanded always alternates, so the
+    // announcement string differs and AT picks up every change.
+    setA11yStatus(
+      newState
+        ? (t('a11y.sidebarExpanded' as any) || (locale === 'fr' ? 'Barre latérale développée' : 'Sidebar expanded'))
+        : (t('a11y.sidebarCollapsed' as any) || (locale === 'fr' ? 'Barre latérale réduite' : 'Sidebar collapsed'))
+    );
   };
+
+  // Hint appended to icon-only rail items so screen readers convey both the
+  // destination AND the visual state ("collapsed sidebar"). On the expanded
+  // variant the visible label already carries the meaning.
+  const collapsedRailHint = !isSidebarExpanded
+    ? (t('a11y.collapsedRail' as any) || (locale === 'fr' ? 'barre réduite' : 'collapsed rail'))
+    : undefined;
 
   // Close "More" on Escape, lock body scroll while open, auto-close on route change.
   // Also implements a focus trap so keyboard users stay within the dialog.

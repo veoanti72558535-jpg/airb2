@@ -124,6 +124,21 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   const moreActive = moreFlat.some((n) => isActive(n.path));
 
+  // Localised labels reused across rail items + announcer. Memoised against
+  // locale changes only so we don't rebuild every render.
+  const a11yActive = t('a11y.current' as any) || (locale === 'fr' ? 'page actuelle' : 'current page');
+  const a11yCollapsedHint = (() => {
+    if (typeof window === 'undefined') return undefined;
+    // Only attach the hint when the sidebar is collapsed AND we are on the
+    // desktop variant (mobile bottom-nav always shows labels).
+    return undefined; // placeholder, overridden below per-item
+  })();
+
+  // Live-region announcement: route changes + sidebar expansion. We keep a
+  // single string and bump it on either change so AT users hear a concise
+  // status when they collapse/expand the rail or land on a new page.
+  const [a11yStatus, setA11yStatus] = useState('');
+
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('airballistik_sidebar_expanded');

@@ -17,6 +17,12 @@ const fr = {
   'nav.compare': 'Comparer',
   'nav.adminAi': 'Admin IA',
   'nav.chat': 'Assistant IA',
+  'nav.fieldMode': 'Mode terrain',
+  'nav.rangeSimulator': 'Simulateur',
+  'nav.diary': 'Carnet de tir',
+  'nav.ftCompetition': 'Compétition FT',
+  'nav.scopeView': 'Vue lunette',
+  'nav.targetAnalysis': 'Analyse cible',
 
   // Dashboard
   'dashboard.title': 'Tableau de bord',

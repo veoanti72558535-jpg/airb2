@@ -164,6 +164,7 @@ function ThemeStudioHeader({
   onReset,
   isDark,
   onToggleMode,
+  onShuffle,
   tx,
 }: {
   mode: StudioMode;
@@ -171,6 +172,7 @@ function ThemeStudioHeader({
   onReset: () => void;
   isDark: boolean;
   onToggleMode: () => void;
+  onShuffle: () => void;
   tx: (fr: string, en: string) => string;
 }) {
   return (
@@ -189,6 +191,19 @@ function ThemeStudioHeader({
             {tx('Studio de thèmes', 'Theme Studio')}
           </h1>
         </div>
+        {/* Shuffle — picks a random family for quick exploration. */}
+        <button
+          type="button"
+          onClick={onShuffle}
+          className={cn(
+            'inline-flex h-9 w-9 items-center justify-center rounded-md border border-border',
+            'hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+          )}
+          aria-label={tx('Thème aléatoire', 'Random theme')}
+          title={tx('Thème aléatoire', 'Random theme')}
+        >
+          <Shuffle className="h-3.5 w-3.5" />
+        </button>
         {/* Global dark/light swap — preserves the active family. */}
         <button
           type="button"

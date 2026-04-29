@@ -19,15 +19,23 @@ import { getSettings, saveSettings } from './storage';
  */
 export type SidebarFocusBehavior = 'first' | 'active';
 
+/**
+ * Global keyboard navigation mode. See `accessibility.keyboardNavMode` in
+ * `src/lib/types.ts` for the rationale of each value.
+ */
+export type KeyboardNavMode = 'normal' | 'cyclic';
+
 interface A11yContextValue {
   highContrast: boolean;
   largeText: boolean;
   premiumContrast: boolean;
   sidebarFocusBehavior: SidebarFocusBehavior;
+  keyboardNavMode: KeyboardNavMode;
   setHighContrast: (v: boolean) => void;
   setLargeText: (v: boolean) => void;
   setPremiumContrast: (v: boolean) => void;
   setSidebarFocusBehavior: (v: SidebarFocusBehavior) => void;
+  setKeyboardNavMode: (v: KeyboardNavMode) => void;
 }
 
 const A11yContext = createContext<A11yContextValue | null>(null);
@@ -55,17 +63,58 @@ export function A11yProvider({ children }: { children: React.ReactNode }) {
       return v === 'active' ? 'active' : 'first';
     } catch { return 'first'; }
   });
+  const [keyboardNavMode, setKNM] = useState<KeyboardNavMode>(() => {
+    try {
+      const v = getSettings().accessibility?.keyboardNavMode;
+      return v === 'cyclic' ? 'cyclic' : 'normal';
+    } catch { return 'normal'; }
+  });
 
   // Apply on mount and on every change.
   useEffect(() => {
     applyClasses(highContrast, largeText, premiumContrast);
   }, [highContrast, largeText, premiumContrast]);
 
+  // Install a global Tab-cycling handler when `keyboardNavMode === 'cyclic'`.
+  // Wraps focus from the last focusable element back to the first (and
+  // Shift+Tab from first → last) so keyboard users never lose focus into
+  // the browser chrome. Listens in capture phase to run before component
+  // handlers, but defers to any `Escape` / focus-trap (e.g. More panel) by
+  // checking that the active element belongs to the document body — local
+  // traps call `e.preventDefault()` themselves and we won't override them.
+  useEffect(() => {
+    if (keyboardNavMode !== 'cyclic') return;
+    const FOCUSABLE_SELECTOR =
+      'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab' || e.defaultPrevented) return;
+      // Skip if a local focus trap is active (the More panel sets aria-modal).
+      if (document.querySelector('[role="dialog"][aria-modal="true"]')) return;
+      const focusables = Array.from(
+        document.body.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
+      ).filter((el) => !el.hasAttribute('aria-hidden') && el.offsetParent !== null);
+      if (focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      const active = document.activeElement as HTMLElement | null;
+      if (!e.shiftKey && active === last) {
+        e.preventDefault();
+        first.focus();
+      } else if (e.shiftKey && active === first) {
+        e.preventDefault();
+        last.focus();
+      }
+    };
+    document.addEventListener('keydown', onKeyDown, true);
+    return () => document.removeEventListener('keydown', onKeyDown, true);
+  }, [keyboardNavMode]);
+
   const persist = useCallback((next: {
     highContrast?: boolean;
     largeText?: boolean;
     premiumContrast?: boolean;
     sidebarFocusBehavior?: SidebarFocusBehavior;
+    keyboardNavMode?: KeyboardNavMode;
   }) => {
     try {
       const s = getSettings();
@@ -92,6 +141,10 @@ export function A11yProvider({ children }: { children: React.ReactNode }) {
     setSFB(v);
     persist({ sidebarFocusBehavior: v });
   }, [persist]);
+  const setKeyboardNavMode = useCallback((v: KeyboardNavMode) => {
+    setKNM(v);
+    persist({ keyboardNavMode: v });
+  }, [persist]);
 
   return (
     <A11yContext.Provider
@@ -100,10 +153,12 @@ export function A11yProvider({ children }: { children: React.ReactNode }) {
         largeText,
         premiumContrast,
         sidebarFocusBehavior,
+        keyboardNavMode,
         setHighContrast,
         setLargeText,
         setPremiumContrast,
         setSidebarFocusBehavior,
+        setKeyboardNavMode,
       }}
     >
       {children}
@@ -120,10 +175,12 @@ export function useA11y(): A11yContextValue {
       largeText: false,
       premiumContrast: false,
       sidebarFocusBehavior: 'first',
+      keyboardNavMode: 'normal',
       setHighContrast: () => {},
       setLargeText: () => {},
       setPremiumContrast: () => {},
       setSidebarFocusBehavior: () => {},
+      setKeyboardNavMode: () => {},
     };
   }
   return ctx;

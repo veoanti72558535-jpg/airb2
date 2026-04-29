@@ -2,6 +2,11 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import { bootstrapStorage } from "./lib/storage";
+import { installReactInstanceGuard } from "./lib/dev/react-instance-guard";
+
+// Dev-only: detect duplicate React instances / corrupted HMR state and
+// force a clean full reload so we don't chase phantom hook errors.
+installReactInstanceGuard();
 
 /**
  * Tranche IDB — on attend l'hydratation du cache mémoire `projectileStore`

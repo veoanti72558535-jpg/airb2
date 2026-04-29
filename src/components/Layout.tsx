@@ -113,10 +113,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   const railItemClass = (active: boolean) =>
     cn(
-      'group/rail relative flex flex-col items-center justify-center gap-1 w-[68px] py-2 rounded-xl transition-all duration-150',
+      // Cheap transitions: only color/background interpolated; no layout/shadow churn.
+      'group/rail relative flex flex-col items-center justify-center gap-1 w-[68px] py-2 rounded-xl',
+      'transition-[color,background-color] duration-100 ease-out motion-reduce:transition-none',
       active
-        ? 'text-primary bg-primary/10 shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.18)]'
-        : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
+        ? 'text-primary bg-primary/[0.08] ring-1 ring-inset ring-primary/15'
+        : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
     );
 
   const railLabelClass = (active: boolean) =>
@@ -148,9 +150,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 className={railItemClass(active)}
               >
                 {active && (
-                  <span className="absolute left-0 top-1/2 -translate-y-1/2 h-7 w-[3px] rounded-r-full bg-gradient-to-b from-primary/70 via-primary to-primary/70 shadow-[0_0_8px_hsl(var(--primary)/0.45)]" />
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-[2px] rounded-r-full bg-primary" />
                 )}
-                <item.icon className="h-[18px] w-[18px]" strokeWidth={active ? 2.25 : 1.85} />
+                <item.icon className="h-[18px] w-[18px]" strokeWidth={active ? 2.1 : 1.85} />
                 <span className={railLabelClass(active)}>{t(item.labelKey)}</span>
               </Link>
             );
@@ -168,9 +170,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 className={railItemClass(active)}
               >
                 {active && (
-                  <span className="absolute left-0 top-1/2 -translate-y-1/2 h-7 w-[3px] rounded-r-full bg-gradient-to-b from-primary/70 via-primary to-primary/70 shadow-[0_0_8px_hsl(var(--primary)/0.45)]" />
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-[2px] rounded-r-full bg-primary" />
                 )}
-                <item.icon className="h-[18px] w-[18px]" strokeWidth={active ? 2.25 : 1.85} />
+                <item.icon className="h-[18px] w-[18px]" strokeWidth={active ? 2.1 : 1.85} />
                 <span className={railLabelClass(active)}>{t(item.labelKey)}</span>
               </Link>
             );
@@ -184,9 +186,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             className={railItemClass(moreActive)}
           >
             {moreActive && (
-              <span className="absolute left-0 top-1/2 -translate-y-1/2 h-7 w-[3px] rounded-r-full bg-gradient-to-b from-primary/70 via-primary to-primary/70 shadow-[0_0_8px_hsl(var(--primary)/0.45)]" />
+              <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-[2px] rounded-r-full bg-primary" />
             )}
-            <MoreHorizontal className="h-[18px] w-[18px]" strokeWidth={moreActive ? 2.25 : 1.85} />
+            <MoreHorizontal className="h-[18px] w-[18px]" strokeWidth={moreActive ? 2.1 : 1.85} />
             <span className={railLabelClass(moreActive)}>{t('nav.more')}</span>
           </button>
         </nav>
@@ -195,7 +197,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <button
             onClick={() => setLocale(locale === 'fr' ? 'en' : 'fr')}
             title={locale === 'fr' ? 'English' : 'Français'}
-            className="flex items-center justify-center gap-1.5 w-[68px] py-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors duration-150"
+            className="flex items-center justify-center gap-1.5 w-[68px] py-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors duration-100 ease-out motion-reduce:transition-none"
           >
             <Globe className="h-3.5 w-3.5" />
             <span className="text-[10px] font-semibold uppercase tracking-wider">{locale}</span>
@@ -203,7 +205,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <Link
             to="/settings"
             title={t('settings.theme' as any)}
-            className="flex items-center justify-center w-9 h-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors duration-150"
+            className="flex items-center justify-center w-9 h-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors duration-100 ease-out motion-reduce:transition-none"
           >
             {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </Link>

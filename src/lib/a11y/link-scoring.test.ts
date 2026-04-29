@@ -225,3 +225,91 @@ describe('segment-boundary alignment — edge cases', () => {
     });
   });
 });
+
+describe('absolute hrefs with a different baseURL', () => {
+  // The scorer uses an internal sentinel origin to resolve relative hrefs.
+  // When a link is written as a full absolute URL (different host, port,
+  // scheme, or even a sub-path base like `/app/`), only the *pathname*
+  // should drive the segment-boundary calculation. The origin must never
+  // leak into the comparison and the segment math must stay stable.
+
+  it('matches an absolute href when only the pathname differs from the current origin', () => {
+    // Different host than the sentinel — pathname still aligns.
+    const s = scoreLinkMatch('https://example.com/settings', at('/settings'));
+    expect(s).toBeGreaterThan(0);
+  });
+
+  it('treats two absolute hrefs with different origins but identical paths as equivalent', () => {
+    const a = scoreLinkMatch('https://example.com/diary', at('/diary'));
+    const b = scoreLinkMatch('http://other.test:8080/diary', at('/diary'));
+    const c = scoreLinkMatch('/diary', at('/diary'));
+    expect(a).toBe(b);
+    expect(b).toBe(c);
+  });
+
+  it('keeps segment-boundary alignment for absolute hrefs (no /app vs /app2 leak)', () => {
+    expect(scoreLinkMatch('https://example.com/app', at('/app2'))).toBe(0);
+    expect(scoreLinkMatch('https://example.com/app2', at('/app'))).toBe(0);
+    expect(scoreLinkMatch('https://example.com/app', at('/app/users'))).toBeGreaterThan(0);
+  });
+
+  it('preserves search ordering equivalence on absolute hrefs', () => {
+    const reordered = scoreLinkMatch('https://example.com/x?b=2&a=1', at('/x', '?a=1&b=2'));
+    const exact = scoreLinkMatch('/x?a=1&b=2', at('/x', '?a=1&b=2'));
+    expect(reordered).toBe(exact);
+  });
+
+  it('ignores the origin when picking the best link among mixed absolute/relative hrefs', () => {
+    const fakeLink = (href: string) => ({
+      href,
+      getAttribute: (n: string) => (n === 'href' ? href : null),
+    });
+    const links = [
+      fakeLink('https://cdn.example.com/sessions'),
+      fakeLink('http://other.test/sessions/42'),
+      fakeLink('/sessions/42/edit'),
+    ];
+    expect(pickBestLink(links, at('/sessions/42'))?.href).toBe('http://other.test/sessions/42');
+    expect(pickBestLink(links, at('/sessions/42/edit'))?.href).toBe('/sessions/42/edit');
+    expect(pickBestLink(links, at('/sessions/99'))?.href).toBe('https://cdn.example.com/sessions');
+  });
+
+  it('resolves a relative href against a base pathname that contains a sub-path (e.g. /app/)', () => {
+    // Simulates an app deployed under a sub-path. The base pathname is
+    // `/app/users` — a relative `./profile` must resolve to `/app/profile`,
+    // NOT to `/profile` and NOT to anything involving the sentinel origin.
+    const n = normaliseHref('./profile', '/app/users');
+    expect(n?.pathname).toBe('/app/profile');
+
+    // And the score reflects that resolution against a current location
+    // that lives under the same sub-path.
+    const s = scoreLinkMatch('./profile', at('/app/profile'));
+    expect(s).toBeGreaterThan(0);
+  });
+
+  it('does not let an absolute href with a matching origin-like path fool the segment check', () => {
+    // The sentinel origin used internally is `http://__a11y_score__.local`.
+    // An author-supplied absolute URL whose host happens to *look* path-ish
+    // must still be parsed as an origin, never as a pathname segment.
+    const s = scoreLinkMatch('https://__a11y_score__.local/app', at('/app'));
+    expect(s).toBeGreaterThan(0);
+    // And it must NOT match an unrelated path just because the host string
+    // contains characters that resemble one.
+    expect(scoreLinkMatch('https://example.com/foo', at('/bar'))).toBe(0);
+  });
+
+  it('strips trailing slashes consistently on absolute hrefs', () => {
+    const a = scoreLinkMatch('https://example.com/diary/', at('/diary'));
+    const b = scoreLinkMatch('https://example.com/diary', at('/diary'));
+    expect(a).toBe(b);
+    expect(a).toBeGreaterThan(0);
+  });
+
+  it('preserves internal double slashes on absolute hrefs (no silent collapsing)', () => {
+    // Same rule as relative hrefs: `/app//users` is a different pathname
+    // from `/app/users` and we surface that, even when wrapped in an
+    // absolute URL.
+    expect(scoreLinkMatch('https://example.com/app//users', at('/app/users'))).toBe(0);
+    expect(scoreLinkMatch('https://example.com/app', at('/app//users'))).toBeGreaterThan(0);
+  });
+});

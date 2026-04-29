@@ -7,6 +7,7 @@ import {
   THEME_CUSTOM_STORAGE_KEY,
   type ThemeId,
 } from './theme-constants';
+import { themeStorageKeyFor, customStorageKeyFor } from './theme-constants';
 
 /**
  * Unit + integration tests for `ThemeProvider`.
@@ -265,5 +266,147 @@ describe('ThemeProvider — HMR remount integration', () => {
     expect(b.getByTestId('theme').textContent).toBe('slate-light');
     a.unmount();
     b.unmount();
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────
+// Per-user storage + smooth dark/light transition
+// ─────────────────────────────────────────────────────────────────────────
+
+describe('ThemeProvider — per-user persistence', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    document.documentElement.classList.remove('theme-transitions-on', 'dark', 'light');
+  });
+
+  it('writes to anonymous bucket while no user is bound', () => {
+    const { result } = renderHook(() => useTheme(), { wrapper: wrap });
+    act(() => result.current.setTheme('desert-tan'));
+    expect(localStorage.getItem(THEME_STORAGE_KEY)).toBe('desert-tan');
+    // No per-user key was created (no user bound yet).
+    expect(localStorage.getItem(themeStorageKeyFor('alice'))).toBeNull();
+  });
+
+  it('migrates anonymous selection forward on first sign-in', () => {
+    const { result } = renderHook(() => useTheme(), { wrapper: wrap });
+    act(() => result.current.setTheme('slate-light'));
+    act(() => result.current.updateCustom({ accentHex: '#22C55E' }));
+
+    // Sign in as "alice" — no per-user key yet → seed from current state.
+    act(() => result.current.setUserId('alice'));
+    expect(localStorage.getItem(themeStorageKeyFor('alice'))).toBe('slate-light');
+    const aliceCustom = JSON.parse(localStorage.getItem(customStorageKeyFor('alice')) ?? '{}');
+    expect(aliceCustom.accentHex).toBe('#22C55E');
+
+    // State should remain stable across the migration.
+    expect(result.current.theme).toBe('slate-light');
+    expect(result.current.userId).toBe('alice');
+  });
+
+  it('hydrates each user from their own bucket when switching identities', () => {
+    // Pre-seed two users with different preferences.
+    localStorage.setItem(themeStorageKeyFor('alice'), 'tactical-dark');
+    localStorage.setItem(themeStorageKeyFor('bob'), 'slate-light');
+    localStorage.setItem(customStorageKeyFor('alice'), JSON.stringify({ accentHex: '#A855F7' }));
+    localStorage.setItem(customStorageKeyFor('bob'), JSON.stringify({ density: 'compact' }));
+
+    const { result } = renderHook(() => useTheme(), { wrapper: wrap });
+    act(() => result.current.setUserId('alice'));
+    expect(result.current.theme).toBe('tactical-dark');
+    expect(result.current.custom.accentHex).toBe('#A855F7');
+
+    act(() => result.current.setUserId('bob'));
+    expect(result.current.theme).toBe('slate-light');
+    expect(result.current.custom.density).toBe('compact');
+    // Alice's accent did NOT leak into Bob's session.
+    expect(result.current.custom.accentHex).toBeUndefined();
+
+    // Sign out → falls back to anonymous bucket.
+    act(() => result.current.setUserId(null));
+    // Anonymous bucket is empty → DEFAULT_THEME.
+    expect(result.current.theme).toBe('carbon-green');
+  });
+
+  it('writes go to the bound user bucket, not the anonymous one alone', () => {
+    const { result } = renderHook(() => useTheme(), { wrapper: wrap });
+    act(() => result.current.setUserId('charlie'));
+    act(() => result.current.setTheme('desert-tan'));
+
+    expect(localStorage.getItem(themeStorageKeyFor('charlie'))).toBe('desert-tan');
+    // Anonymous bucket is mirrored so first-paint after reload is correct.
+    expect(localStorage.getItem(THEME_STORAGE_KEY)).toBe('desert-tan');
+  });
+
+  it('setUserId is a no-op when the id does not change', () => {
+    const { result } = renderHook(() => useTheme(), { wrapper: wrap });
+    act(() => result.current.setUserId('alice'));
+    act(() => result.current.setTheme('tactical-dark'));
+    // Calling again with the same id must not re-hydrate (which would
+    // overwrite our just-set theme back to whatever was on disk).
+    act(() => result.current.setUserId('alice'));
+    expect(result.current.theme).toBe('tactical-dark');
+  });
+});
+
+describe('ThemeProvider — smooth dark/light transition', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    document.documentElement.classList.remove('theme-transitions-on', 'dark', 'light');
+    // Default matchMedia in setup.ts always returns matches=false → no
+    // reduced-motion. Keep it that way for these tests.
+  });
+
+  it('toggles theme-transitions-on around a dark→light flip', () => {
+    vi.useFakeTimers();
+    const { result } = renderHook(() => useTheme(), { wrapper: wrap });
+    // Start: carbon-green (dark). Switch to slate-light (light).
+    act(() => result.current.setTheme('slate-light'));
+    expect(document.documentElement.classList.contains('theme-transitions-on')).toBe(true);
+
+    // After the pulse window, the class is removed so ordinary paints
+    // don't pay the transition cost.
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
+    expect(document.documentElement.classList.contains('theme-transitions-on')).toBe(false);
+    vi.useRealTimers();
+  });
+
+  it('does NOT pulse when only the accent changes (same dark/light branch)', () => {
+    vi.useFakeTimers();
+    const { result } = renderHook(() => useTheme(), { wrapper: wrap });
+    // Drain the initial-mount effect.
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
+    document.documentElement.classList.remove('theme-transitions-on');
+
+    act(() => result.current.updateCustom({ accentHex: '#3B82F6' }));
+    // Customisation alone does not flip dark/light → no pulse.
+    expect(document.documentElement.classList.contains('theme-transitions-on')).toBe(false);
+    vi.useRealTimers();
+  });
+
+  it('respects prefers-reduced-motion (no pulse class added)', () => {
+    // Override matchMedia just for this test.
+    const originalMM = window.matchMedia;
+    window.matchMedia = ((q: string) => ({
+      matches: q.includes('prefers-reduced-motion'),
+      media: q,
+      onchange: null,
+      addListener: () => {},
+      removeListener: () => {},
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => false,
+    })) as typeof window.matchMedia;
+
+    try {
+      const { result } = renderHook(() => useTheme(), { wrapper: wrap });
+      act(() => result.current.setTheme('slate-light'));
+      expect(document.documentElement.classList.contains('theme-transitions-on')).toBe(false);
+    } finally {
+      window.matchMedia = originalMM;
+    }
   });
 });

@@ -252,4 +252,3 @@ describe('<Layout> "More" panel — accessibility focus contract', () => {
     expect(focused!.getAttribute('href')).toBe('/diary');
   });
 });
-});

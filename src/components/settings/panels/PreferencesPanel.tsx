@@ -42,7 +42,7 @@ import { useTheme } from '@/lib/theme';
 import { THEMES, DEFAULT_THEME } from '@/lib/theme-constants';
 import { getSettings, saveSettings } from '@/lib/storage';
 import { useAuth } from '@/lib/auth-context';
-import { savePreferenceToSupabase, markLocalUpdated } from '@/lib/preferences-sync';
+import { markLocalUpdated } from '@/lib/preferences-sync';
 import { ThemePicker } from '@/components/settings/ThemePicker';
 import { cn } from '@/lib/utils';
 
@@ -55,7 +55,10 @@ export function PreferencesPanel() {
   const { t, locale, setLocale } = useI18n();
   const { theme, setTheme, isDark, toggleTheme } = useTheme();
   const settings = getSettings();
-  const { user } = useAuth();
+  // Auth is unused for this panel — `advancedMode` is a local-only setting
+  // (no Supabase column today) and locale/theme have their own per-user
+  // sync paths inside their providers.
+  useAuth(); // keep the call to register the consumer (no-op).
   const [, force] = React.useReducer((x) => x + 1, 0);
   const [justReset, setJustReset] = useState(false);
 
@@ -65,10 +68,9 @@ export function PreferencesPanel() {
     (advanced: boolean) => {
       saveSettings({ ...getSettings(), advancedMode: advanced });
       markLocalUpdated();
-      if (user) savePreferenceToSupabase(user.id, 'advanced_mode', advanced).catch(() => {});
       force();
     },
-    [user],
+    [],
   );
 
   const handleReset = useCallback(() => {

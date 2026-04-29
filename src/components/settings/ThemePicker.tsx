@@ -4,13 +4,20 @@ import { useTheme, THEMES } from '@/lib/theme';
 import { THEME_FAMILIES, getFamilyVariant } from '@/lib/theme-constants';
 import { useI18n } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
+import { useThemeFlags } from '@/lib/admin/useThemeFlags';
+import { filterThemesByFlags } from '@/lib/admin/theme-flags';
 
 export function ThemePicker() {
   const { theme, setTheme, isDark } = useTheme();
   const { locale } = useI18n();
+  const { flags } = useThemeFlags();
   const mode = isDark ? 'dark' : 'light';
   const activeFamily = THEMES.find((t) => t.id === theme)?.family ?? 'carbon-green';
-  const cards = THEME_FAMILIES.map(
+  // Hide families whose variants the admin disallowed. We compute by family
+  // because the picker shows one card per family (variant matches dark/light).
+  const allowed = filterThemesByFlags(THEMES, flags);
+  const allowedFamilies = new Set(allowed.map((t) => t.family));
+  const cards = THEME_FAMILIES.filter((f) => allowedFamilies.has(f)).map(
     (family) =>
       THEMES.find((t) => t.family === family && t.mode === mode) ??
       THEMES.find((t) => t.family === family)!,

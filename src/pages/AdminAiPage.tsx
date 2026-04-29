@@ -39,6 +39,7 @@ import RunbookPayloads from '@/components/admin/RunbookPayloads';
 import RunbookLogViewer from '@/components/admin/RunbookLogViewer';
 import UsageQuotasPanel from '@/components/admin/UsageQuotasPanel';
 import { AiGuardrailsCard } from '@/components/admin/AiGuardrailsCard';
+import { ThemeFlagsAdminCard } from '@/components/admin/ThemeFlagsAdminCard';
 import { RlsDetailsPanel } from '@/components/admin/RlsDetailsPanel';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ClipboardCheck } from 'lucide-react';
@@ -635,6 +636,7 @@ function AdminAiAuthenticated() {
 
         <TabsContent value="guardrails" className="space-y-4 mt-4">
           <AiGuardrailsCard />
+          <ThemeFlagsAdminCard />
           <RlsDetailsPanel />
         </TabsContent>
       </Tabs>

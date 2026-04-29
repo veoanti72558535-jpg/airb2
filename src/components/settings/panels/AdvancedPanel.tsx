@@ -8,6 +8,7 @@ import { ThemePicker } from '@/components/settings/ThemePicker';
 import { AccessibilityCard } from '@/components/settings/AccessibilityCard';
 import { SecurityAuditCard } from '@/components/settings/SecurityAuditCard';
 import { cn } from '@/lib/utils';
+import { useThemeFlags } from '@/lib/admin/useThemeFlags';
 
 /**
  * Hub Réglages — onglet "Affichage & Avancé" :
@@ -17,6 +18,7 @@ export function AdvancedPanel() {
   const { t } = useI18n();
   const settings = getSettings();
   const [, force] = React.useReducer((x: number) => x + 1, 0);
+  const { flags } = useThemeFlags();
 
   return (
     <div className="space-y-3">
@@ -31,6 +33,7 @@ export function AdvancedPanel() {
               </div>
             </div>
           </div>
+          {flags.studioRouteEnabled && (
           <Link
             to="/theme"
             className={cn(
@@ -42,6 +45,7 @@ export function AdvancedPanel() {
             {t('themeStudio.open' as any)}
             <ChevronRight className="h-3.5 w-3.5" />
           </Link>
+          )}
         </div>
         {/* Quick picker stays available for users who don't need the full studio. */}
         <ThemePicker />

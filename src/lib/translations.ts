@@ -1510,6 +1510,40 @@ const fr = {
   'admin.ai.guardrails.httpsDesc': 'TLS obligatoire en production pour protéger les sessions et les requêtes Supabase.',
   'admin.ai.guardrails.deterministic': 'Moteur balistique déterministe',
   'admin.ai.guardrails.deterministicDesc': 'Tous les calculs balistiques sont déterministes. L\'IA est uniquement une aide à la rédaction.',
+  // ── Simulation (admin/ai/simulation) ───────────────────────────────
+  'admin.ai.simulation.title': 'Mode simulation IA',
+  'admin.ai.simulation.subtitle':
+    'Rejoue les sondes admin (garde-fous, providers, runbook) sur le profil ai.*.staging avant tout déploiement.',
+  'admin.ai.simulation.openLink': 'Ouvrir la simulation',
+  'admin.ai.simulation.profile.title': 'Profil de configuration test',
+  'admin.ai.simulation.profile.subtitle':
+    'Lecture seule — édition réservée à app_settings (clés ai.*.staging).',
+  'admin.ai.simulation.profile.empty': 'Aucune clé ai.*.staging trouvée. Appliquer la migration 20260429193021_ai_staging_profile.sql.',
+  'admin.ai.simulation.profile.refresh': 'Recharger le profil',
+  'admin.ai.simulation.mode.label': 'Mode',
+  'admin.ai.simulation.mode.dryRun': 'Dry-run',
+  'admin.ai.simulation.mode.dryRunDesc': 'Aucun appel facturable, aucune écriture.',
+  'admin.ai.simulation.mode.live': 'Live',
+  'admin.ai.simulation.mode.liveDesc': 'Appels réels marqués simulation=true côté logs.',
+  'admin.ai.simulation.run': 'Lancer le test',
+  'admin.ai.simulation.running': 'En cours…',
+  'admin.ai.simulation.lastRun': 'Dernière exécution',
+  'admin.ai.simulation.never': 'jamais',
+  'admin.ai.simulation.section.guardrails': 'Garde-fous',
+  'admin.ai.simulation.section.guardrailsDesc':
+    'Vérifie RLS, rôles, secrets, CSP. En dry-run, n\'inspecte que les sources statiques.',
+  'admin.ai.simulation.section.providers': 'Providers',
+  'admin.ai.simulation.section.providersDesc':
+    'Compare les clés ai.*.staging avec ce que voient les Edge Functions.',
+  'admin.ai.simulation.section.runbook': 'Runbook',
+  'admin.ai.simulation.section.runbookDesc':
+    'Réutilise la checklist 13 critères avec un état dédié simulation (séparé de la prod).',
+  'admin.ai.simulation.banner.dryRun': 'Tous les tests sont en dry-run : aucune requête sortante n\'est émise.',
+  'admin.ai.simulation.banner.live': 'Mode live : les sondes RLS et providers émettront de vraies requêtes admin.',
+  'admin.ai.simulation.warning.prodFallback':
+    'Cette sonde lit les valeurs prod côté serveur — utilisez-la pour comparer avec le profil staging affiché ci-dessous.',
+  'admin.ai.simulation.runbook.reset': 'Réinitialiser la checklist simulation',
+  'admin.ai.simulation.runbook.scoped': 'État stocké séparément (clé airballistik:runbook-validation:simulation).',
   'admin.ai.usage.title': 'Usage & quotas',
   'admin.ai.usage.window.1d': 'Aujourd\'hui',
   'admin.ai.usage.window.7d': '7 jours',

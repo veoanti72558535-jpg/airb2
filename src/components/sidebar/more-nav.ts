@@ -14,8 +14,11 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 
-export type MoreItem = { path: string; icon: LucideIcon; labelKey: string };
-export type MoreSection = { titleKey: string; items: MoreItem[] };
+// `labelKey` / `titleKey` use `any` to stay compatible with the project's
+// strongly-typed i18n key union (`useI18n().t(...)`), the same way the
+// original Layout-local definitions did.
+export type MoreItem = { path: string; icon: LucideIcon; labelKey: any };
+export type MoreSection = { titleKey: any; items: MoreItem[] };
 
 export const moreSections: MoreSection[] = [
   {

@@ -17,6 +17,7 @@ import { Section } from '@/components/calc/Section';
 import { ResultsCard } from '@/components/calc/ResultsCard';
 import { Field } from '@/components/calc/Field';
 import { Switch } from '@/components/ui/switch';
+import { ResponsivePreview } from '@/components/devtools/ResponsivePreview';
 import { BallisticResult, WeatherSnapshot } from '@/lib/types';
 
 /**
@@ -285,6 +286,9 @@ export default function DesignSystemPage() {
         <DemoLabel>layout split (schematic) — sidebar / viewport</DemoLabel>
         <ScopeLayoutSchematic />
 
+        <DemoLabel>responsive preview — live overflow detector (320 → 1440px)</DemoLabel>
+        <ResponsivePreview path="/scope-view" defaultWidth={768} height={620} />
+
         <Rules
           title="Scope View rules"
           rules={[
@@ -294,6 +298,7 @@ export default function DesignSystemPage() {
             'Slider value must be displayed inline with the label (right-aligned, cyan, font-weight 600).',
             'Show advanced ballistic inputs (MV/BC/weight/zero) behind a Settings toggle — keep first-screen sparse.',
             'On mobile (<768px): sidebar stacks above canvas with bottom-border separator and overflow auto.',
+            'Use the responsive preview tool above to verify no horizontal overflow at any breakpoint between 320px and 1440px.',
           ]}
         />
       </article>

@@ -76,7 +76,10 @@ export function railItemClass(active: boolean, variant: Variant = 'rail'): strin
     );
   }
   return cn(
-    'group/rail relative flex flex-col items-center justify-center gap-1 w-[68px] py-2 rounded-xl',
+    // Tightened rail item: fixed 64×52 footprint kills any reflow when labels
+    // change locale (FR labels run ~30% longer than EN). gap-[3px] keeps the
+    // icon-to-label rhythm crisp without stealing vertical space.
+    'group/rail relative flex flex-col items-center justify-center gap-[3px] w-16 h-[52px] rounded-xl',
     railItemBase,
     active
       ? 'text-primary bg-primary/[0.08] ring-1 ring-inset ring-primary/15'
@@ -86,7 +89,10 @@ export function railItemClass(active: boolean, variant: Variant = 'rail'): strin
 
 function railLabelClass(active: boolean): string {
   return cn(
-    'text-[10px] leading-tight text-center truncate max-w-full px-1 tracking-wide',
+    // leading-none + fixed 9px size locks the label box height regardless of
+    // descenders; truncate guards the longest FR strings ("Conversions",
+    // "Bibliothèque"…). max-w-full ensures the container width clamps the text.
+    'text-[9px] leading-none text-center truncate max-w-full px-1 tracking-wide',
     active ? 'font-semibold' : 'font-medium'
   );
 }
@@ -99,7 +105,7 @@ function ActiveBar() {
   return (
     <span
       aria-hidden
-      className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-[2px] rounded-r-full bg-primary"
+      className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[2px] rounded-r-full bg-primary"
     />
   );
 }

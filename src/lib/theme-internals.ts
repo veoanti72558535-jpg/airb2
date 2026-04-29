@@ -24,6 +24,14 @@ export interface ThemeContextType {
   updateCustom: (patch: ThemeCustomisation) => void;
   /** Reset every override back to the base theme. */
   resetCustom: () => void;
+  /**
+   * Bind the provider to a user identity so theme + customisation are
+   * stored per-user. Pass `null` for the anonymous (pre-sign-in) bucket.
+   * Safe to call repeatedly with the same id (no-op).
+   */
+  setUserId: (userId: string | null) => void;
+  /** Currently active storage user id, or `null` when anonymous. */
+  userId: string | null;
 }
 
 export const ThemeContext = createContext<ThemeContextType | null>(null);

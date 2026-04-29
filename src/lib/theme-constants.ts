@@ -52,6 +52,29 @@ export function isValidTheme(v: string | null): v is ThemeId {
 }
 
 // ─────────────────────────────────────────────────────────────────────────
+// Per-user storage helpers
+// ─────────────────────────────────────────────────────────────────────────
+// Theme + customisation are stored per-device (Supabase profiles is left
+// untouched on purpose — see preferences-sync.ts). To still give a "per
+// user" experience on shared devices, we scope the storage key to the
+// signed-in user id when available, and migrate the anonymous value
+// forward on first sign-in.
+//
+//   Anonymous → "pcp-theme"
+//   User abc  → "pcp-theme:abc"
+//
+// When the active user changes, callers swap storage keys via
+// `themeStorageKeyFor(userId)` and `customStorageKeyFor(userId)`.
+
+export function themeStorageKeyFor(userId: string | null | undefined): string {
+  return userId ? `${THEME_STORAGE_KEY}:${userId}` : THEME_STORAGE_KEY;
+}
+
+export function customStorageKeyFor(userId: string | null | undefined): string {
+  return userId ? `${THEME_CUSTOM_STORAGE_KEY}:${userId}` : THEME_CUSTOM_STORAGE_KEY;
+}
+
+// ─────────────────────────────────────────────────────────────────────────
 // Customisation layer (M5 — Theme Studio)
 // ─────────────────────────────────────────────────────────────────────────
 // On top of the four base themes, users can override a small set of
@@ -144,8 +167,12 @@ export function hexToHslTokens(hex: string): string | null {
 }
 
 export function readCustomisation(): ThemeCustomisation {
+  return readCustomisationFor(null);
+}
+
+export function readCustomisationFor(userId: string | null | undefined): ThemeCustomisation {
   try {
-    const raw = localStorage.getItem(THEME_CUSTOM_STORAGE_KEY);
+    const raw = localStorage.getItem(customStorageKeyFor(userId));
     if (!raw) return {};
     const parsed = JSON.parse(raw) as ThemeCustomisation;
     return sanitiseCustomisation(parsed);
@@ -167,9 +194,13 @@ export function sanitiseCustomisation(c: ThemeCustomisation): ThemeCustomisation
 }
 
 export function writeCustomisation(c: ThemeCustomisation): void {
+  writeCustomisationFor(null, c);
+}
+
+export function writeCustomisationFor(userId: string | null | undefined, c: ThemeCustomisation): void {
   try {
     const clean = sanitiseCustomisation(c);
-    localStorage.setItem(THEME_CUSTOM_STORAGE_KEY, JSON.stringify(clean));
+    localStorage.setItem(customStorageKeyFor(userId), JSON.stringify(clean));
   } catch {
     /* storage may be full or disabled — silently ignore */
   }

@@ -136,12 +136,15 @@ export default function ThemeStudioPage() {
 
       {/* Advanced controls only visible in Avancé mode. */}
       {mode === 'advanced' && (
-        <AdvancedControls
-          isDark={isDark}
-          custom={custom}
-          updateCustom={updateCustom}
-          tx={tx}
-        />
+        <>
+          <LivePreviewPanel custom={custom} isDark={isDark} tx={tx} />
+          <AdvancedControls
+            isDark={isDark}
+            custom={custom}
+            updateCustom={updateCustom}
+            tx={tx}
+          />
+        </>
       )}
 
       <p className="text-[11px] text-muted-foreground text-center pt-2">

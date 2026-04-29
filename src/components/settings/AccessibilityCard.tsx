@@ -182,6 +182,46 @@ export function AccessibilityCard() {
           </button>
         </div>
 
+        {/* Reduce motion — neutralises every transition + animation through
+            the global `.reduce-motion` rule, applied uniformly to all
+            theme variants. */}
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <Zap className="h-4 w-4 text-primary/80 shrink-0" />
+            <div className="min-w-0">
+              <div className="text-sm font-medium">{t('settings.a11y.reduceMotion' as any)}</div>
+              <div className="text-[11px] text-muted-foreground">{t('settings.a11y.reduceMotionDesc' as any)}</div>
+            </div>
+          </div>
+          <button
+            onClick={() => setReduceMotion(!reduceMotion)}
+            className={toggleClass(reduceMotion)}
+            aria-pressed={reduceMotion}
+          >
+            {reduceMotion ? 'ON' : 'OFF'}
+          </button>
+        </div>
+
+        {/* Strong focus — boosts the focus-visible outline to 3px + 4px
+            halo using the active theme's `--ring` token, so the colour
+            stays on-brand for every theme. */}
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <Target className="h-4 w-4 text-primary/80 shrink-0" />
+            <div className="min-w-0">
+              <div className="text-sm font-medium">{t('settings.a11y.strongFocus' as any)}</div>
+              <div className="text-[11px] text-muted-foreground">{t('settings.a11y.strongFocusDesc' as any)}</div>
+            </div>
+          </div>
+          <button
+            onClick={() => setStrongFocus(!strongFocus)}
+            className={toggleClass(strongFocus)}
+            aria-pressed={strongFocus}
+          >
+            {strongFocus ? 'ON' : 'OFF'}
+          </button>
+        </div>
+
         {/* Sidebar focus behaviour — segmented control. */}
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">

@@ -1,128 +1,127 @@
-# Golden cases request — document de demande dédié, sans IA
-
 ## Objectif
 
-Créer un document de demande **autonome et envoyable tel quel** (au dev ChairGun, et réutilisable pour Strelok / MERO / un opérateur humain) pour obtenir des **golden cases** complets destinés à la cross-validation **sans IA**.
+Permettre l'import idempotent du fichier `chairgun_final_supabase_import.json` (~1944 réticules ChairGun) dans la table `public.chairgun_reticles_catalog` de votre Supabase self-hosted, via la `service_role` key (option 1, sans ouvrir Postgres au monde extérieur).
 
-Différence avec `docs/handoff/chairgun-data-request.md` (qui existe déjà et couvre 4 priorités larges) :
-- Mono-sujet : golden cases uniquement (pas de scope reticle, pas de Cd tables, pas d'UX)
-- **Prêt à copier-coller** dans un mail / Discord / GitHub issue (FR + EN)
-- Insiste sur le **canal humain ou export programmatique** : pas d'OCR, pas d'IA dans la boucle d'extraction
-- Fournit un **template JSON pré-rempli** (squelette à remplir case par case)
-- Référence le format pivot canonique `external-case-json.md` v1 sans le redupliquer
+## Fichiers modifiés / créés
 
-## Tranche unique — Documentation only
+### 1. `docs/migrations/20260424-chairgun-reticles-catalog.sql` — modifié
 
-### Files
+Ajouter la colonne `vendor` au DDL existant (le JSON contient ce champ, absent du schéma actuel) :
 
-- **Created** : `docs/handoff/golden-cases-request.md` (~250–350 lignes)
-- **Created** : `docs/handoff/templates/golden-case-template.json` (squelette JSON, tous champs requis présents)
-- **Modified** : `docs/handoff/chairgun-data-request.md` — ajouter 1–2 lignes de renvoi en tête de §P1.1 vers le nouveau document dédié
-- **Modified** : aucun fichier code, aucun test, aucune migration, aucune translation, aucune memory
+```sql
+CREATE TABLE IF NOT EXISTS public.chairgun_reticles_catalog (
+  id              serial PRIMARY KEY,
+  reticle_id      integer NOT NULL UNIQUE,
+  name            text NOT NULL,
+  vendor          text,                       -- ← NOUVEAU
+  focal_plane     text CHECK (focal_plane IN ('FFP','SFP')),
+  unit            text CHECK (unit IN ('MRAD','MIL','MOA','CM/100M')),
+  true_magnification numeric,
+  elements        jsonb NOT NULL DEFAULT '[]'::jsonb,
+  element_count   integer GENERATED ALWAYS AS (jsonb_array_length(elements)) STORED,
+  created_at      timestamptz NOT NULL DEFAULT now()
+);
+```
 
-### Document structure (`golden-cases-request.md`)
+Et — pour les VM où la migration a déjà été appliquée sans `vendor` — ajouter en bas du fichier un bloc idempotent :
 
-1. **Pourquoi cette demande** — moteur déterministe verrouillé par snapshots golden ; pour le confronter à une référence externe sans biaiser nos tests, il faut des cas **complets et traçables** ; ils iront dans `src/lib/__fixtures__/cross-validation/<case-id>/` et seront comparés par `runCaseComparison` (déterministe, **zéro IA**).
+```sql
+ALTER TABLE public.chairgun_reticles_catalog
+  ADD COLUMN IF NOT EXISTS vendor text;
+CREATE INDEX IF NOT EXISTS idx_cg_reticles_vendor
+  ON public.chairgun_reticles_catalog(vendor);
+```
 
-2. **Définition opérationnelle d'un "golden case"** :
-   - 1 projectile identifié (marque + modèle + poids exact en grains + diamètre mm)
-   - 1 tune (MV mesurée au chrono, idéalement avec ES/SD)
-   - 1 atmosphère explicite (T °C, P hPa **absolus**, HR %, altitude m)
-   - 1 réglage scope (sight height mm, zero range m)
-   - 1 condition vent (vitesse + direction + convention angulaire)
-   - N lignes de résultats (range, drop mm, velocity m/s ; optionnel : TOF, windDrift, energy)
-   - Métadonnées de traçabilité : version app, méthode d'extraction, opérateur, date
+Aucun fichier verrouillé n'est touché. Cette migration vit hors de `supabase/migrations/` (volontairement, par contrainte BUILD existante) — vous l'exécuterez manuellement sur la VM.
 
-3. **Couverture souhaitée (matrice 8 lignes)** :
+### 2. `scripts/import-chairgun-reticles.ts` — nouveau
 
-   | Calibre | Type | MV cible | Zero | Atmosphère |
-   |---|---|---|---|---|
-   | .177 | pellet | 240 m/s | 25 m | ICAO |
-   | .22  | pellet | 280 m/s | 30 m | ICAO |
-   | .22  | pellet | 280 m/s | 30 m | -10 °C / 20 % HR |
-   | .22  | pellet | 280 m/s | 30 m | 35 °C / 90 % HR |
-   | .22  | slug   | 320 m/s | 50 m | ICAO |
-   | .25  | pellet | 270 m/s | 40 m | altitude 1500 m |
-   | .25  | slug   | 280 m/s | 50 m | altitude + vent 5 m/s travers |
-   | .30  | slug   | 290 m/s | 100 m | ICAO |
+Script Node/Bun qui lit le JSON, valide chaque ligne avec Zod, et upsert par paquets de 200 via `@supabase/supabase-js` sur la clé `service_role`. Idempotent grâce à `onConflict: 'reticle_id'`.
 
-   Cible : **8 cas minimum**, **20 idéal**. Livraison incrémentale OK.
+Caractéristiques :
+- **Variables d'env requises** : `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` (lues via `process.env`, jamais loggées).
+- **Validation Zod** par item — une ligne invalide est skippée et reportée, le reste passe.
+- **Chunking 200** pour éviter les payloads >5 MB sur PostgREST.
+- **Mode `--dry-run`** : valide + parse + groupe sans écrire (pour tester).
+- **Récap final** : `ok / skipped / failed` + temps total + nombre de réticules en base avant/après.
+- **Exit code non-zéro** si au moins un chunk échoue (CI-friendly).
 
-4. **Format de livraison attendu** — pointeur strict vers :
-   - `docs/validation/external-case-json.md` (schéma v1 canonique, single source of truth)
-   - `docs/handoff/templates/golden-case-template.json` (squelette à remplir)
+Squelette :
 
-   Règles : 1 fichier JSON par cas ; nom = `caseId` slug (ex : `22-jsb-18gr-280-zero30.json`) ; pas de conversion d'unités côté contributeur (remplir `sourceUnitsNote`, conversion côté AirBallistik).
+```ts
+import { readFileSync } from 'node:fs';
+import { z } from 'zod';
+import { createClient } from '@supabase/supabase-js';
 
-5. **Règles d'or (rappel court)** :
-   - Aucune valeur inventée. Cellule vide = "on ne sait pas".
-   - Atmosphère explicite, pas de défaut implicite.
-   - Vent : convention angulaire documentée dans `assumptions[]`.
-   - BC : préciser le modèle (G1 / G7 / custom Cd table).
-   - Confiance auto-évaluée (A / B / C) selon la grille du schéma v1.
+const RowSchema = z.object({
+  reticle_id: z.number().int().positive(),
+  name: z.string().min(1),
+  vendor: z.string().optional().nullable(),
+  focal_plane: z.enum(['FFP', 'SFP']).optional().nullable(),
+  unit: z.enum(['MRAD', 'MIL', 'MOA', 'CM/100M']).optional().nullable(),
+  true_magnification: z.number().optional().nullable(),
+  elements: z.array(z.unknown()),
+});
 
-6. **Checklist qualité contributeur** (cases à cocher avant envoi) :
-   - [ ] `caseId` unique et slug-safe
-   - [ ] `meta.source/version/confidence/extractionMethod/extractedAt` renseignés
-   - [ ] Atmosphère explicite ou explicitement marquée "ICAO"
-   - [ ] Vent : speed + direction + convention dans `assumptions[]`
-   - [ ] BC + modèle BC documentés
-   - [ ] Au moins 5 lignes de résultats, range croissant
-   - [ ] Drop signé (négatif = sous ligne de visée)
-   - [ ] `sourceUnitsNote` rempli si unités non canoniques
-   - [ ] JSON parser-validé
+// 1. Vérifier env vars (fail fast si absentes)
+// 2. Lire et JSON.parse le fichier (chemin = argv[2] || défaut /tmp/...)
+// 3. Compter avant: SELECT count(*) FROM chairgun_reticles_catalog
+// 4. Boucle par chunks de 200 → upsert(onConflict:'reticle_id')
+// 5. Compter après + récap stdout
+```
 
-7. **Ce qu'on NE demande PAS** (transparence) :
-   - Pas de code source ChairGun
-   - Pas de captures d'écran (on évite explicitement le pipeline IA pour cette demande)
-   - Pas d'engagement de support ou de maintenance
-   - Pas d'exclusivité
+### 3. `package.json` — modifié
 
-8. **Où ça atterrit chez nous** :
-   - `src/lib/__fixtures__/cross-validation/<case-id>/case.json` (cf. cas pilote `case-22-pellet-18gr-270-zero30`)
-   - Exécution → `runCaseComparison` (déterministe, zéro IA)
-   - Si convergence multi-cas : peut contribuer à débloquer un gate MERO (cf. `mem://constraints/mero-exposure-gates`)
+Ajouter un script npm pour usage clair :
 
-9. **Messages prêts à envoyer** — deux blocs courts (FR + EN, ~150 mots) :
-   - Présentent AirBallistik en 1 phrase
-   - Pointent vers `golden-cases-request.md` + le template
-   - Ouvrent par "qu'est-ce qui est facile pour toi à exporter ?" plutôt que tout demander d'un coup
-   - Précisent explicitement : "pas d'OCR, pas d'IA, on consomme directement ton JSON"
+```json
+"scripts": {
+  "import:chairgun-reticles": "bun run scripts/import-chairgun-reticles.ts"
+}
+```
 
-10. **Workflow de réception côté AirBallistik** :
-    - Valider le JSON contre le schéma (parser `user-case-schema.ts` déjà en place)
-    - Déposer dans `src/lib/__fixtures__/cross-validation/<case-id>/`
-    - Lancer `vitest run src/lib/cross-validation/`
-    - Documenter le verdict (convergence / écart) dans les notes du cas
-    - **Pas** de mise à jour automatique des golden snapshots — décision humaine explicite
+`@supabase/supabase-js` et `zod` sont déjà dans les dépendances du projet, pas d'installation supplémentaire.
 
-### Template JSON (`golden-case-template.json`)
+## Procédure d'exécution (côté utilisateur, après merge)
 
-JSON strict (pas de commentaires inline) reprenant **tous** les champs requis du schéma v1 :
-- valeurs `null` pour les obligatoires non encore remplis
-- valeurs d'exemple courtes pour les structurants (ex : `"caliber": ".22"`)
-- 3 `rows` squelettes (range = 10, 30, 50) pour donner le pattern
-- 1 référence avec metadata complète (`source`, `version`, `confidence`, `extractionMethod`, `extractedAt`)
-- `assumptions[]` non vide avec exemples ("BC G1 supposé", "vent convention 0°=12h")
-- `schemaVersion: 1` explicite
+```bash
+# 1. Sur la VM, appliquer la migration (ou juste l'ALTER si table existante)
+psql -U postgres -d postgres -f docs/migrations/20260424-chairgun-reticles-catalog.sql
 
-Les explications de chaque champ vivent dans le markdown voisin, pas dans le JSON.
+# 2. Localement, exporter les credentials
+export SUPABASE_URL="https://supabase.votre-domaine"
+export SUPABASE_SERVICE_ROLE_KEY="eyJ..."   # depuis Supabase Studio → Settings → API
 
-### Constraints respected
+# 3. Dry-run de validation
+bun run scripts/import-chairgun-reticles.ts ./chairgun_final_supabase_import.json --dry-run
 
-- ✅ `src/lib/ballistics/` intouchable
-- ✅ `supabase/`, `src/components/cross-validation/`, `src/lib/ai/edge-client.ts` intouchables
-- ✅ Pas de migration, pas de SQL, pas de test, pas de code, pas de translations
-- ✅ Réutilise et référence le format pivot existant `external-case-json.md` (pas de duplication de schéma)
-- ✅ Mention explicite "sans IA" alignée avec la demande utilisateur
-- ✅ Cohérent avec `mem://core` : moteur balistique = déterministe, IA = assistance seulement
-- ✅ Cohérent avec `mem://constraints/mero-exposure-gates` : ces cas peuvent contribuer à débloquer MERO
+# 4. Import réel
+bun run scripts/import-chairgun-reticles.ts ./chairgun_final_supabase_import.json
+```
 
-### Risques / régressions
+## Vérification post-import
 
-Aucun. Documentation pure + 1 fichier JSON template, hors chaîne de build, hors runtime, hors tests. La modification de `chairgun-data-request.md` se limite à 1–2 lignes de renvoi en tête de §P1.1.
+```sql
+SELECT count(*) FROM public.chairgun_reticles_catalog;             -- ~1944
+SELECT focal_plane, unit, count(*) FROM public.chairgun_reticles_catalog
+  GROUP BY 1,2 ORDER BY 1,2;
+SELECT vendor, count(*) FROM public.chairgun_reticles_catalog
+  GROUP BY 1 ORDER BY 2 DESC LIMIT 10;
+```
 
-### Ce qui reste à faire après cette tranche
+## Hors scope (non touché)
 
-- Envoyer les messages FR/EN au(x) destinataire(s) (action utilisateur, hors Lovable)
-- À réception d'un cas : appliquer le workflow §10 (créera ses propres tranches BUILD si divergence à investiguer)
+- Aucune modif des modules verrouillés (`src/lib/ballistics/`, `ChairGunScopeView.tsx`, `auth-context.tsx`, `library-supabase-repo.ts`).
+- Pas de copie du JSON dans le repo (852k lignes, ~50 MB) — il reste un artefact opérationnel à fournir à l'exécution du script.
+- Pas de modification de `supabase/migrations/` (interdit par contrainte BUILD existante).
+- Pas de UI admin pour déclencher l'import — opération one-shot CLI.
+
+## Risques & mitigations
+
+| Risque | Mitigation |
+|---|---|
+| Service_role leak | Variable d'env locale uniquement, jamais committée, jamais loggée par le script |
+| Payload trop gros | Chunking 200 lignes (testé safe sur PostgREST) |
+| Réimport accidentel = doublons | `upsert(onConflict:'reticle_id')` rend l'opération rejouable |
+| Lignes JSON malformées | Validation Zod par item, skip + log, ne casse pas l'import global |
+| Migration partiellement appliquée sur certaines VM | Bloc `ADD COLUMN IF NOT EXISTS` idempotent en bas du fichier |

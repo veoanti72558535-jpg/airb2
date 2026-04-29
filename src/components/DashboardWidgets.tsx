@@ -152,7 +152,7 @@ function QuickStatsWidget() {
 // ── Widget: Favorites ──
 function FavoritesWidget() {
   const navigate = useNavigate();
-  const favSessions = sessionStore.getAll().filter(s => s.favorite);
+  const favSessions = getSortedFavorites(sessionStore.getAll());
 
   return (
     <div className="surface-elevated p-4">
@@ -171,7 +171,9 @@ function FavoritesWidget() {
             >
               <Star className="h-3 w-3 text-primary fill-primary shrink-0" />
               <span className="text-xs truncate">{s.name}</span>
-              <span className="text-[10px] text-muted-foreground ml-auto font-mono">{s.input.bc}</span>
+              <span className="text-[10px] text-muted-foreground ml-auto font-mono shrink-0">
+                BC {s.input.bc}
+              </span>
             </button>
           ))}
         </div>

@@ -3736,6 +3736,23 @@ const en: Record<keyof typeof fr, string> = {
   'settings.security.test.globals': 'No secrets exposed on window',
   'settings.security.test.aiFlag': 'AI flag explicitly disabled',
   'settings.security.test.crypto': 'WebCrypto available',
+  // Settings → Accessibility (contrast, size, WCAG checker)
+  'settings.a11y.title': 'Accessibility',
+  'settings.a11y.subtitle': 'Improve label legibility in light and dark themes',
+  'settings.a11y.highContrast': 'High contrast',
+  'settings.a11y.highContrastDesc': 'Boosts secondary label and border contrast.',
+  'settings.a11y.largeText': 'Larger text',
+  'settings.a11y.largeTextDesc': 'Increases base font size and fine labels (10–11 px).',
+  'settings.a11y.checkerTitle': 'Contrast verification',
+  'settings.a11y.runCheck': 'Check',
+  'settings.a11y.noCheck': 'No verification has been run yet.',
+  'settings.a11y.fail': 'Insufficient',
+  'settings.a11y.legend': 'WCAG: AA ≥ 4.5:1 · AAA ≥ 7:1 (body text).',
+  'settings.a11y.pair.fgOnBg': 'Main text on background',
+  'settings.a11y.pair.mutedOnBg': 'Secondary label on background',
+  'settings.a11y.pair.fgOnCard': 'Main text on card',
+  'settings.a11y.pair.mutedOnCard': 'Secondary label on card',
+  'settings.a11y.pair.primaryOnBg': 'Accent (primary) on background',
 };
 
 // Append paste-import keys (EN) — kept after object literal would be a TS

@@ -117,6 +117,9 @@ const App = () => (
                 <Route path="/docs" element={<DocsPage />} />
                 <Route path="/search" element={<SearchPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
+                {/* Friendly alias — /preferences deep-links to the unified
+                    Preferences tab inside the Settings hub. */}
+                <Route path="/preferences" element={<Navigate to="/settings?tab=preferences" replace />} />
                 <Route path="/admin" element={<AdminPage />} />
                 {/*
                   /admin/ai keeps its own SignInCard for the 'anon' state —

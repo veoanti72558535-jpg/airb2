@@ -36,6 +36,7 @@ import RunbookChecklist from '@/components/admin/RunbookChecklist';
 import RunbookPayloads from '@/components/admin/RunbookPayloads';
 import RunbookLogViewer from '@/components/admin/RunbookLogViewer';
 import UsageQuotasPanel from '@/components/admin/UsageQuotasPanel';
+import { AiGuardrailsCard } from '@/components/admin/AiGuardrailsCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ClipboardCheck } from 'lucide-react';
 import { getQuatarlyModels, refreshQuatarlyModels, getCacheFetchedAt } from '@/lib/ai/quatarly-models-cache';
@@ -360,12 +361,15 @@ function AdminAiAuthenticated() {
       </div>
 
       <Tabs defaultValue="config" className="w-full">
-        <TabsList className="grid grid-cols-2 w-full sm:w-auto">
+        <TabsList className="grid grid-cols-3 w-full sm:w-auto">
           <TabsTrigger value="config" data-testid="tab-config">
             {t('admin.ai.usage.tabConfig')}
           </TabsTrigger>
           <TabsTrigger value="usage" data-testid="tab-usage">
             {t('admin.ai.usage.tabUsage')}
+          </TabsTrigger>
+          <TabsTrigger value="guardrails" data-testid="tab-guardrails">
+            {t('admin.ai.guardrails.tab' as any)}
           </TabsTrigger>
         </TabsList>
 
@@ -519,6 +523,10 @@ function AdminAiAuthenticated() {
 
         <TabsContent value="usage" className="space-y-4 mt-4">
           <UsageQuotasPanel />
+        </TabsContent>
+
+        <TabsContent value="guardrails" className="space-y-4 mt-4">
+          <AiGuardrailsCard />
         </TabsContent>
       </Tabs>
     </div>

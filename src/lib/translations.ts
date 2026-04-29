@@ -3606,6 +3606,22 @@ const en: Record<keyof typeof fr, string> = {
     'Reading run history is admin-only. Inserts come from Edge Functions (service_role).',
   'admin.ai.rls.policy.aiUsageEventsAdminRead':
     'Reading the AI usage log is admin-only. Inserts come from Edge Functions (service_role).',
+  // Detail level (Simple / Advanced) — AI security page
+  'admin.ai.detail.label': 'Detail level',
+  'admin.ai.detail.simple': 'Simple',
+  'admin.ai.detail.advanced': 'Advanced',
+  'admin.ai.detail.simpleHint':
+    'Concise view: statuses and plain-language explanations, no SQL jargon.',
+  'admin.ai.detail.advancedHint':
+    'Technical view: configuration sources, policy names and SQL USING clauses.',
+  'admin.ai.detail.modeHintSimple':
+    'Simple mode: only the essential explanations are shown. Switch to Advanced to see sources, policy names and SQL clauses.',
+  'admin.ai.detail.modeHintAdvanced':
+    'Advanced mode: configuration sources, internal identifiers and SQL exposed for audit.',
+  'admin.ai.rls.modeSimple':
+    'Quick read: who can read or write each table, in plain language.',
+  'admin.ai.rls.modeAdvanced':
+    'Full audit: policy names, migration files and SQL USING clauses are visible.',
   'admin.ai.usage.title': 'Usage & quotas',
   'admin.ai.usage.window.1d': 'Today',
   'admin.ai.usage.window.7d': '7 days',

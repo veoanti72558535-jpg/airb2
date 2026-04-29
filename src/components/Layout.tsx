@@ -93,6 +93,18 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const bottomNavRef = useRef<HTMLElement | null>(null);
   const [bottomNavHeight, setBottomNavHeight] = useState(56);
 
+  // Refs powering the sidebar focus-handoff after toggle.
+  // ── sidebarNavRef:    container we query for the first/last rail item.
+  // ── sidebarToggleRef: the collapse/expand button itself, always visible
+  //                     so it is a safe focus target when collapsing.
+  // ── pendingFocusRef:  set by `toggleSidebar` so the post-render effect
+  //                     knows WHICH side of the handoff to perform without
+  //                     reacting to the initial mount (preventing the page
+  //                     from auto-focusing the sidebar on first paint).
+  const sidebarNavRef = useRef<HTMLElement | null>(null);
+  const sidebarToggleRef = useRef<HTMLButtonElement | null>(null);
+  const pendingFocusRef = useRef<'expand' | 'collapse' | null>(null);
+
   // Arrow-key navigation inside the sidebar nav and the mobile bottom nav.
   // Tab order is preserved; this only adds APG-style affordances on top.
   const onSidebarKeyDown = useRovingFocus('vertical');
@@ -146,6 +158,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     const newState = !isSidebarExpanded;
     setIsSidebarExpanded(newState);
     localStorage.setItem('airballistik_sidebar_expanded', String(newState));
+    // Mark which handoff the post-render effect should perform. We cannot
+    // move focus synchronously here because the new layout (revealed labels
+    // / new geometry) hasn't painted yet — so the target rail item may not
+    // be focusable until React commits.
+    pendingFocusRef.current = newState ? 'expand' : 'collapse';
     // Announce the new sidebar state on the polite live region. Using a
     // freshly-formatted string (with timestamp suffix when identical) is
     // unnecessary here: collapsed → expanded always alternates, so the
@@ -156,6 +173,38 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         : (t('a11y.sidebarCollapsed' as any) || (locale === 'fr' ? 'Barre latérale réduite' : 'Sidebar collapsed'))
     );
   };
+
+  // Post-toggle focus handoff. Runs after the sidebar has re-rendered with
+  // the new width / labels, so query selectors hit the freshly-mounted DOM.
+  // Only fires when `pendingFocusRef` was set by `toggleSidebar` — meaning
+  // first mount, hot-reload state restore, or external setState calls do NOT
+  // steal focus from wherever the user currently is.
+  useEffect(() => {
+    const intent = pendingFocusRef.current;
+    if (!intent) return;
+    pendingFocusRef.current = null;
+
+    if (intent === 'expand') {
+      // Focus the first interactive rail item so the user can immediately
+      // start navigating the now-readable labels with arrow keys.
+      const first = sidebarNavRef.current?.querySelector<HTMLElement>(
+        'a[href], button:not([disabled])'
+      );
+      if (first) {
+        first.focus();
+        return;
+      }
+      // Fallback: if the nav lost its children for some reason, anchor on
+      // the toggle so focus never falls back to <body>.
+      sidebarToggleRef.current?.focus();
+      return;
+    }
+
+    // Collapsing: park focus on the toggle. The previously-focused rail
+    // item may have shrunk / become visually ambiguous, and the toggle is
+    // the only element guaranteed to remain in the same on-screen position.
+    sidebarToggleRef.current?.focus();
+  }, [isSidebarExpanded]);
 
   // Hint appended to icon-only rail items so screen readers convey both the
   // destination AND the visual state ("collapsed sidebar"). On the expanded
@@ -310,6 +359,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </div>
 
         <nav
+          ref={sidebarNavRef as React.RefObject<HTMLElement>}
           aria-label={t('nav.primary' as any) || 'Navigation principale'}
           onKeyDown={onSidebarKeyDown}
           className="flex-1 flex flex-col gap-1 py-4 overflow-y-auto scrollbar-thin px-3"
@@ -370,6 +420,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
         <div className="p-3 border-t border-border/40 space-y-2">
           <button
+            ref={sidebarToggleRef}
             onClick={toggleSidebar}
             type="button"
             aria-expanded={isSidebarExpanded}

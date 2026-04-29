@@ -99,10 +99,12 @@ export default function Dashboard() {
                 </div>
 
                 <div className="space-y-2 mb-4">
-                  <div className="flex justify-between items-center text-sm border-b border-border/40 pb-1">
-                    <span className="text-muted-foreground">Munition</span>
-                    <span className="font-medium text-right max-w-[150px] truncate" title={last.input.projectileName}>{last.input.projectileName}</span>
-                  </div>
+                  {(last.input as any).projectileName && (
+                    <div className="flex justify-between items-center text-sm border-b border-border/40 pb-1">
+                      <span className="text-muted-foreground">Munition</span>
+                      <span className="font-medium text-right max-w-[150px] truncate" title={(last.input as any).projectileName}>{(last.input as any).projectileName}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between items-center text-sm border-b border-border/40 pb-1">
                     <span className="text-muted-foreground">Vélocité</span>
                     <span className="font-mono text-primary">{last.input.muzzleVelocity} m/s</span>

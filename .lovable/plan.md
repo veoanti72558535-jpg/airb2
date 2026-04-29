@@ -1,96 +1,96 @@
-## Diagnostic
 
-Le dry-run sur la VM montre :
-- 1986 réticules lus depuis `chairgun_final_supabase_import.json`
-- 1793 valides
-- **193 skippés** uniquement à cause de `focal_plane: ""` (chaîne vide au lieu de `'FFP' | 'SFP'`)
+# Audit complet des routes — accessibilité depuis l'UI
 
-Cause : ChairGun publie certains réticules sans plan focal documenté. La donnée n'est pas corrompue — elle est légitimement inconnue. La colonne SQL est `text CHECK (focal_plane IN ('FFP','SFP'))` sur une colonne **nullable**, donc `NULL` est accepté en base. Le seul blocage est le schéma Zod côté script qui rejette la chaîne vide.
+J'ai croisé les **30 routes déclarées** dans `src/App.tsx` avec **toute la navigation effective** (sidebar desktop, bottom nav mobile, menu "Plus", liens contextuels Dashboard / AdminPage / DashboardWidgets, navigation programmatique).
 
-Même problème potentiel sur `unit` (à coercer aussi par sécurité, sans changer le comportement actuel).
+## Tableau de couverture
 
-## Correction
+| Route | Page | Sidebar desktop | Bottom mobile | Menu "Plus" | Lien contextuel | Statut |
+|---|---|:-:|:-:|:-:|:-:|---|
+| `/` | Dashboard | ✅ | ✅ | — | — | OK |
+| `/calc` | QuickCalc | ✅ | ✅ | — | Dashboard | OK |
+| `/sessions` | SessionsPage | ✅ | ✅ | — | Dashboard | OK |
+| `/sessions/:id` | SessionDetailPage | — | — | — | depuis liste | OK (détail) |
+| `/library` | LibraryPage | ✅ | — | ✅ | — | OK (doublon) |
+| `/library/airgun/:id` | AirgunDetailPage | — | — | — | depuis liste | OK (détail) |
+| `/library/projectile/:id` | ProjectileDetailPage | — | — | — | depuis liste | OK (détail) |
+| `/library/optic/:id` | OpticDetailPage | — | — | — | depuis liste | OK (détail) |
+| `/library/reticles` | ReticlesPage | — | — | — | onglet Library | OK |
+| `/library/reticles/:id` | ReticleDetailPage | — | — | — | depuis liste | OK (détail) |
+| `/chrono` | ChronoPage | ✅ | — | ✅ | Dashboard | OK (doublon) |
+| `/conversions` | ConversionsPage | ✅ | — | ✅ | — | OK (doublon) |
+| `/compare` | ComparePage | ✅ | — | ✅ | bouton sessions | OK (doublon) |
+| `/field-mode` | FieldModePage | — | — | ✅ | — | OK |
+| `/range-simulator` | RangeSimulatorPage | — | — | ✅ | — | OK |
+| `/chat` | BallisticChatPage | — | — | ✅ | — | OK |
+| `/diary` | ShootingDiaryPage | — | — | ✅ | — | OK |
+| `/ft-competition` | FieldTargetCompPage | — | — | ✅ | — | OK |
+| `/scope-view` | ScopeViewPage | — | — | ✅ | — | OK ✓ (vous pensiez orpheline — elle est dans "Plus") |
+| `/target-analysis` | TargetAnalysisPage | — | — | ✅ | — | OK |
+| `/competition-prep` | CompetitionPrepPage | — | — | ✅ | — | OK ⚠ doublon fonctionnel avec `/ft-competition` |
+| `/cross-validation` | CrossValidationPage | — | — | ✅ | — | OK |
+| `/docs` | DocsPage | — | — | ✅ | — | OK |
+| `/search` | SearchPage | — | — | ✅ | — | OK |
+| `/settings` | SettingsPage | — | — | ✅ | icône thème sidebar | OK |
+| `/admin` | AdminPage | — | — | ✅ | — | OK |
+| `/admin/ai` | AdminAiPage | ✅ (icône Cpu) | — | — | bouton SettingsPage | OK |
+| `/airguns` | LibraryPage (legacy) | — | — | — | — | Redirect legacy OK |
+| `/projectiles` | LibraryPage (legacy) | — | — | — | — | Redirect legacy OK |
+| `/optics` | LibraryPage (legacy) | — | — | — | — | Redirect legacy OK |
 
-Une seule modification, dans `scripts/import-chairgun-reticles.ts` : pré-traiter `focal_plane` et `unit` avant la validation Zod, en transformant `""` (et `null`/`undefined`/whitespace) en `null`. Ainsi :
-- Les 193 réticules sans plan focal sont **importés** avec `focal_plane = NULL`
-- Les valeurs invalides hors-enum (autres que vide) restent rejetées et loggées
-- Aucun changement de schéma SQL nécessaire (déjà nullable)
+## Verdict : 0 route orpheline
 
-### Détails techniques
+**Aucune page n'est inaccessible.** L'audit confirme que `/scope-view` est bien dans le menu "Plus" (ligne 41 de `Layout.tsx`, label `nav.scopeView`, icône `Eye`). De même `/admin/ai` est exposé via `adminNav` (icône Cpu sous le séparateur de la sidebar desktop) ET via le bouton "Configurer IA" dans `SettingsPage`. L'audit `docs/audit/navigation-routes-audit.md` (daté du 2026-04-21) est **obsolète** — il listait `/admin/ai` comme orphelin alors que les liens ont été ajoutés depuis.
 
-Remplacer le bloc de validation par une normalisation préalable :
+## Vrais problèmes détectés
 
-```ts
-const ENUM_FIELDS = ['focal_plane', 'unit'] as const;
+### 1. Découvrabilité catastrophique — menu "Plus" surchargé
+`moreNav` contient **16 entrées** affichées en liste verticale plate. Sans regroupement, l'utilisateur scrolle et ne trouve rien. Pages cachées en pratique : `/scope-view`, `/field-mode`, `/range-simulator`, `/diary`, `/ft-competition`, `/target-analysis`, `/competition-prep`, `/cross-validation`, `/chat`.
 
-function normalizeRow(raw: unknown): unknown {
-  if (!raw || typeof raw !== 'object') return raw;
-  const obj = { ...(raw as Record<string, unknown>) };
-  for (const key of ENUM_FIELDS) {
-    const v = obj[key];
-    if (v === '' || v === undefined || (typeof v === 'string' && v.trim() === '')) {
-      obj[key] = null;
-    }
-  }
-  return obj;
-}
+### 2. Doublons sidebar ↔ "Plus"
+`/library`, `/chrono`, `/conversions`, `/compare` apparaissent **deux fois** (sidebar desktop + menu "Plus"). Sur mobile c'est OK (pas de sidebar) ; sur desktop ça brouille.
 
-// puis dans la boucle :
-const parsed = RowSchema.safeParse(normalizeRow(rawJson[i]));
-```
+### 3. Doublon fonctionnel
+`/competition-prep` (CompetitionPrepPage) et `/ft-competition` (FieldTargetCompPage) couvrent le même besoin "préparation compétition Field Target". L'un des deux est probablement une ancienne version oubliée.
 
-Le `RowSchema` reste inchangé (les champs sont déjà `.optional().nullable()`).
+### 4. Aucun accès desktop au menu "Plus"
+Sur mobile, le bouton "Plus" ouvre un bottom sheet avec les 16 pages secondaires. **Sur desktop, ce bouton n'existe pas** — donc 9 pages secondaires (`/scope-view`, `/field-mode`, `/range-simulator`, `/diary`, `/chat`, `/ft-competition`, `/target-analysis`, `/competition-prep`, `/cross-validation`, `/docs`, `/search`) ne sont accessibles que par URL directe pour un utilisateur desktop. **C'est le vrai problème "scope-view"** que vous avez ressenti.
 
-### Logging amélioré
+### 5. Redondance Settings ↔ Admin
+Les deux pages contiennent des réglages utilisateur (le contenu de `AdminPage` est en réalité 100% paramètres système). Cf. plan UX précédent en discussion.
 
-Ajouter un compteur dédié pour distinguer « normalisé (vide → null) » de « vraiment skippé » dans le récap final :
+### 6. Sidebar desktop sans label
+Les icônes sont nues (tooltip au hover seulement). Cumulé avec `/admin/ai` représenté par une icône `Cpu` opaque, c'est peu lisible.
 
-```
-▸ Items lus: 1986 — valides: 1986 — normalisés: 193 — skippés: 0
-```
+## Plan d'action proposé (tranche BUILD)
 
-Cela rend visible dans l'audit que ces 193 réticules sont bien en base avec `focal_plane IS NULL`, et permet à l'admin de vérifier post-import :
+**Sprint 1 — Découvrabilité desktop (prioritaire)**
+1. Ajouter dans la sidebar desktop un bouton **"Plus"** (icône `MoreHorizontal`) qui ouvre un panel latéral réutilisant `moreNav` regroupé par sections :
+   - **Outils terrain** : Field Mode, Range Sim, Scope View, Cible photo
+   - **Compétition** : Field Target, Préparation
+   - **Données & analyse** : Comparer, Conversions, Chrono, Cross-validation
+   - **IA & docs** : Chat IA, Recherche, Docs
+   - **Système** : Réglages, Admin
+2. Retirer de `moreNav` les 4 entrées doublons (`/library`, `/chrono`, `/conversions`, `/compare`) — la sidebar suffit.
+3. Mettre à jour `docs/audit/navigation-routes-audit.md` (dater 2026-04-29, marquer `/admin/ai` comme résolu).
 
-```sql
-SELECT count(*) FROM chairgun_reticles_catalog WHERE focal_plane IS NULL;
--- attendu: ~193
-```
+**Sprint 2 — Désambiguïsation**
+4. Fusionner `/competition-prep` et `/ft-competition` : choisir la page la plus complète, supprimer l'autre, conserver une redirection legacy.
+5. Aligner avec le plan "Hub Réglages" précédent : faire de `/settings` un système d'onglets absorbant le contenu d'`/admin`.
 
-## Procédure utilisateur après merge
+**Sprint 3 — Lisibilité**
+6. Sidebar desktop : élargir à `w-20` et afficher le label sous l'icône (comme la barre mobile).
 
-```bash
-cd /home/airadmin/airballistik
-git pull origin main
-bun run import:chairgun-reticles ./chairgun_final_supabase_import.json --dry-run
-# Doit afficher: valides: 1986 — normalisés: 193 — skippés: 0
-bun run import:chairgun-reticles ./chairgun_final_supabase_import.json
-```
+## Fichiers impactés (résumé technique)
 
-Vérification :
-```bash
-docker compose -f /home/airadmin/supabase-stack/docker/docker-compose.yml exec -T db \
-  psql -U postgres -d postgres -c \
-  "SELECT count(*) AS total,
-          count(*) FILTER (WHERE focal_plane IS NULL) AS sans_focal,
-          count(*) FILTER (WHERE focal_plane = 'FFP') AS ffp,
-          count(*) FILTER (WHERE focal_plane = 'SFP') AS sfp
-   FROM public.chairgun_reticles_catalog;"
-```
+- `src/components/Layout.tsx` : ajouter bouton "Plus" desktop + composant `MorePanel` regroupé, nettoyer doublons.
+- `src/App.tsx` : ajouter redirect `/competition-prep → /ft-competition` (ou inverse).
+- `src/lib/translations.ts` : clés FR/EN pour les 5 sous-sections.
+- `docs/audit/navigation-routes-audit.md` : refresh complet.
+- Page supprimée : `CompetitionPrepPage.tsx` ou `FieldTargetCompPage.tsx` (à confirmer après revue rapide des deux).
 
-## Fichiers touchés
+## Question à confirmer
 
-- `scripts/import-chairgun-reticles.ts` — ajout de `normalizeRow()` + compteur `normalized` dans le récap
+Quelle page garder entre `/competition-prep` et `/ft-competition` ? Je peux comparer le contenu des deux fichiers et vous proposer le choix le plus riche, ou vous tranchez directement.
 
-## Hors scope
-
-- Pas de modif SQL (la colonne est déjà nullable, le CHECK accepte NULL)
-- Pas d'édition du JSON source (la donnée vide est légitime, pas corrompue)
-- Pas de modif des modules verrouillés
-- Pas de UI : opération CLI one-shot
-
-## Risques
-
-| Risque | Mitigation |
-|---|---|
-| Lecteur ChairGun (`ChairGunScopeView`) plante sur `focal_plane = NULL` | À vérifier : si le composant exige FFP/SFP, ajouter un fallback côté lecteur dans une tranche ultérieure. Pour l'instant, ces 193 réticules apparaîtront filtrables mais peut-être non rendables — acceptable comme premier pas (mieux qu'absent en base). |
-| Vraies valeurs invalides (typo) masquées par le `""→null` | Non : seul l'empty string et le whitespace pur sont normalisés. Une valeur comme `"FF"` reste rejetée et loggée. |
+Validez ce plan (et la question ci-dessus) — je passe en BUILD pour le Sprint 1 minimum (qui résout votre frustration "scope-view introuvable").

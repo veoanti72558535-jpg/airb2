@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -33,7 +33,7 @@ const AdminAiPage = lazy(() => import("@/pages/AdminAiPage"));
 const CrossValidationPage = lazy(() => import("@/pages/CrossValidationPage"));
 const ChronoPage = lazy(() => import("@/pages/ChronoPage"));
 const TargetAnalysisPage = lazy(() => import("@/pages/TargetAnalysisPage"));
-const CompetitionPrepPage = lazy(() => import("@/pages/CompetitionPrepPage"));
+// CompetitionPrepPage merged into FieldTargetCompPage; route now redirects.
 const ScopeViewPage = lazy(() => import("@/pages/ScopeViewPage"));
 const FieldModePage = lazy(() => import("@/pages/FieldModePage"));
 const RangeSimulatorPage = lazy(() => import("@/pages/RangeSimulatorPage"));
@@ -101,7 +101,7 @@ const App = () => (
                 <Route path="/cross-validation" element={<CrossValidationPage />} />
                 <Route path="/chrono" element={<ChronoPage />} />
                 <Route path="/target-analysis" element={<TargetAnalysisPage />} />
-                <Route path="/competition-prep" element={<CompetitionPrepPage />} />
+                <Route path="/competition-prep" element={<Navigate to="/ft-competition" replace />} />
                 <Route path="/scope-view" element={<ScopeViewPage />} />
                 <Route path="/field-mode" element={<FieldModePage />} />
                 <Route path="/range-simulator" element={<RangeSimulatorPage />} />

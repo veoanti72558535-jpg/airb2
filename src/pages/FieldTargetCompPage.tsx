@@ -10,6 +10,7 @@ import { useI18n } from '@/lib/i18n';
 import { sessionStore } from '@/lib/storage';
 import { calculateTrajectory } from '@/lib/ballistics';
 import { generateDopeCardPDF } from '@/lib/dope-card-pdf';
+import { CompetitionPrepAdvisorButton } from '@/components/ai/agents/CompetitionPrepAdvisorButton';
 
 interface Lane {
   id: string;
@@ -120,6 +121,11 @@ export default function FieldTargetCompPage() {
       <div className="flex items-center gap-2">
         <Trophy className="h-5 w-5 text-primary" />
         <h1 className="text-lg font-heading font-bold">{t('nav.fieldTargetComp' as any) || 'Field Target — Parcours'}</h1>
+      </div>
+
+      {/* AI competition prep advisor (merged from former /competition-prep page) */}
+      <div className="surface-card p-4">
+        <CompetitionPrepAdvisorButton />
       </div>
 
       {/* Session selector */}

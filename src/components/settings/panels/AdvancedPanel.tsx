@@ -1,5 +1,6 @@
 import React from 'react';
-import { Target, Palette } from 'lucide-react';
+import { Target, Palette, ChevronRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
 import { getSettings, saveSettings } from '@/lib/storage';
 import { markLocalUpdated } from '@/lib/preferences-sync';
@@ -20,13 +21,29 @@ export function AdvancedPanel() {
   return (
     <div className="space-y-3">
       <div className="surface-elevated p-4 space-y-3">
-        <div className="flex items-center gap-3">
-          <Palette className="h-4 w-4 text-primary" />
-          <div>
-            <div className="text-sm font-medium">{t('settings.theme')}</div>
-            <div className="text-[11px] text-muted-foreground">{t('settings.themeSubtitle' as any)}</div>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <Palette className="h-4 w-4 text-primary shrink-0" />
+            <div className="min-w-0">
+              <div className="text-sm font-medium">{t('settings.theme')}</div>
+              <div className="text-[11px] text-muted-foreground">
+                {t('settings.themeSubtitle' as any)}
+              </div>
+            </div>
           </div>
+          <Link
+            to="/theme"
+            className={cn(
+              'inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-medium',
+              'bg-primary/10 text-primary hover:bg-primary/20 transition-colors',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+            )}
+          >
+            {t('themeStudio.open' as any)}
+            <ChevronRight className="h-3.5 w-3.5" />
+          </Link>
         </div>
+        {/* Quick picker stays available for users who don't need the full studio. */}
         <ThemePicker />
       </div>
 

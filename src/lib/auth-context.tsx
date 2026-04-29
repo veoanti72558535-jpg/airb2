@@ -5,24 +5,20 @@
  * exposes a permanent `{ user: null, session: null, loading: false }`
  * so the entire app works identically without any backend.
  */
-import React, { createContext, useContext, useEffect, useState, useCallback, useRef, type ReactNode } from 'react';
+import { useEffect, useState, useCallback, type ReactNode } from 'react';
 import type { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { syncPreferencesOnLogin } from './preferences-sync';
 import { syncSessionsOnLogin } from './session-supabase-repo';
 import { syncLibraryOnLogin } from './library-supabase-repo';
 import { syncCrossValidationOnLogin } from './cross-validation-supabase-repo';
+import { AuthContext, useAuth as useAuthInternal, type AuthContextType } from './auth-context-internals';
 
-interface AuthContextType {
-  user: User | null;
-  session: Session | null;
-  loading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string) => Promise<void>;
-  signOut: () => Promise<void>;
-}
-
-const AuthContext = createContext<AuthContextType | null>(null);
+// Re-export the hook + type so existing `import { useAuth } from '@/lib/auth-context'`
+// call sites keep working unchanged. The actual definitions live in the
+// non-component file to keep this module Fast-Refresh friendly.
+export const useAuth = useAuthInternal;
+export type { AuthContextType };
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -90,10 +86,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
-  return ctx;
 }

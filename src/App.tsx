@@ -47,6 +47,7 @@ const FieldTargetCompPage = lazy(() => import("@/pages/FieldTargetCompPage"));
 const ShootingDiaryPage = lazy(() => import("@/pages/ShootingDiaryPage"));
 const DesignSystemPage = lazy(() => import("@/pages/DesignSystemPage"));
 const PerfDebugPage = lazy(() => import("@/pages/PerfDebugPage"));
+const ThemeStudioPage = lazy(() => import("@/pages/ThemeStudioPage"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -139,6 +140,7 @@ const App = () => (
                 <Route path="/diary" element={<ShootingDiaryPage />} />
                 <Route path="/design-system" element={<DesignSystemPage />} />
                 <Route path="/debug/perf" element={<PerfDebugPage />} />
+                <Route path="/theme" element={<ThemeStudioPage />} />
                 {/* Legacy routes */}
                 <Route path="/airguns" element={<LibraryPage />} />
                 <Route path="/projectiles" element={<LibraryPage />} />

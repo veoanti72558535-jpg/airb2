@@ -124,6 +124,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   const moreActive = moreFlat.some((n) => isActive(n.path));
 
+  // Localised labels reused across rail items + announcer. Memoised against
+  // locale changes only so we don't rebuild every render.
+  const a11yActive = t('a11y.current' as any) || (locale === 'fr' ? 'page actuelle' : 'current page');
+
+  // Live-region announcement: route changes + sidebar expansion. We keep a
+  // single string and bump it on either change so AT users hear a concise
+  // status when they collapse/expand the rail or land on a new page.
+  const [a11yStatus, setA11yStatus] = useState('');
+
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('airballistik_sidebar_expanded');
@@ -137,7 +146,23 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     const newState = !isSidebarExpanded;
     setIsSidebarExpanded(newState);
     localStorage.setItem('airballistik_sidebar_expanded', String(newState));
+    // Announce the new sidebar state on the polite live region. Using a
+    // freshly-formatted string (with timestamp suffix when identical) is
+    // unnecessary here: collapsed → expanded always alternates, so the
+    // announcement string differs and AT picks up every change.
+    setA11yStatus(
+      newState
+        ? (t('a11y.sidebarExpanded' as any) || (locale === 'fr' ? 'Barre latérale développée' : 'Sidebar expanded'))
+        : (t('a11y.sidebarCollapsed' as any) || (locale === 'fr' ? 'Barre latérale réduite' : 'Sidebar collapsed'))
+    );
   };
+
+  // Hint appended to icon-only rail items so screen readers convey both the
+  // destination AND the visual state ("collapsed sidebar"). On the expanded
+  // variant the visible label already carries the meaning.
+  const collapsedRailHint = !isSidebarExpanded
+    ? (t('a11y.collapsedRail' as any) || (locale === 'fr' ? 'barre réduite' : 'collapsed rail'))
+    : undefined;
 
   // Close "More" on Escape, lock body scroll while open, auto-close on route change.
   // Also implements a focus trap so keyboard users stay within the dialog.
@@ -229,6 +254,20 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     setMoreOpen(false);
   }, [location.pathname, location.search]);
 
+  // Announce route changes on the polite live region. We look up the
+  // currently-active nav entry by path so the message is meaningful
+  // ("Sessions, current page") rather than the raw URL.
+  useEffect(() => {
+    const all = [...sidebarNav, ...adminNav, ...moreFlat];
+    const match = all.find((n) => isActive(n.path));
+    if (!match) return;
+    const labelText = t(match.labelKey as any) || match.path;
+    setA11yStatus(`${labelText} — ${a11yActive}`);
+    // Intentionally not depending on `t`/`a11yActive` to avoid a re-announce
+    // storm on locale toggles; the locale-change effect would handle that.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
+
   return (
     <div className="min-h-screen bg-background flex selection:bg-primary/30">
       {/* Skip link — first focusable element, jumps past the nav rails. */}
@@ -243,6 +282,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <aside 
         id="app-sidebar"
         aria-label={t('nav.primary' as any) || 'Navigation principale'}
+        aria-expanded={isSidebarExpanded}
+        data-state={isSidebarExpanded ? 'expanded' : 'collapsed'}
         className={cn(
           "hidden md:flex flex-col border-r border-border/40 bg-card/50 backdrop-blur-xl sticky top-0 h-screen shrink-0 transition-all duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] z-40",
           isSidebarExpanded ? "w-64" : "w-20 items-center"
@@ -281,6 +322,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               label={isSidebarExpanded ? t(item.labelKey) : undefined}
               title={!isSidebarExpanded ? t(item.labelKey) : undefined}
               active={isActive(item.path)}
+              activeLabelSuffix={a11yActive}
+              collapsedHint={collapsedRailHint}
               className={cn(
                 "transition-all duration-200",
                 isSidebarExpanded ? "px-3 py-2.5 justify-start gap-3 w-full" : "w-12 h-12 justify-center"
@@ -298,6 +341,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               label={isSidebarExpanded ? t(item.labelKey) : undefined}
               title={!isSidebarExpanded ? t(item.labelKey) : undefined}
               active={isActive(item.path)}
+              activeLabelSuffix={a11yActive}
+              collapsedHint={collapsedRailHint}
               className={cn(
                 "transition-all duration-200 text-amber-500/80",
                 isSidebarExpanded ? "px-3 py-2.5 justify-start gap-3 w-full" : "w-12 h-12 justify-center"
@@ -312,6 +357,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             title={!isSidebarExpanded ? t('nav.more') : undefined}
             ariaLabel={t('nav.more')}
             ariaExpanded={moreOpen}
+            ariaControls="more-panel"
+            isDisclosure
+            collapsedHint={collapsedRailHint}
             active={moreActive}
             className={cn(
               "transition-all duration-200 mt-auto",
@@ -389,6 +437,17 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </main>
       </div>
 
+      {/* Polite live region — announces sidebar collapse/expand and route
+          changes without stealing focus. Visually hidden via .sr-only. */}
+      <div
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        className="sr-only"
+      >
+        {a11yStatus}
+      </div>
+
       {/* ── Mobile Bottom Nav ── */}
       <nav
         ref={bottomNavRef}
@@ -409,6 +468,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <Link
                 key={item.path}
                 to={item.path}
+                aria-current={active ? 'page' : undefined}
+                aria-label={`${t(item.labelKey)}${active ? ` (${a11yActive})` : ''}`}
+                data-state={active ? 'active' : 'inactive'}
                 className={cn(
                   'flex-1 min-w-0 flex flex-col items-center justify-center gap-[3px] px-2 rounded-md',
                   'transition-colors duration-150 touch-target relative',
@@ -432,6 +494,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           })}
           <button
             onClick={() => setMoreOpen(true)}
+            type="button"
+            aria-label={t('nav.more')}
+            aria-expanded={moreOpen}
+            aria-controls="more-panel"
+            aria-haspopup="dialog"
+            data-state={moreActive ? 'active' : 'inactive'}
             className={cn(
               'flex-1 min-w-0 flex flex-col items-center justify-center gap-[3px] px-2 rounded-md',
               'transition-colors duration-150 touch-target',
@@ -453,9 +521,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <div
             className="fixed inset-0 z-[60] bg-background/60 backdrop-blur-sm"
             onClick={() => setMoreOpen(false)}
+            aria-hidden="true"
           />
           <div
             ref={morePanelRef}
+            id="more-panel"
             className={cn(
               'fixed z-[70] bg-card border-border animate-fade-in',
               // Mobile: bottom sheet sitting flush above the actual bottom-nav height
@@ -487,10 +557,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     {t(section.titleKey)}
                   </div>
                   {section.items.map((item) => (
+                    (() => { const active = isActive(item.path); return (
                     <Link
                       key={item.path}
                       to={item.path}
                       onClick={() => setMoreOpen(false)}
+                      aria-current={active ? 'page' : undefined}
+                      aria-label={`${t(item.labelKey)}${active ? ` (${a11yActive})` : ''}`}
+                      data-state={active ? 'active' : 'inactive'}
                       className={cn(
                         'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150 touch-target',
                         // Items live inside a padded panel — keep an offset
@@ -498,7 +572,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                         // background) but reduce the offset to 1px so it
                         // never touches the panel's inner edge.
                         'outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 focus-visible:ring-offset-card focus-visible:bg-muted/60',
-                        isActive(item.path)
+                        active
                           ? 'bg-primary/10 text-primary'
                           : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                       )}
@@ -507,6 +581,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                       <span className="flex-1">{t(item.labelKey)}</span>
                       <ChevronRight className="h-4 w-4 opacity-40" />
                     </Link>
+                    ); })()
                   ))}
                 </div>
               ))}

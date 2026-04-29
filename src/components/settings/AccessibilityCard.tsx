@@ -246,6 +246,34 @@ export function AccessibilityCard() {
             </button>
           </div>
         </div>
+
+        {/*
+          Explainer + live preview for the active keyboard-nav mode.
+          Re-uses the muted surface tokens so it sits below the segmented
+          control without competing visually. `aria-live="polite"` lets AT
+          users hear the new behaviour after toggling without stealing
+          focus.
+        */}
+        <div
+          aria-live="polite"
+          className="ml-7 rounded-md border border-border/40 bg-muted/20 p-3 space-y-2"
+        >
+          <p className="text-[11px] text-muted-foreground">
+            {keyboardNavMode === 'cyclic'
+              ? t('settings.a11y.keyboardNav.cyclicHint' as any)
+              : t('settings.a11y.keyboardNav.normalHint' as any)}
+          </p>
+          <div className="pt-1 border-t border-border/30">
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 mb-1">
+              {t('settings.a11y.keyboardNav.previewTitle' as any)}
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              {keyboardNavMode === 'cyclic'
+                ? t('settings.a11y.keyboardNav.previewCyclic' as any)
+                : t('settings.a11y.keyboardNav.previewNormal' as any)}
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Contrast checker */}

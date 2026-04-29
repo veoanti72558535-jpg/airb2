@@ -116,3 +116,112 @@ describe('pickBestLink', () => {
     expect(pickBestLink(links, at('/baz'))).toBeNull();
   });
 });
+
+describe('segment-boundary alignment — edge cases', () => {
+  // These cases used to be the source of subtle "wrong link highlighted"
+  // bugs in the More panel: similarly-named top-level routes, accidental
+  // double slashes from string concatenation, and dynamic path segments
+  // (e.g. `/sessions/:id`) that look like prefixes of one another.
+
+  describe('similar-prefix segments', () => {
+    it('does NOT match /app against /app2 (segment must be complete)', () => {
+      expect(scoreLinkMatch('/app', at('/app2'))).toBe(0);
+      expect(scoreLinkMatch('/app', at('/app2/details'))).toBe(0);
+    });
+
+    it('does NOT match /app2 against /app', () => {
+      expect(scoreLinkMatch('/app2', at('/app'))).toBe(0);
+    });
+
+    it('still matches /app against true sub-routes /app/...', () => {
+      expect(scoreLinkMatch('/app', at('/app'))).toBeGreaterThan(0);
+      expect(scoreLinkMatch('/app', at('/app/users'))).toBeGreaterThan(0);
+    });
+
+    it('picks the most specific link between /app and /app2 siblings', () => {
+      const links = [
+        { href: '/app', getAttribute: (n: string) => (n === 'href' ? '/app' : null) },
+        { href: '/app2', getAttribute: (n: string) => (n === 'href' ? '/app2' : null) },
+      ];
+      expect(pickBestLink(links, at('/app2'))?.href).toBe('/app2');
+      expect(pickBestLink(links, at('/app'))?.href).toBe('/app');
+      expect(pickBestLink(links, at('/app2/foo'))?.href).toBe('/app2');
+    });
+
+    it('disambiguates /sessions vs /sessions-archive (hyphen boundary)', () => {
+      // `-archive` is part of the same segment, so /sessions must NOT
+      // claim /sessions-archive.
+      expect(scoreLinkMatch('/sessions', at('/sessions-archive'))).toBe(0);
+      expect(scoreLinkMatch('/sessions-archive', at('/sessions-archive'))).toBeGreaterThan(0);
+    });
+  });
+
+  describe('double slashes in routes', () => {
+    it('treats a stray double slash in the candidate as a different path', () => {
+      // `/app//users` is technically a different pathname from `/app/users`
+      // — we do NOT silently collapse it, otherwise we would mask routing
+      // bugs. But a clean `/app` candidate should still match the user
+      // currently sitting at `/app//users` as a parent route.
+      expect(scoreLinkMatch('/app//users', at('/app/users'))).toBe(0);
+      expect(scoreLinkMatch('/app', at('/app//users'))).toBeGreaterThan(0);
+    });
+
+    it('matches /app//users to itself (exact)', () => {
+      const exact = scoreLinkMatch('/app//users', at('/app//users'));
+      const parent = scoreLinkMatch('/app', at('/app//users'));
+      expect(exact).toBeGreaterThan(parent);
+    });
+
+    it('strips a single trailing slash but preserves internal doubles', () => {
+      // Trailing slash equivalence still applies on top of preserved
+      // internal doubles.
+      const a = scoreLinkMatch('/app//users/', at('/app//users'));
+      const b = scoreLinkMatch('/app//users', at('/app//users'));
+      expect(a).toBe(b);
+    });
+  });
+
+  describe('dynamic path parameters (resolved hrefs)', () => {
+    // React Router params are already substituted by the time the link
+    // hits the DOM (e.g. <Link to={`/sessions/${id}`}>). The scorer never
+    // sees `:id`; it sees concrete values like `/sessions/42`.
+
+    it('exact-matches a resolved param route', () => {
+      const exact = scoreLinkMatch('/sessions/42', at('/sessions/42'));
+      expect(exact).toBeGreaterThan(0);
+    });
+
+    it('parent /sessions matches a child /sessions/:id route', () => {
+      const parent = scoreLinkMatch('/sessions', at('/sessions/42'));
+      const exact = scoreLinkMatch('/sessions/42', at('/sessions/42'));
+      expect(parent).toBeGreaterThan(0);
+      expect(exact).toBeGreaterThan(parent);
+    });
+
+    it('does NOT confuse /sessions/42 with /sessions/421', () => {
+      // Same segment-boundary rule applies inside dynamic segments —
+      // `42` is not a prefix of `421` for our purposes.
+      expect(scoreLinkMatch('/sessions/42', at('/sessions/421'))).toBe(0);
+      expect(scoreLinkMatch('/sessions/421', at('/sessions/42'))).toBe(0);
+    });
+
+    it('picks the deepest matching link among siblings', () => {
+      const links = [
+        { href: '/sessions', getAttribute: (n: string) => (n === 'href' ? '/sessions' : null) },
+        { href: '/sessions/42', getAttribute: (n: string) => (n === 'href' ? '/sessions/42' : null) },
+        { href: '/sessions/42/edit', getAttribute: (n: string) => (n === 'href' ? '/sessions/42/edit' : null) },
+      ];
+      expect(pickBestLink(links, at('/sessions/42'))?.href).toBe('/sessions/42');
+      expect(pickBestLink(links, at('/sessions/42/edit'))?.href).toBe('/sessions/42/edit');
+      expect(pickBestLink(links, at('/sessions/99'))?.href).toBe('/sessions');
+    });
+
+    it('picks /app2/:id over /app for /app2/7', () => {
+      const links = [
+        { href: '/app', getAttribute: (n: string) => (n === 'href' ? '/app' : null) },
+        { href: '/app2/7', getAttribute: (n: string) => (n === 'href' ? '/app2/7' : null) },
+      ];
+      expect(pickBestLink(links, at('/app2/7'))?.href).toBe('/app2/7');
+    });
+  });
+});

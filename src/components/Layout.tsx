@@ -11,6 +11,7 @@ import {
 import { useI18n } from '@/lib/i18n';
 import { useTheme } from '@/lib/theme';
 import { cn } from '@/lib/utils';
+import { RailItem, railItemClass } from '@/components/sidebar/RailItem';
 
 const sidebarNav = [
   { path: '/', icon: LayoutDashboard, labelKey: 'nav.home' as const },
@@ -183,24 +184,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     setMoreOpen(false);
   }, [location.pathname, location.search]);
 
-  const railItemClass = (active: boolean) =>
-    cn(
-      // Cheap transitions: only color/background interpolated; no layout/shadow churn.
-      'group/rail relative flex flex-col items-center justify-center gap-1 w-[68px] py-2 rounded-xl',
-      'transition-[color,background-color] duration-100 ease-out motion-reduce:transition-none',
-      // Visible & consistent keyboard focus across every rail item.
-      'outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card',
-      active
-        ? 'text-primary bg-primary/[0.08] ring-1 ring-inset ring-primary/15'
-        : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
-    );
-
-  const railLabelClass = (active: boolean) =>
-    cn(
-      'text-[10px] leading-tight text-center truncate max-w-full px-1 tracking-wide',
-      active ? 'font-semibold' : 'font-medium'
-    );
-
   return (
     <div className="min-h-screen bg-background flex">
       {/* ── Desktop Sidebar (premium icon-rail with labels) ── */}
@@ -217,83 +200,69 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </Link>
 
         <nav className="flex-1 flex flex-col items-center gap-1 py-3 overflow-y-auto scrollbar-thin">
-          {sidebarNav.map(item => {
-            const active = isActive(item.path);
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                title={t(item.labelKey)}
-                className={railItemClass(active)}
-              >
-                {active && (
-                  <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-[2px] rounded-r-full bg-primary" />
-                )}
-                <item.icon className="h-[18px] w-[18px]" strokeWidth={active ? 2.1 : 1.85} />
-                <span className={railLabelClass(active)}>{t(item.labelKey)}</span>
-              </Link>
-            );
-          })}
+          {sidebarNav.map(item => (
+            <RailItem
+              key={item.path}
+              to={item.path}
+              icon={item.icon}
+              label={t(item.labelKey)}
+              title={t(item.labelKey)}
+              active={isActive(item.path)}
+            />
+          ))}
 
           <div className="w-8 border-t border-border/60 my-2" />
 
-          {adminNav.map(item => {
-            const active = isActive(item.path);
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                title={t(item.labelKey)}
-                className={railItemClass(active)}
-              >
-                {active && (
-                  <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-[2px] rounded-r-full bg-primary" />
-                )}
-                <item.icon className="h-[18px] w-[18px]" strokeWidth={active ? 2.1 : 1.85} />
-                <span className={railLabelClass(active)}>{t(item.labelKey)}</span>
-              </Link>
-            );
-          })}
+          {adminNav.map(item => (
+            <RailItem
+              key={item.path}
+              to={item.path}
+              icon={item.icon}
+              label={t(item.labelKey)}
+              title={t(item.labelKey)}
+              active={isActive(item.path)}
+            />
+          ))}
 
           {/* Desktop "More" trigger — opens grouped side panel */}
-          <button
+          <RailItem
             onClick={() => setMoreOpen(true)}
+            icon={MoreHorizontal}
+            label={t('nav.more')}
             title={t('nav.more')}
-            aria-label={t('nav.more')}
-            className={railItemClass(moreActive)}
-          >
-            {moreActive && (
-              <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-[2px] rounded-r-full bg-primary" />
-            )}
-            <MoreHorizontal className="h-[18px] w-[18px]" strokeWidth={moreActive ? 2.1 : 1.85} />
-            <span className={railLabelClass(moreActive)}>{t('nav.more')}</span>
-          </button>
+            ariaLabel={t('nav.more')}
+            ariaExpanded={moreOpen}
+            active={moreActive}
+          />
         </nav>
 
         <div className="flex flex-col items-center gap-1.5 py-3 border-t border-border/70 bg-card/60">
-          <button
+          <RailItem
+            variant="footer"
             onClick={() => setLocale(locale === 'fr' ? 'en' : 'fr')}
             title={locale === 'fr' ? 'English' : 'Français'}
-            className="flex items-center justify-center gap-1.5 w-[68px] py-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors duration-100 ease-out motion-reduce:transition-none outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card"
+            className="gap-1.5 w-[68px] py-1.5"
           >
             <Globe className="h-3.5 w-3.5" />
             <span className="text-[10px] font-semibold uppercase tracking-wider">{locale}</span>
-          </button>
-          <Link
+          </RailItem>
+          <RailItem
+            variant="footer"
             to="/settings"
             title={t('settings.theme' as any)}
-            className="flex items-center justify-center w-9 h-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors duration-100 ease-out motion-reduce:transition-none outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card"
+            className="w-9 h-9"
           >
             {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-          </Link>
+          </RailItem>
           {user && (
-            <button
+            <RailItem
+              variant="footer"
               onClick={() => signOut()}
               title={user.email ?? 'Sign out'}
-              className="flex items-center justify-center w-9 h-9 rounded-full bg-primary/10 text-primary text-xs font-bold outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card"
+              className="w-9 h-9 rounded-full bg-primary/10 text-primary text-xs font-bold hover:bg-primary/15"
             >
               {(user.email ?? '?')[0].toUpperCase()}
-            </button>
+            </RailItem>
           )}
         </div>
       </aside>

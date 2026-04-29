@@ -19,11 +19,15 @@ export interface A11yContextValue {
   premiumContrast: boolean;
   sidebarFocusBehavior: SidebarFocusBehavior;
   keyboardNavMode: KeyboardNavMode;
+  reduceMotion: boolean;
+  strongFocus: boolean;
   setHighContrast: (v: boolean) => void;
   setLargeText: (v: boolean) => void;
   setPremiumContrast: (v: boolean) => void;
   setSidebarFocusBehavior: (v: SidebarFocusBehavior) => void;
   setKeyboardNavMode: (v: KeyboardNavMode) => void;
+  setReduceMotion: (v: boolean) => void;
+  setStrongFocus: (v: boolean) => void;
 }
 
 export const A11yContext = createContext<A11yContextValue | null>(null);
@@ -38,11 +42,15 @@ export function useA11y(): A11yContextValue {
       premiumContrast: false,
       sidebarFocusBehavior: 'first',
       keyboardNavMode: 'normal',
+      reduceMotion: false,
+      strongFocus: false,
       setHighContrast: () => {},
       setLargeText: () => {},
       setPremiumContrast: () => {},
       setSidebarFocusBehavior: () => {},
       setKeyboardNavMode: () => {},
+      setReduceMotion: () => {},
+      setStrongFocus: () => {},
     };
   }
   return ctx;

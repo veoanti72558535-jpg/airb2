@@ -123,6 +123,7 @@ const App = () => (
           </AuthGuard>
         </AuthProvider>
       </I18nProvider>
+      </A11yProvider>
     </ThemeProvider>
   </QueryClientProvider>
 );

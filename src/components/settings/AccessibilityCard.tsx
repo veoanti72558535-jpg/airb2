@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Eye, Type, Contrast, CheckCircle2, AlertTriangle, XCircle, Sparkles, Focus } from 'lucide-react';
+import { Eye, Type, Contrast, CheckCircle2, AlertTriangle, XCircle, Sparkles, Focus, Keyboard } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { useA11y } from '@/lib/a11y';
 import { cn } from '@/lib/utils';
@@ -70,10 +70,12 @@ export function AccessibilityCard() {
     largeText,
     premiumContrast,
     sidebarFocusBehavior,
+    keyboardNavMode,
     setHighContrast,
     setLargeText,
     setPremiumContrast,
     setSidebarFocusBehavior,
+    setKeyboardNavMode,
   } = useA11y();
   const [results, setResults] = useState<{ id: string; ratio: number; verdict: 'AAA' | 'AA' | 'fail' }[] | null>(null);
 
@@ -206,6 +208,41 @@ export function AccessibilityCard() {
               className={segmentClass(sidebarFocusBehavior === 'active')}
             >
               {t('settings.a11y.sidebarFocus.active' as any)}
+            </button>
+          </div>
+        </div>
+
+        {/* Keyboard navigation mode — segmented control. */}
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <Keyboard className="h-4 w-4 text-primary/80 shrink-0" />
+            <div className="min-w-0">
+              <div className="text-sm font-medium">{t('settings.a11y.keyboardNav' as any)}</div>
+              <div className="text-[11px] text-muted-foreground">{t('settings.a11y.keyboardNavDesc' as any)}</div>
+            </div>
+          </div>
+          <div
+            role="radiogroup"
+            aria-label={t('settings.a11y.keyboardNav' as any)}
+            className="inline-flex items-center gap-1 p-0.5 rounded-md bg-muted/40"
+          >
+            <button
+              type="button"
+              role="radio"
+              aria-checked={keyboardNavMode === 'normal'}
+              onClick={() => setKeyboardNavMode('normal')}
+              className={segmentClass(keyboardNavMode === 'normal')}
+            >
+              {t('settings.a11y.keyboardNav.normal' as any)}
+            </button>
+            <button
+              type="button"
+              role="radio"
+              aria-checked={keyboardNavMode === 'cyclic'}
+              onClick={() => setKeyboardNavMode('cyclic')}
+              className={segmentClass(keyboardNavMode === 'cyclic')}
+            >
+              {t('settings.a11y.keyboardNav.cyclic' as any)}
             </button>
           </div>
         </div>

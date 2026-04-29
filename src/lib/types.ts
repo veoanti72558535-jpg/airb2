@@ -563,5 +563,15 @@ export interface AppSettings {
      * Collapse always returns focus to the toggle regardless of this setting.
      */
     sidebarFocusBehavior?: 'first' | 'active';
+    /**
+     * Keyboard navigation mode applied globally to Tab traversal.
+     *  • 'normal' → browser default (Tab leaves the document at the end).
+     *  • 'cyclic' → Tab wraps from the last focusable back to the first
+     *               (and Shift+Tab from first → last). Helps keyboard users
+     *               who never want focus to escape into the browser chrome.
+     * Does not affect arrow-key / Home / End behaviours inside menus, nor
+     * the focus trap of the More panel.
+     */
+    keyboardNavMode?: 'normal' | 'cyclic';
   };
 }

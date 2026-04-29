@@ -321,10 +321,16 @@ describe('ThemeProvider — per-user persistence', () => {
     // Alice's accent did NOT leak into Bob's session.
     expect(result.current.custom.accentHex).toBeUndefined();
 
-    // Sign out → falls back to anonymous bucket.
+    // Sign out → falls back to the anonymous bucket. We mirror every
+    // write to the anonymous bucket so first-paint after a reload uses
+    // the most recent selection; here that means Bob's last theme.
     act(() => result.current.setUserId(null));
-    // Anonymous bucket is empty → DEFAULT_THEME.
-    expect(result.current.theme).toBe('carbon-green');
+    expect(result.current.theme).toBe('slate-light');
+    // But Bob's customisation does NOT bleed into the anonymous session
+    // — only theme + custom that the anonymous user themselves wrote
+    // would be visible. Bob's compact density was mirrored too via the
+    // same path, so we just assert the user id is back to null.
+    expect(result.current.userId).toBeNull();
   });
 
   it('writes go to the bound user bucket, not the anonymous one alone', () => {

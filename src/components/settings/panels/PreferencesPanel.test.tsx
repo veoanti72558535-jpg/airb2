@@ -66,7 +66,8 @@ describe('PreferencesPanel', () => {
     renderPanel();
     // Switch locale to EN first to make the assertion meaningful.
     fireEvent.click(screen.getByText('English'));
-    fireEvent.click(screen.getByLabelText('Réinitialiser'));
+    // After switching to EN, the reset button is labelled "Reset".
+    fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
     expect(confirmSpy).toHaveBeenCalledOnce();
     expect(getSettings().advancedMode).toBe(false);
     // After reset, the FR label is back as "Français" with `aria-checked=true`.
@@ -79,7 +80,7 @@ describe('PreferencesPanel', () => {
     saveSettings({ ...getSettings(), advancedMode: true });
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
     renderPanel();
-    fireEvent.click(screen.getByLabelText('Réinitialiser'));
+    fireEvent.click(screen.getByRole('button', { name: 'Réinitialiser' }));
     expect(getSettings().advancedMode).toBe(true);
     confirmSpy.mockRestore();
   });

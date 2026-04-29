@@ -87,6 +87,27 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const moreCloseBtnRef = useRef<HTMLButtonElement | null>(null);
   const morePanelRef = useRef<HTMLDivElement | null>(null);
   const moreTriggerRef = useRef<HTMLElement | null>(null);
+  const bottomNavRef = useRef<HTMLElement | null>(null);
+  const [bottomNavHeight, setBottomNavHeight] = useState(56);
+
+  // Track the actual rendered height of the mobile bottom nav so the "More"
+  // bottom sheet can sit flush above it regardless of theme/font/safe-area.
+  useEffect(() => {
+    const el = bottomNavRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const measure = () => {
+      const h = el.getBoundingClientRect().height;
+      if (h > 0) setBottomNavHeight(Math.round(h));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    window.addEventListener('resize', measure);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', measure);
+    };
+  }, []);
 
   const isActive = (path: string) => {
     const base = path.split('?')[0];
@@ -280,7 +301,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* ── Mobile Bottom Nav ── */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/95 backdrop-blur-md safe-area-bottom">
+      <nav
+        ref={bottomNavRef}
+        className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/95 backdrop-blur-md safe-area-bottom"
+      >
         <div className="flex items-center justify-around h-14 px-1">
           {bottomNav.map(item => {
             const active = isActive(item.path);
@@ -325,11 +349,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             ref={morePanelRef}
             className={cn(
               'fixed z-[70] bg-card border-border animate-fade-in',
-              // Mobile: bottom sheet sitting above the 56px bottom nav
-              'left-0 right-0 bottom-14 border-t rounded-t-2xl safe-area-bottom max-h-[75vh] overflow-y-auto shadow-2xl',
+              // Mobile: bottom sheet sitting flush above the actual bottom-nav height
+              // (measured at runtime via --bottom-nav-h, falling back to 56px).
+              'left-0 right-0 bottom-[var(--bottom-nav-h,56px)] border-t rounded-t-2xl safe-area-bottom max-h-[75vh] overflow-y-auto shadow-2xl',
               // Desktop: docked side panel flush against the 5rem (w-20) sidebar
               'md:bottom-0 md:right-auto md:left-20 md:top-0 md:h-screen md:w-80 md:max-h-none md:rounded-none md:border-l md:border-t-0'
             )}
+            style={{ ['--bottom-nav-h' as any]: `${bottomNavHeight}px` }}
             role="dialog"
             aria-modal="true"
             aria-label={t('nav.more')}

@@ -34,6 +34,15 @@ type GuardedWindow = Window & {
   [STAMP_KEY]?: string;
 };
 
+/**
+ * Token generated ONCE per JS module evaluation. Two evaluations (i.e. two
+ * loaded copies of this module — typically from a duplicate React bundle)
+ * yield two different tokens. The same evaluation calling
+ * `installReactInstanceGuard()` multiple times keeps the same token, so
+ * idempotent calls never trip the duplicate check.
+ */
+const MODULE_TOKEN = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+
 // React's shared internals slot. Name differs slightly across versions
 // (legacy "SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED") so we probe
 // both. Typed loosely on purpose — this is a runtime smoke test.
@@ -77,10 +86,7 @@ export function installReactInstanceGuard(): void {
   if (typeof window === 'undefined') return;
 
   const w = window as GuardedWindow;
-  // A unique token per JS module evaluation. If two React copies are loaded,
-  // each module evaluation generates its own token; the second one will see
-  // a mismatch on the window stamp.
-  const moduleToken = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+  const moduleToken = MODULE_TOKEN;
 
   const internals = getInternals();
   if (internals) {

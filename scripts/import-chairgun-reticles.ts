@@ -37,6 +37,27 @@ const RowSchema = z.object({
 
 type Row = z.infer<typeof RowSchema>;
 
+// Champs énumérés où une chaîne vide doit être traitée comme "non renseigné"
+// (ChairGun publie certains réticules sans plan focal documenté — donnée
+// légitimement absente, pas corrompue). La colonne SQL est nullable et le
+// CHECK (focal_plane IN ('FFP','SFP')) accepte NULL.
+const ENUM_FIELDS = ['focal_plane', 'unit'] as const;
+
+function normalizeRow(raw: unknown): { value: unknown; normalizedFields: string[] } {
+  if (!raw || typeof raw !== 'object') return { value: raw, normalizedFields: [] };
+  const obj = { ...(raw as Record<string, unknown>) };
+  const normalizedFields: string[] = [];
+  for (const key of ENUM_FIELDS) {
+    const v = obj[key];
+    if (v === undefined || v === null) continue;
+    if (typeof v === 'string' && v.trim() === '') {
+      obj[key] = null;
+      normalizedFields.push(key);
+    }
+  }
+  return { value: obj, normalizedFields };
+}
+
 const CHUNK_SIZE = 200; // Garde les payloads PostgREST sous ~5 MB.
 const TABLE = 'chairgun_reticles_catalog';
 
@@ -81,13 +102,27 @@ if (!Array.isArray(rawJson)) {
 
 const valid: Row[] = [];
 const skipped: Array<{ index: number; error: string }> = [];
+let normalizedCount = 0;
+const normalizedByField: Record<string, number> = {};
 for (let i = 0; i < rawJson.length; i++) {
-  const parsed = RowSchema.safeParse(rawJson[i]);
+  const { value, normalizedFields } = normalizeRow(rawJson[i]);
+  if (normalizedFields.length > 0) {
+    normalizedCount++;
+    for (const f of normalizedFields) normalizedByField[f] = (normalizedByField[f] ?? 0) + 1;
+  }
+  const parsed = RowSchema.safeParse(value);
   if (parsed.success) valid.push(parsed.data);
   else skipped.push({ index: i, error: parsed.error.issues.map((x) => `${x.path.join('.')}: ${x.message}`).join('; ') });
 }
 
-console.log(`▸ Items lus: ${rawJson.length} — valides: ${valid.length} — skippés: ${skipped.length}`);
+const normalizedSummary = Object.entries(normalizedByField)
+  .map(([k, v]) => `${k}=${v}`)
+  .join(', ');
+console.log(
+  `▸ Items lus: ${rawJson.length} — valides: ${valid.length} — normalisés: ${normalizedCount}` +
+    (normalizedSummary ? ` (${normalizedSummary} → null)` : '') +
+    ` — skippés: ${skipped.length}`,
+);
 if (skipped.length > 0) {
   console.warn('  Premiers skips:');
   skipped.slice(0, 5).forEach((s) => console.warn(`   #${s.index}: ${s.error}`));

@@ -18,10 +18,13 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { useTheme } from '@/lib/theme';
 import { useI18n } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 import { readUserPref, writeUserPref, migrateGuestPrefToUser } from '@/lib/user-prefs';
+import { useThemeFlags } from '@/lib/admin/useThemeFlags';
+import { filterThemesByFlags } from '@/lib/admin/theme-flags';
 import {
   THEMES,
   ACCENT_PRESETS,
@@ -61,6 +64,7 @@ function readMode(userId: string | null): StudioMode {
 export default function ThemeStudioPage() {
   const { locale, t } = useI18n();
   const { theme, setTheme, isDark, custom, updateCustom, resetCustom, toggleTheme, userId } = useTheme();
+  const { flags, loading: flagsLoading } = useThemeFlags();
   const [mode, setMode] = useState<StudioMode>(() => readMode(userId));
 
   // Re-hydrate the studio mode whenever the active user changes (sign-in,
@@ -79,22 +83,39 @@ export default function ThemeStudioPage() {
     [userId],
   );
 
+  // If the admin disabled the mode the user previously picked, snap to the
+  // other one. If both are disabled (defensive: shouldn't happen — admin UI
+  // doesn't allow it but RLS-injected JSON could), fall back to 'simple'.
+  useEffect(() => {
+    if (flagsLoading) return;
+    if (mode === 'simple' && !flags.simpleModeEnabled && flags.advancedModeEnabled) {
+      setStudioMode('advanced');
+    } else if (mode === 'advanced' && !flags.advancedModeEnabled && flags.simpleModeEnabled) {
+      setStudioMode('simple');
+    }
+  }, [flagsLoading, flags.simpleModeEnabled, flags.advancedModeEnabled, mode, setStudioMode]);
+
   const isFR = locale === 'fr';
   const tx = (fr: string, en: string) => (isFR ? fr : en);
 
   // Resolve current family for the grid → we render one card per family,
   // and pressing a card swaps to that family's variant in the active mode.
   const activeMode: ThemeMode = isDark ? 'dark' : 'light';
+  const allowedThemes = useMemo(() => filterThemesByFlags(THEMES, flags), [flags]);
+  const allowedFamilies = useMemo(
+    () => new Set(allowedThemes.map((t) => t.family)),
+    [allowedThemes],
+  );
   const familyCards = useMemo(
     () =>
-      THEME_FAMILIES.map((family) => {
+      THEME_FAMILIES.filter((f) => allowedFamilies.has(f)).map((family) => {
         // Show the variant matching the user's current dark/light mode.
         const meta =
           THEMES.find((t) => t.family === family && t.mode === activeMode) ??
           THEMES.find((t) => t.family === family)!;
         return meta;
       }),
-    [activeMode],
+    [activeMode, allowedFamilies],
   );
   const activeFamily: ThemeFamily =
     THEMES.find((t) => t.id === theme)?.family ?? 'carbon-green';
@@ -105,13 +126,22 @@ export default function ThemeStudioPage() {
 
   const pickRandomFamily = useCallback(() => {
     // Random *different* family for satisfying tactile feedback.
-    const others = THEME_FAMILIES.filter((f) => f !== activeFamily);
+    const others = THEME_FAMILIES.filter(
+      (f) => f !== activeFamily && allowedFamilies.has(f),
+    );
+    if (!others.length) return;
     const next = others[Math.floor(Math.random() * others.length)];
     const meta =
       THEMES.find((t) => t.family === next && t.mode === activeMode) ??
       THEMES.find((t) => t.family === next)!;
     setTheme(meta.id);
-  }, [activeFamily, activeMode, setTheme]);
+  }, [activeFamily, activeMode, setTheme, allowedFamilies]);
+
+  // Studio route disabled by admin → redirect to the regular settings hub
+  // where the inline ThemePicker still works (filtered by the same flags).
+  if (!flagsLoading && !flags.studioRouteEnabled) {
+    return <Navigate to="/settings" replace />;
+  }
 
   return (
     <main className="mx-auto w-full max-w-2xl px-3 py-4 sm:px-4 sm:py-6 space-y-4">
@@ -123,6 +153,9 @@ export default function ThemeStudioPage() {
         onToggleMode={toggleTheme}
         onShuffle={pickRandomFamily}
         tx={tx}
+        simpleEnabled={flags.simpleModeEnabled}
+        advancedEnabled={flags.advancedModeEnabled}
+        darkLightEnabled={flags.darkLightToggleEnabled}
       />
 
       {/* Theme grid (mobile-first: 1 col phone, 2 cols ≥ sm) */}

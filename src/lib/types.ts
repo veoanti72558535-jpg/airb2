@@ -552,5 +552,16 @@ export interface AppSettings {
      * default for users who want crisper labels without the AA aesthetic.
      */
     premiumContrast?: boolean;
+    /**
+     * Where focus lands after the desktop sidebar is expanded via the
+     * collapse/expand toggle.
+     *  • 'first'  → focus the first rail item (default; lets users start
+     *               navigating the freshly-revealed labels with arrows).
+     *  • 'active' → focus the currently active route's rail item, useful for
+     *               keyboard users who want to confirm "where am I" before
+     *               moving on.
+     * Collapse always returns focus to the toggle regardless of this setting.
+     */
+    sidebarFocusBehavior?: 'first' | 'active';
   };
 }

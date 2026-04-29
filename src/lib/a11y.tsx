@@ -12,13 +12,22 @@ import { getSettings, saveSettings } from './storage';
  * can keep their preferred theme AND add a contrast boost.
  */
 
+/**
+ * Where focus lands after the desktop sidebar expands. Persisted alongside
+ * the rest of the a11y preferences. See `accessibility.sidebarFocusBehavior`
+ * in `src/lib/types.ts` for the rationale of each value.
+ */
+export type SidebarFocusBehavior = 'first' | 'active';
+
 interface A11yContextValue {
   highContrast: boolean;
   largeText: boolean;
   premiumContrast: boolean;
+  sidebarFocusBehavior: SidebarFocusBehavior;
   setHighContrast: (v: boolean) => void;
   setLargeText: (v: boolean) => void;
   setPremiumContrast: (v: boolean) => void;
+  setSidebarFocusBehavior: (v: SidebarFocusBehavior) => void;
 }
 
 const A11yContext = createContext<A11yContextValue | null>(null);
@@ -40,13 +49,24 @@ export function A11yProvider({ children }: { children: React.ReactNode }) {
   const [premiumContrast, setPC] = useState<boolean>(() => {
     try { return getSettings().accessibility?.premiumContrast === true; } catch { return false; }
   });
+  const [sidebarFocusBehavior, setSFB] = useState<SidebarFocusBehavior>(() => {
+    try {
+      const v = getSettings().accessibility?.sidebarFocusBehavior;
+      return v === 'active' ? 'active' : 'first';
+    } catch { return 'first'; }
+  });
 
   // Apply on mount and on every change.
   useEffect(() => {
     applyClasses(highContrast, largeText, premiumContrast);
   }, [highContrast, largeText, premiumContrast]);
 
-  const persist = useCallback((next: { highContrast?: boolean; largeText?: boolean; premiumContrast?: boolean }) => {
+  const persist = useCallback((next: {
+    highContrast?: boolean;
+    largeText?: boolean;
+    premiumContrast?: boolean;
+    sidebarFocusBehavior?: SidebarFocusBehavior;
+  }) => {
     try {
       const s = getSettings();
       saveSettings({
@@ -68,6 +88,10 @@ export function A11yProvider({ children }: { children: React.ReactNode }) {
     setPC(v);
     persist({ premiumContrast: v });
   }, [persist]);
+  const setSidebarFocusBehavior = useCallback((v: SidebarFocusBehavior) => {
+    setSFB(v);
+    persist({ sidebarFocusBehavior: v });
+  }, [persist]);
 
   return (
     <A11yContext.Provider
@@ -75,9 +99,11 @@ export function A11yProvider({ children }: { children: React.ReactNode }) {
         highContrast,
         largeText,
         premiumContrast,
+        sidebarFocusBehavior,
         setHighContrast,
         setLargeText,
         setPremiumContrast,
+        setSidebarFocusBehavior,
       }}
     >
       {children}
@@ -93,9 +119,11 @@ export function useA11y(): A11yContextValue {
       highContrast: false,
       largeText: false,
       premiumContrast: false,
+      sidebarFocusBehavior: 'first',
       setHighContrast: () => {},
       setLargeText: () => {},
       setPremiumContrast: () => {},
+      setSidebarFocusBehavior: () => {},
     };
   }
   return ctx;

@@ -5,7 +5,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { I18nProvider } from "@/lib/i18n";
-import { ThemeProvider } from "@/lib/theme";
+import { ThemeProvider, AuthThemeBridge } from "@/lib/theme";
 import { A11yProvider } from "@/lib/a11y";
 import { AuthProvider } from "@/lib/auth-context";
 import { warnIfNotConfigured } from "@/lib/supabase-check";
@@ -74,6 +74,15 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+/**
+ * Sits inside AuthProvider (so it can read auth) AND inside ThemeProvider
+ * (so AuthThemeBridge can patch the theme user id). Renders nothing.
+ */
+function ThemeUserBinder() {
+  const { user } = useAuth();
+  return <AuthThemeBridge userId={user?.id ?? null} />;
+}
+
 warnIfNotConfigured();
 
 const App = () => (
@@ -82,6 +91,7 @@ const App = () => (
       <A11yProvider>
       <I18nProvider>
         <AuthProvider>
+          <ThemeUserBinder />
           <AuthGuard>
           <TooltipProvider>
           <Toaster />

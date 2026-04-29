@@ -210,7 +210,49 @@
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-body);
-    transition: background-color 180ms ease, color 180ms ease;
+    /*
+     * Body owns the baseline page colours. We keep its transition short
+     * and unconditional so even legacy pages get a smooth fade.
+     */
+    transition: background-color 220ms ease, color 220ms ease;
+  }
+
+  /* ────────────────────────────────────────────────────────────────────────
+     Theme transition layer
+     ──────────────────────────────────────────────────────────────────────
+     The `ThemeProvider` adds `theme-transitions-on` to `<html>` for a
+     short window around each dark/light swap. While the class is present,
+     EVERY element fades its themed properties (background, colour,
+     border, fill/stroke, shadow) over 240 ms. We then strip the class so
+     ordinary interactions (hover, focus, scroll) don't pay the cost on
+     every paint.
+
+     Respects `prefers-reduced-motion`: the transition is skipped entirely
+     for users who opted out at the OS level.
+     ──────────────────────────────────────────────────────────────────── */
+  html.theme-transitions-on,
+  html.theme-transitions-on body,
+  html.theme-transitions-on *,
+  html.theme-transitions-on *::before,
+  html.theme-transitions-on *::after {
+    transition:
+      background-color 240ms ease,
+      border-color     240ms ease,
+      color            240ms ease,
+      fill             240ms ease,
+      stroke           240ms ease,
+      box-shadow       240ms ease,
+      outline-color    240ms ease !important;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html.theme-transitions-on,
+    html.theme-transitions-on body,
+    html.theme-transitions-on *,
+    html.theme-transitions-on *::before,
+    html.theme-transitions-on *::after {
+      transition: none !important;
+    }
   }
 
   /* ────────────────────────────────────────────────────────────────────────

@@ -85,8 +85,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [moreOpen, setMoreOpen] = useState(false);
   const { user, signOut } = useAuth();
 
-  const isActive = (path: string) =>
-    path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
+  const isActive = (path: string) => {
+    const base = path.split('?')[0];
+    return base === '/' ? location.pathname === '/' : location.pathname.startsWith(base);
+  };
 
   const moreActive = moreFlat.some((n) => isActive(n.path));
 

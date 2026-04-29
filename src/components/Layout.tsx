@@ -349,12 +349,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             ref={morePanelRef}
             className={cn(
               'fixed z-[70] bg-card border-border animate-fade-in',
-              // Mobile: bottom sheet sitting flush above the actual bottom-nav height (measured at runtime).
-              'left-0 right-0 border-t rounded-t-2xl safe-area-bottom max-h-[75vh] overflow-y-auto shadow-2xl',
+              // Mobile: bottom sheet sitting flush above the actual bottom-nav height
+              // (measured at runtime via --bottom-nav-h, falling back to 56px).
+              'left-0 right-0 bottom-[var(--bottom-nav-h,56px)] border-t rounded-t-2xl safe-area-bottom max-h-[75vh] overflow-y-auto shadow-2xl',
               // Desktop: docked side panel flush against the 5rem (w-20) sidebar
               'md:bottom-0 md:right-auto md:left-20 md:top-0 md:h-screen md:w-80 md:max-h-none md:rounded-none md:border-l md:border-t-0'
             )}
-            style={{ bottom: `var(--more-sheet-bottom, ${bottomNavHeight}px)` }}
+            style={{ ['--bottom-nav-h' as any]: `${bottomNavHeight}px` }}
             role="dialog"
             aria-modal="true"
             aria-label={t('nav.more')}

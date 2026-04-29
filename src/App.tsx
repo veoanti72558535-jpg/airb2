@@ -34,6 +34,7 @@ const SettingsPage = lazy(() => import("@/pages/SettingsPage"));
 const AdminPage = lazy(() => import("@/pages/AdminPage"));
 const AdminAiPage = lazy(() => import("@/pages/AdminAiPage"));
 const AdminAiSimulationPage = lazy(() => import("@/pages/AdminAiSimulationPage"));
+import { RequireAdmin } from "@/components/auth/RequireAdmin";
 const CrossValidationPage = lazy(() => import("@/pages/CrossValidationPage"));
 const ChronoPage = lazy(() => import("@/pages/ChronoPage"));
 const TargetAnalysisPage = lazy(() => import("@/pages/TargetAnalysisPage"));
@@ -105,8 +106,27 @@ const App = () => (
                 <Route path="/search" element={<SearchPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/admin" element={<AdminPage />} />
-                <Route path="/admin/ai" element={<AdminAiPage />} />
-                <Route path="/admin/ai/simulation" element={<AdminAiSimulationPage />} />
+                {/*
+                  /admin/ai keeps its own SignInCard for the 'anon' state —
+                  the guard only hides admin-only content from authenticated
+                  non-admins.
+                */}
+                <Route
+                  path="/admin/ai"
+                  element={
+                    <RequireAdmin signInFallback={<AdminAiPage />}>
+                      <AdminAiPage />
+                    </RequireAdmin>
+                  }
+                />
+                <Route
+                  path="/admin/ai/simulation"
+                  element={
+                    <RequireAdmin>
+                      <AdminAiSimulationPage />
+                    </RequireAdmin>
+                  }
+                />
                 <Route path="/cross-validation" element={<CrossValidationPage />} />
                 <Route path="/chrono" element={<ChronoPage />} />
                 <Route path="/target-analysis" element={<TargetAnalysisPage />} />

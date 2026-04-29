@@ -259,8 +259,51 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       const firstItem = root?.querySelector<HTMLElement>(
         '[role="dialog"] a[href], a[href][data-state], a[href]'
       ) ?? null;
-      const activeItem =
-        root?.querySelector<HTMLElement>('a[href][aria-current="page"]') ?? null;
+      // Best-active selection — handles routes that several links could
+      // legitimately claim (e.g. `/settings?tab=data` vs `/settings`).
+      // Strategy:
+      //   1. Prefer the link explicitly marked aria-current="page" by the
+      //      route-aware `isActive(...)` logic (single source of truth).
+      //   2. If multiple aria-current candidates exist, pick the one whose
+      //      `href` is the longest prefix of the current pathname+search —
+      //      i.e. the most specific match.
+      //   3. If no aria-current is set, fall back to the same longest-prefix
+      //      heuristic across every link so we still land on the most
+      //      relevant entry instead of an arbitrary first one.
+      // This keeps the existing aria-current contract authoritative while
+      // disambiguating when several siblings could match.
+      const here = `${location.pathname}${location.search}`;
+      const allLinks = root
+        ? Array.from(root.querySelectorAll<HTMLAnchorElement>('a[href]'))
+        : [];
+      const scoreMatch = (link: HTMLAnchorElement): number => {
+        // Compare against the link's `to` attribute when possible (no origin
+        // noise), otherwise fall back to pathname+search of the resolved URL.
+        const raw = link.getAttribute('href') ?? '';
+        const candidate = raw.startsWith('/')
+          ? raw
+          : `${link.pathname}${link.search}`;
+        if (!candidate) return 0;
+        if (here === candidate) return candidate.length + 1; // exact wins
+        if (here.startsWith(candidate)) return candidate.length;
+        return 0;
+      };
+      const pickBest = (links: HTMLAnchorElement[]): HTMLAnchorElement | null => {
+        let best: HTMLAnchorElement | null = null;
+        let bestScore = 0;
+        for (const l of links) {
+          const s = scoreMatch(l);
+          if (s > bestScore) { bestScore = s; best = l; }
+        }
+        return best;
+      };
+      const ariaCurrent = allLinks.filter(
+        (l) => l.getAttribute('aria-current') === 'page',
+      );
+      const activeItem: HTMLElement | null =
+        (ariaCurrent.length > 0
+          ? (pickBest(ariaCurrent) ?? ariaCurrent[0])
+          : pickBest(allLinks)) ?? null;
       const target =
         sidebarFocusBehavior === 'active'
           ? (activeItem ?? firstItem ?? moreCloseBtnRef.current)

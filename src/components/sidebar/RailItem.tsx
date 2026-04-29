@@ -31,7 +31,7 @@ interface BaseProps {
   /** Active route / pressed state — drives accent bar, ring, icon weight. */
   active?: boolean;
   /** Icon component (lucide-react). Optional for footer chips with custom content. */
-  icon?: React.ComponentType<{ className?: string; strokeWidth?: number }>;
+  icon?: React.ComponentType<{ className?: string; strokeWidth?: number | string }>;
   /** Visible label under the icon (rail variant). Footer variant uses children. */
   label?: string;
   /** Tooltip / aria-label fallback. */

@@ -67,7 +67,7 @@ const moreSections: MoreSection[] = [
     titleKey: 'nav.section.system',
     items: [
       { path: '/settings', icon: Settings, labelKey: 'nav.settings' as const },
-      { path: '/admin', icon: Shield, labelKey: 'nav.admin' as const },
+      { path: '/settings?tab=data', icon: Shield, labelKey: 'nav.admin' as const },
     ],
   },
 ];

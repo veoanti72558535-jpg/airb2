@@ -1843,6 +1843,13 @@ const en: Record<keyof typeof fr, string> = {
   'nav.tunes': 'Tunes',
   'nav.compare': 'Compare',
   'nav.adminAi': 'AI Admin',
+  'nav.chat': 'AI Assistant',
+  'nav.fieldMode': 'Field mode',
+  'nav.rangeSimulator': 'Range simulator',
+  'nav.diary': 'Shooting diary',
+  'nav.ftCompetition': 'FT competition',
+  'nav.scopeView': 'Scope view',
+  'nav.targetAnalysis': 'Target analysis',
 
   'dashboard.title': 'Dashboard',
   'dashboard.welcome': 'Welcome to AirBallistik',

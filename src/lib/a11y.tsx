@@ -1,5 +1,16 @@
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { getSettings, saveSettings } from './storage';
+import {
+  A11yContext,
+  useA11y as useA11yInternal,
+  type SidebarFocusBehavior,
+  type KeyboardNavMode,
+  type A11yContextValue,
+} from './a11y-internals';
+
+// Re-exports for backwards compatibility with existing call sites.
+export const useA11y = useA11yInternal;
+export type { SidebarFocusBehavior, KeyboardNavMode, A11yContextValue };
 
 /**
  * A11y preferences (high-contrast + large text), persisted via the standard
@@ -11,34 +22,6 @@ import { getSettings, saveSettings } from './storage';
  * every theme. This intentionally lives outside ThemeProvider so a user
  * can keep their preferred theme AND add a contrast boost.
  */
-
-/**
- * Where focus lands after the desktop sidebar expands. Persisted alongside
- * the rest of the a11y preferences. See `accessibility.sidebarFocusBehavior`
- * in `src/lib/types.ts` for the rationale of each value.
- */
-export type SidebarFocusBehavior = 'first' | 'active';
-
-/**
- * Global keyboard navigation mode. See `accessibility.keyboardNavMode` in
- * `src/lib/types.ts` for the rationale of each value.
- */
-export type KeyboardNavMode = 'normal' | 'cyclic';
-
-interface A11yContextValue {
-  highContrast: boolean;
-  largeText: boolean;
-  premiumContrast: boolean;
-  sidebarFocusBehavior: SidebarFocusBehavior;
-  keyboardNavMode: KeyboardNavMode;
-  setHighContrast: (v: boolean) => void;
-  setLargeText: (v: boolean) => void;
-  setPremiumContrast: (v: boolean) => void;
-  setSidebarFocusBehavior: (v: SidebarFocusBehavior) => void;
-  setKeyboardNavMode: (v: KeyboardNavMode) => void;
-}
-
-const A11yContext = createContext<A11yContextValue | null>(null);
 
 function applyClasses(highContrast: boolean, largeText: boolean, premiumContrast: boolean) {
   const root = document.documentElement;
@@ -164,24 +147,4 @@ export function A11yProvider({ children }: { children: React.ReactNode }) {
       {children}
     </A11yContext.Provider>
   );
-}
-
-export function useA11y(): A11yContextValue {
-  const ctx = useContext(A11yContext);
-  if (!ctx) {
-    // Safe fallback — lets unit-tested components mount without the provider.
-    return {
-      highContrast: false,
-      largeText: false,
-      premiumContrast: false,
-      sidebarFocusBehavior: 'first',
-      keyboardNavMode: 'normal',
-      setHighContrast: () => {},
-      setLargeText: () => {},
-      setPremiumContrast: () => {},
-      setSidebarFocusBehavior: () => {},
-      setKeyboardNavMode: () => {},
-    };
-  }
-  return ctx;
 }

@@ -13,6 +13,9 @@ import {
   Moon,
   Contrast,
   LayoutGrid,
+  Shuffle,
+  ShieldCheck,
+  AlertTriangle,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '@/lib/theme';
@@ -92,6 +95,16 @@ export default function ThemeStudioPage() {
     setTheme(getFamilyVariant(meta.id, activeMode));
   };
 
+  const pickRandomFamily = useCallback(() => {
+    // Random *different* family for satisfying tactile feedback.
+    const others = THEME_FAMILIES.filter((f) => f !== activeFamily);
+    const next = others[Math.floor(Math.random() * others.length)];
+    const meta =
+      THEMES.find((t) => t.family === next && t.mode === activeMode) ??
+      THEMES.find((t) => t.family === next)!;
+    setTheme(meta.id);
+  }, [activeFamily, activeMode, setTheme]);
+
   return (
     <main className="mx-auto w-full max-w-2xl px-3 py-4 sm:px-4 sm:py-6 space-y-4">
       <ThemeStudioHeader
@@ -100,6 +113,7 @@ export default function ThemeStudioPage() {
         onReset={resetCustom}
         isDark={isDark}
         onToggleMode={toggleTheme}
+        onShuffle={pickRandomFamily}
         tx={tx}
       />
 
@@ -122,12 +136,15 @@ export default function ThemeStudioPage() {
 
       {/* Advanced controls only visible in Avancé mode. */}
       {mode === 'advanced' && (
-        <AdvancedControls
-          isDark={isDark}
-          custom={custom}
-          updateCustom={updateCustom}
-          tx={tx}
-        />
+        <>
+          <LivePreviewPanel custom={custom} isDark={isDark} tx={tx} />
+          <AdvancedControls
+            isDark={isDark}
+            custom={custom}
+            updateCustom={updateCustom}
+            tx={tx}
+          />
+        </>
       )}
 
       <p className="text-[11px] text-muted-foreground text-center pt-2">
@@ -150,6 +167,7 @@ function ThemeStudioHeader({
   onReset,
   isDark,
   onToggleMode,
+  onShuffle,
   tx,
 }: {
   mode: StudioMode;
@@ -157,6 +175,7 @@ function ThemeStudioHeader({
   onReset: () => void;
   isDark: boolean;
   onToggleMode: () => void;
+  onShuffle: () => void;
   tx: (fr: string, en: string) => string;
 }) {
   return (
@@ -175,6 +194,19 @@ function ThemeStudioHeader({
             {tx('Studio de thèmes', 'Theme Studio')}
           </h1>
         </div>
+        {/* Shuffle — picks a random family for quick exploration. */}
+        <button
+          type="button"
+          onClick={onShuffle}
+          className={cn(
+            'inline-flex h-9 w-9 items-center justify-center rounded-md border border-border',
+            'hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+          )}
+          aria-label={tx('Thème aléatoire', 'Random theme')}
+          title={tx('Thème aléatoire', 'Random theme')}
+        >
+          <Shuffle className="h-3.5 w-3.5" />
+        </button>
         {/* Global dark/light swap — preserves the active family. */}
         <button
           type="button"
@@ -318,7 +350,10 @@ function ThemeCard({
         <MiniMockup meta={meta} isFR={isFR} />
       )}
 
-      <p className="text-[11px] text-muted-foreground line-clamp-2">{desc}</p>
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[11px] text-muted-foreground line-clamp-2 flex-1">{desc}</p>
+        <ContrastBadge meta={meta} isFR={isFR} />
+      </div>
 
       {selected && (
         <span className="absolute top-2 right-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary">
@@ -665,4 +700,153 @@ function adjustHex(hex: string, delta: number): string {
 }
 function clamp255(n: number): number {
   return Math.min(255, Math.max(0, Math.round(n)));
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// WCAG contrast helpers
+// ─────────────────────────────────────────────────────────────────────────
+
+/** Convert `#RRGGBB` to a relative luminance per WCAG 2.1 §1.4.3. */
+function relativeLuminance(hex: string): number {
+  let h = hex.startsWith('#') ? hex.slice(1) : hex;
+  if (h.length === 3) h = h.split('').map((c) => c + c).join('');
+  if (h.length !== 6) return 0;
+  const channel = (n: number) => {
+    const c = n / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  };
+  const r = channel(parseInt(h.slice(0, 2), 16));
+  const g = channel(parseInt(h.slice(2, 4), 16));
+  const b = channel(parseInt(h.slice(4, 6), 16));
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+/** WCAG contrast ratio between two `#RRGGBB` colours (1 → 21). */
+function contrastRatio(a: string, b: string): number {
+  const la = relativeLuminance(a);
+  const lb = relativeLuminance(b);
+  const [hi, lo] = la > lb ? [la, lb] : [lb, la];
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+function ContrastBadge({
+  meta,
+  isFR,
+}: {
+  meta: (typeof THEMES)[number];
+  isFR: boolean;
+}) {
+  // Compare accent against the surface a button would sit on (theme bg).
+  const ratio = contrastRatio(meta.accentColor, meta.bgColor);
+  // WCAG: ≥ 4.5 → AA normal text, ≥ 7 → AAA, < 3 → fail.
+  const grade = ratio >= 7 ? 'AAA' : ratio >= 4.5 ? 'AA' : ratio >= 3 ? 'AA·LG' : 'FAIL';
+  const passing = ratio >= 4.5;
+  const warn = ratio < 3;
+  return (
+    <span
+      title={
+        isFR
+          ? `Contraste accent / fond : ${ratio.toFixed(2)}:1 (${grade})`
+          : `Accent / background contrast: ${ratio.toFixed(2)}:1 (${grade})`
+      }
+      className={cn(
+        'inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-mono font-semibold shrink-0',
+        warn
+          ? 'bg-destructive/15 text-destructive'
+          : passing
+            ? 'bg-primary/10 text-primary'
+            : 'bg-muted text-muted-foreground',
+      )}
+    >
+      {warn ? (
+        <AlertTriangle className="h-2.5 w-2.5" aria-hidden="true" />
+      ) : (
+        <ShieldCheck className="h-2.5 w-2.5" aria-hidden="true" />
+      )}
+      {grade}
+    </span>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Live preview panel — sticky bottom card in Advanced mode that shows
+// realistic UI snippets (heading, body, button, badge, link) with the
+// active customisation applied. Lets users see the impact of accent /
+// font / radius / density / contrast changes without scrolling around.
+// ─────────────────────────────────────────────────────────────────────────
+
+function LivePreviewPanel({
+  custom,
+  isDark,
+  tx,
+}: {
+  custom: ReturnType<typeof useTheme>['custom'];
+  isDark: boolean;
+  tx: (fr: string, en: string) => string;
+}) {
+  // We rely on CSS variables already applied to <html> by ThemeProvider:
+  // hsl(var(--card)), hsl(var(--primary)), etc. So the preview reflects
+  // every override the user makes in real time.
+  return (
+    <section
+      aria-label={tx('Aperçu en direct', 'Live preview')}
+      className={cn(
+        'sticky bottom-2 z-10',
+        'rounded-xl border border-border bg-card/95 backdrop-blur-sm shadow-lg',
+        'p-3 space-y-2.5',
+      )}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
+          <Eye className="h-3 w-3" aria-hidden="true" />
+          {tx('Aperçu en direct', 'Live preview')}
+          <span className="text-[10px] text-muted-foreground/70">
+            · {isDark ? tx('sombre', 'dark') : tx('clair', 'light')}
+          </span>
+        </div>
+        <span className="tactical-badge">{custom.accentHex ? 'Accent' : tx('Auto', 'Auto')}</span>
+      </div>
+
+      <div className="rounded-lg border border-border p-2.5 space-y-2 bg-background">
+        <div className="flex items-baseline justify-between gap-2">
+          <h3 className="text-sm font-semibold text-foreground">
+            {tx('Énergie cinétique', 'Kinetic energy')}
+          </h3>
+          <span className="font-mono text-sm text-primary">43.2 J</span>
+        </div>
+        <p className="text-[11px] text-muted-foreground line-clamp-2">
+          {tx(
+            'Échantillon de texte secondaire pour vérifier la lisibilité.',
+            'Sample secondary text to validate readability.',
+          )}
+        </p>
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <button
+            type="button"
+            tabIndex={-1}
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-primary text-primary-foreground text-[11px] font-medium"
+          >
+            <Sparkles className="h-3 w-3" />
+            {tx('Calculer', 'Compute')}
+          </button>
+          <button
+            type="button"
+            tabIndex={-1}
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md border border-border text-foreground text-[11px] font-medium hover:bg-muted"
+          >
+            {tx('Annuler', 'Cancel')}
+          </button>
+          <span className="tactical-badge">DOPE</span>
+          <a
+            href="#preview"
+            tabIndex={-1}
+            onClick={(e) => e.preventDefault()}
+            className="text-[11px] text-primary underline underline-offset-2"
+          >
+            {tx('Voir détails', 'See details')}
+          </a>
+        </div>
+      </div>
+    </section>
+  );
 }

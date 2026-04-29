@@ -34,3 +34,33 @@ export function sortFavoriteSessions(sessions: readonly Session[]): Session[] {
 export function getSortedFavorites(sessions: readonly Session[]): Session[] {
   return sortFavoriteSessions(sessions.filter((s) => s.favorite));
 }
+
+/**
+ * Compact "last used" relative-time label, locale-aware.
+ * Used by both the Dashboard favorites widget and the Preferences
+ * quick-switch list so the same session shows the same age string in
+ * both places.
+ *
+ * Examples (fr): "à l'instant", "il y a 5 min", "il y a 3 h",
+ *               "il y a 2 j", "il y a 4 sem".
+ * Examples (en): "just now", "5m ago", "3h ago", "2d ago", "4w ago".
+ */
+export function formatLastUsed(iso: string | undefined, locale: 'fr' | 'en'): string {
+  if (!iso) return '';
+  const t = Date.parse(iso);
+  if (!Number.isFinite(t)) return '';
+  const diffSec = Math.max(0, Math.round((Date.now() - t) / 1000));
+  if (diffSec < 60) return locale === 'fr' ? "à l'instant" : 'just now';
+  const min = Math.round(diffSec / 60);
+  if (min < 60) return locale === 'fr' ? `il y a ${min} min` : `${min}m ago`;
+  const h = Math.round(min / 60);
+  if (h < 24) return locale === 'fr' ? `il y a ${h} h` : `${h}h ago`;
+  const d = Math.round(h / 24);
+  if (d < 7) return locale === 'fr' ? `il y a ${d} j` : `${d}d ago`;
+  const w = Math.round(d / 7);
+  if (w < 5) return locale === 'fr' ? `il y a ${w} sem` : `${w}w ago`;
+  const mo = Math.round(d / 30);
+  if (mo < 12) return locale === 'fr' ? `il y a ${mo} mois` : `${mo}mo ago`;
+  const y = Math.round(d / 365);
+  return locale === 'fr' ? `il y a ${y} an${y > 1 ? 's' : ''}` : `${y}y ago`;
+}

@@ -87,6 +87,27 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const moreCloseBtnRef = useRef<HTMLButtonElement | null>(null);
   const morePanelRef = useRef<HTMLDivElement | null>(null);
   const moreTriggerRef = useRef<HTMLElement | null>(null);
+  const bottomNavRef = useRef<HTMLElement | null>(null);
+  const [bottomNavHeight, setBottomNavHeight] = useState(56);
+
+  // Track the actual rendered height of the mobile bottom nav so the "More"
+  // bottom sheet can sit flush above it regardless of theme/font/safe-area.
+  useEffect(() => {
+    const el = bottomNavRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const measure = () => {
+      const h = el.getBoundingClientRect().height;
+      if (h > 0) setBottomNavHeight(Math.round(h));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    window.addEventListener('resize', measure);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', measure);
+    };
+  }, []);
 
   const isActive = (path: string) => {
     const base = path.split('?')[0];

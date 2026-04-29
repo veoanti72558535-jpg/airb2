@@ -1872,6 +1872,23 @@ const fr = {
   'settings.security.test.globals': 'Pas de secrets exposés sur window',
   'settings.security.test.aiFlag': 'Flag IA explicitement désactivé',
   'settings.security.test.crypto': 'WebCrypto disponible',
+  // Settings → Accessibilité (contraste, taille, vérificateur WCAG)
+  'settings.a11y.title': 'Accessibilité',
+  'settings.a11y.subtitle': 'Améliorer la lisibilité des labels en clair et sombre',
+  'settings.a11y.highContrast': 'Contraste élevé',
+  'settings.a11y.highContrastDesc': 'Renforce le contraste des labels secondaires et des bordures.',
+  'settings.a11y.largeText': 'Texte plus grand',
+  'settings.a11y.largeTextDesc': 'Augmente la taille de base et les libellés fins (10–11 px).',
+  'settings.a11y.checkerTitle': 'Vérification du contraste',
+  'settings.a11y.runCheck': 'Vérifier',
+  'settings.a11y.noCheck': 'Aucune vérification effectuée pour le moment.',
+  'settings.a11y.fail': 'Insuffisant',
+  'settings.a11y.legend': 'WCAG : AA ≥ 4.5:1 · AAA ≥ 7:1 (texte courant).',
+  'settings.a11y.pair.fgOnBg': 'Texte principal sur fond',
+  'settings.a11y.pair.mutedOnBg': 'Label secondaire sur fond',
+  'settings.a11y.pair.fgOnCard': 'Texte principal sur carte',
+  'settings.a11y.pair.mutedOnCard': 'Label secondaire sur carte',
+  'settings.a11y.pair.primaryOnBg': 'Accent (primary) sur fond',
 } as const;
 
 const en: Record<keyof typeof fr, string> = {
@@ -3719,6 +3736,23 @@ const en: Record<keyof typeof fr, string> = {
   'settings.security.test.globals': 'No secrets exposed on window',
   'settings.security.test.aiFlag': 'AI flag explicitly disabled',
   'settings.security.test.crypto': 'WebCrypto available',
+  // Settings → Accessibility (contrast, size, WCAG checker)
+  'settings.a11y.title': 'Accessibility',
+  'settings.a11y.subtitle': 'Improve label legibility in light and dark themes',
+  'settings.a11y.highContrast': 'High contrast',
+  'settings.a11y.highContrastDesc': 'Boosts secondary label and border contrast.',
+  'settings.a11y.largeText': 'Larger text',
+  'settings.a11y.largeTextDesc': 'Increases base font size and fine labels (10–11 px).',
+  'settings.a11y.checkerTitle': 'Contrast verification',
+  'settings.a11y.runCheck': 'Check',
+  'settings.a11y.noCheck': 'No verification has been run yet.',
+  'settings.a11y.fail': 'Insufficient',
+  'settings.a11y.legend': 'WCAG: AA ≥ 4.5:1 · AAA ≥ 7:1 (body text).',
+  'settings.a11y.pair.fgOnBg': 'Main text on background',
+  'settings.a11y.pair.mutedOnBg': 'Secondary label on background',
+  'settings.a11y.pair.fgOnCard': 'Main text on card',
+  'settings.a11y.pair.mutedOnCard': 'Secondary label on card',
+  'settings.a11y.pair.primaryOnBg': 'Accent (primary) on background',
 };
 
 // Append paste-import keys (EN) — kept after object literal would be a TS

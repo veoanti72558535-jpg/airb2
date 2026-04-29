@@ -4,6 +4,7 @@ import { useI18n } from '@/lib/i18n';
 import { getSettings, saveSettings } from '@/lib/storage';
 import { markLocalUpdated } from '@/lib/preferences-sync';
 import { ThemePicker } from '@/components/settings/ThemePicker';
+import { AccessibilityCard } from '@/components/settings/AccessibilityCard';
 import { SecurityAuditCard } from '@/components/settings/SecurityAuditCard';
 import { cn } from '@/lib/utils';
 
@@ -56,6 +57,7 @@ export function AdvancedPanel() {
       </div>
 
       <SecurityAuditCard />
+      <AccessibilityCard />
     </div>
   );
 }

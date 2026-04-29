@@ -535,4 +535,14 @@ export interface AppSettings {
    * Common values: 7.5 J (France airgun limit), 16.27 J (UK FAC, ≈12 ft·lb).
    */
   energyThresholdJ?: number | null;
+  /**
+   * A11y preferences applied at the root (`<html>`) level.
+   * - `highContrast` boosts label/border contrast for both dark & light themes.
+   * - `largeText` bumps the base font-size for better legibility.
+   * Persisted in localStorage and rehydrated on app boot.
+   */
+  accessibility?: {
+    highContrast?: boolean;
+    largeText?: boolean;
+  };
 }

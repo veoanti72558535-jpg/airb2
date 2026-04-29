@@ -15,16 +15,19 @@ import { getSettings, saveSettings } from './storage';
 interface A11yContextValue {
   highContrast: boolean;
   largeText: boolean;
+  premiumContrast: boolean;
   setHighContrast: (v: boolean) => void;
   setLargeText: (v: boolean) => void;
+  setPremiumContrast: (v: boolean) => void;
 }
 
 const A11yContext = createContext<A11yContextValue | null>(null);
 
-function applyClasses(highContrast: boolean, largeText: boolean) {
+function applyClasses(highContrast: boolean, largeText: boolean, premiumContrast: boolean) {
   const root = document.documentElement;
   root.classList.toggle('hc', highContrast);
   root.classList.toggle('lg-text', largeText);
+  root.classList.toggle('pc', premiumContrast);
 }
 
 export function A11yProvider({ children }: { children: React.ReactNode }) {
@@ -34,11 +37,16 @@ export function A11yProvider({ children }: { children: React.ReactNode }) {
   const [largeText, setLT] = useState<boolean>(() => {
     try { return getSettings().accessibility?.largeText === true; } catch { return false; }
   });
+  const [premiumContrast, setPC] = useState<boolean>(() => {
+    try { return getSettings().accessibility?.premiumContrast === true; } catch { return false; }
+  });
 
   // Apply on mount and on every change.
-  useEffect(() => { applyClasses(highContrast, largeText); }, [highContrast, largeText]);
+  useEffect(() => {
+    applyClasses(highContrast, largeText, premiumContrast);
+  }, [highContrast, largeText, premiumContrast]);
 
-  const persist = useCallback((next: { highContrast?: boolean; largeText?: boolean }) => {
+  const persist = useCallback((next: { highContrast?: boolean; largeText?: boolean; premiumContrast?: boolean }) => {
     try {
       const s = getSettings();
       saveSettings({
@@ -56,9 +64,22 @@ export function A11yProvider({ children }: { children: React.ReactNode }) {
     setLT(v);
     persist({ largeText: v });
   }, [persist]);
+  const setPremiumContrast = useCallback((v: boolean) => {
+    setPC(v);
+    persist({ premiumContrast: v });
+  }, [persist]);
 
   return (
-    <A11yContext.Provider value={{ highContrast, largeText, setHighContrast, setLargeText }}>
+    <A11yContext.Provider
+      value={{
+        highContrast,
+        largeText,
+        premiumContrast,
+        setHighContrast,
+        setLargeText,
+        setPremiumContrast,
+      }}
+    >
       {children}
     </A11yContext.Provider>
   );
@@ -71,8 +92,10 @@ export function useA11y(): A11yContextValue {
     return {
       highContrast: false,
       largeText: false,
+      premiumContrast: false,
       setHighContrast: () => {},
       setLargeText: () => {},
+      setPremiumContrast: () => {},
     };
   }
   return ctx;

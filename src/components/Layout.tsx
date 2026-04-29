@@ -437,6 +437,17 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </main>
       </div>
 
+      {/* Polite live region — announces sidebar collapse/expand and route
+          changes without stealing focus. Visually hidden via .sr-only. */}
+      <div
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        className="sr-only"
+      >
+        {a11yStatus}
+      </div>
+
       {/* ── Mobile Bottom Nav ── */}
       <nav
         ref={bottomNavRef}
@@ -457,6 +468,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <Link
                 key={item.path}
                 to={item.path}
+                aria-current={active ? 'page' : undefined}
+                aria-label={`${t(item.labelKey)}${active ? ` (${a11yActive})` : ''}`}
+                data-state={active ? 'active' : 'inactive'}
                 className={cn(
                   'flex-1 min-w-0 flex flex-col items-center justify-center gap-[3px] px-2 rounded-md',
                   'transition-colors duration-150 touch-target relative',
@@ -480,6 +494,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           })}
           <button
             onClick={() => setMoreOpen(true)}
+            type="button"
+            aria-label={t('nav.more')}
+            aria-expanded={moreOpen}
+            aria-controls="more-panel"
+            aria-haspopup="dialog"
+            data-state={moreActive ? 'active' : 'inactive'}
             className={cn(
               'flex-1 min-w-0 flex flex-col items-center justify-center gap-[3px] px-2 rounded-md',
               'transition-colors duration-150 touch-target',
@@ -501,9 +521,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <div
             className="fixed inset-0 z-[60] bg-background/60 backdrop-blur-sm"
             onClick={() => setMoreOpen(false)}
+            aria-hidden="true"
           />
           <div
             ref={morePanelRef}
+            id="more-panel"
             className={cn(
               'fixed z-[70] bg-card border-border animate-fade-in',
               // Mobile: bottom sheet sitting flush above the actual bottom-nav height
@@ -535,10 +557,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     {t(section.titleKey)}
                   </div>
                   {section.items.map((item) => (
+                    (() => { const active = isActive(item.path); return (
                     <Link
                       key={item.path}
                       to={item.path}
                       onClick={() => setMoreOpen(false)}
+                      aria-current={active ? 'page' : undefined}
+                      aria-label={`${t(item.labelKey)}${active ? ` (${a11yActive})` : ''}`}
+                      data-state={active ? 'active' : 'inactive'}
                       className={cn(
                         'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150 touch-target',
                         // Items live inside a padded panel — keep an offset
@@ -546,7 +572,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                         // background) but reduce the offset to 1px so it
                         // never touches the panel's inner edge.
                         'outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 focus-visible:ring-offset-card focus-visible:bg-muted/60',
-                        isActive(item.path)
+                        active
                           ? 'bg-primary/10 text-primary'
                           : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                       )}
@@ -555,6 +581,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                       <span className="flex-1">{t(item.labelKey)}</span>
                       <ChevronRight className="h-4 w-4 opacity-40" />
                     </Link>
+                    ); })()
                   ))}
                 </div>
               ))}

@@ -38,13 +38,16 @@ import {
   Moon,
   Star,
   ChevronRight,
+  Ruler,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
 import { useTheme } from '@/lib/theme';
 import { THEMES, DEFAULT_THEME } from '@/lib/theme-constants';
 import { getSettings, saveSettings, sessionStore } from '@/lib/storage';
-import { markLocalUpdated } from '@/lib/preferences-sync';
+import { markLocalUpdated, savePreferenceToSupabase } from '@/lib/preferences-sync';
+import { useAuth } from '@/lib/auth-context';
+import { useUnits } from '@/hooks/use-units';
 import { ThemePicker } from '@/components/settings/ThemePicker';
 import { cn } from '@/lib/utils';
 
@@ -57,6 +60,8 @@ export function PreferencesPanel() {
   const { t, locale, setLocale } = useI18n();
   const { theme, setTheme, isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { display, symbol } = useUnits();
   const settings = getSettings();
   // `advancedMode` is local-only (no Supabase column today). Locale and
   // theme have their own per-user sync paths inside their providers, so
@@ -65,6 +70,25 @@ export function PreferencesPanel() {
   const [justReset, setJustReset] = useState(false);
 
   const advancedMode = settings.advancedMode === true;
+  const unitSystem: 'metric' | 'imperial' = settings.unitSystem === 'imperial' ? 'imperial' : 'metric';
+
+  // Switching the unit SYSTEM only changes how reference values are
+  // formatted at render time — the ballistic engine keeps storing/
+  // computing in the deterministic SI reference (m, m/s, J, °C…).
+  // We deliberately reset `unitPreferences` to the new system's
+  // defaults so the preview and the rest of the app agree, but users
+  // can still fine-tune per category in the dedicated Unités tab.
+  const setUnitSystem = useCallback(
+    (next: 'metric' | 'imperial') => {
+      const cur = getSettings();
+      if (cur.unitSystem === next) return;
+      saveSettings({ ...cur, unitSystem: next, unitPreferences: undefined });
+      markLocalUpdated();
+      if (user) savePreferenceToSupabase(user.id, 'unit_system', next).catch(() => {});
+      force();
+    },
+    [user],
+  );
 
   // ── Favorites quick-switch ────────────────────────────────────────
   // Re-read on every render: cheap (in-memory cache) and `force()` is
@@ -196,6 +220,78 @@ export function PreferencesPanel() {
           <LangButton active={!advancedMode} onClick={() => setMode(false)} label={t('common.simpleMode')} />
           <LangButton active={advancedMode} onClick={() => setMode(true)} label={t('common.advancedMode')} />
         </div>
+      </section>
+
+      {/* Units (display only — engine stays in SI reference) */}
+      <section
+        className="surface-elevated p-4 space-y-2"
+        aria-label={t('settings.unitSystem')}
+      >
+        <header className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <Ruler className="h-4 w-4 text-primary/80 shrink-0" />
+            <h3 className="text-sm font-medium truncate">{t('settings.unitSystem')}</h3>
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate('/settings?tab=units')}
+            className={cn(
+              'inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] font-medium',
+              'hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+            )}
+          >
+            {t('settings.preferences.unitsFine' as any)}
+            <ChevronRight className="h-3 w-3" />
+          </button>
+        </header>
+        <p className="text-[11px] text-muted-foreground">
+          {t('settings.preferences.unitsDesc' as any)}
+        </p>
+        <div
+          role="radiogroup"
+          aria-label={t('settings.unitSystem')}
+          className="inline-flex w-full sm:w-auto rounded-md border border-border bg-card p-0.5"
+        >
+          <LangButton
+            active={unitSystem === 'metric'}
+            onClick={() => setUnitSystem('metric')}
+            label={t('common.metric')}
+          />
+          <LangButton
+            active={unitSystem === 'imperial'}
+            onClick={() => setUnitSystem('imperial')}
+            label={t('common.imperial')}
+          />
+        </div>
+
+        {/* Live conversion preview — values come from useUnits.display(),
+            so changing the system above instantly re-formats the row. */}
+        <div className="grid grid-cols-3 gap-2 pt-1">
+          {([
+            { cat: 'distance', refValue: 50, label: t('settings.preferences.unitsDistance' as any) },
+            { cat: 'velocity', refValue: 280, label: t('settings.preferences.unitsVelocity' as any) },
+            { cat: 'energy',   refValue: 24,  label: t('settings.preferences.unitsEnergy'   as any) },
+          ] as const).map(({ cat, refValue, label }) => {
+            const v = display(cat, refValue);
+            const formatted = Number.isFinite(v)
+              ? (Math.abs(v) >= 100 ? v.toFixed(0) : v.toFixed(2))
+              : '—';
+            return (
+              <div
+                key={cat}
+                className="rounded-md border border-border/40 bg-background/40 px-2 py-1.5"
+              >
+                <div className="text-[9px] uppercase text-muted-foreground">{label}</div>
+                <div className="text-xs font-mono font-semibold">
+                  {formatted} <span className="text-muted-foreground">{symbol(cat)}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <p className="text-[10px] text-muted-foreground">
+          {t('settings.preferences.unitsHint' as any)}
+        </p>
       </section>
 
       {/* Favorites quick-switch */}

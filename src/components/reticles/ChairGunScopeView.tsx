@@ -226,6 +226,7 @@ const ChairGunScopeView: React.FC<ChairGunScopeViewProps> = ({
 
     // Track drawn dots to avoid overlapping rendering
     const drawn = new Set<string>();
+    let hasMainCross = false;
 
     for (const el of els) {
       if (el.type === 'line') {
@@ -233,6 +234,9 @@ const ChairGunScopeView: React.FC<ChairGunScopeViewProps> = ({
         const axis = el.y1 ?? 0; // 0 = vertical, 1 = horizontal
         const extent = el.x2 ?? 0;
         const thickness = el.y2 ?? 0;
+
+        const len = Math.abs(extent - gap);
+        if (len > 5) hasMainCross = true;
 
         const sw = thickness > 0 ? Math.max(thickness * ppm, baseLineWidth) : baseLineWidth;
         ctx.lineWidth = sw;

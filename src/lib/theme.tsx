@@ -1,22 +1,16 @@
-import React, { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react';
+import {
+  THEMES,
+  THEME_STORAGE_KEY,
+  DEFAULT_THEME,
+  isValidTheme,
+  type ThemeId,
+} from './theme-constants';
 
-export type ThemeId = 'carbon-green' | 'tactical-dark' | 'slate-light' | 'desert-tan';
-
-export interface ThemeMeta {
-  id: ThemeId;
-  labelFR: string;
-  labelEN: string;
-  isDark: boolean;
-  accentColor: string;
-  bgColor: string;
-}
-
-export const THEMES: ThemeMeta[] = [
-  { id: 'carbon-green', labelFR: 'Carbon Green', labelEN: 'Carbon Green', isDark: true, accentColor: '#22C55E', bgColor: '#111111' },
-  { id: 'tactical-dark', labelFR: 'Tactical Dark', labelEN: 'Tactical Dark', isDark: true, accentColor: '#F59E0B', bgColor: '#0C0E14' },
-  { id: 'slate-light', labelFR: 'Slate Light', labelEN: 'Slate Light', isDark: false, accentColor: '#3B82F6', bgColor: '#F8FAFC' },
-  { id: 'desert-tan', labelFR: 'Desert Tan', labelEN: 'Desert Tan', isDark: true, accentColor: '#E07B39', bgColor: '#1C1510' },
-];
+// Re-export so existing call sites (`import { THEMES, ThemeId } from '@/lib/theme'`)
+// keep working without churn. Types & constants are now sourced from the
+// sibling module; this file stays "components-only" for Fast Refresh.
+export { THEMES, type ThemeId, type ThemeMeta } from './theme-constants';
 
 interface ThemeContextType {
   theme: ThemeId;
@@ -26,18 +20,11 @@ interface ThemeContextType {
   isDark: boolean;
 }
 
-const STORAGE_KEY = 'pcp-theme';
-const DEFAULT_THEME: ThemeId = 'carbon-green';
-
-function isValidTheme(v: string | null): v is ThemeId {
-  return v === 'carbon-green' || v === 'tactical-dark' || v === 'slate-light' || v === 'desert-tan';
-}
-
 const ThemeContext = createContext<ThemeContextType | null>(null);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<ThemeId>(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
+    const saved = localStorage.getItem(THEME_STORAGE_KEY);
     // migrate old dark/light values
     if (saved === 'dark') return 'carbon-green';
     if (saved === 'light') return 'slate-light';
@@ -51,7 +38,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     root.classList.remove('dark', 'light');
     root.classList.add(meta.isDark ? 'dark' : 'light');
     root.setAttribute('data-theme', theme);
-    localStorage.setItem(STORAGE_KEY, theme);
+    localStorage.setItem(THEME_STORAGE_KEY, theme);
   }, [theme]);
 
   const setTheme = useCallback((id: ThemeId) => setThemeState(id), []);

@@ -212,6 +212,51 @@
     font-family: var(--font-body);
     transition: background-color 180ms ease, color 180ms ease;
   }
+
+  /* ────────────────────────────────────────────────────────────────────────
+     A11y: High-contrast mode (toggled by adding `.hc` on <html>).
+     We only override semantic tokens — components keep using `text-muted-
+     foreground`, `border`, etc., so the boost applies everywhere uniformly
+     across all 4 themes (carbon-green, tactical-dark, slate-light, desert-tan).
+
+     Strategy:
+       • Push muted-foreground much closer to foreground on dark themes,
+         and much darker on light themes, so secondary labels stop looking
+         washed-out.
+       • Strengthen border lightness contrast so dividers/rings remain
+         perceptible at 200% zoom and on glossy mobile screens.
+     ──────────────────────────────────────────────────────────────────────── */
+  html.hc.dark {
+    --muted-foreground: 0 0% 82%;
+    --border: 0 0% 38%;
+    --ring: var(--primary);
+  }
+  html.hc.light {
+    --muted-foreground: 0 0% 22%;
+    --border: 0 0% 55%;
+    --ring: var(--primary);
+  }
+  /* Generic rule for any custom theme that did not match dark/light */
+  html.hc {
+    --ring: var(--primary);
+  }
+  /* Strengthen all focus rings & underline links for clarity */
+  html.hc :focus-visible {
+    outline: 2px solid hsl(var(--primary));
+    outline-offset: 2px;
+  }
+  html.hc a:not([class*="bg-"]):not(.no-hc-underline) {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  /* A11y: Larger base text — additive, so works alongside `.hc`. */
+  html.lg-text {
+    font-size: 17px; /* default 16 → +6.25% */
+  }
+  html.lg-text .text-\[10px\] { font-size: 11px !important; }
+  html.lg-text .text-\[11px\] { font-size: 12px !important; }
+
   .surface-card, .surface-elevated,
   [class*="bg-card"], [class*="bg-background"], [class*="bg-muted"], [class*="bg-popover"], [class*="bg-secondary"],
   aside, nav, main, header, footer, section, dialog,

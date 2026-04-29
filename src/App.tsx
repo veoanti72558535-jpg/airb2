@@ -12,6 +12,8 @@ import { warnIfNotConfigured } from "@/lib/supabase-check";
 import AuthPage from "@/pages/AuthPage";
 import { useAuth } from "@/lib/auth-context";
 import Layout from "@/components/Layout";
+import { PerfMonitorProvider } from "@/lib/perf-monitor";
+import { PerfOverlay } from "@/components/devtools/PerfOverlay";
 
 // ── Lazy-loaded pages (F1 — code splitting) ──────────────────────────────
 const Dashboard = lazy(() => import("@/pages/Dashboard"));
@@ -42,6 +44,7 @@ const BallisticChatPage = lazy(() => import("@/pages/BallisticChatPage"));
 const FieldTargetCompPage = lazy(() => import("@/pages/FieldTargetCompPage"));
 const ShootingDiaryPage = lazy(() => import("@/pages/ShootingDiaryPage"));
 const DesignSystemPage = lazy(() => import("@/pages/DesignSystemPage"));
+const PerfDebugPage = lazy(() => import("@/pages/PerfDebugPage"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -81,6 +84,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <PerfMonitorProvider>
             <Layout>
               <Suspense fallback={<PageLoader />}>
               <Routes>
@@ -112,6 +116,7 @@ const App = () => (
                 <Route path="/ft-competition" element={<FieldTargetCompPage />} />
                 <Route path="/diary" element={<ShootingDiaryPage />} />
                 <Route path="/design-system" element={<DesignSystemPage />} />
+                <Route path="/debug/perf" element={<PerfDebugPage />} />
                 {/* Legacy routes */}
                 <Route path="/airguns" element={<LibraryPage />} />
                 <Route path="/projectiles" element={<LibraryPage />} />
@@ -120,6 +125,8 @@ const App = () => (
               </Routes>
               </Suspense>
             </Layout>
+            <PerfOverlay />
+            </PerfMonitorProvider>
           </BrowserRouter>
           </TooltipProvider>
           </AuthGuard>

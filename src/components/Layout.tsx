@@ -268,6 +268,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <aside 
         id="app-sidebar"
         aria-label={t('nav.primary' as any) || 'Navigation principale'}
+        aria-expanded={isSidebarExpanded}
+        data-state={isSidebarExpanded ? 'expanded' : 'collapsed'}
         className={cn(
           "hidden md:flex flex-col border-r border-border/40 bg-card/50 backdrop-blur-xl sticky top-0 h-screen shrink-0 transition-all duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] z-40",
           isSidebarExpanded ? "w-64" : "w-20 items-center"
@@ -306,6 +308,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               label={isSidebarExpanded ? t(item.labelKey) : undefined}
               title={!isSidebarExpanded ? t(item.labelKey) : undefined}
               active={isActive(item.path)}
+              activeLabelSuffix={a11yActive}
+              collapsedHint={collapsedRailHint}
               className={cn(
                 "transition-all duration-200",
                 isSidebarExpanded ? "px-3 py-2.5 justify-start gap-3 w-full" : "w-12 h-12 justify-center"
@@ -323,6 +327,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               label={isSidebarExpanded ? t(item.labelKey) : undefined}
               title={!isSidebarExpanded ? t(item.labelKey) : undefined}
               active={isActive(item.path)}
+              activeLabelSuffix={a11yActive}
+              collapsedHint={collapsedRailHint}
               className={cn(
                 "transition-all duration-200 text-amber-500/80",
                 isSidebarExpanded ? "px-3 py-2.5 justify-start gap-3 w-full" : "w-12 h-12 justify-center"
@@ -337,6 +343,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             title={!isSidebarExpanded ? t('nav.more') : undefined}
             ariaLabel={t('nav.more')}
             ariaExpanded={moreOpen}
+            ariaControls="more-panel"
+            isDisclosure
+            collapsedHint={collapsedRailHint}
             active={moreActive}
             className={cn(
               "transition-all duration-200 mt-auto",

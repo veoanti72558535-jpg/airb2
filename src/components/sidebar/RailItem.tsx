@@ -62,7 +62,11 @@ export const railItemBase = cn(
   // Cheap transitions: only color/background interpolated; no layout/shadow churn.
   'transition-[color,background-color] duration-100 ease-out motion-reduce:transition-none',
   // Visible & consistent keyboard focus across every rail item.
-  'outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card'
+  // Inset ring so the halo never gets clipped by the sidebar border, the
+  // footer divider, or by sibling rail items sitting edge-to-edge. Inset
+  // also removes the need for ring-offset (which would bleed outside the
+  // rounded box and look truncated against the card surface).
+  'outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary'
 );
 
 export function railItemClass(active: boolean, variant: Variant = 'rail'): string {

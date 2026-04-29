@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   Palette,
   Check,
@@ -21,6 +21,7 @@ import { Link } from 'react-router-dom';
 import { useTheme } from '@/lib/theme';
 import { useI18n } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
+import { readUserPref, writeUserPref, migrateGuestPrefToUser } from '@/lib/user-prefs';
 import {
   THEMES,
   ACCENT_PRESETS,
@@ -52,24 +53,31 @@ import {
 
 type StudioMode = 'simple' | 'advanced';
 
-function readMode(): StudioMode {
-  const v = localStorage.getItem(THEME_MODE_STORAGE_KEY);
+function readMode(userId: string | null): StudioMode {
+  const v = readUserPref(THEME_MODE_STORAGE_KEY, userId);
   return v === 'advanced' ? 'advanced' : 'simple';
 }
 
 export default function ThemeStudioPage() {
   const { locale, t } = useI18n();
-  const { theme, setTheme, isDark, custom, updateCustom, resetCustom, toggleTheme } = useTheme();
-  const [mode, setMode] = useState<StudioMode>(() => readMode());
+  const { theme, setTheme, isDark, custom, updateCustom, resetCustom, toggleTheme, userId } = useTheme();
+  const [mode, setMode] = useState<StudioMode>(() => readMode(userId));
 
-  const setStudioMode = useCallback((m: StudioMode) => {
-    setMode(m);
-    try {
-      localStorage.setItem(THEME_MODE_STORAGE_KEY, m);
-    } catch {
-      /* ignore storage errors */
-    }
-  }, []);
+  // Re-hydrate the studio mode whenever the active user changes (sign-in,
+  // sign-out, account swap on the same device). Migrates the guest value
+  // forward on first sign-in via `migrateGuestPrefToUser`.
+  useEffect(() => {
+    if (userId) migrateGuestPrefToUser(THEME_MODE_STORAGE_KEY, userId);
+    setMode(readMode(userId));
+  }, [userId]);
+
+  const setStudioMode = useCallback(
+    (m: StudioMode) => {
+      setMode(m);
+      writeUserPref(THEME_MODE_STORAGE_KEY, userId, m);
+    },
+    [userId],
+  );
 
   const isFR = locale === 'fr';
   const tx = (fr: string, en: string) => (isFR ? fr : en);

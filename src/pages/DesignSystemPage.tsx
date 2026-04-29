@@ -19,6 +19,7 @@ import { Field } from '@/components/calc/Field';
 import { Switch } from '@/components/ui/switch';
 import { ResponsivePreview } from '@/components/devtools/ResponsivePreview';
 import { BallisticResult, WeatherSnapshot } from '@/lib/types';
+import { cn } from '@/lib/utils';
 
 /**
  * Internal design-system showcase. Mirrors what Claude Design documents in its

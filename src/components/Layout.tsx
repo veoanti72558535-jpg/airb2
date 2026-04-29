@@ -242,9 +242,30 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       );
     };
 
-    // Defer initial focus until the panel has mounted.
+    // Defer initial focus until the panel has mounted, then honour the
+    // user's "Focus behavior" preference — the same one applied when the
+    // desktop sidebar expands. The "More" panel is effectively a sub-menu
+    // disclosure, so the focus contract should match:
+    //  • 'active' → land on the currently-active row (aria-current="page")
+    //               so AT users immediately hear where they are inside the
+    //               just-opened sub-menu. Falls back to the first item, then
+    //               the close button if the panel happens to be empty.
+    //  • 'first'  → land on the first interactive item so arrow keys start
+    //               traversing the menu from the top (APG menu pattern).
+    // The close button remains the ultimate fallback so focus never leaks
+    // back to <body> while the modal sub-menu is open.
     const focusTimer = window.setTimeout(() => {
-      moreCloseBtnRef.current?.focus();
+      const root = morePanelRef.current;
+      const firstItem = root?.querySelector<HTMLElement>(
+        '[role="dialog"] a[href], a[href][data-state], a[href]'
+      ) ?? null;
+      const activeItem =
+        root?.querySelector<HTMLElement>('a[href][aria-current="page"]') ?? null;
+      const target =
+        sidebarFocusBehavior === 'active'
+          ? (activeItem ?? firstItem ?? moreCloseBtnRef.current)
+          : (firstItem ?? moreCloseBtnRef.current);
+      target?.focus();
     }, 0);
 
     const onKey = (e: KeyboardEvent) => {
@@ -309,6 +330,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       // Restore focus to the trigger that opened the panel.
       moreTriggerRef.current?.focus?.();
     };
+    // `sidebarFocusBehavior` is intentionally read at open time only — we
+    // don't want toggling the preference while the panel is open to yank
+    // focus around. Re-running on `moreOpen` change is sufficient.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [moreOpen]);
 
   useEffect(() => {

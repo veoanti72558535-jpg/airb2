@@ -131,3 +131,18 @@ Ce document est le registre chronologique de toutes les modifications apportées
 - `src/App.tsx` : Ajout de 4 routes lazy-loaded (`/range-simulator`, `/chat`, `/ft-competition`, `/diary`).
 - `src/components/Layout.tsx` : Ajout de 4 entrées navigation mobile (Simulateur, Chat, Carnet, FT Competition).
 - `src/pages/Dashboard.tsx` : Intégration du système de widgets DnD.
+
+---
+
+### [2026-04-29 15:30:00] Axe 4 : Modernisation UI/UX & Restructuration Globale
+**Fichiers modifiés :**
+- `src/components/Layout.tsx` : Passage à un layout fluide (`max-w-[1600px]`). Implémentation d'une **Sidebar dynamique** (expand/collapse) avec persistance de l'état (localStorage) et animations fluides.
+- `src/index.css` : Introduction du **Design System "Glassmorphism"** avec les utilitaires `.glass-card` and `.glass-panel`. Ajout d'effets de flou (`backdrop-blur`), bordures semi-transparentes et dégradés d'ambiance.
+- `src/components/ui/AppCard.tsx` : Ajout de la variante `glass` pour supporter nativement le nouveau style visuel.
+- `src/pages/Dashboard.tsx` : Refonte complète du Dashboard en **Command Center (HUD)**. Mise en valeur de la dernière session avec graphique de trajectoire interactif immédiat et grille d'outils tactiques.
+- `src/pages/AirgunsPage.tsx`, `src/pages/OpticsPage.tsx`, `src/pages/ProjectilesPage.tsx`, `src/pages/ReticlesPage.tsx` : Mise à jour des listes de la bibliothèque pour utiliser les nouvelles cartes Glassmorphism avec effets de survol (hover) et typographies renforcées.
+
+**Modifications :**
+- **Fluidité et Espace** : L'interface n'est plus contrainte en largeur, optimisant l'usage des grands écrans pour les outils de précision.
+- **Identité Visuelle** : Transition vers un look "Tactical Platform" sombre et premium avec des micro-animations et des retours visuels interactifs.
+- **Correction Critique** : Résolution d'une erreur de build dans `Layout.tsx` qui empêchait l'affichage des mises à jour.

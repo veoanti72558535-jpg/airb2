@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { I18nProvider } from "@/lib/i18n";
 import { ThemeProvider } from "@/lib/theme";
+import { A11yProvider } from "@/lib/a11y";
 import { AuthProvider } from "@/lib/auth-context";
 import { warnIfNotConfigured } from "@/lib/supabase-check";
 import AuthPage from "@/pages/AuthPage";
@@ -71,6 +72,7 @@ warnIfNotConfigured();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
+      <A11yProvider>
       <I18nProvider>
         <AuthProvider>
           <AuthGuard>

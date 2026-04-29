@@ -95,6 +95,16 @@ export default function ThemeStudioPage() {
     setTheme(getFamilyVariant(meta.id, activeMode));
   };
 
+  const pickRandomFamily = useCallback(() => {
+    // Random *different* family for satisfying tactile feedback.
+    const others = THEME_FAMILIES.filter((f) => f !== activeFamily);
+    const next = others[Math.floor(Math.random() * others.length)];
+    const meta =
+      THEMES.find((t) => t.family === next && t.mode === activeMode) ??
+      THEMES.find((t) => t.family === next)!;
+    setTheme(meta.id);
+  }, [activeFamily, activeMode, setTheme]);
+
   return (
     <main className="mx-auto w-full max-w-2xl px-3 py-4 sm:px-4 sm:py-6 space-y-4">
       <ThemeStudioHeader
@@ -103,6 +113,7 @@ export default function ThemeStudioPage() {
         onReset={resetCustom}
         isDark={isDark}
         onToggleMode={toggleTheme}
+        onShuffle={pickRandomFamily}
         tx={tx}
       />
 

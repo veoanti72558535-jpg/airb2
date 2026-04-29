@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { useI18n } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 import { isSupabaseConfigured, supabase } from '@/integrations/supabase/client';
+import { useDetailLevel } from '@/lib/admin/detailLevel';
 
 /**
  * Garde-fous IA & sécurité — vue synthétique.
@@ -56,6 +57,7 @@ const STATE_LABEL_KEY: Record<GuardState, string> = {
 const RLS_PROBE_TABLES = ['airguns', 'tunes', 'projectiles', 'sessions', 'profiles'] as const;
 
 export function AiGuardrailsCard() {
+  const { isAdvanced } = useDetailLevel();
   const { t } = useI18n();
   const [rlsState, setRlsState] = useState<GuardState>('unknown');
   const [rlsDetail, setRlsDetail] = useState<string | undefined>();
@@ -268,23 +270,29 @@ export function AiGuardrailsCard() {
                     <p className={cn('text-[10px] font-mono mt-1 truncate', meta.cls)}>{g.detail}</p>
                   )}
                 </div>
-                <div className="text-right max-w-[200px]">
-                  <div className="text-[9px] uppercase tracking-wider text-muted-foreground/70">
-                    {t('admin.ai.guardrails.source' as any)}
+                {isAdvanced ? (
+                  <div className="text-right max-w-[200px]">
+                    <div className="text-[9px] uppercase tracking-wider text-muted-foreground/70">
+                      {t('admin.ai.guardrails.source' as any)}
+                    </div>
+                    <div className="text-[10px] font-mono text-muted-foreground break-all leading-tight mt-0.5">
+                      {g.source}
+                    </div>
                   </div>
-                  <div className="text-[10px] font-mono text-muted-foreground break-all leading-tight mt-0.5">
-                    {g.source}
-                  </div>
-                </div>
+                ) : (
+                  <div aria-hidden className="w-0" />
+                )}
               </li>
             );
           })}
         </ul>
 
-        <p className="text-[10px] text-muted-foreground flex items-center gap-1 pt-1">
-          <ExternalLink className="h-3 w-3" />
-          {t('admin.ai.guardrails.disclaimer' as any)}
-        </p>
+        {isAdvanced && (
+          <p className="text-[10px] text-muted-foreground flex items-center gap-1 pt-1">
+            <ExternalLink className="h-3 w-3" />
+            {t('admin.ai.guardrails.disclaimer' as any)}
+          </p>
+        )}
       </CardContent>
     </Card>
   );

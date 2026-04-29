@@ -16,6 +16,7 @@ import { RailItem, railItemClass } from '@/components/sidebar/RailItem';
 import { useRovingFocus } from '@/lib/hooks/useRovingFocus';
 import { useA11y } from '@/lib/a11y';
 import { pickBestLink } from '@/lib/a11y/link-scoring';
+import { moreSections, moreFlat, type MoreItem, type MoreSection } from '@/components/sidebar/more-nav';
 
 const sidebarNav = [
   { path: '/', icon: LayoutDashboard, labelKey: 'nav.home' as const },
@@ -33,51 +34,9 @@ const bottomNav = [
   { path: '/sessions', icon: BookOpen, labelKey: 'nav.sessions' as const },
 ];
 
-/**
- * Grouped "More" navigation — used by both desktop side-panel and mobile
- * bottom-sheet. Sections improve discoverability vs the previous flat 16-row
- * list. Doublons sidebar (library/chrono/conversions/compare) removed.
- * /competition-prep merged into /ft-competition (handled via route redirect).
- */
-type MoreItem = { path: string; icon: LucideIcon; labelKey: any };
-type MoreSection = { titleKey: any; items: MoreItem[] };
-
-const moreSections: MoreSection[] = [
-  {
-    titleKey: 'nav.section.fieldTools',
-    items: [
-      { path: '/field-mode', icon: Crosshair, labelKey: 'nav.fieldMode' as const },
-      { path: '/range-simulator', icon: Target, labelKey: 'nav.rangeSimulator' as const },
-      { path: '/scope-view', icon: Eye, labelKey: 'nav.scopeView' as const },
-      { path: '/target-analysis', icon: Camera, labelKey: 'nav.targetAnalysis' as const },
-    ],
-  },
-  {
-    titleKey: 'nav.section.competition',
-    items: [
-      { path: '/ft-competition', icon: Trophy, labelKey: 'nav.ftCompetition' as const },
-      { path: '/diary', icon: Calendar, labelKey: 'nav.diary' as const },
-    ],
-  },
-  {
-    titleKey: 'nav.section.aiAndDocs',
-    items: [
-      { path: '/chat', icon: MessageCircle, labelKey: 'nav.chat' as const },
-      { path: '/cross-validation', icon: FlaskConical, labelKey: 'nav.crossValidation' as const },
-      { path: '/docs', icon: FileText, labelKey: 'nav.docs' as const },
-      { path: '/search', icon: Search, labelKey: 'nav.search' as const },
-    ],
-  },
-  {
-    titleKey: 'nav.section.system',
-    items: [
-      { path: '/settings', icon: Settings, labelKey: 'nav.settings' as const },
-      { path: '/settings?tab=data', icon: Shield, labelKey: 'nav.admin' as const },
-    ],
-  },
-];
-
-const moreFlat: MoreItem[] = moreSections.flatMap((s) => s.items);
+// `moreSections` / `moreFlat` are imported from `@/components/sidebar/more-nav`
+// so the AccessibilityCard simulator can preview the SAME ordered item list
+// without importing all of Layout.
 
 const adminNav = [
   { path: '/admin/ai', icon: Cpu, labelKey: 'nav.adminAi' as const },

@@ -207,6 +207,15 @@ export default function DesignSystemPage() {
           clickUnit="MOA"
           energyThresholdJ={40}
         />
+
+        <DemoLabel>dense trajectory table — dual threshold (energy + velocity)</DemoLabel>
+        <DenseTrajectoryTableDemo rows={trajectoryRows} />
+
+        <DemoLabel>drop sparkline — inline SVG, threshold band</DemoLabel>
+        <DropSparklineDemo rows={trajectoryRows} thresholdMm={50} />
+
+        <DemoLabel>multi-axis chart — drop, wind, energy with threshold markers</DemoLabel>
+        <MultiAxisTrajectoryChartDemo rows={trajectoryRows} energyThresholdJ={20} />
       </article>
 
       <footer className="pt-6 border-t border-border/40 text-[11px] font-mono text-muted-foreground">

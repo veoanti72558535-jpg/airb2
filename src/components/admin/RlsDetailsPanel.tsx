@@ -36,6 +36,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useI18n } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
+import { useDetailLevel, AdvancedOnly } from '@/lib/admin/detailLevel';
 
 type Operation = 'select' | 'insert' | 'update' | 'delete' | 'all';
 type Audience = 'admin' | 'authenticated' | 'self';
@@ -184,6 +185,7 @@ const SENS_CLS: Record<TableRls['sensitivity'], string> = {
 
 export function RlsDetailsPanel() {
   const { t } = useI18n();
+  const { isAdvanced } = useDetailLevel();
   const [open, setOpen] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(TABLES.map((tab) => [tab.table, true])),
   );
@@ -254,6 +256,13 @@ export function RlsDetailsPanel() {
           })}
         </div>
 
+        {/* Mode-aware top hint */}
+        <p className="text-[11px] text-muted-foreground">
+          {isAdvanced
+            ? t('admin.ai.rls.modeAdvanced' as any)
+            : t('admin.ai.rls.modeSimple' as any)}
+        </p>
+
         {/* Tables list */}
         <ul className="space-y-2">
           {TABLES.map((tab) => {
@@ -275,7 +284,8 @@ export function RlsDetailsPanel() {
                     {t(`admin.ai.rls.sensitivity.${tab.sensitivity}` as any)}
                   </Badge>
                   <span className="text-[10px] text-muted-foreground ml-auto font-mono">
-                    {tab.policies.length} · {tab.source}
+                    {tab.policies.length}
+                    {isAdvanced ? ` · ${tab.source}` : ''}
                   </span>
                 </button>
                 {isOpen && (
@@ -300,13 +310,17 @@ export function RlsDetailsPanel() {
                               </Badge>
                             </div>
                             <div className="min-w-0">
-                              <div className="text-[11px] font-mono text-muted-foreground truncate">{p.name}</div>
+                              <AdvancedOnly>
+                                <div className="text-[11px] font-mono text-muted-foreground truncate">{p.name}</div>
+                              </AdvancedOnly>
                               <div className="text-xs">{t(p.descriptionKey as any)}</div>
                             </div>
                             {p.using && (
-                              <code className="text-[10px] font-mono text-muted-foreground md:text-right break-all md:max-w-[220px]">
-                                {p.using}
-                              </code>
+                              <AdvancedOnly>
+                                <code className="text-[10px] font-mono text-muted-foreground md:text-right break-all md:max-w-[220px]">
+                                  {p.using}
+                                </code>
+                              </AdvancedOnly>
                             )}
                           </li>
                         );
@@ -319,9 +333,11 @@ export function RlsDetailsPanel() {
           })}
         </ul>
 
-        <p className="text-[10px] text-muted-foreground pt-1">
-          {t('admin.ai.rls.disclaimer')}
-        </p>
+        <AdvancedOnly>
+          <p className="text-[10px] text-muted-foreground pt-1">
+            {t('admin.ai.rls.disclaimer')}
+          </p>
+        </AdvancedOnly>
       </CardContent>
     </Card>
   );

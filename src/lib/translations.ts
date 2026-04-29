@@ -1593,6 +1593,22 @@ const fr = {
     'Lecture des historiques d\'exécution réservée aux admins. L\'insertion vient des Edge Functions (service_role).',
   'admin.ai.rls.policy.aiUsageEventsAdminRead':
     'Lecture du journal d\'usage IA réservée aux admins. L\'insertion vient des Edge Functions (service_role).',
+  // Detail level (Simple / Advanced) — AI security page
+  'admin.ai.detail.label': 'Niveau de détail',
+  'admin.ai.detail.simple': 'Simple',
+  'admin.ai.detail.advanced': 'Avancé',
+  'admin.ai.detail.simpleHint':
+    'Vue synthétique : statuts et explications en langage clair, sans jargon SQL.',
+  'admin.ai.detail.advancedHint':
+    'Vue technique : sources de configuration, noms de policies et clauses USING SQL.',
+  'admin.ai.detail.modeHintSimple':
+    'Mode Simple : seules les explications essentielles sont affichées. Passez en Avancé pour voir les sources, les noms de policies et les clauses SQL.',
+  'admin.ai.detail.modeHintAdvanced':
+    'Mode Avancé : sources de configuration, identifiants techniques et SQL exposés à des fins d\'audit.',
+  'admin.ai.rls.modeSimple':
+    'Lecture rapide : qui peut lire ou écrire chaque table, en langage clair.',
+  'admin.ai.rls.modeAdvanced':
+    'Audit complet : noms de policies, fichiers de migration et clauses USING SQL visibles.',
   'admin.ai.usage.title': 'Usage & quotas',
   'admin.ai.usage.window.1d': 'Aujourd\'hui',
   'admin.ai.usage.window.7d': '7 jours',
@@ -3590,6 +3606,22 @@ const en: Record<keyof typeof fr, string> = {
     'Reading run history is admin-only. Inserts come from Edge Functions (service_role).',
   'admin.ai.rls.policy.aiUsageEventsAdminRead':
     'Reading the AI usage log is admin-only. Inserts come from Edge Functions (service_role).',
+  // Detail level (Simple / Advanced) — AI security page
+  'admin.ai.detail.label': 'Detail level',
+  'admin.ai.detail.simple': 'Simple',
+  'admin.ai.detail.advanced': 'Advanced',
+  'admin.ai.detail.simpleHint':
+    'Concise view: statuses and plain-language explanations, no SQL jargon.',
+  'admin.ai.detail.advancedHint':
+    'Technical view: configuration sources, policy names and SQL USING clauses.',
+  'admin.ai.detail.modeHintSimple':
+    'Simple mode: only the essential explanations are shown. Switch to Advanced to see sources, policy names and SQL clauses.',
+  'admin.ai.detail.modeHintAdvanced':
+    'Advanced mode: configuration sources, internal identifiers and SQL exposed for audit.',
+  'admin.ai.rls.modeSimple':
+    'Quick read: who can read or write each table, in plain language.',
+  'admin.ai.rls.modeAdvanced':
+    'Full audit: policy names, migration files and SQL USING clauses are visible.',
   'admin.ai.usage.title': 'Usage & quotas',
   'admin.ai.usage.window.1d': 'Today',
   'admin.ai.usage.window.7d': '7 days',

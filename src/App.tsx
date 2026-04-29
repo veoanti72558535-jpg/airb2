@@ -4,7 +4,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { I18nProvider } from "@/lib/i18n";
+import { I18nProvider, AuthLocaleBridge } from "@/lib/i18n";
 import { ThemeProvider, AuthThemeBridge } from "@/lib/theme";
 import { A11yProvider } from "@/lib/a11y";
 import { AuthProvider } from "@/lib/auth-context";
@@ -92,6 +92,7 @@ const App = () => (
       <I18nProvider>
         <AuthProvider>
           <ThemeUserBinder />
+          <AuthLocaleBridge />
           <AuthGuard>
           <TooltipProvider>
           <Toaster />

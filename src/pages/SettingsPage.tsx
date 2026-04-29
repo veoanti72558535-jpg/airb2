@@ -12,11 +12,12 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import {
-  Settings, Sliders, Ruler, Palette, Database, ArrowLeftRight, Bot,
+  Settings, Sliders, Ruler, Palette, Database, ArrowLeftRight, Bot, SlidersHorizontal,
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useUrlFilter } from '@/hooks/use-url-filter';
+import { PreferencesPanel } from '@/components/settings/panels/PreferencesPanel';
 import { GeneralPanel } from '@/components/settings/panels/GeneralPanel';
 import { UnitsPanel } from '@/components/settings/panels/UnitsPanel';
 import { AdvancedPanel } from '@/components/settings/panels/AdvancedPanel';
@@ -24,7 +25,7 @@ import { DataPanel } from '@/components/settings/panels/DataPanel';
 import { ConversionsPanel } from '@/components/settings/panels/ConversionsPanel';
 import { AiPanel } from '@/components/settings/panels/AiPanel';
 
-const TABS = ['general', 'units', 'display', 'data', 'conversions', 'ai'] as const;
+const TABS = ['preferences', 'general', 'units', 'display', 'data', 'conversions', 'ai'] as const;
 type TabKey = typeof TABS[number];
 
 function isTabKey(v: string | null): v is TabKey {
@@ -34,10 +35,13 @@ function isTabKey(v: string | null): v is TabKey {
 export default function SettingsPage() {
   const { t } = useI18n();
   const [tabParam, setTabParam] = useUrlFilter('tab');
-  const active: TabKey = isTabKey(tabParam) ? tabParam : 'general';
-  const setActive = (k: TabKey) => setTabParam(k === 'general' ? null : k);
+  // Default tab is "preferences" — the unified langue/thème/mode menu.
+  // We omit the `?tab=` param when it equals the default to keep URLs clean.
+  const active: TabKey = isTabKey(tabParam) ? tabParam : 'preferences';
+  const setActive = (k: TabKey) => setTabParam(k === 'preferences' ? null : k);
 
   const tabMeta: { key: TabKey; icon: React.ComponentType<{ className?: string }>; labelKey: any }[] = [
+    { key: 'preferences', icon: SlidersHorizontal, labelKey: 'settings.tabs.preferences' },
     { key: 'general', icon: Sliders, labelKey: 'settings.tabs.general' },
     { key: 'units', icon: Ruler, labelKey: 'settings.tabs.units' },
     { key: 'display', icon: Palette, labelKey: 'settings.tabs.display' },
@@ -67,6 +71,7 @@ export default function SettingsPage() {
           ))}
         </TabsList>
 
+        <TabsContent value="preferences" className="mt-4"><PreferencesPanel /></TabsContent>
         <TabsContent value="general" className="mt-4"><GeneralPanel /></TabsContent>
         <TabsContent value="units" className="mt-4"><UnitsPanel /></TabsContent>
         <TabsContent value="display" className="mt-4"><AdvancedPanel /></TabsContent>

@@ -1549,6 +1549,50 @@ const fr = {
   // page admin aux utilisateurs non autorisés.
   'admin.guard.loading': 'Chargement…',
   'admin.guard.notFound': 'Page introuvable.',
+  // ── RLS details panel (admin/ai · Guardrails) ──────────────────────
+  'admin.ai.rls.title': 'Détails RLS — politiques actives',
+  'admin.ai.rls.subtitle':
+    'Vue lisible des règles Row-Level Security déclarées dans les migrations. Chaque politique précise son opération, son audience et la condition SQL.',
+  'admin.ai.rls.expandAll': 'Tout déplier',
+  'admin.ai.rls.collapseAll': 'Tout replier',
+  'admin.ai.rls.summary.tables': 'tables',
+  'admin.ai.rls.summary.policies': 'politiques',
+  'admin.ai.rls.audience.admin': 'admin',
+  'admin.ai.rls.audience.authenticated': 'connectés',
+  'admin.ai.rls.audience.self': 'soi-même',
+  'admin.ai.rls.sensitivity.critical': 'Critique',
+  'admin.ai.rls.sensitivity.sensitive': 'Sensible',
+  'admin.ai.rls.sensitivity.shared': 'Partagée',
+  'admin.ai.rls.disclaimer':
+    'Document statique — synchronisé manuellement avec les migrations supabase/migrations/. Pour la vérification live (sondes RLS), voir la card Garde-fous au-dessus.',
+  // Tables — purpose lines
+  'admin.ai.rls.tables.user_roles':
+    'Stocke les rôles applicatifs (admin, …). Référencée par has_role() pour toutes les vérifications de privilège.',
+  'admin.ai.rls.tables.app_settings':
+    'Configuration runtime (clés ai.*, feature flags). Lecture pour tout utilisateur connecté, écriture admin uniquement.',
+  'admin.ai.rls.tables.ai_agent_configs':
+    'Définition des agents IA (modèle, prompt, paramètres). Réservée aux admins en lecture comme en écriture.',
+  'admin.ai.rls.tables.ai_agent_runs':
+    'Historique d\'exécution des agents IA (input, output, tokens, coût). Lecture admin uniquement.',
+  'admin.ai.rls.tables.ai_usage_events':
+    'Journal détaillé des appels IA (provider, modèle, latence, statut). Lecture admin uniquement.',
+  // Policy descriptions — written for non-DBA readers
+  'admin.ai.rls.policy.userRolesSelectSelf':
+    'Chaque utilisateur ne peut lire que ses propres rôles. Empêche d\'énumérer les comptes admin.',
+  'admin.ai.rls.policy.userRolesAdminInsert':
+    'Seul un admin peut attribuer un rôle. Bloque toute auto-promotion côté client.',
+  'admin.ai.rls.policy.userRolesAdminDelete':
+    'Seul un admin peut révoquer un rôle. Empêche un admin compromis d\'effacer les autres.',
+  'admin.ai.rls.policy.appSettingsReadAuth':
+    'Tout utilisateur connecté peut lire la configuration publique (modèle IA, flags). Aucun secret ne transite ici.',
+  'admin.ai.rls.policy.appSettingsWriteAdmin':
+    'Seul un admin peut écrire/modifier/supprimer une clé app_settings (incluant les clés .staging du mode simulation).',
+  'admin.ai.rls.policy.aiAgentConfigsAdminAll':
+    'Lecture, écriture, suppression des configs d\'agents réservées aux admins.',
+  'admin.ai.rls.policy.aiAgentRunsAdminRead':
+    'Lecture des historiques d\'exécution réservée aux admins. L\'insertion vient des Edge Functions (service_role).',
+  'admin.ai.rls.policy.aiUsageEventsAdminRead':
+    'Lecture du journal d\'usage IA réservée aux admins. L\'insertion vient des Edge Functions (service_role).',
   'admin.ai.usage.title': 'Usage & quotas',
   'admin.ai.usage.window.1d': 'Aujourd\'hui',
   'admin.ai.usage.window.7d': '7 jours',
@@ -3502,6 +3546,50 @@ const en: Record<keyof typeof fr, string> = {
   // ── Generic guard (RequireAdmin) ───────────────────────────────────
   'admin.guard.loading': 'Loading…',
   'admin.guard.notFound': 'Page not found.',
+  // ── RLS details panel (admin/ai · Guardrails) ──────────────────────
+  'admin.ai.rls.title': 'RLS details — active policies',
+  'admin.ai.rls.subtitle':
+    'Readable view of Row-Level Security rules declared in migrations. Each policy lists its operation, audience and SQL condition.',
+  'admin.ai.rls.expandAll': 'Expand all',
+  'admin.ai.rls.collapseAll': 'Collapse all',
+  'admin.ai.rls.summary.tables': 'tables',
+  'admin.ai.rls.summary.policies': 'policies',
+  'admin.ai.rls.audience.admin': 'admin',
+  'admin.ai.rls.audience.authenticated': 'signed-in',
+  'admin.ai.rls.audience.self': 'self',
+  'admin.ai.rls.sensitivity.critical': 'Critical',
+  'admin.ai.rls.sensitivity.sensitive': 'Sensitive',
+  'admin.ai.rls.sensitivity.shared': 'Shared',
+  'admin.ai.rls.disclaimer':
+    'Static document — kept in sync manually with supabase/migrations/. For live RLS probes, see the Guardrails card above.',
+  // Tables — purpose lines
+  'admin.ai.rls.tables.user_roles':
+    'Stores app roles (admin, …). Referenced by has_role() for every privilege check.',
+  'admin.ai.rls.tables.app_settings':
+    'Runtime configuration (ai.* keys, feature flags). Readable by any signed-in user, write-restricted to admins.',
+  'admin.ai.rls.tables.ai_agent_configs':
+    'AI agent definitions (model, prompt, parameters). Admin-only for both read and write.',
+  'admin.ai.rls.tables.ai_agent_runs':
+    'AI agent execution history (input, output, tokens, cost). Admin-only read.',
+  'admin.ai.rls.tables.ai_usage_events':
+    'Detailed AI call log (provider, model, latency, status). Admin-only read.',
+  // Policy descriptions — written for non-DBA readers
+  'admin.ai.rls.policy.userRolesSelectSelf':
+    'Each user can only read their own roles. Prevents enumerating admin accounts.',
+  'admin.ai.rls.policy.userRolesAdminInsert':
+    'Only an admin can grant a role. Blocks any client-side self-promotion.',
+  'admin.ai.rls.policy.userRolesAdminDelete':
+    'Only an admin can revoke a role. Prevents a compromised admin from wiping the others.',
+  'admin.ai.rls.policy.appSettingsReadAuth':
+    'Any signed-in user can read public configuration (AI model, flags). No secret is exposed here.',
+  'admin.ai.rls.policy.appSettingsWriteAdmin':
+    'Only an admin can write/update/delete an app_settings key (including the .staging keys used by simulation mode).',
+  'admin.ai.rls.policy.aiAgentConfigsAdminAll':
+    'Read, write and delete on agent configs are admin-only.',
+  'admin.ai.rls.policy.aiAgentRunsAdminRead':
+    'Reading run history is admin-only. Inserts come from Edge Functions (service_role).',
+  'admin.ai.rls.policy.aiUsageEventsAdminRead':
+    'Reading the AI usage log is admin-only. Inserts come from Edge Functions (service_role).',
   'admin.ai.usage.title': 'Usage & quotas',
   'admin.ai.usage.window.1d': 'Today',
   'admin.ai.usage.window.7d': '7 days',

@@ -1,8 +1,9 @@
-import React, { useMemo, useState } from 'react';
-import { Eye, Type, Contrast, CheckCircle2, AlertTriangle, XCircle, Sparkles, Focus, Keyboard } from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Eye, Type, Contrast, CheckCircle2, AlertTriangle, XCircle, Sparkles, Focus, Keyboard, ArrowRight, ArrowLeft, LogOut } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { useA11y } from '@/lib/a11y';
 import { cn } from '@/lib/utils';
+import { moreFlat } from '@/components/sidebar/more-nav';
 
 /**
  * Settings → Accessibility card.
@@ -272,6 +273,7 @@ export function AccessibilityCard() {
                 ? t('settings.a11y.keyboardNav.previewCyclic' as any)
                 : t('settings.a11y.keyboardNav.previewNormal' as any)}
             </p>
+            <KeyboardNavSimulator mode={keyboardNavMode} />
           </div>
         </div>
       </div>

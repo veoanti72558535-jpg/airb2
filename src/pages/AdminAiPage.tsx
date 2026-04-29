@@ -44,6 +44,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ClipboardCheck } from 'lucide-react';
 import { getQuatarlyModels, refreshQuatarlyModels, getCacheFetchedAt } from '@/lib/ai/quatarly-models-cache';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DetailLevelProvider, DetailLevelToggle, ContextualHint } from '@/lib/admin/detailLevel';
 
 const GOOGLE_DIRECT_MODELS = [
   'gemini-2.5-flash',
@@ -439,6 +440,7 @@ function AdminAiAuthenticated() {
     setForm((f) => ({ ...f, [key]: value }));
 
   return (
+    <DetailLevelProvider>
     <div className="space-y-4">
       <div className="flex flex-wrap gap-2">
         <Button size="sm" variant="secondary" onClick={() => void load()} data-testid="ai-admin-reload">
@@ -455,11 +457,16 @@ function AdminAiAuthenticated() {
             {t('admin.ai.simulation.openLink')}
           </Link>
         </Button>
-        <Button size="sm" variant="ghost" onClick={() => void signOut()} className="ml-auto">
+        <DetailLevelToggle className="ml-auto" />
+        <Button size="sm" variant="ghost" onClick={() => void signOut()}>
           <LogOut className="h-4 w-4 mr-1" />
           {t('admin.ai.signOut')}
         </Button>
       </div>
+      <ContextualHint
+        simpleKey="admin.ai.detail.modeHintSimple"
+        advancedKey="admin.ai.detail.modeHintAdvanced"
+      />
 
       <Tabs defaultValue="config" className="w-full">
         <TabsList className="grid grid-cols-3 w-full sm:w-auto">
@@ -632,6 +639,7 @@ function AdminAiAuthenticated() {
         </TabsContent>
       </Tabs>
     </div>
+    </DetailLevelProvider>
   );
 }
 

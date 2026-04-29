@@ -15,7 +15,7 @@
  * d'indisponibilité et NE TENTE AUCUN appel.
  */
 import React, { useCallback, useEffect, useState } from 'react';
-import { Bot, KeyRound, RefreshCw, ShieldAlert, LogOut, Server, Clock } from 'lucide-react';
+import { Bot, KeyRound, RefreshCw, ShieldAlert, LogOut, Server, Clock, Lock, ShieldCheck, Loader2 } from 'lucide-react';
 import type { Session } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,6 +27,7 @@ import { Switch } from '@/components/ui/switch';
 import { useI18n } from '@/lib/i18n';
 import { isSupabaseConfigured, supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useIsAdmin } from '@/lib/hooks/useIsAdmin';
 import { AiQuotaCard, type GoogleQuotaData } from '@/components/admin/AiQuotaCard';
 import { AiOllamaCard, type OllamaTestResult } from '@/components/admin/AiOllamaCard';
 import AgentsList from '@/components/admin/AgentsList';
@@ -149,6 +150,7 @@ function AdminAiInner() {
   const sb = supabase!;
   const [session, setSession] = useState<Session | null>(null);
   const [bootstrapped, setBootstrapped] = useState(false);
+  const admin = useIsAdmin();
 
   useEffect(() => {
     let alive = true;
@@ -180,8 +182,108 @@ function AdminAiInner() {
   return (
     <div className="space-y-4">
       <PageHeaderWithSubtitle />
-      {!session ? <SignInCard /> : <AdminAiAuthenticated />}
+      {!session ? (
+        <SignInCard />
+      ) : admin.status === 'loading' ? (
+        <AdminLockCard
+          tone="checking"
+          title={t('admin.ai.lock.checking')}
+          email={admin.email}
+          onRecheck={admin.recheck}
+        />
+      ) : admin.status === 'admin' ? (
+        <AdminAiAuthenticated />
+      ) : admin.status === 'error' ? (
+        <AdminLockCard
+          tone="error"
+          title={t('admin.ai.lock.errorTitle')}
+          description={t('admin.ai.lock.errorDesc')}
+          email={admin.email}
+          onRecheck={admin.recheck}
+        />
+      ) : (
+        <AdminLockCard
+          tone="denied"
+          title={t('admin.ai.lock.deniedTitle')}
+          description={t('admin.ai.lock.deniedDesc')}
+          email={admin.email}
+          onRecheck={admin.recheck}
+        />
+      )}
     </div>
+  );
+}
+
+/**
+ * Bandeau de verrouillage affiché lorsque la session existe mais que le
+ * rôle admin n'est pas confirmé. Aucune source de configuration, aucun
+ * détail de garde-fou n'est rendu ici.
+ */
+function AdminLockCard({
+  tone,
+  title,
+  description,
+  email,
+  onRecheck,
+}: {
+  tone: 'checking' | 'denied' | 'error';
+  title: string;
+  description?: string;
+  email: string | null;
+  onRecheck: () => Promise<void>;
+}) {
+  const { t } = useI18n();
+  const sb = supabase!;
+  const Icon = tone === 'checking' ? Loader2 : tone === 'denied' ? Lock : ShieldAlert;
+  const variant = tone === 'denied' || tone === 'error' ? 'destructive' : 'default';
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm flex items-center gap-2">
+          <ShieldCheck className="h-4 w-4 text-primary" />
+          {t('admin.ai.lock.title')}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <Alert variant={variant as 'default' | 'destructive'}>
+          <Icon className={`h-4 w-4 ${tone === 'checking' ? 'animate-spin' : ''}`} />
+          <AlertDescription className="text-xs">
+            <div className="font-medium">{title}</div>
+            {description && <div className="mt-1 opacity-90">{description}</div>}
+          </AlertDescription>
+        </Alert>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+          <div className="rounded border border-border/60 px-2.5 py-2">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              {t('admin.ai.lock.signedInAs')}
+            </div>
+            <div className="font-mono mt-0.5 truncate">{email ?? '—'}</div>
+          </div>
+          <div className="rounded border border-border/60 px-2.5 py-2">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              {t('admin.ai.lock.role')}
+            </div>
+            <div className="font-mono mt-0.5">
+              {tone === 'denied' ? t('admin.ai.lock.roleNone') : '—'}
+            </div>
+          </div>
+        </div>
+        <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+          <Lock className="h-3 w-3" />
+          {t('admin.ai.lock.sourcesHidden')}
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" variant="secondary" onClick={() => void onRecheck()} disabled={tone === 'checking'}>
+            <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${tone === 'checking' ? 'animate-spin' : ''}`} />
+            {t('admin.ai.lock.recheck')}
+          </Button>
+          <Button size="sm" variant="ghost" onClick={() => void sb.auth.signOut()}>
+            <LogOut className="h-3.5 w-3.5 mr-1.5" />
+            {t('admin.ai.signOut')}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 

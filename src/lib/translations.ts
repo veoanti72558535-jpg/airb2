@@ -16,6 +16,7 @@ const fr = {
   'nav.tunes': 'Tunes',
   'nav.compare': 'Comparer',
   'nav.adminAi': 'Admin IA',
+  'nav.chat': 'Assistant IA',
 
   // Dashboard
   'dashboard.title': 'Tableau de bord',

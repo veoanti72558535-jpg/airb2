@@ -33,6 +33,7 @@ const SearchPage = lazy(() => import("@/pages/SearchPage"));
 const SettingsPage = lazy(() => import("@/pages/SettingsPage"));
 const AdminPage = lazy(() => import("@/pages/AdminPage"));
 const AdminAiPage = lazy(() => import("@/pages/AdminAiPage"));
+const AdminAiSimulationPage = lazy(() => import("@/pages/AdminAiSimulationPage"));
 const CrossValidationPage = lazy(() => import("@/pages/CrossValidationPage"));
 const ChronoPage = lazy(() => import("@/pages/ChronoPage"));
 const TargetAnalysisPage = lazy(() => import("@/pages/TargetAnalysisPage"));
@@ -105,6 +106,7 @@ const App = () => (
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/admin" element={<AdminPage />} />
                 <Route path="/admin/ai" element={<AdminAiPage />} />
+                <Route path="/admin/ai/simulation" element={<AdminAiSimulationPage />} />
                 <Route path="/cross-validation" element={<CrossValidationPage />} />
                 <Route path="/chrono" element={<ChronoPage />} />
                 <Route path="/target-analysis" element={<TargetAnalysisPage />} />

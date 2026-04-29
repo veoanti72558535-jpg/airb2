@@ -191,7 +191,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <Link
           to="/"
           className={cn(
-            'flex items-center justify-center h-14 border-b border-border/70 rounded-md mx-2',
+            'flex items-center justify-center h-12 border-b border-border/70 rounded-md mx-2',
             'outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card'
           )}
           title="AirBallistik"
@@ -199,7 +199,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <Target className="h-5 w-5 text-primary" />
         </Link>
 
-        <nav className="flex-1 flex flex-col items-center gap-1 py-3 overflow-y-auto scrollbar-thin">
+        <nav className="flex-1 flex flex-col items-center gap-0.5 py-2 overflow-y-auto scrollbar-thin">
           {sidebarNav.map(item => (
             <RailItem
               key={item.path}
@@ -211,7 +211,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             />
           ))}
 
-          <div className="w-8 border-t border-border/60 my-2" />
+          <div className="w-8 border-t border-border/60 my-1.5" />
 
           {adminNav.map(item => (
             <RailItem

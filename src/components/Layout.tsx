@@ -95,12 +95,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-background flex">
       {/* ── Desktop Sidebar (64px icons + labels) ── */}
-      <aside className="hidden md:flex flex-col w-16 border-r border-border bg-card sticky top-0 h-screen shrink-0">
-        <Link to="/" className="flex items-center justify-center h-14 border-b border-border">
+      <aside className="hidden md:flex flex-col w-20 border-r border-border bg-card sticky top-0 h-screen shrink-0">
+        <Link to="/" className="flex items-center justify-center h-14 border-b border-border" title="AirBallistik">
           <Target className="h-5 w-5 text-primary" />
         </Link>
 
-        <nav className="flex-1 flex flex-col items-center gap-1 py-3 overflow-y-auto">
+        <nav className="flex-1 flex flex-col items-center gap-0.5 py-2 overflow-y-auto">
           {sidebarNav.map(item => {
             const active = isActive(item.path);
             return (
@@ -109,18 +109,24 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 to={item.path}
                 title={t(item.labelKey)}
                 className={cn(
-                  'flex flex-col items-center justify-center w-11 h-11 rounded-lg transition-colors duration-150',
+                  'flex flex-col items-center justify-center gap-1 w-16 py-2 rounded-lg transition-colors duration-150 relative',
                   active
                     ? 'bg-primary/10 text-primary'
                     : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                 )}
               >
+                {active && (
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-0.5 rounded-r-full bg-primary" />
+                )}
                 <item.icon className="h-5 w-5" />
+                <span className="text-[10px] font-medium leading-tight text-center truncate max-w-full px-1">
+                  {t(item.labelKey)}
+                </span>
               </Link>
             );
           })}
 
-          <div className="w-6 border-t border-border my-1" />
+          <div className="w-8 border-t border-border my-1.5" />
 
           {adminNav.map(item => {
             const active = isActive(item.path);
@@ -130,13 +136,19 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 to={item.path}
                 title={t(item.labelKey)}
                 className={cn(
-                  'flex flex-col items-center justify-center w-11 h-11 rounded-lg transition-colors duration-150',
+                  'flex flex-col items-center justify-center gap-1 w-16 py-2 rounded-lg transition-colors duration-150 relative',
                   active
                     ? 'bg-primary/10 text-primary'
                     : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                 )}
               >
+                {active && (
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-0.5 rounded-r-full bg-primary" />
+                )}
                 <item.icon className="h-5 w-5" />
+                <span className="text-[10px] font-medium leading-tight text-center truncate max-w-full px-1">
+                  {t(item.labelKey)}
+                </span>
               </Link>
             );
           })}
@@ -147,23 +159,28 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             title={t('nav.more')}
             aria-label={t('nav.more')}
             className={cn(
-              'flex flex-col items-center justify-center w-11 h-11 rounded-lg transition-colors duration-150',
+              'flex flex-col items-center justify-center gap-1 w-16 py-2 rounded-lg transition-colors duration-150 relative',
               moreActive
                 ? 'bg-primary/10 text-primary'
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted'
             )}
           >
+            {moreActive && (
+              <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-0.5 rounded-r-full bg-primary" />
+            )}
             <MoreHorizontal className="h-5 w-5" />
+            <span className="text-[10px] font-medium leading-tight">{t('nav.more')}</span>
           </button>
         </nav>
 
-        <div className="flex flex-col items-center gap-2 py-3 border-t border-border">
+        <div className="flex flex-col items-center gap-1.5 py-3 border-t border-border">
           <button
             onClick={() => setLocale(locale === 'fr' ? 'en' : 'fr')}
             title={locale === 'fr' ? 'English' : 'Français'}
-            className="flex items-center justify-center w-9 h-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors duration-150"
+            className="flex items-center justify-center gap-1 w-16 py-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors duration-150"
           >
             <Globe className="h-4 w-4" />
+            <span className="text-[10px] font-semibold uppercase">{locale}</span>
           </button>
           <Link
             to="/settings"
@@ -237,7 +254,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             className={cn(
               'fixed z-[70] bg-card border-border animate-fade-in',
               'bottom-0 left-0 right-0 border-t rounded-t-2xl safe-area-bottom max-h-[80vh] overflow-y-auto',
-              'md:bottom-auto md:right-auto md:left-16 md:top-0 md:h-screen md:w-80 md:rounded-none md:border-l md:border-t-0'
+              'md:bottom-auto md:right-auto md:left-20 md:top-0 md:h-screen md:w-80 md:rounded-none md:border-l md:border-t-0'
             )}
           >
             <div className="flex items-center justify-between px-5 pt-4 pb-2 sticky top-0 bg-card z-10 border-b border-border/40">

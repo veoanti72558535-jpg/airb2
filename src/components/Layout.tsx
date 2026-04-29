@@ -166,7 +166,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         setMoreOpen(false);
         return;
       }
-      if (e.key !== 'Tab') return;
+
+      const navKeys = ['Tab', 'ArrowDown', 'ArrowUp', 'Home', 'End'];
+      if (!navKeys.includes(e.key)) return;
+
       const focusables = getFocusable();
       if (focusables.length === 0) {
         e.preventDefault();
@@ -175,18 +178,38 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       const first = focusables[0];
       const last = focusables[focusables.length - 1];
       const active = document.activeElement as HTMLElement | null;
+      const idx = active ? focusables.indexOf(active) : -1;
+
       // If focus escaped the panel entirely, pull it back in.
       if (!morePanelRef.current?.contains(active)) {
         e.preventDefault();
         (e.shiftKey ? last : first).focus();
         return;
       }
-      if (e.shiftKey && active === first) {
-        e.preventDefault();
-        last.focus();
-      } else if (!e.shiftKey && active === last) {
-        e.preventDefault();
+
+      if (e.key === 'Tab') {
+        if (e.shiftKey && active === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && active === last) {
+          e.preventDefault();
+          first.focus();
+        }
+        return;
+      }
+
+      // Arrow / Home / End — circular navigation between menu items.
+      e.preventDefault();
+      if (e.key === 'Home') {
         first.focus();
+      } else if (e.key === 'End') {
+        last.focus();
+      } else if (e.key === 'ArrowDown') {
+        const next = idx < 0 ? 0 : (idx + 1) % focusables.length;
+        focusables[next].focus();
+      } else if (e.key === 'ArrowUp') {
+        const prev = idx <= 0 ? focusables.length - 1 : idx - 1;
+        focusables[prev].focus();
       }
     };
     window.addEventListener('keydown', onKey);
@@ -446,7 +469,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <button
                 ref={moreCloseBtnRef}
                 onClick={() => setMoreOpen(false)}
-                className="p-1 text-muted-foreground rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                className="p-1 text-muted-foreground rounded-md outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card transition-shadow"
                 aria-label="Close"
               >
                 <X className="h-5 w-5" />
@@ -465,6 +488,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                       onClick={() => setMoreOpen(false)}
                       className={cn(
                         'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150 touch-target',
+                        'outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card focus-visible:bg-muted/60',
                         isActive(item.path)
                           ? 'bg-primary/10 text-primary'
                           : 'text-muted-foreground hover:text-foreground hover:bg-muted'

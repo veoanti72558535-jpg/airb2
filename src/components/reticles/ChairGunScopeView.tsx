@@ -220,52 +220,103 @@ const ChairGunScopeView: React.FC<ChairGunScopeViewProps> = ({
 
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
     ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-    ctx.lineWidth = 1.5;
     ctx.lineCap = 'round';
 
-    // Draw each element
-    let hasMainCross = false;
+    const baseLineWidth = Math.max(0.5, size * 0.002);
+
+    // Track drawn dots to avoid overlapping rendering
+    const drawn = new Set<string>();
+
     for (const el of els) {
       if (el.type === 'line') {
-        const x1 = el.x1 ?? 0, y1 = el.y1 ?? 0;
-        const x2 = el.x2 ?? 0, y2 = el.y2 ?? 0;
-        const len = Math.hypot(x2 - x1, y2 - y1);
-        if (len > 5) hasMainCross = true;
+        const gap = el.x1 ?? 0;
+        const axis = el.y1 ?? 0; // 0 = vertical, 1 = horizontal
+        const extent = el.x2 ?? 0;
+        const thickness = el.y2 ?? 0;
 
-        ctx.beginPath();
-        ctx.moveTo(cx + x1 * ppm, cy - y1 * ppm);
-        ctx.lineTo(cx + x2 * ppm, cy - y2 * ppm);
-        ctx.stroke();
-      } else {
-        // dot/circle
-        const x = el.x ?? 0, y = el.y ?? 0;
-        const r = el.radius ?? 0;
-        if (r === 0 || r < 0.01) {
+        const sw = thickness > 0 ? Math.max(thickness * ppm, baseLineWidth) : baseLineWidth;
+        ctx.lineWidth = sw;
+
+        if (gap >= extent && extent > 0) continue;
+
+        if (axis === 1 || axis === 1.0) {
+          // Horizontal arms
           ctx.beginPath();
-          ctx.arc(cx + x * ppm, cy - y * ppm, 2, 0, Math.PI * 2);
-          ctx.fill();
+          ctx.moveTo(cx + gap * ppm, cy);
+          ctx.lineTo(cx + extent * ppm, cy);
+          ctx.stroke();
+          
+          ctx.beginPath();
+          ctx.moveTo(cx - gap * ppm, cy);
+          ctx.lineTo(cx - extent * ppm, cy);
+          ctx.stroke();
         } else {
+          // Vertical arms
           ctx.beginPath();
-          ctx.arc(cx + x * ppm, cy - y * ppm, r * ppm, 0, Math.PI * 2);
-          ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+          ctx.moveTo(cx, cy + gap * ppm);
+          ctx.lineTo(cx, cy + extent * ppm);
+          ctx.stroke();
+          
+          ctx.beginPath();
+          ctx.moveTo(cx, cy - gap * ppm);
+          ctx.lineTo(cx, cy - extent * ppm);
           ctx.stroke();
         }
-      }
-    }
+      } else {
+        // dot/circle
+        const axisAndWidth = el.x ?? 0;
+        const pos = el.y ?? 0;
+        const r = el.radius ?? 0;
+        const isHorizontal = axisAndWidth > 0;
 
-    // Auto-crosshair if no long lines in geometry
-    if (!hasMainCross) {
-      ctx.save();
-      ctx.setLineDash([3, 6]);
-      ctx.strokeStyle = 'rgba(255,255,255,0.5)';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(cx - radius, cy);
-      ctx.lineTo(cx + radius, cy);
-      ctx.moveTo(cx, cy - radius);
-      ctx.lineTo(cx, cy + radius);
-      ctx.stroke();
-      ctx.restore();
+        let px: number, py: number;
+        if (isHorizontal) {
+          px = cx + pos * ppm;
+          py = cy;
+        } else {
+          px = cx;
+          py = cy + pos * ppm; // Using + because in Canvas +Y is down
+        }
+
+        const key = `${isHorizontal ? 'h' : 'v'}|${pos}|${r}`;
+        if (drawn.has(key)) continue;
+        drawn.add(key);
+
+        // Draw arm/tick segment
+        if (axisAndWidth > 0 && r === 0) {
+          const halfArm = Math.max(axisAndWidth * ppm * 0.5, baseLineWidth * 0.5);
+          ctx.lineWidth = baseLineWidth;
+          ctx.beginPath();
+          if (isHorizontal) {
+            ctx.moveTo(px, py - halfArm);
+            ctx.lineTo(px, py + halfArm);
+          } else {
+            ctx.moveTo(px - halfArm, py);
+            ctx.lineTo(px + halfArm, py);
+          }
+          ctx.stroke();
+        }
+
+        // Draw dot/circle
+        if (r > 0) {
+          const dotRadiusPx = Math.max(1.5, r * ppm * 0.05);
+          const isLargeCircle = r > 2.0;
+          ctx.beginPath();
+          ctx.arc(px, py, dotRadiusPx, 0, Math.PI * 2);
+          
+          if (isLargeCircle) {
+            ctx.lineWidth = baseLineWidth;
+            ctx.stroke();
+          } else {
+            ctx.fill();
+          }
+        } else if (axisAndWidth === 0) {
+          // Tiny tick on vertical
+          ctx.beginPath();
+          ctx.arc(px, py, Math.max(0.8, baseLineWidth * 0.4), 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
     }
 
     // ── 5. Range labels (ChairGun red numbers) ────────────────────

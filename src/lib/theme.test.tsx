@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { act, render, renderHook, screen } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { ThemeProvider, useTheme } from './theme';
@@ -249,12 +249,16 @@ describe('ThemeProvider — HMR remount integration', () => {
       <ThemeProvider>
         <ThemeProbe />
       </ThemeProvider>,
+      { container: document.body.appendChild(document.createElement('div')) },
     );
     const b = render(
       <ThemeProvider>
         <ThemeProbe />
       </ThemeProvider>,
+      { container: document.body.appendChild(document.createElement('div')) },
     );
+    // Scope queries to each render's container so duplicate test-ids
+    // across the two trees don't trip getByTestId.
     expect(a.getByTestId('theme').textContent).toBe('slate-light');
     expect(b.getByTestId('theme').textContent).toBe('slate-light');
     a.unmount();

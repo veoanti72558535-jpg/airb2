@@ -191,7 +191,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <Link
           to="/"
           className={cn(
-            'flex items-center justify-center h-14 border-b border-border/70 rounded-md mx-2',
+            'flex items-center justify-center h-12 border-b border-border/70 rounded-md mx-2',
             'outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card'
           )}
           title="AirBallistik"
@@ -199,7 +199,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <Target className="h-5 w-5 text-primary" />
         </Link>
 
-        <nav className="flex-1 flex flex-col items-center gap-1 py-3 overflow-y-auto scrollbar-thin">
+        <nav className="flex-1 flex flex-col items-center gap-0.5 py-2 overflow-y-auto scrollbar-thin">
           {sidebarNav.map(item => (
             <RailItem
               key={item.path}
@@ -211,7 +211,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             />
           ))}
 
-          <div className="w-8 border-t border-border/60 my-2" />
+          <div className="w-8 border-t border-border/60 my-1.5" />
 
           {adminNav.map(item => (
             <RailItem
@@ -279,7 +279,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         ref={bottomNavRef}
         className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/95 backdrop-blur-md safe-area-bottom"
       >
-        <div className="flex items-center justify-around h-14 px-1">
+        {/*
+          Tightened mobile bottom-nav:
+          - h-12 (48px) instead of h-14 (56px) → less visual weight
+          - gap-0 between icon and label, fixed leading-none to lock vertical rhythm
+          - min-w-0 + truncate on label so a longer FR string never reflows the row
+        */}
+        <div className="flex items-stretch justify-around h-12 px-1">
           {bottomNav.map(item => {
             const active = isActive(item.path);
             return (
@@ -287,27 +293,35 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 key={item.path}
                 to={item.path}
                 className={cn(
-                  'flex flex-col items-center gap-0.5 py-1 px-3 rounded-md transition-colors duration-150 touch-target relative outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card',
+                  'flex-1 min-w-0 flex flex-col items-center justify-center gap-[3px] px-2 rounded-md',
+                  'transition-colors duration-150 touch-target relative',
+                  'outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card',
                   active ? 'text-primary' : 'text-muted-foreground'
                 )}
               >
                 {active && (
-                  <span className="absolute top-0 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-full bg-primary" />
+                  <span className="absolute top-0 left-1/2 -translate-x-1/2 w-4 h-[2px] rounded-full bg-primary" />
                 )}
-                <item.icon className="h-5 w-5" />
-                <span className="text-[10px] font-medium">{t(item.labelKey)}</span>
+                <item.icon className="h-[18px] w-[18px] shrink-0" />
+                <span className="text-[9px] leading-none font-medium tracking-wide truncate max-w-full">
+                  {t(item.labelKey)}
+                </span>
               </Link>
             );
           })}
           <button
             onClick={() => setMoreOpen(true)}
             className={cn(
-              'flex flex-col items-center gap-0.5 py-1 px-3 rounded-md transition-colors duration-150 touch-target outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card',
+              'flex-1 min-w-0 flex flex-col items-center justify-center gap-[3px] px-2 rounded-md',
+              'transition-colors duration-150 touch-target',
+              'outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card',
               moreActive ? 'text-primary' : 'text-muted-foreground'
             )}
           >
-            <MoreHorizontal className="h-5 w-5" />
-            <span className="text-[10px] font-medium">{t('nav.more')}</span>
+            <MoreHorizontal className="h-[18px] w-[18px] shrink-0" />
+            <span className="text-[9px] leading-none font-medium tracking-wide truncate max-w-full">
+              {t('nav.more')}
+            </span>
           </button>
         </div>
       </nav>

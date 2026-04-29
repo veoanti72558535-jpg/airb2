@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Eye, Type, Contrast, CheckCircle2, AlertTriangle, XCircle } from 'lucide-react';
+import { Eye, Type, Contrast, CheckCircle2, AlertTriangle, XCircle, Sparkles } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { useA11y } from '@/lib/a11y';
 import { cn } from '@/lib/utils';
@@ -65,7 +65,14 @@ function verdict(ratio: number): 'AAA' | 'AA' | 'fail' {
 
 export function AccessibilityCard() {
   const { t } = useI18n();
-  const { highContrast, largeText, setHighContrast, setLargeText } = useA11y();
+  const {
+    highContrast,
+    largeText,
+    premiumContrast,
+    setHighContrast,
+    setLargeText,
+    setPremiumContrast,
+  } = useA11y();
   const [results, setResults] = useState<{ id: string; ratio: number; verdict: 'AAA' | 'AA' | 'fail' }[] | null>(null);
 
   const runCheck = () => {
@@ -103,6 +110,23 @@ export function AccessibilityCard() {
 
       {/* Toggles */}
       <div className="space-y-2">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <Sparkles className="h-4 w-4 text-primary/80 shrink-0" />
+            <div className="min-w-0">
+              <div className="text-sm font-medium">{t('settings.a11y.premiumContrast' as any)}</div>
+              <div className="text-[11px] text-muted-foreground">{t('settings.a11y.premiumContrastDesc' as any)}</div>
+            </div>
+          </div>
+          <button
+            onClick={() => setPremiumContrast(!premiumContrast)}
+            className={toggleClass(premiumContrast)}
+            aria-pressed={premiumContrast}
+          >
+            {premiumContrast ? 'ON' : 'OFF'}
+          </button>
+        </div>
+
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
             <Contrast className="h-4 w-4 text-primary/80 shrink-0" />

@@ -359,6 +359,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </div>
 
         <nav
+          ref={sidebarNavRef as React.RefObject<HTMLElement>}
           aria-label={t('nav.primary' as any) || 'Navigation principale'}
           onKeyDown={onSidebarKeyDown}
           className="flex-1 flex flex-col gap-1 py-4 overflow-y-auto scrollbar-thin px-3"
@@ -419,6 +420,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
         <div className="p-3 border-t border-border/40 space-y-2">
           <button
+            ref={sidebarToggleRef}
             onClick={toggleSidebar}
             type="button"
             aria-expanded={isSidebarExpanded}

@@ -14,6 +14,7 @@ import { useTheme } from '@/lib/theme';
 import { cn } from '@/lib/utils';
 import { RailItem, railItemClass } from '@/components/sidebar/RailItem';
 import { useRovingFocus } from '@/lib/hooks/useRovingFocus';
+import { useA11y } from '@/lib/a11y';
 
 const sidebarNav = [
   { path: '/', icon: LayoutDashboard, labelKey: 'nav.home' as const },
@@ -87,6 +88,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const [moreOpen, setMoreOpen] = useState(false);
   const { user, signOut } = useAuth();
+  const { sidebarFocusBehavior } = useA11y();
   const moreCloseBtnRef = useRef<HTMLButtonElement | null>(null);
   const morePanelRef = useRef<HTMLDivElement | null>(null);
   const moreTriggerRef = useRef<HTMLElement | null>(null);
@@ -185,14 +187,24 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     pendingFocusRef.current = null;
 
     if (intent === 'expand') {
-      // Focus the first interactive rail item so the user can immediately
-      // start navigating the now-readable labels with arrow keys.
-      const first = sidebarNavRef.current?.querySelector<HTMLElement>(
-        'a[href], button:not([disabled])'
-      );
-      if (first) {
-        first.focus();
-        return;
+      // Honour the user's focus-behavior preference:
+      //  • 'active' → focus the rail item matching the current route
+      //               (`aria-current="page"`), so AT users immediately hear
+      //               where they are within the now-expanded sidebar.
+      //  • 'first'  → focus the first interactive rail item so the user
+      //               can start navigating freshly-revealed labels with
+      //               arrow keys (default; matches APG menubar guidance).
+      const root = sidebarNavRef.current;
+      if (root) {
+        const target =
+          sidebarFocusBehavior === 'active'
+            ? (root.querySelector<HTMLElement>('[aria-current="page"]') ??
+               root.querySelector<HTMLElement>('a[href], button:not([disabled])'))
+            : root.querySelector<HTMLElement>('a[href], button:not([disabled])');
+        if (target) {
+          target.focus();
+          return;
+        }
       }
       // Fallback: if the nav lost its children for some reason, anchor on
       // the toggle so focus never falls back to <body>.

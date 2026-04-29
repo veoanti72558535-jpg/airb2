@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { Link, useLocation } from 'react-router-dom';
 import {
@@ -84,6 +84,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const [moreOpen, setMoreOpen] = useState(false);
   const { user, signOut } = useAuth();
+  const moreCloseBtnRef = useRef<HTMLButtonElement | null>(null);
+  const morePanelRef = useRef<HTMLDivElement | null>(null);
+  const moreTriggerRef = useRef<HTMLElement | null>(null);
 
   const isActive = (path: string) => {
     const base = path.split('?')[0];
@@ -92,18 +95,66 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   const moreActive = moreFlat.some((n) => isActive(n.path));
 
-  // Close "More" on Escape, lock body scroll while open, auto-close on route change
+  // Close "More" on Escape, lock body scroll while open, auto-close on route change.
+  // Also implements a focus trap so keyboard users stay within the dialog.
   useEffect(() => {
     if (!moreOpen) return;
+    // Remember the element that opened the panel so we can restore focus on close.
+    moreTriggerRef.current = (document.activeElement as HTMLElement) ?? null;
+
+    const getFocusable = (): HTMLElement[] => {
+      const root = morePanelRef.current;
+      if (!root) return [];
+      const selector =
+        'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+      return Array.from(root.querySelectorAll<HTMLElement>(selector)).filter(
+        (el) => !el.hasAttribute('aria-hidden') && el.offsetParent !== null
+      );
+    };
+
+    // Defer initial focus until the panel has mounted.
+    const focusTimer = window.setTimeout(() => {
+      moreCloseBtnRef.current?.focus();
+    }, 0);
+
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setMoreOpen(false);
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setMoreOpen(false);
+        return;
+      }
+      if (e.key !== 'Tab') return;
+      const focusables = getFocusable();
+      if (focusables.length === 0) {
+        e.preventDefault();
+        return;
+      }
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      const active = document.activeElement as HTMLElement | null;
+      // If focus escaped the panel entirely, pull it back in.
+      if (!morePanelRef.current?.contains(active)) {
+        e.preventDefault();
+        (e.shiftKey ? last : first).focus();
+        return;
+      }
+      if (e.shiftKey && active === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && active === last) {
+        e.preventDefault();
+        first.focus();
+      }
     };
     window.addEventListener('keydown', onKey);
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     return () => {
+      window.clearTimeout(focusTimer);
       window.removeEventListener('keydown', onKey);
       document.body.style.overflow = prevOverflow;
+      // Restore focus to the trigger that opened the panel.
+      moreTriggerRef.current?.focus?.();
     };
   }, [moreOpen]);
 
@@ -271,6 +322,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             onClick={() => setMoreOpen(false)}
           />
           <div
+            ref={morePanelRef}
             className={cn(
               'fixed z-[70] bg-card border-border animate-fade-in',
               // Mobile: bottom sheet sitting above the 56px bottom nav
@@ -284,7 +336,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           >
             <div className="flex items-center justify-between px-5 pt-4 pb-2 sticky top-0 bg-card z-10 border-b border-border/40">
               <span className="font-heading font-semibold text-sm">{t('nav.more')}</span>
-              <button onClick={() => setMoreOpen(false)} className="p-1 text-muted-foreground" aria-label="Close">
+              <button
+                ref={moreCloseBtnRef}
+                onClick={() => setMoreOpen(false)}
+                className="p-1 text-muted-foreground rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                aria-label="Close"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>

@@ -254,6 +254,20 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     setMoreOpen(false);
   }, [location.pathname, location.search]);
 
+  // Announce route changes on the polite live region. We look up the
+  // currently-active nav entry by path so the message is meaningful
+  // ("Sessions, current page") rather than the raw URL.
+  useEffect(() => {
+    const all = [...sidebarNav, ...adminNav, ...moreFlat];
+    const match = all.find((n) => isActive(n.path));
+    if (!match) return;
+    const labelText = t(match.labelKey as any) || match.path;
+    setA11yStatus(`${labelText} — ${a11yActive}`);
+    // Intentionally not depending on `t`/`a11yActive` to avoid a re-announce
+    // storm on locale toggles; the locale-change effect would handle that.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
+
   return (
     <div className="min-h-screen bg-background flex selection:bg-primary/30">
       {/* Skip link — first focusable element, jumps past the nav rails. */}

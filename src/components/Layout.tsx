@@ -188,6 +188,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       // Cheap transitions: only color/background interpolated; no layout/shadow churn.
       'group/rail relative flex flex-col items-center justify-center gap-1 w-[68px] py-2 rounded-xl',
       'transition-[color,background-color] duration-100 ease-out motion-reduce:transition-none',
+      // Visible & consistent keyboard focus across every rail item.
+      'outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card',
       active
         ? 'text-primary bg-primary/[0.08] ring-1 ring-inset ring-primary/15'
         : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
@@ -205,7 +207,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <aside className="hidden md:flex flex-col w-20 border-r border-border bg-card/95 backdrop-blur-sm sticky top-0 h-screen shrink-0 shadow-[inset_-1px_0_0_0_hsl(var(--border)/0.4)]">
         <Link
           to="/"
-          className="flex items-center justify-center h-14 border-b border-border/70"
+          className={cn(
+            'flex items-center justify-center h-14 border-b border-border/70 rounded-md mx-2',
+            'outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card'
+          )}
           title="AirBallistik"
         >
           <Target className="h-5 w-5 text-primary" />

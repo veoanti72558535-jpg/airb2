@@ -347,7 +347,10 @@ function ThemeCard({
         <MiniMockup meta={meta} isFR={isFR} />
       )}
 
-      <p className="text-[11px] text-muted-foreground line-clamp-2">{desc}</p>
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[11px] text-muted-foreground line-clamp-2 flex-1">{desc}</p>
+        <ContrastBadge meta={meta} isFR={isFR} />
+      </div>
 
       {selected && (
         <span className="absolute top-2 right-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary">

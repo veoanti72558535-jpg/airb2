@@ -15,8 +15,9 @@
  * d'indisponibilité et NE TENTE AUCUN appel.
  */
 import React, { useCallback, useEffect, useState } from 'react';
-import { Bot, KeyRound, RefreshCw, ShieldAlert, LogOut, Server, Clock, Lock, ShieldCheck, Loader2 } from 'lucide-react';
+import { Bot, KeyRound, RefreshCw, ShieldAlert, LogOut, Server, Clock, Lock, ShieldCheck, Loader2, Beaker } from 'lucide-react';
 import type { Session } from '@supabase/supabase-js';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -455,6 +456,12 @@ function AdminAiAuthenticated() {
         <Button size="sm" variant="default" onClick={() => void test()} disabled={testing} data-testid="ai-admin-test">
           <Bot className="h-4 w-4 mr-1" />
           {testing ? t('admin.ai.testRunning') : t('admin.ai.testProviders')}
+        </Button>
+        <Button size="sm" variant="outline" asChild data-testid="ai-admin-simulation-link">
+          <Link to="/admin/ai/simulation">
+            <Beaker className="h-4 w-4 mr-1" />
+            {t('admin.ai.simulation.openLink')}
+          </Link>
         </Button>
         <Button size="sm" variant="ghost" onClick={() => void signOut()} className="ml-auto">
           <LogOut className="h-4 w-4 mr-1" />

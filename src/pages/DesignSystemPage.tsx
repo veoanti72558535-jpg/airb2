@@ -213,6 +213,12 @@ export default function DesignSystemPage() {
         Source-of-truth components live under{' '}
         <code className="text-primary">src/components/calc/</code>. Sync this
         page with Claude Design after any visual change to either component.
+        <br />
+        Reuse guide for FieldMode / ScopeView:{' '}
+        <code className="text-primary">
+          docs/handoff/section-resultscard-reuse.md
+        </code>
+        .
       </footer>
 
       {/* ── Field Mode UI Kit ─────────────────────────────────────────── */}

@@ -39,6 +39,7 @@ import RunbookPayloads from '@/components/admin/RunbookPayloads';
 import RunbookLogViewer from '@/components/admin/RunbookLogViewer';
 import UsageQuotasPanel from '@/components/admin/UsageQuotasPanel';
 import { AiGuardrailsCard } from '@/components/admin/AiGuardrailsCard';
+import { RlsDetailsPanel } from '@/components/admin/RlsDetailsPanel';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ClipboardCheck } from 'lucide-react';
 import { getQuatarlyModels, refreshQuatarlyModels, getCacheFetchedAt } from '@/lib/ai/quatarly-models-cache';
@@ -627,6 +628,7 @@ function AdminAiAuthenticated() {
 
         <TabsContent value="guardrails" className="space-y-4 mt-4">
           <AiGuardrailsCard />
+          <RlsDetailsPanel />
         </TabsContent>
       </Tabs>
     </div>

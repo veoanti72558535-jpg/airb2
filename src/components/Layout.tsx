@@ -274,7 +274,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <button
             onClick={() => setLocale(locale === 'fr' ? 'en' : 'fr')}
             title={locale === 'fr' ? 'English' : 'Français'}
-            className="flex items-center justify-center gap-1.5 w-[68px] py-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors duration-100 ease-out motion-reduce:transition-none"
+            className="flex items-center justify-center gap-1.5 w-[68px] py-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors duration-100 ease-out motion-reduce:transition-none outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card"
           >
             <Globe className="h-3.5 w-3.5" />
             <span className="text-[10px] font-semibold uppercase tracking-wider">{locale}</span>
@@ -282,7 +282,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <Link
             to="/settings"
             title={t('settings.theme' as any)}
-            className="flex items-center justify-center w-9 h-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors duration-100 ease-out motion-reduce:transition-none"
+            className="flex items-center justify-center w-9 h-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors duration-100 ease-out motion-reduce:transition-none outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card"
           >
             {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </Link>
@@ -290,7 +290,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <button
               onClick={() => signOut()}
               title={user.email ?? 'Sign out'}
-              className="flex items-center justify-center w-9 h-9 rounded-full bg-primary/10 text-primary text-xs font-bold"
+              className="flex items-center justify-center w-9 h-9 rounded-full bg-primary/10 text-primary text-xs font-bold outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card"
             >
               {(user.email ?? '?')[0].toUpperCase()}
             </button>
@@ -318,7 +318,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 key={item.path}
                 to={item.path}
                 className={cn(
-                  'flex flex-col items-center gap-0.5 py-1 px-3 rounded-md transition-colors duration-150 touch-target relative',
+                  'flex flex-col items-center gap-0.5 py-1 px-3 rounded-md transition-colors duration-150 touch-target relative outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card',
                   active ? 'text-primary' : 'text-muted-foreground'
                 )}
               >
@@ -333,7 +333,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <button
             onClick={() => setMoreOpen(true)}
             className={cn(
-              'flex flex-col items-center gap-0.5 py-1 px-3 rounded-md transition-colors duration-150 touch-target',
+              'flex flex-col items-center gap-0.5 py-1 px-3 rounded-md transition-colors duration-150 touch-target outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card',
               moreActive ? 'text-primary' : 'text-muted-foreground'
             )}
           >

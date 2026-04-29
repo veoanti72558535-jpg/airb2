@@ -15,7 +15,7 @@
  * d'indisponibilité et NE TENTE AUCUN appel.
  */
 import React, { useCallback, useEffect, useState } from 'react';
-import { Bot, KeyRound, RefreshCw, ShieldAlert, LogOut, Server, Clock } from 'lucide-react';
+import { Bot, KeyRound, RefreshCw, ShieldAlert, LogOut, Server, Clock, Lock, ShieldCheck, Loader2 } from 'lucide-react';
 import type { Session } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,6 +27,7 @@ import { Switch } from '@/components/ui/switch';
 import { useI18n } from '@/lib/i18n';
 import { isSupabaseConfigured, supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useIsAdmin } from '@/lib/hooks/useIsAdmin';
 import { AiQuotaCard, type GoogleQuotaData } from '@/components/admin/AiQuotaCard';
 import { AiOllamaCard, type OllamaTestResult } from '@/components/admin/AiOllamaCard';
 import AgentsList from '@/components/admin/AgentsList';

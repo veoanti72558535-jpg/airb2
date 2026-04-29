@@ -1544,6 +1544,11 @@ const fr = {
     'Cette sonde lit les valeurs prod côté serveur — utilisez-la pour comparer avec le profil staging affiché ci-dessous.',
   'admin.ai.simulation.runbook.reset': 'Réinitialiser la checklist simulation',
   'admin.ai.simulation.runbook.scoped': 'État stocké séparément (clé airballistik:runbook-validation:simulation).',
+  // ── Guard générique (RequireAdmin) ─────────────────────────────────
+  // Messages volontairement neutres : on ne révèle pas l'existence d'une
+  // page admin aux utilisateurs non autorisés.
+  'admin.guard.loading': 'Chargement…',
+  'admin.guard.notFound': 'Page introuvable.',
   'admin.ai.usage.title': 'Usage & quotas',
   'admin.ai.usage.window.1d': 'Aujourd\'hui',
   'admin.ai.usage.window.7d': '7 jours',
@@ -3494,6 +3499,9 @@ const en: Record<keyof typeof fr, string> = {
     'This probe reads prod values server-side — use it to compare against the staging profile shown below.',
   'admin.ai.simulation.runbook.reset': 'Reset simulation checklist',
   'admin.ai.simulation.runbook.scoped': 'State stored separately (key airballistik:runbook-validation:simulation).',
+  // ── Generic guard (RequireAdmin) ───────────────────────────────────
+  'admin.guard.loading': 'Loading…',
+  'admin.guard.notFound': 'Page not found.',
   'admin.ai.usage.title': 'Usage & quotas',
   'admin.ai.usage.window.1d': 'Today',
   'admin.ai.usage.window.7d': '7 days',

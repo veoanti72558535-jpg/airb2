@@ -36,11 +36,14 @@ import {
   Check,
   Sun,
   Moon,
+  Star,
+  ChevronRight,
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
 import { useTheme } from '@/lib/theme';
 import { THEMES, DEFAULT_THEME } from '@/lib/theme-constants';
-import { getSettings, saveSettings } from '@/lib/storage';
+import { getSettings, saveSettings, sessionStore } from '@/lib/storage';
 import { markLocalUpdated } from '@/lib/preferences-sync';
 import { ThemePicker } from '@/components/settings/ThemePicker';
 import { cn } from '@/lib/utils';
@@ -53,6 +56,7 @@ const DEFAULT_ADVANCED_MODE = false;
 export function PreferencesPanel() {
   const { t, locale, setLocale } = useI18n();
   const { theme, setTheme, isDark, toggleTheme } = useTheme();
+  const navigate = useNavigate();
   const settings = getSettings();
   // `advancedMode` is local-only (no Supabase column today). Locale and
   // theme have their own per-user sync paths inside their providers, so
@@ -61,6 +65,23 @@ export function PreferencesPanel() {
   const [justReset, setJustReset] = useState(false);
 
   const advancedMode = settings.advancedMode === true;
+
+  // ── Favorites quick-switch ────────────────────────────────────────
+  // Re-read on every render: cheap (in-memory cache) and `force()` is
+  // already wired below for the mode toggle. The star button calls
+  // `sessionStore.update()` then `force()` so the list refreshes
+  // without leaving the panel.
+  const favSessions = sessionStore.getAll().filter((s) => s.favorite);
+
+  const toggleFav = useCallback(
+    (id: string) => {
+      const s = sessionStore.getAll().find((x) => x.id === id);
+      if (!s) return;
+      sessionStore.update(id, { favorite: !s.favorite });
+      force();
+    },
+    [],
+  );
 
   const setMode = useCallback(
     (advanced: boolean) => {
@@ -175,6 +196,87 @@ export function PreferencesPanel() {
           <LangButton active={!advancedMode} onClick={() => setMode(false)} label={t('common.simpleMode')} />
           <LangButton active={advancedMode} onClick={() => setMode(true)} label={t('common.advancedMode')} />
         </div>
+      </section>
+
+      {/* Favorites quick-switch */}
+      <section
+        className="surface-elevated p-4 space-y-2"
+        aria-label={t('settings.preferences.favorites' as any)}
+      >
+        <header className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <Star className="h-4 w-4 text-primary/80 shrink-0" />
+            <h3 className="text-sm font-medium truncate">
+              {t('settings.preferences.favorites' as any)}
+            </h3>
+            <span className="text-[10px] text-muted-foreground font-mono shrink-0">
+              {favSessions.length}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate('/sessions?filter=favorites')}
+            className={cn(
+              'inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] font-medium',
+              'hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+            )}
+          >
+            {t('settings.preferences.favoritesAll' as any)}
+            <ChevronRight className="h-3 w-3" />
+          </button>
+        </header>
+        <p className="text-[11px] text-muted-foreground">
+          {t('settings.preferences.favoritesDesc' as any)}
+        </p>
+
+        {favSessions.length === 0 ? (
+          <p className="text-xs text-muted-foreground italic px-1 py-2">
+            {t('settings.preferences.favoritesEmpty' as any)}
+          </p>
+        ) : (
+          <ul className="space-y-1" role="list">
+            {favSessions.slice(0, 6).map((s) => (
+              <li
+                key={s.id}
+                className="flex items-center gap-1 rounded-md hover:bg-muted/50 transition-colors"
+              >
+                <button
+                  type="button"
+                  onClick={() => toggleFav(s.id)}
+                  className={cn(
+                    'p-1.5 rounded-md text-primary shrink-0',
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                  )}
+                  aria-label={t('settings.preferences.favoritesUnpin' as any)}
+                  title={t('settings.preferences.favoritesUnpin' as any)}
+                >
+                  <Star className="h-3.5 w-3.5" fill="currentColor" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate(`/sessions/${s.id}`)}
+                  className={cn(
+                    'flex-1 min-w-0 flex items-center gap-2 px-1 py-1.5 text-left',
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md',
+                  )}
+                >
+                  <span className="text-xs truncate">{s.name}</span>
+                  {typeof s.input?.bc === 'number' && (
+                    <span className="ml-auto text-[10px] text-muted-foreground font-mono shrink-0">
+                      BC {s.input.bc}
+                    </span>
+                  )}
+                  <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+        {favSessions.length > 6 && (
+          <p className="text-[10px] text-muted-foreground text-right">
+            +{favSessions.length - 6} {t('settings.preferences.favoritesMore' as any)}
+          </p>
+        )}
       </section>
 
       {/* Live preview */}

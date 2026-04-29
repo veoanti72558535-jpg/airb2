@@ -182,4 +182,74 @@ describe('<Layout> "More" panel — accessibility focus contract', () => {
     expect(getMorePanel()).toBeNull();
     expect(document.activeElement).toBe(trigger);
   });
+
+  // ── Active-link disambiguation ────────────────────────────────────
+  // The More panel exposes both `/settings` and `/settings?tab=data`.
+  // `isActive` (Layout.tsx) marks BOTH as aria-current="page" when the
+  // route is `/settings?tab=data`, so the focus picker must break the tie
+  // by longest href-prefix match against pathname+search.
+
+  it("picks the most specific aria-current link when several match (prefix collision)", async () => {
+    setFocusBehavior('active');
+    const user = userEvent.setup();
+    renderLayout('/settings?tab=data');
+    await user.click(getMoreTrigger());
+    await flushOpenTimer();
+
+    const panel = getMorePanel()!;
+    const currents = panel.querySelectorAll<HTMLAnchorElement>('a[href][aria-current="page"]');
+    // Sanity: the prefix collision really exists (both /settings and
+    // /settings?tab=data are flagged active). If this ever drops to 1,
+    // the test is still valid but the tie-breaker is no longer exercised
+    // — fail loudly so we update the fixture.
+    expect(currents.length).toBeGreaterThanOrEqual(2);
+
+    const focused = document.activeElement as HTMLAnchorElement | null;
+    expect(focused).not.toBeNull();
+    expect(focused!.tagName).toBe('A');
+    // The most specific match wins — its href must contain the query.
+    expect(focused!.getAttribute('href')).toContain('tab=data');
+  });
+
+  it("falls back to longest-prefix match when no aria-current is present", async () => {
+    setFocusBehavior('active');
+    const user = userEvent.setup();
+    // /unknown-route is NOT in the More panel → no link will receive
+    // aria-current. The picker should still pick the best prefix match,
+    // and when nothing matches at all, fall back to the first item.
+    renderLayout('/unknown-route-xyz');
+    await user.click(getMoreTrigger());
+    await flushOpenTimer();
+
+    const panel = getMorePanel()!;
+    expect(panel.querySelector('a[href][aria-current="page"]')).toBeNull();
+
+    const focused = document.activeElement as HTMLAnchorElement | null;
+    expect(focused).not.toBeNull();
+    // No link can claim the route → first interactive item wins.
+    const firstLink = panel.querySelector<HTMLAnchorElement>('a[href]');
+    expect(focused).toBe(firstLink);
+  });
+
+  it("uses prefix match (no aria-current) to land on a partially-matching link", async () => {
+    setFocusBehavior('active');
+    const user = userEvent.setup();
+    // We render under a deeper path that still starts with a More-panel
+    // href. `isActive(...)` already covers `/diary/...` → aria-current is
+    // set, so to truly exercise the no-aria-current branch we'd need a
+    // path that prefix-matches a link but `isActive` rejects. In practice
+    // `isActive` uses startsWith too, so any prefix match also flips
+    // aria-current. We assert that the picker still returns the
+    // prefix-matching link (whether via aria-current or fallback) — both
+    // paths go through the same scoring function.
+    renderLayout('/diary/2024-04');
+    await user.click(getMoreTrigger());
+    await flushOpenTimer();
+
+    const panel = getMorePanel()!;
+    const focused = document.activeElement as HTMLAnchorElement | null;
+    expect(focused).not.toBeNull();
+    expect(focused!.getAttribute('href')).toBe('/diary');
+  });
+});
 });

@@ -95,7 +95,11 @@ export const railItemBase = cn(
   // footer divider, or by sibling rail items sitting edge-to-edge. Inset
   // also removes the need for ring-offset (which would bleed outside the
   // rounded box and look truncated against the card surface).
-  'outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary'
+  // `ring-offset-0` ensures Tailwind's offset shadow layer is reset to zero
+  // (otherwise inherited offset values from upstream rings could nudge the
+  // halo). Tracking ring-color through the `--ring` token keeps the focus
+  // colour aligned with whatever theme is active (carbon/tactical/slate/desert).
+  'outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring focus-visible:ring-offset-0'
 );
 
 export function railItemClass(active: boolean, variant: Variant = 'rail'): string {
@@ -104,7 +108,11 @@ export function railItemClass(active: boolean, variant: Variant = 'rail'): strin
       'flex items-center justify-center rounded-lg',
       railItemBase,
       active
-        ? 'text-primary bg-primary/[0.08]'
+        // Active state owns its hover too — otherwise hover:bg-muted (declared
+        // on the inactive branch) would win by source order and strip the
+        // accent tint. Slight bump (8% → 14%) gives tactile hover feedback
+        // without competing with the focus ring.
+        ? 'text-primary bg-primary/[0.08] hover:bg-primary/[0.14]'
         : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
     );
   }
@@ -115,7 +123,13 @@ export function railItemClass(active: boolean, variant: Variant = 'rail'): strin
     'group/rail relative flex flex-col items-center justify-center gap-[3px] w-16 h-[52px] rounded-xl',
     railItemBase,
     active
-      ? 'text-primary bg-primary/[0.08] ring-1 ring-inset ring-primary/15'
+      // No persistent `ring-*` on the active item: the left accent bar
+      // (`<ActiveBar />`) plus the primary background tint already mark the
+      // selection, and a static 1px primary ring would visually merge with
+      // the 2px focus ring (same colour family, same inset position) and
+      // make the focus state feel "thicker" rather than distinct. Hover
+      // tint is bumped on active to keep parity with the footer variant.
+      ? 'text-primary bg-primary/[0.08] hover:bg-primary/[0.14]'
       : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
   );
 }

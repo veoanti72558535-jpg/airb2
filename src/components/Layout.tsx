@@ -427,7 +427,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             aria-controls="app-sidebar"
             aria-label={isSidebarExpanded ? (t('a11y.collapseSidebar' as any) || 'Réduire la barre latérale') : (t('a11y.expandSidebar' as any) || 'Développer la barre latérale')}
             className={cn(
-              "hidden md:flex items-center justify-center w-full h-10 rounded-lg hover:bg-muted transition-colors text-muted-foreground outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary",
+              "hidden md:flex items-center justify-center w-full h-10 rounded-lg hover:bg-muted transition-colors text-muted-foreground outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
               !isSidebarExpanded && "rotate-180"
             )}
             title={isSidebarExpanded ? "Collapse Sidebar" : "Expand Sidebar"}
@@ -441,7 +441,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               type="button"
               aria-label={`${t('a11y.switchLocale' as any) || 'Changer la langue'} (${locale.toUpperCase()})`}
               className={cn(
-                "flex items-center gap-3 h-10 rounded-lg hover:bg-muted transition-all px-3 text-muted-foreground outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary",
+                "flex items-center gap-3 h-10 rounded-lg hover:bg-muted transition-all px-3 text-muted-foreground outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
                 !isSidebarExpanded && "justify-center px-0 w-10"
               )}
             >
@@ -452,7 +452,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               to="/settings"
               aria-label={t('settings.theme' as any) || 'Thème'}
               className={cn(
-                "flex items-center gap-3 h-10 rounded-lg hover:bg-muted transition-all px-3 text-muted-foreground outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary",
+                "flex items-center gap-3 h-10 rounded-lg hover:bg-muted transition-all px-3 text-muted-foreground outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
                 !isSidebarExpanded && "justify-center px-0 w-10"
               )}
             >
@@ -467,7 +467,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 type="button"
                 aria-label={`${t('a11y.signOut' as any) || 'Se déconnecter'} (${user.email ?? ''})`}
                 className={cn(
-                  "flex items-center gap-3 h-10 rounded-lg hover:bg-muted transition-all px-3 text-muted-foreground outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary",
+                  "flex items-center gap-3 h-10 rounded-lg hover:bg-muted transition-all px-3 text-muted-foreground outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
                   !isSidebarExpanded && "justify-center px-0 w-10"
                 )}
               >
@@ -529,7 +529,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   // card's top border and against neighbouring siblings, so
                   // an offset ring would always be clipped on at least one
                   // side. Inset keeps the 2px halo perfectly contained.
-                  'outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary',
+                  'outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
                   active ? 'text-primary' : 'text-muted-foreground'
                 )}
               >
@@ -554,7 +554,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             className={cn(
               'flex-1 min-w-0 flex flex-col items-center justify-center gap-[3px] px-2 rounded-md',
               'transition-colors duration-150 touch-target',
-              'outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary',
+              'outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
               moreActive ? 'text-primary' : 'text-muted-foreground'
             )}
           >
@@ -595,7 +595,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <button
                 ref={moreCloseBtnRef}
                 onClick={() => setMoreOpen(false)}
-                className="p-1 text-muted-foreground rounded-md outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 focus-visible:ring-offset-card transition-shadow"
+                className="p-1 text-muted-foreground rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-card transition-shadow"
                 aria-label="Close"
               >
                 <X className="h-5 w-5" />
@@ -622,7 +622,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                         // ring (so the halo reads as separate from the row
                         // background) but reduce the offset to 1px so it
                         // never touches the panel's inner edge.
-                        'outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 focus-visible:ring-offset-card focus-visible:bg-muted/60',
+                        'outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-card focus-visible:bg-muted/60',
                         active
                           ? 'bg-primary/10 text-primary'
                           : 'text-muted-foreground hover:text-foreground hover:bg-muted'

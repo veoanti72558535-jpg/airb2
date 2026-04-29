@@ -573,5 +573,22 @@ export interface AppSettings {
      * the focus trap of the More panel.
      */
     keyboardNavMode?: 'normal' | 'cyclic';
+    /**
+     * Reduce motion — disables non-essential transitions/animations across
+     * the app (including theme transitions, hover scales, and accordion
+     * easings). Mirrors the OS-level `prefers-reduced-motion: reduce` but
+     * lets the user opt in regardless of system setting (useful when the
+     * user's OS doesn't expose the preference, or when they want it only
+     * inside this app). Applied via `html.reduce-motion` class so the
+     * override works for ALL theme variants (dark + light, every family).
+     */
+    reduceMotion?: boolean;
+    /**
+     * Strong focus — boosts the focus-visible outline to 3px, doubles the
+     * offset, and forces a contrasting halo using the active theme's
+     * `--ring` (= `--primary`) token so it remains visible across every
+     * theme + density + accent without overriding the brand colour.
+     */
+    strongFocus?: boolean;
   };
 }

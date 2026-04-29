@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Eye, Type, Contrast, CheckCircle2, AlertTriangle, XCircle, Sparkles, Focus, Keyboard, ArrowRight, ArrowLeft, LogOut } from 'lucide-react';
+import { Eye, Type, Contrast, CheckCircle2, AlertTriangle, XCircle, Sparkles, Focus, Keyboard, ArrowRight, ArrowLeft, LogOut, Zap, Target } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { useA11y } from '@/lib/a11y';
 import { cn } from '@/lib/utils';
@@ -72,11 +72,15 @@ export function AccessibilityCard() {
     premiumContrast,
     sidebarFocusBehavior,
     keyboardNavMode,
+    reduceMotion,
+    strongFocus,
     setHighContrast,
     setLargeText,
     setPremiumContrast,
     setSidebarFocusBehavior,
     setKeyboardNavMode,
+    setReduceMotion,
+    setStrongFocus,
   } = useA11y();
   const [results, setResults] = useState<{ id: string; ratio: number; verdict: 'AAA' | 'AA' | 'fail' }[] | null>(null);
 
@@ -175,6 +179,46 @@ export function AccessibilityCard() {
             aria-pressed={largeText}
           >
             {largeText ? 'ON' : 'OFF'}
+          </button>
+        </div>
+
+        {/* Reduce motion — neutralises every transition + animation through
+            the global `.reduce-motion` rule, applied uniformly to all
+            theme variants. */}
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <Zap className="h-4 w-4 text-primary/80 shrink-0" />
+            <div className="min-w-0">
+              <div className="text-sm font-medium">{t('settings.a11y.reduceMotion' as any)}</div>
+              <div className="text-[11px] text-muted-foreground">{t('settings.a11y.reduceMotionDesc' as any)}</div>
+            </div>
+          </div>
+          <button
+            onClick={() => setReduceMotion(!reduceMotion)}
+            className={toggleClass(reduceMotion)}
+            aria-pressed={reduceMotion}
+          >
+            {reduceMotion ? 'ON' : 'OFF'}
+          </button>
+        </div>
+
+        {/* Strong focus — boosts the focus-visible outline to 3px + 4px
+            halo using the active theme's `--ring` token, so the colour
+            stays on-brand for every theme. */}
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <Target className="h-4 w-4 text-primary/80 shrink-0" />
+            <div className="min-w-0">
+              <div className="text-sm font-medium">{t('settings.a11y.strongFocus' as any)}</div>
+              <div className="text-[11px] text-muted-foreground">{t('settings.a11y.strongFocusDesc' as any)}</div>
+            </div>
+          </div>
+          <button
+            onClick={() => setStrongFocus(!strongFocus)}
+            className={toggleClass(strongFocus)}
+            aria-pressed={strongFocus}
+          >
+            {strongFocus ? 'ON' : 'OFF'}
           </button>
         </div>
 

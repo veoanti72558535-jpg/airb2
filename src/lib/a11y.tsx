@@ -23,11 +23,22 @@ export type { SidebarFocusBehavior, KeyboardNavMode, A11yContextValue };
  * can keep their preferred theme AND add a contrast boost.
  */
 
-function applyClasses(highContrast: boolean, largeText: boolean, premiumContrast: boolean) {
+function applyClasses(
+  highContrast: boolean,
+  largeText: boolean,
+  premiumContrast: boolean,
+  reduceMotion: boolean,
+  strongFocus: boolean,
+) {
   const root = document.documentElement;
   root.classList.toggle('hc', highContrast);
   root.classList.toggle('lg-text', largeText);
   root.classList.toggle('pc', premiumContrast);
+  // `reduce-motion` and `strong-focus` are theme-agnostic: they only act on
+  // semantic tokens (`--ring`, `--primary`) and global `transition` / `animation`
+  // properties, so the same rules apply to every theme variant.
+  root.classList.toggle('reduce-motion', reduceMotion);
+  root.classList.toggle('strong-focus', strongFocus);
 }
 
 export function A11yProvider({ children }: { children: React.ReactNode }) {
@@ -52,11 +63,17 @@ export function A11yProvider({ children }: { children: React.ReactNode }) {
       return v === 'cyclic' ? 'cyclic' : 'normal';
     } catch { return 'normal'; }
   });
+  const [reduceMotion, setRM] = useState<boolean>(() => {
+    try { return getSettings().accessibility?.reduceMotion === true; } catch { return false; }
+  });
+  const [strongFocus, setSF] = useState<boolean>(() => {
+    try { return getSettings().accessibility?.strongFocus === true; } catch { return false; }
+  });
 
   // Apply on mount and on every change.
   useEffect(() => {
-    applyClasses(highContrast, largeText, premiumContrast);
-  }, [highContrast, largeText, premiumContrast]);
+    applyClasses(highContrast, largeText, premiumContrast, reduceMotion, strongFocus);
+  }, [highContrast, largeText, premiumContrast, reduceMotion, strongFocus]);
 
   // Install a global Tab-cycling handler when `keyboardNavMode === 'cyclic'`.
   // Wraps focus from the last focusable element back to the first (and
@@ -98,6 +115,8 @@ export function A11yProvider({ children }: { children: React.ReactNode }) {
     premiumContrast?: boolean;
     sidebarFocusBehavior?: SidebarFocusBehavior;
     keyboardNavMode?: KeyboardNavMode;
+    reduceMotion?: boolean;
+    strongFocus?: boolean;
   }) => {
     try {
       const s = getSettings();
@@ -128,6 +147,14 @@ export function A11yProvider({ children }: { children: React.ReactNode }) {
     setKNM(v);
     persist({ keyboardNavMode: v });
   }, [persist]);
+  const setReduceMotion = useCallback((v: boolean) => {
+    setRM(v);
+    persist({ reduceMotion: v });
+  }, [persist]);
+  const setStrongFocus = useCallback((v: boolean) => {
+    setSF(v);
+    persist({ strongFocus: v });
+  }, [persist]);
 
   return (
     <A11yContext.Provider
@@ -137,11 +164,15 @@ export function A11yProvider({ children }: { children: React.ReactNode }) {
         premiumContrast,
         sidebarFocusBehavior,
         keyboardNavMode,
+        reduceMotion,
+        strongFocus,
         setHighContrast,
         setLargeText,
         setPremiumContrast,
         setSidebarFocusBehavior,
         setKeyboardNavMode,
+        setReduceMotion,
+        setStrongFocus,
       }}
     >
       {children}

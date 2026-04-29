@@ -117,6 +117,21 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   const moreActive = moreFlat.some((n) => isActive(n.path));
 
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('airballistik_sidebar_expanded');
+      if (saved !== null) return saved === 'true';
+      return window.innerWidth >= 1280;
+    }
+    return true;
+  });
+
+  const toggleSidebar = () => {
+    const newState = !isSidebarExpanded;
+    setIsSidebarExpanded(newState);
+    localStorage.setItem('airballistik_sidebar_expanded', String(newState));
+  };
+
   // Close "More" on Escape, lock body scroll while open, auto-close on route change.
   // Also implements a focus trap so keyboard users stay within the dialog.
   useEffect(() => {
@@ -185,91 +200,136 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   }, [location.pathname, location.search]);
 
   return (
-    <div className="min-h-screen bg-background flex">
-      {/* ── Desktop Sidebar (premium icon-rail with labels) ── */}
-      <aside className="hidden md:flex flex-col w-20 border-r border-border bg-card/95 backdrop-blur-sm sticky top-0 h-screen shrink-0 shadow-[inset_-1px_0_0_0_hsl(var(--border)/0.4)]">
-        <Link
-          to="/"
-          className={cn(
-            'flex items-center justify-center h-12 border-b border-border/70 rounded-md mx-2',
-            'outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card'
+    <div className="min-h-screen bg-background flex selection:bg-primary/30">
+      {/* ── Desktop Sidebar (premium collapsible sidebar) ── */}
+      <aside 
+        className={cn(
+          "hidden md:flex flex-col border-r border-border/40 bg-card/50 backdrop-blur-xl sticky top-0 h-screen shrink-0 transition-all duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] z-40",
+          isSidebarExpanded ? "w-64" : "w-20 items-center"
+        )}
+      >
+        <div className={cn(
+          "flex items-center h-14 border-b border-border/40 px-3",
+          isSidebarExpanded ? "justify-between" : "justify-center"
+        )}>
+          {isSidebarExpanded ? (
+            <Link to="/" className="flex items-center gap-3 px-2 group outline-none">
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300 shadow-[0_0_15px_rgba(var(--primary),0.2)]">
+                <Target className="h-5 w-5" />
+              </div>
+              <span className="font-heading font-bold text-lg tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">
+                AirBallistiK
+              </span>
+            </Link>
+          ) : (
+            <Link to="/" className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-300 shadow-[0_0_15px_rgba(var(--primary),0.1)]">
+              <Target className="h-6 w-6" />
+            </Link>
           )}
-          title="AirBallistik"
-        >
-          <Target className="h-5 w-5 text-primary" />
-        </Link>
+        </div>
 
-        <nav className="flex-1 flex flex-col items-center gap-0.5 py-2 overflow-y-auto scrollbar-thin">
+        <nav className="flex-1 flex flex-col gap-1 py-4 overflow-y-auto scrollbar-thin px-3">
           {sidebarNav.map(item => (
             <RailItem
               key={item.path}
               to={item.path}
               icon={item.icon}
-              label={t(item.labelKey)}
-              title={t(item.labelKey)}
+              label={isSidebarExpanded ? t(item.labelKey) : undefined}
+              title={!isSidebarExpanded ? t(item.labelKey) : undefined}
               active={isActive(item.path)}
+              className={cn(
+                "transition-all duration-200",
+                isSidebarExpanded ? "px-3 py-2.5 justify-start gap-3 w-full" : "w-12 h-12 justify-center"
+              )}
             />
           ))}
 
-          <div className="w-8 border-t border-border/60 my-1.5" />
+          <div className={cn("border-t border-border/60 my-2", isSidebarExpanded ? "mx-3" : "w-8")} />
 
           {adminNav.map(item => (
             <RailItem
               key={item.path}
               to={item.path}
               icon={item.icon}
-              label={t(item.labelKey)}
-              title={t(item.labelKey)}
+              label={isSidebarExpanded ? t(item.labelKey) : undefined}
+              title={!isSidebarExpanded ? t(item.labelKey) : undefined}
               active={isActive(item.path)}
+              className={cn(
+                "transition-all duration-200 text-amber-500/80",
+                isSidebarExpanded ? "px-3 py-2.5 justify-start gap-3 w-full" : "w-12 h-12 justify-center"
+              )}
             />
           ))}
 
-          {/* Desktop "More" trigger — opens grouped side panel */}
           <RailItem
             onClick={() => setMoreOpen(true)}
             icon={MoreHorizontal}
-            label={t('nav.more')}
-            title={t('nav.more')}
+            label={isSidebarExpanded ? t('nav.more') : undefined}
+            title={!isSidebarExpanded ? t('nav.more') : undefined}
             ariaLabel={t('nav.more')}
             ariaExpanded={moreOpen}
             active={moreActive}
+            className={cn(
+              "transition-all duration-200 mt-auto",
+              isSidebarExpanded ? "px-3 py-2.5 justify-start gap-3 w-full" : "w-12 h-12 justify-center"
+            )}
           />
         </nav>
 
-        <div className="flex flex-col items-center gap-1.5 py-3 border-t border-border/70 bg-card/60">
-          <RailItem
-            variant="footer"
-            onClick={() => setLocale(locale === 'fr' ? 'en' : 'fr')}
-            title={locale === 'fr' ? 'English' : 'Français'}
-            className="gap-1.5 w-[68px] py-1.5"
+        <div className="p-3 border-t border-border/40 space-y-2">
+          <button
+            onClick={toggleSidebar}
+            className={cn(
+              "hidden md:flex items-center justify-center w-full h-10 rounded-lg hover:bg-muted transition-colors text-muted-foreground",
+              !isSidebarExpanded && "rotate-180"
+            )}
+            title={isSidebarExpanded ? "Collapse Sidebar" : "Expand Sidebar"}
           >
-            <Globe className="h-3.5 w-3.5" />
-            <span className="text-[10px] font-semibold uppercase tracking-wider">{locale}</span>
-          </RailItem>
-          <RailItem
-            variant="footer"
-            to="/settings"
-            title={t('settings.theme' as any)}
-            className="w-9 h-9"
-          >
-            {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-          </RailItem>
-          {user && (
-            <RailItem
-              variant="footer"
-              onClick={() => signOut()}
-              title={user.email ?? 'Sign out'}
-              className="w-9 h-9 rounded-full bg-primary/10 text-primary text-xs font-bold hover:bg-primary/15"
+            <ChevronRight className="h-4 w-4" />
+          </button>
+          
+          <div className={cn("flex flex-col gap-2", isSidebarExpanded ? "items-stretch" : "items-center")}>
+            <button
+              onClick={() => setLocale(locale === 'fr' ? 'en' : 'fr')}
+              className={cn(
+                "flex items-center gap-3 h-10 rounded-lg hover:bg-muted transition-all px-3 text-muted-foreground",
+                !isSidebarExpanded && "justify-center px-0 w-10"
+              )}
             >
-              {(user.email ?? '?')[0].toUpperCase()}
-            </RailItem>
-          )}
+              <Globe className="h-4 w-4 shrink-0" />
+              {isSidebarExpanded && <span className="text-xs font-semibold uppercase tracking-wider">{locale}</span>}
+            </button>
+            <Link
+              to="/settings"
+              className={cn(
+                "flex items-center gap-3 h-10 rounded-lg hover:bg-muted transition-all px-3 text-muted-foreground",
+                !isSidebarExpanded && "justify-center px-0 w-10"
+              )}
+            >
+              {isDark ? <Sun className="h-4 w-4 shrink-0" /> : <Moon className="h-4 w-4 shrink-0" />}
+              {isSidebarExpanded && <span className="text-xs font-medium">{t('settings.theme' as any)}</span>}
+            </Link>
+            {user && (
+              <button
+                onClick={() => signOut()}
+                className={cn(
+                  "flex items-center gap-3 h-10 rounded-lg hover:bg-muted transition-all px-3 text-muted-foreground",
+                  !isSidebarExpanded && "justify-center px-0 w-10"
+                )}
+              >
+                <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] font-bold shrink-0">
+                  {(user.email ?? '?')[0].toUpperCase()}
+                </div>
+                {isSidebarExpanded && <span className="text-xs truncate max-w-[120px]">{user.email}</span>}
+              </button>
+            )}
+          </div>
         </div>
       </aside>
 
       {/* ── Main content ── */}
-      <div className="flex-1 flex flex-col min-h-screen">
-        <main className="flex-1 px-4 py-4 pb-24 md:pb-4 max-w-4xl w-full mx-auto">
+      <div className="flex-1 flex flex-col min-h-screen min-w-0 relative">
+        <main className="flex-1 px-4 sm:px-6 md:px-8 py-6 pb-24 md:pb-8 w-full mx-auto max-w-[1600px] animate-fade-in">
           {children}
         </main>
       </div>

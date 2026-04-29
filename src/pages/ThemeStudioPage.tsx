@@ -210,6 +210,9 @@ function ThemeStudioHeader({
   onToggleMode,
   onShuffle,
   tx,
+  simpleEnabled,
+  advancedEnabled,
+  darkLightEnabled,
 }: {
   mode: StudioMode;
   onModeChange: (m: StudioMode) => void;
@@ -218,7 +221,12 @@ function ThemeStudioHeader({
   onToggleMode: () => void;
   onShuffle: () => void;
   tx: (fr: string, en: string) => string;
+  simpleEnabled: boolean;
+  advancedEnabled: boolean;
+  darkLightEnabled: boolean;
 }) {
+  // If only one mode is allowed, hiding the tabs avoids dead UI.
+  const showModeTabs = simpleEnabled && advancedEnabled;
   return (
     <header className="space-y-3">
       <div className="flex items-center gap-2">
@@ -249,6 +257,7 @@ function ThemeStudioHeader({
           <Shuffle className="h-3.5 w-3.5" />
         </button>
         {/* Global dark/light swap — preserves the active family. */}
+        {darkLightEnabled && (
         <button
           type="button"
           onClick={onToggleMode}
@@ -266,6 +275,7 @@ function ThemeStudioHeader({
             {isDark ? tx('Clair', 'Light') : tx('Sombre', 'Dark')}
           </span>
         </button>
+        )}
       </div>
 
       <p className="text-xs text-muted-foreground">
@@ -275,7 +285,8 @@ function ThemeStudioHeader({
         )}
       </p>
 
-      {/* Simple / Avancé toggle */}
+      {/* Simple / Avancé toggle — only when both modes are enabled. */}
+      {showModeTabs && (
       <div
         role="tablist"
         aria-label={tx('Mode du studio', 'Studio mode')}
@@ -288,6 +299,7 @@ function ThemeStudioHeader({
           {tx('Avancé', 'Advanced')}
         </ModeTab>
       </div>
+      )}
 
       {mode === 'advanced' && (
         <div className="flex justify-end">

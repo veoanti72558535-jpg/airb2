@@ -301,7 +301,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* ── Mobile Bottom Nav ── */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/95 backdrop-blur-md safe-area-bottom">
+      <nav
+        ref={bottomNavRef}
+        className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/95 backdrop-blur-md safe-area-bottom"
+      >
         <div className="flex items-center justify-around h-14 px-1">
           {bottomNav.map(item => {
             const active = isActive(item.path);
@@ -346,11 +349,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             ref={morePanelRef}
             className={cn(
               'fixed z-[70] bg-card border-border animate-fade-in',
-              // Mobile: bottom sheet sitting above the 56px bottom nav
-              'left-0 right-0 bottom-14 border-t rounded-t-2xl safe-area-bottom max-h-[75vh] overflow-y-auto shadow-2xl',
+              // Mobile: bottom sheet sitting flush above the actual bottom-nav height (measured at runtime).
+              'left-0 right-0 border-t rounded-t-2xl safe-area-bottom max-h-[75vh] overflow-y-auto shadow-2xl',
               // Desktop: docked side panel flush against the 5rem (w-20) sidebar
               'md:bottom-0 md:right-auto md:left-20 md:top-0 md:h-screen md:w-80 md:max-h-none md:rounded-none md:border-l md:border-t-0'
             )}
+            style={{ bottom: `var(--more-sheet-bottom, ${bottomNavHeight}px)` }}
             role="dialog"
             aria-modal="true"
             aria-label={t('nav.more')}

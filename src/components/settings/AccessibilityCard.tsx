@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Eye, Type, Contrast, CheckCircle2, AlertTriangle, XCircle, Sparkles, Focus, Keyboard, ArrowRight, ArrowLeft, LogOut } from 'lucide-react';
+import { Eye, Type, Contrast, CheckCircle2, AlertTriangle, XCircle, Sparkles, Focus, Keyboard, ArrowRight, ArrowLeft, LogOut, Zap, Target } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { useA11y } from '@/lib/a11y';
 import { cn } from '@/lib/utils';
@@ -72,11 +72,15 @@ export function AccessibilityCard() {
     premiumContrast,
     sidebarFocusBehavior,
     keyboardNavMode,
+    reduceMotion,
+    strongFocus,
     setHighContrast,
     setLargeText,
     setPremiumContrast,
     setSidebarFocusBehavior,
     setKeyboardNavMode,
+    setReduceMotion,
+    setStrongFocus,
   } = useA11y();
   const [results, setResults] = useState<{ id: string; ratio: number; verdict: 'AAA' | 'AA' | 'fail' }[] | null>(null);
 

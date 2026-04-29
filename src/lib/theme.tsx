@@ -10,6 +10,7 @@ import {
   hexToHslTokens,
   themeStorageKeyFor,
   customStorageKeyFor,
+  getFamilyVariant,
   type ThemeId,
   type ThemeCustomisation,
 } from './theme-constants';
@@ -111,6 +112,23 @@ function applyCustomisation(c: ThemeCustomisation, isDark: boolean): void {
   const radiusValue = radius === 'sharp' ? '0.25rem' : radius === 'soft' ? '0.875rem' : '0.5rem';
   root.style.setProperty('--radius', radiusValue);
 
+  // Font family override. We swap the --font-heading / --font-body CSS
+  // variables (defined in index.css) so every typed surface picks it up.
+  // 'sans' clears the override and lets index.css fall back to its
+  // defaults (DM Sans / Inter).
+  const fontFamily = c.fontFamily ?? 'sans';
+  root.setAttribute('data-font-family', fontFamily);
+  if (fontFamily === 'display') {
+    root.style.setProperty('--font-heading', "'Space Grotesk', 'DM Sans', system-ui, sans-serif");
+    root.style.setProperty('--font-body', "'DM Sans', 'Inter', system-ui, sans-serif");
+  } else if (fontFamily === 'serif') {
+    root.style.setProperty('--font-heading', "'Fraunces', 'Playfair Display', Georgia, serif");
+    root.style.setProperty('--font-body', "'DM Sans', 'Inter', system-ui, sans-serif");
+  } else {
+    root.style.removeProperty('--font-heading');
+    root.style.removeProperty('--font-body');
+  }
+
   // Mark customisation dirty for downstream consumers (e.g. canvas
   // renderers) that may want to re-paint on changes.
   root.setAttribute('data-theme-mode', isDark ? 'dark' : 'light');
@@ -160,9 +178,14 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const setTheme = useCallback((id: ThemeId) => setThemeState(id), []);
   const toggleTheme = useCallback(() => {
+    // Swap to the same family's opposite mode (e.g. midnight-blue ↔
+    // midnight-blue-light). Falls back to slate-light/carbon-green if
+    // the active id has no sibling, which can't happen with the current
+    // theme list but keeps the toggle defensive.
     setThemeState((t) => {
       const m = THEMES.find((x) => x.id === t);
-      return m?.isDark ? 'slate-light' : 'carbon-green';
+      if (!m) return 'carbon-green';
+      return getFamilyVariant(m.id, m.mode === 'dark' ? 'light' : 'dark');
     });
   }, []);
 

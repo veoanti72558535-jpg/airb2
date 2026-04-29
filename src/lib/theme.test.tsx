@@ -245,20 +245,22 @@ describe('ThemeProvider — HMR remount integration', () => {
     const { result } = renderHook(() => useTheme(), { wrapper: wrap });
     act(() => result.current.setTheme('slate-light'));
 
+    const containerA = document.body.appendChild(document.createElement('div'));
+    const containerB = document.body.appendChild(document.createElement('div'));
     const a = render(
       <ThemeProvider>
         <ThemeProbe />
       </ThemeProvider>,
-      { container: document.body.appendChild(document.createElement('div')) },
+      { container: containerA, baseElement: containerA },
     );
     const b = render(
       <ThemeProvider>
         <ThemeProbe />
       </ThemeProvider>,
-      { container: document.body.appendChild(document.createElement('div')) },
+      { container: containerB, baseElement: containerB },
     );
-    // Scope queries to each render's container so duplicate test-ids
-    // across the two trees don't trip getByTestId.
+    // Scope queries to each tree's baseElement so duplicate test-ids
+    // across the parallel mounts don't trip getByTestId.
     expect(a.getByTestId('theme').textContent).toBe('slate-light');
     expect(b.getByTestId('theme').textContent).toBe('slate-light');
     a.unmount();

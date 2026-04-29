@@ -8,6 +8,7 @@ import {
   FileText, Search, Settings, Shield,
   Camera, Trophy, Eye, Crosshair, MessageCircle, Calendar,
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { useTheme } from '@/lib/theme';
 import { cn } from '@/lib/utils';
@@ -36,7 +37,7 @@ const bottomNav = [
  * list. Doublons sidebar (library/chrono/conversions/compare) removed.
  * /competition-prep merged into /ft-competition (handled via route redirect).
  */
-type MoreItem = { path: string; icon: React.ComponentType<{ className?: string }>; labelKey: any };
+type MoreItem = { path: string; icon: LucideIcon; labelKey: any };
 type MoreSection = { titleKey: any; items: MoreItem[] };
 
 const moreSections: MoreSection[] = [

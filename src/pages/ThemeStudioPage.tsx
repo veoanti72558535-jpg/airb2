@@ -26,6 +26,12 @@ import {
   type ThemeDensity,
   type ThemeContrast,
   type ThemeRadius,
+  type ThemeFontFamily,
+  type ThemeFamily,
+  type ThemeMode,
+  type ThemeMeta,
+  THEME_FAMILIES,
+  getFamilyVariant,
   THEME_MODE_STORAGE_KEY,
 } from '@/lib/theme-constants';
 
@@ -50,7 +56,7 @@ function readMode(): StudioMode {
 
 export default function ThemeStudioPage() {
   const { locale, t } = useI18n();
-  const { theme, setTheme, isDark, custom, updateCustom, resetCustom } = useTheme();
+  const { theme, setTheme, isDark, custom, updateCustom, resetCustom, toggleTheme } = useTheme();
   const [mode, setMode] = useState<StudioMode>(() => readMode());
 
   const setStudioMode = useCallback((m: StudioMode) => {
@@ -65,12 +71,35 @@ export default function ThemeStudioPage() {
   const isFR = locale === 'fr';
   const tx = (fr: string, en: string) => (isFR ? fr : en);
 
+  // Resolve current family for the grid → we render one card per family,
+  // and pressing a card swaps to that family's variant in the active mode.
+  const activeMode: ThemeMode = isDark ? 'dark' : 'light';
+  const familyCards = useMemo(
+    () =>
+      THEME_FAMILIES.map((family) => {
+        // Show the variant matching the user's current dark/light mode.
+        const meta =
+          THEMES.find((t) => t.family === family && t.mode === activeMode) ??
+          THEMES.find((t) => t.family === family)!;
+        return meta;
+      }),
+    [activeMode],
+  );
+  const activeFamily: ThemeFamily =
+    THEMES.find((t) => t.id === theme)?.family ?? 'carbon-green';
+
+  const handlePickFamily = (meta: ThemeMeta) => {
+    setTheme(getFamilyVariant(meta.id, activeMode));
+  };
+
   return (
     <main className="mx-auto w-full max-w-2xl px-3 py-4 sm:px-4 sm:py-6 space-y-4">
       <ThemeStudioHeader
         mode={mode}
         onModeChange={setStudioMode}
         onReset={resetCustom}
+        isDark={isDark}
+        onToggleMode={toggleTheme}
         tx={tx}
       />
 
@@ -79,14 +108,14 @@ export default function ThemeStudioPage() {
         aria-label={tx('Choix du thème', 'Theme choice')}
         className="grid grid-cols-1 sm:grid-cols-2 gap-3"
       >
-        {THEMES.map((meta) => (
+        {familyCards.map((meta) => (
           <ThemeCard
             key={meta.id}
             meta={meta}
-            selected={theme === meta.id}
+            selected={activeFamily === meta.family}
             mode={mode}
             isFR={isFR}
-            onPick={() => setTheme(meta.id)}
+            onPick={() => handlePickFamily(meta)}
           />
         ))}
       </section>
@@ -119,11 +148,15 @@ function ThemeStudioHeader({
   mode,
   onModeChange,
   onReset,
+  isDark,
+  onToggleMode,
   tx,
 }: {
   mode: StudioMode;
   onModeChange: (m: StudioMode) => void;
   onReset: () => void;
+  isDark: boolean;
+  onToggleMode: () => void;
   tx: (fr: string, en: string) => string;
 }) {
   return (
@@ -136,12 +169,30 @@ function ThemeStudioHeader({
         >
           <ChevronLeft className="h-5 w-5" />
         </Link>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-1">
           <Palette className="h-5 w-5 text-primary" aria-hidden="true" />
           <h1 className="text-lg font-semibold leading-tight">
             {tx('Studio de thèmes', 'Theme Studio')}
           </h1>
         </div>
+        {/* Global dark/light swap — preserves the active family. */}
+        <button
+          type="button"
+          onClick={onToggleMode}
+          className={cn(
+            'inline-flex h-9 items-center gap-1.5 rounded-md border border-border px-2.5 text-xs font-medium',
+            'hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+          )}
+          aria-label={tx(
+            isDark ? 'Passer en clair' : 'Passer en sombre',
+            isDark ? 'Switch to light' : 'Switch to dark',
+          )}
+        >
+          {isDark ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
+          <span className="hidden xs:inline">
+            {isDark ? tx('Clair', 'Light') : tx('Sombre', 'Dark')}
+          </span>
+        </button>
       </div>
 
       <p className="text-xs text-muted-foreground">
@@ -375,6 +426,7 @@ function AdvancedControls({
   tx: (fr: string, en: string) => string;
 }) {
   const fontScale = custom.fontScale ?? 1;
+  const fontFamily: ThemeFontFamily = custom.fontFamily ?? 'sans';
   return (
     <section className="space-y-3" aria-label={tx('Personnalisation avancée', 'Advanced customisation')}>
       {/* Accent picker */}
@@ -450,6 +502,44 @@ function AdvancedControls({
         <div className="flex justify-between text-[10px] text-muted-foreground">
           <span>A</span>
           <span className="text-base">A</span>
+        </div>
+      </ControlCard>
+
+      {/* Font family */}
+      <ControlCard
+        icon={<Type className="h-4 w-4 text-primary" />}
+        title={tx('Police', 'Font family')}
+        hint={tx('Sans / Display / Serif', 'Sans / Display / Serif')}
+      >
+        <div role="radiogroup" className="grid grid-cols-3 gap-1.5">
+          {([
+            { value: 'sans',    labelFR: 'Sans',    labelEN: 'Sans',    sample: 'Aa', font: "'DM Sans', system-ui, sans-serif" },
+            { value: 'display', labelFR: 'Display', labelEN: 'Display', sample: 'Aa', font: "'Space Grotesk', system-ui, sans-serif" },
+            { value: 'serif',   labelFR: 'Serif',   labelEN: 'Serif',   sample: 'Aa', font: "'Fraunces', Georgia, serif" },
+          ] as const).map((opt) => {
+            const active = fontFamily === opt.value;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                role="radio"
+                aria-checked={active}
+                onClick={() => updateCustom({ fontFamily: opt.value as ThemeFontFamily })}
+                className={cn(
+                  'flex flex-col items-center justify-center gap-0.5 rounded-md border-2 py-2',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                  active ? 'border-primary bg-primary/5' : 'border-border hover:border-muted-foreground/50',
+                )}
+              >
+                <span className="text-lg leading-none" style={{ fontFamily: opt.font }}>
+                  {opt.sample}
+                </span>
+                <span className="text-[10px] font-medium">
+                  {tx(opt.labelFR, opt.labelEN)}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </ControlCard>
 

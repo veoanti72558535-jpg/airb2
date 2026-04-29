@@ -157,7 +157,7 @@ export default function PerfDebugPage() {
       </Card>
 
       <div className="text-xs text-muted-foreground">
-        <strong>Seuils:</strong> vert ≤120ms · ambre ≤300ms · rouge >300ms. FPS: vert ≥55, ambre ≥40, rouge sinon.
+        <strong>Seuils:</strong> vert ≤120ms · ambre ≤300ms · rouge {'>'}300ms. FPS: vert ≥55, ambre ≥40, rouge sinon.
         Le monitor consomme un rAF continu — désactivez-le en production.
       </div>
     </div>

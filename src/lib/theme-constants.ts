@@ -18,12 +18,55 @@
  * components-only module so HMR can hot-swap it cleanly.
  */
 
-export type ThemeId = 'carbon-green' | 'tactical-dark' | 'slate-light' | 'desert-tan';
+// ─────────────────────────────────────────────────────────────────────────
+// Theme families & variants
+// ─────────────────────────────────────────────────────────────────────────
+// Each "family" exposes a coherent dark + light pair that share the same
+// hue identity (accent + surface tint). Users pick a family in the Theme
+// Studio, then a global dark/light toggle swaps between the two variants.
+//
+// Six premium families:
+//   • carbon-green   — vert tactique, intérieur
+//   • tactical-dark  — ambre profond, lecture nocturne
+//   • slate          — bleu froid neutre, plein soleil
+//   • desert-tan     — terracotta chaud, longues sessions
+//   • midnight-blue  — bleu nuit profond, focus
+//   • mono-slate     — monochrome ardoise, sobre éditorial
+//
+// All 12 ids stay individually addressable so persisted preferences and
+// existing storage values keep working.
+
+export type ThemeFamily =
+  | 'carbon-green'
+  | 'tactical-dark'
+  | 'slate'
+  | 'desert-tan'
+  | 'midnight-blue'
+  | 'mono-slate';
+
+export type ThemeMode = 'dark' | 'light';
+
+export type ThemeId =
+  | 'carbon-green'
+  | 'carbon-green-light'
+  | 'tactical-dark'
+  | 'tactical-dark-light'
+  | 'slate-light'
+  | 'slate-dark'
+  | 'desert-tan'
+  | 'desert-tan-light'
+  | 'midnight-blue'
+  | 'midnight-blue-light'
+  | 'mono-slate'
+  | 'mono-slate-light';
 
 export interface ThemeMeta {
   id: ThemeId;
+  family: ThemeFamily;
+  mode: ThemeMode;
   labelFR: string;
   labelEN: string;
+  /** Convenience: `mode === 'dark'`. Kept for backwards compatibility. */
   isDark: boolean;
   accentColor: string;
   bgColor: string;
@@ -33,23 +76,82 @@ export interface ThemeMeta {
   descEN: string;
 }
 
+/**
+ * All 12 themes. Order matters: it drives the Studio grid. Families come
+ * in pairs (dark first, then light) so the dark/light toggle has a
+ * predictable neighbour.
+ */
 export const THEMES: ThemeMeta[] = [
-  { id: 'carbon-green',  labelFR: 'Carbon Green',  labelEN: 'Carbon Green',  isDark: true,  accentColor: '#22C55E', bgColor: '#111111',
-    descFR: 'Sombre, vert tactique. Idéal en intérieur.',                  descEN: 'Dark, tactical green. Best for indoors.' },
-  { id: 'tactical-dark', labelFR: 'Tactical Dark', labelEN: 'Tactical Dark', isDark: true,  accentColor: '#F59E0B', bgColor: '#0C0E14',
-    descFR: 'Sombre profond, accent ambre. Lecture nocturne.',              descEN: 'Deep dark, amber accent. Night-time reading.' },
-  { id: 'slate-light',   labelFR: 'Slate Light',   labelEN: 'Slate Light',   isDark: false, accentColor: '#3B82F6', bgColor: '#F8FAFC',
-    descFR: 'Clair, bleu froid. Plein soleil sur le terrain.',              descEN: 'Light, cool blue. Outdoor sunlight.' },
-  { id: 'desert-tan',    labelFR: 'Desert Tan',    labelEN: 'Desert Tan',    isDark: true,  accentColor: '#E07B39', bgColor: '#1C1510',
-    descFR: 'Sombre chaud, accent terracotta. Confort longue durée.',       descEN: 'Warm dark, terracotta accent. Long-session comfort.' },
+  // Carbon Green
+  { id: 'carbon-green',        family: 'carbon-green',  mode: 'dark',  isDark: true,  accentColor: '#22C55E', bgColor: '#111111',
+    labelFR: 'Carbon Green',   labelEN: 'Carbon Green',
+    descFR: 'Sombre, vert tactique. Idéal en intérieur.',  descEN: 'Dark, tactical green. Best for indoors.' },
+  { id: 'carbon-green-light',  family: 'carbon-green',  mode: 'light', isDark: false, accentColor: '#16A34A', bgColor: '#F4FBF6',
+    labelFR: 'Carbon Green',   labelEN: 'Carbon Green',
+    descFR: 'Clair, vert tactique adouci.',                descEN: 'Light, softened tactical green.' },
+  // Tactical (amber)
+  { id: 'tactical-dark',       family: 'tactical-dark', mode: 'dark',  isDark: true,  accentColor: '#F59E0B', bgColor: '#0C0E14',
+    labelFR: 'Tactical Amber', labelEN: 'Tactical Amber',
+    descFR: 'Sombre profond, accent ambre. Lecture nocturne.', descEN: 'Deep dark, amber accent. Night-time reading.' },
+  { id: 'tactical-dark-light', family: 'tactical-dark', mode: 'light', isDark: false, accentColor: '#D97706', bgColor: '#FBF7EE',
+    labelFR: 'Tactical Amber', labelEN: 'Tactical Amber',
+    descFR: 'Clair, ambre chaud. Bureau ensoleillé.',      descEN: 'Light, warm amber. Sunlit office.' },
+  // Slate (blue)
+  { id: 'slate-dark',          family: 'slate',         mode: 'dark',  isDark: true,  accentColor: '#60A5FA', bgColor: '#0E1626',
+    labelFR: 'Slate Blue',     labelEN: 'Slate Blue',
+    descFR: 'Sombre, bleu acier. Polyvalent.',             descEN: 'Dark, steel blue. Versatile.' },
+  { id: 'slate-light',         family: 'slate',         mode: 'light', isDark: false, accentColor: '#3B82F6', bgColor: '#F8FAFC',
+    labelFR: 'Slate Blue',     labelEN: 'Slate Blue',
+    descFR: 'Clair, bleu froid. Plein soleil sur le terrain.', descEN: 'Light, cool blue. Outdoor sunlight.' },
+  // Desert
+  { id: 'desert-tan',          family: 'desert-tan',    mode: 'dark',  isDark: true,  accentColor: '#E07B39', bgColor: '#1C1510',
+    labelFR: 'Desert Tan',     labelEN: 'Desert Tan',
+    descFR: 'Sombre chaud, accent terracotta. Confort longue durée.', descEN: 'Warm dark, terracotta accent. Long-session comfort.' },
+  { id: 'desert-tan-light',    family: 'desert-tan',    mode: 'light', isDark: false, accentColor: '#C2410C', bgColor: '#FBF6EE',
+    labelFR: 'Desert Tan',     labelEN: 'Desert Tan',
+    descFR: 'Clair, ton sable. Élégant et chaleureux.',    descEN: 'Light, sand tone. Warm and elegant.' },
+  // Midnight Blue
+  { id: 'midnight-blue',       family: 'midnight-blue', mode: 'dark',  isDark: true,  accentColor: '#7C9CFF', bgColor: '#070B1A',
+    labelFR: 'Midnight Blue',  labelEN: 'Midnight Blue',
+    descFR: 'Bleu nuit profond, accent indigo. Concentration.', descEN: 'Deep night blue, indigo accent. Focus mode.' },
+  { id: 'midnight-blue-light', family: 'midnight-blue', mode: 'light', isDark: false, accentColor: '#4F46E5', bgColor: '#F5F6FF',
+    labelFR: 'Midnight Blue',  labelEN: 'Midnight Blue',
+    descFR: 'Clair, indigo doux. Lecture longue durée.',   descEN: 'Light, soft indigo. Long-form reading.' },
+  // Mono Slate
+  { id: 'mono-slate',          family: 'mono-slate',    mode: 'dark',  isDark: true,  accentColor: '#E2E8F0', bgColor: '#0B0D10',
+    labelFR: 'Mono Slate',     labelEN: 'Mono Slate',
+    descFR: 'Monochrome ardoise. Minimaliste éditorial.',  descEN: 'Slate monochrome. Editorial minimalism.' },
+  { id: 'mono-slate-light',    family: 'mono-slate',    mode: 'light', isDark: false, accentColor: '#1F2937', bgColor: '#FAFAFA',
+    labelFR: 'Mono Slate',     labelEN: 'Mono Slate',
+    descFR: 'Clair, encre & papier. Sobre haut de gamme.', descEN: 'Light, ink & paper. Premium minimal.' },
 ];
+
+const THEME_IDS = new Set<ThemeId>(THEMES.map((t) => t.id));
 
 export const THEME_STORAGE_KEY = 'pcp-theme';
 export const DEFAULT_THEME: ThemeId = 'carbon-green';
 
-export function isValidTheme(v: string | null): v is ThemeId {
-  return v === 'carbon-green' || v === 'tactical-dark' || v === 'slate-light' || v === 'desert-tan';
+export function isValidTheme(v: string | null | undefined): v is ThemeId {
+  return typeof v === 'string' && THEME_IDS.has(v as ThemeId);
 }
+
+/**
+ * Find a theme's matching variant in the opposite mode (dark ↔ light) so
+ * the dark/light toggle can swap inside the same family without losing
+ * the user's family choice.
+ */
+export function getFamilyVariant(id: ThemeId, mode: ThemeMode): ThemeId {
+  const meta = THEMES.find((t) => t.id === id);
+  if (!meta) return DEFAULT_THEME;
+  if (meta.mode === mode) return meta.id;
+  const sibling = THEMES.find((t) => t.family === meta.family && t.mode === mode);
+  return sibling?.id ?? meta.id;
+}
+
+/** Distinct families in display order, derived from THEMES. */
+export const THEME_FAMILIES: ThemeFamily[] = Array.from(
+  new Set(THEMES.map((t) => t.family)),
+);
 
 // ─────────────────────────────────────────────────────────────────────────
 // Per-user storage helpers
@@ -92,6 +194,14 @@ export function customStorageKeyFor(userId: string | null | undefined): string {
 export type ThemeDensity = 'compact' | 'cosy' | 'comfortable';
 export type ThemeContrast = 'normal' | 'high';
 export type ThemeRadius = 'sharp' | 'normal' | 'soft';
+/**
+ * Typography family selector exposed in the Studio.
+ *
+ *   • sans    — DM Sans / Inter (default, neutral premium)
+ *   • display — Space Grotesk (modern, geometric headings)
+ *   • serif   — Fraunces (editorial, elegant)
+ */
+export type ThemeFontFamily = 'sans' | 'display' | 'serif';
 
 export interface ThemeCustomisation {
   accentHex?: string | null;
@@ -99,6 +209,8 @@ export interface ThemeCustomisation {
   fontScale?: number;
   contrast?: ThemeContrast;
   radius?: ThemeRadius;
+  /** Heading + body font family. `undefined` falls back to 'sans'. */
+  fontFamily?: ThemeFontFamily;
 }
 
 export const THEME_CUSTOM_STORAGE_KEY = 'pcp-theme-custom';
@@ -110,6 +222,7 @@ export const DEFAULT_CUSTOMISATION: Required<Omit<ThemeCustomisation, 'accentHex
   fontScale: 1,
   contrast: 'normal',
   radius: 'normal',
+  fontFamily: 'sans',
 };
 
 export const FONT_SCALE_BOUNDS = { min: 0.875, max: 1.25, step: 0.025 } as const;
@@ -190,6 +303,9 @@ export function sanitiseCustomisation(c: ThemeCustomisation): ThemeCustomisation
   }
   if (c.contrast === 'normal' || c.contrast === 'high') out.contrast = c.contrast;
   if (c.radius === 'sharp' || c.radius === 'normal' || c.radius === 'soft') out.radius = c.radius;
+  if (c.fontFamily === 'sans' || c.fontFamily === 'display' || c.fontFamily === 'serif') {
+    out.fontFamily = c.fontFamily;
+  }
   return out;
 }
 

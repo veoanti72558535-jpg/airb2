@@ -5,6 +5,10 @@ import {
   readCustomisation,
   writeCustomisation,
   THEME_CUSTOM_STORAGE_KEY,
+  THEMES,
+  THEME_FAMILIES,
+  getFamilyVariant,
+  isValidTheme,
 } from './theme-constants';
 
 describe('hexToHslTokens', () => {
@@ -81,5 +85,48 @@ describe('read/writeCustomisation', () => {
   it('returns {} on corrupted storage', () => {
     localStorage.setItem(THEME_CUSTOM_STORAGE_KEY, '{not json');
     expect(readCustomisation()).toEqual({});
+  });
+});
+
+describe('Theme families', () => {
+  it('exposes the six premium families', () => {
+    expect(THEME_FAMILIES).toEqual([
+      'carbon-green',
+      'tactical-dark',
+      'slate',
+      'desert-tan',
+      'midnight-blue',
+      'mono-slate',
+    ]);
+  });
+
+  it('every family has both a dark and a light variant', () => {
+    for (const family of THEME_FAMILIES) {
+      const variants = THEMES.filter((t) => t.family === family);
+      const modes = variants.map((v) => v.mode).sort();
+      expect(modes).toEqual(['dark', 'light']);
+    }
+  });
+
+  it('getFamilyVariant swaps to the requested mode within the family', () => {
+    expect(getFamilyVariant('midnight-blue', 'light')).toBe('midnight-blue-light');
+    expect(getFamilyVariant('midnight-blue-light', 'dark')).toBe('midnight-blue');
+    expect(getFamilyVariant('mono-slate', 'light')).toBe('mono-slate-light');
+    expect(getFamilyVariant('slate-light', 'dark')).toBe('slate-dark');
+    // Already in the right mode → no change.
+    expect(getFamilyVariant('carbon-green', 'dark')).toBe('carbon-green');
+  });
+
+  it('isValidTheme accepts all 12 ids and rejects unknown values', () => {
+    for (const t of THEMES) expect(isValidTheme(t.id)).toBe(true);
+    expect(isValidTheme('not-a-theme')).toBe(false);
+    expect(isValidTheme(null)).toBe(false);
+  });
+
+  it('sanitises and round-trips fontFamily', () => {
+    expect(sanitiseCustomisation({ fontFamily: 'serif' }).fontFamily).toBe('serif');
+    expect(sanitiseCustomisation({ fontFamily: 'display' }).fontFamily).toBe('display');
+    // @ts-expect-error testing runtime guard
+    expect(sanitiseCustomisation({ fontFamily: 'comic-sans' }).fontFamily).toBeUndefined();
   });
 });

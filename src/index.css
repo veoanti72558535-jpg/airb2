@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -200,6 +200,325 @@
     --sidebar-accent-foreground: 31 24% 44%;
     --sidebar-border: 27 24% 24%;
     --sidebar-ring: 23 74% 55%;
+  }
+
+  /* ──────────────────────────────────────────────────────────────────
+     Auto-derived light variants for the four original families.
+     We only override the tokens that need to flip for light mode;
+     accent/sidebar tokens are tuned per-family so brand identity
+     survives the dark/light swap.
+     ────────────────────────────────────────────────────────────────── */
+
+  /* ── Carbon Green — Light ── */
+  [data-theme="carbon-green-light"] {
+    --background: 138 50% 97%;
+    --foreground: 142 30% 8%;
+    --card: 0 0% 100%;
+    --card-foreground: 142 30% 8%;
+    --popover: 138 40% 96%;
+    --popover-foreground: 142 30% 8%;
+    --primary: 142 71% 38%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 138 25% 90%;
+    --secondary-foreground: 142 25% 25%;
+    --muted: 138 30% 94%;
+    --muted-foreground: 142 15% 38%;
+    --accent: 142 65% 35%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 138 18% 82%;
+    --input: 138 18% 82%;
+    --ring: 142 71% 38%;
+    --surface: 0 0% 100%;
+    --surface-foreground: 142 30% 8%;
+    --tactical: 142 71% 38%;
+    --tactical-foreground: 0 0% 100%;
+    --warning: 38 92% 38%;
+    --warning-foreground: 0 0% 100%;
+    --info: 217 91% 50%;
+    --info-foreground: 0 0% 100%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 142 25% 25%;
+    --sidebar-primary: 142 71% 38%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 138 25% 90%;
+    --sidebar-accent-foreground: 142 25% 25%;
+    --sidebar-border: 138 18% 82%;
+    --sidebar-ring: 142 71% 38%;
+  }
+
+  /* ── Tactical Amber — Light ── */
+  [data-theme="tactical-dark-light"] {
+    --background: 38 60% 97%;
+    --foreground: 30 30% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 30 30% 10%;
+    --popover: 38 50% 96%;
+    --popover-foreground: 30 30% 10%;
+    --primary: 32 95% 42%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 38 35% 90%;
+    --secondary-foreground: 30 25% 25%;
+    --muted: 38 40% 94%;
+    --muted-foreground: 30 18% 38%;
+    --accent: 32 90% 38%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 38 25% 82%;
+    --input: 38 25% 82%;
+    --ring: 32 95% 42%;
+    --surface: 0 0% 100%;
+    --surface-foreground: 30 30% 10%;
+    --tactical: 32 95% 42%;
+    --tactical-foreground: 0 0% 100%;
+    --warning: 38 92% 38%;
+    --warning-foreground: 0 0% 100%;
+    --info: 217 91% 50%;
+    --info-foreground: 0 0% 100%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 30 25% 25%;
+    --sidebar-primary: 32 95% 42%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 38 35% 90%;
+    --sidebar-accent-foreground: 30 25% 25%;
+    --sidebar-border: 38 25% 82%;
+    --sidebar-ring: 32 95% 42%;
+  }
+
+  /* ── Slate Blue — Dark ── */
+  [data-theme="slate-dark"] {
+    --background: 222 35% 8%;
+    --foreground: 210 40% 96%;
+    --card: 222 30% 12%;
+    --card-foreground: 210 40% 96%;
+    --popover: 222 30% 14%;
+    --popover-foreground: 210 40% 96%;
+    --primary: 217 91% 65%;
+    --primary-foreground: 222 35% 8%;
+    --secondary: 222 28% 18%;
+    --secondary-foreground: 215 25% 75%;
+    --muted: 222 28% 18%;
+    --muted-foreground: 215 18% 55%;
+    --accent: 217 85% 58%;
+    --accent-foreground: 222 35% 8%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 222 25% 24%;
+    --input: 222 25% 24%;
+    --ring: 217 91% 65%;
+    --surface: 222 30% 12%;
+    --surface-foreground: 210 40% 96%;
+    --tactical: 217 91% 65%;
+    --tactical-foreground: 222 35% 8%;
+    --warning: 45 93% 55%;
+    --warning-foreground: 45 93% 10%;
+    --info: 217 91% 65%;
+    --info-foreground: 0 0% 98%;
+    --sidebar-background: 222 30% 12%;
+    --sidebar-foreground: 215 25% 75%;
+    --sidebar-primary: 217 91% 65%;
+    --sidebar-primary-foreground: 222 35% 8%;
+    --sidebar-accent: 222 28% 18%;
+    --sidebar-accent-foreground: 215 25% 75%;
+    --sidebar-border: 222 25% 24%;
+    --sidebar-ring: 217 91% 65%;
+  }
+
+  /* ── Desert Tan — Light ── */
+  [data-theme="desert-tan-light"] {
+    --background: 35 60% 97%;
+    --foreground: 22 30% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 22 30% 12%;
+    --popover: 35 50% 95%;
+    --popover-foreground: 22 30% 12%;
+    --primary: 18 78% 42%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 32 30% 88%;
+    --secondary-foreground: 22 25% 28%;
+    --muted: 32 35% 93%;
+    --muted-foreground: 22 18% 38%;
+    --accent: 18 70% 38%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 32 22% 80%;
+    --input: 32 22% 80%;
+    --ring: 18 78% 42%;
+    --surface: 0 0% 100%;
+    --surface-foreground: 22 30% 12%;
+    --tactical: 18 78% 42%;
+    --tactical-foreground: 0 0% 100%;
+    --warning: 38 92% 38%;
+    --warning-foreground: 0 0% 100%;
+    --info: 217 91% 50%;
+    --info-foreground: 0 0% 100%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 22 25% 28%;
+    --sidebar-primary: 18 78% 42%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 32 30% 88%;
+    --sidebar-accent-foreground: 22 25% 28%;
+    --sidebar-border: 32 22% 80%;
+    --sidebar-ring: 18 78% 42%;
+  }
+
+  /* ── Midnight Blue — Dark ── */
+  [data-theme="midnight-blue"] {
+    --background: 230 60% 5%;
+    --foreground: 220 30% 95%;
+    --card: 230 45% 9%;
+    --card-foreground: 220 30% 95%;
+    --popover: 230 45% 12%;
+    --popover-foreground: 220 30% 95%;
+    --primary: 235 100% 74%;
+    --primary-foreground: 230 60% 5%;
+    --secondary: 230 35% 16%;
+    --secondary-foreground: 220 25% 78%;
+    --muted: 230 35% 16%;
+    --muted-foreground: 220 18% 55%;
+    --accent: 250 90% 68%;
+    --accent-foreground: 230 60% 5%;
+    --destructive: 0 72% 55%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 230 32% 22%;
+    --input: 230 32% 22%;
+    --ring: 235 100% 74%;
+    --surface: 230 45% 9%;
+    --surface-foreground: 220 30% 95%;
+    --tactical: 235 100% 74%;
+    --tactical-foreground: 230 60% 5%;
+    --warning: 45 93% 60%;
+    --warning-foreground: 45 93% 10%;
+    --info: 217 91% 65%;
+    --info-foreground: 0 0% 98%;
+    --sidebar-background: 230 45% 9%;
+    --sidebar-foreground: 220 25% 78%;
+    --sidebar-primary: 235 100% 74%;
+    --sidebar-primary-foreground: 230 60% 5%;
+    --sidebar-accent: 230 35% 16%;
+    --sidebar-accent-foreground: 220 25% 78%;
+    --sidebar-border: 230 32% 22%;
+    --sidebar-ring: 235 100% 74%;
+  }
+
+  /* ── Midnight Blue — Light ── */
+  [data-theme="midnight-blue-light"] {
+    --background: 230 100% 99%;
+    --foreground: 230 50% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 230 50% 12%;
+    --popover: 230 80% 97%;
+    --popover-foreground: 230 50% 12%;
+    --primary: 245 75% 56%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 230 40% 92%;
+    --secondary-foreground: 230 35% 28%;
+    --muted: 230 50% 95%;
+    --muted-foreground: 230 18% 42%;
+    --accent: 250 75% 52%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 230 30% 84%;
+    --input: 230 30% 84%;
+    --ring: 245 75% 56%;
+    --surface: 0 0% 100%;
+    --surface-foreground: 230 50% 12%;
+    --tactical: 245 75% 56%;
+    --tactical-foreground: 0 0% 100%;
+    --warning: 38 92% 42%;
+    --warning-foreground: 0 0% 100%;
+    --info: 217 91% 50%;
+    --info-foreground: 0 0% 100%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 230 35% 28%;
+    --sidebar-primary: 245 75% 56%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 230 40% 92%;
+    --sidebar-accent-foreground: 230 35% 28%;
+    --sidebar-border: 230 30% 84%;
+    --sidebar-ring: 245 75% 56%;
+  }
+
+  /* ── Mono Slate — Dark ── */
+  [data-theme="mono-slate"] {
+    --background: 220 13% 6%;
+    --foreground: 210 20% 96%;
+    --card: 220 12% 10%;
+    --card-foreground: 210 20% 96%;
+    --popover: 220 12% 12%;
+    --popover-foreground: 210 20% 96%;
+    --primary: 210 25% 92%;
+    --primary-foreground: 220 13% 6%;
+    --secondary: 220 10% 16%;
+    --secondary-foreground: 210 15% 80%;
+    --muted: 220 10% 16%;
+    --muted-foreground: 215 12% 58%;
+    --accent: 210 20% 70%;
+    --accent-foreground: 220 13% 6%;
+    --destructive: 0 65% 52%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 220 10% 22%;
+    --input: 220 10% 22%;
+    --ring: 210 25% 92%;
+    --surface: 220 12% 10%;
+    --surface-foreground: 210 20% 96%;
+    --tactical: 210 25% 92%;
+    --tactical-foreground: 220 13% 6%;
+    --warning: 45 80% 55%;
+    --warning-foreground: 45 80% 10%;
+    --info: 200 60% 65%;
+    --info-foreground: 220 13% 6%;
+    --sidebar-background: 220 12% 10%;
+    --sidebar-foreground: 210 15% 80%;
+    --sidebar-primary: 210 25% 92%;
+    --sidebar-primary-foreground: 220 13% 6%;
+    --sidebar-accent: 220 10% 16%;
+    --sidebar-accent-foreground: 210 15% 80%;
+    --sidebar-border: 220 10% 22%;
+    --sidebar-ring: 210 25% 92%;
+  }
+
+  /* ── Mono Slate — Light ── */
+  [data-theme="mono-slate-light"] {
+    --background: 0 0% 98%;
+    --foreground: 220 25% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 25% 10%;
+    --popover: 0 0% 99%;
+    --popover-foreground: 220 25% 10%;
+    --primary: 220 30% 18%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 12% 92%;
+    --secondary-foreground: 220 25% 25%;
+    --muted: 220 12% 95%;
+    --muted-foreground: 220 12% 38%;
+    --accent: 220 25% 32%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 65% 50%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 220 12% 84%;
+    --input: 220 12% 84%;
+    --ring: 220 30% 18%;
+    --surface: 0 0% 100%;
+    --surface-foreground: 220 25% 10%;
+    --tactical: 220 30% 18%;
+    --tactical-foreground: 0 0% 100%;
+    --warning: 38 90% 40%;
+    --warning-foreground: 0 0% 100%;
+    --info: 217 91% 45%;
+    --info-foreground: 0 0% 100%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 220 25% 25%;
+    --sidebar-primary: 220 30% 18%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 12% 92%;
+    --sidebar-accent-foreground: 220 25% 25%;
+    --sidebar-border: 220 12% 84%;
+    --sidebar-ring: 220 30% 18%;
   }
 }
 

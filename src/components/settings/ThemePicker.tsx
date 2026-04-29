@@ -1,22 +1,30 @@
 import React from 'react';
 import { Check } from 'lucide-react';
-import { useTheme, THEMES, ThemeId } from '@/lib/theme';
+import { useTheme, THEMES } from '@/lib/theme';
+import { THEME_FAMILIES, getFamilyVariant } from '@/lib/theme-constants';
 import { useI18n } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 
 export function ThemePicker() {
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, isDark } = useTheme();
   const { locale } = useI18n();
+  const mode = isDark ? 'dark' : 'light';
+  const activeFamily = THEMES.find((t) => t.id === theme)?.family ?? 'carbon-green';
+  const cards = THEME_FAMILIES.map(
+    (family) =>
+      THEMES.find((t) => t.family === family && t.mode === mode) ??
+      THEMES.find((t) => t.family === family)!,
+  );
 
   return (
     <div className="grid grid-cols-2 gap-2">
-      {THEMES.map(t => {
-        const selected = theme === t.id;
+      {cards.map((t) => {
+        const selected = activeFamily === t.family;
         const label = locale === 'fr' ? t.labelFR : t.labelEN;
         return (
           <button
             key={t.id}
-            onClick={() => setTheme(t.id)}
+            onClick={() => setTheme(getFamilyVariant(t.id, mode))}
             className={cn(
               'relative flex flex-col items-start gap-1.5 p-3 rounded-lg border-2 transition-all duration-200 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
               selected
@@ -35,14 +43,6 @@ export function ThemePicker() {
             </div>
             <div className="flex items-center gap-1.5">
               <span className="text-xs font-semibold text-foreground">{label}</span>
-              <span className={cn(
-                'text-[10px] px-1.5 py-0.5 rounded font-medium',
-                t.isDark
-                  ? 'bg-secondary text-secondary-foreground'
-                  : 'bg-primary/15 text-primary'
-              )}>
-                {t.isDark ? (locale === 'fr' ? 'Sombre' : 'Dark') : (locale === 'fr' ? 'Clair' : 'Light')}
-              </span>
             </div>
             {selected && (
               <div className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-primary flex items-center justify-center">

@@ -667,6 +667,62 @@
     --muted-foreground: var(--muted-foreground); /* already overridden by .hc */
   }
 
+  /* ────────────────────────────────────────────────────────────────────────
+     A11y: Reduce motion (toggled by `.reduce-motion` on <html>).
+
+     Mirrors the `prefers-reduced-motion: reduce` media query but driven by
+     the user setting so it works regardless of the OS preference. We
+     neutralise EVERY transition and animation (including the theme-swap
+     180ms colour fades just below, the `animate-*` keyframes from the
+     Tailwind config, and any `transform`-based hover-scales). Theme-agnostic:
+     the rule targets every element and never touches design tokens, so it
+     applies uniformly to all 12 theme variants.
+
+     `scroll-behavior: auto` neutralises smooth scroll for anchor jumps.
+     ──────────────────────────────────────────────────────────────────────── */
+  html.reduce-motion,
+  html.reduce-motion *,
+  html.reduce-motion *::before,
+  html.reduce-motion *::after {
+    transition-duration: 0ms !important;
+    transition-delay: 0ms !important;
+    animation-duration: 0ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+  /* Hover micro-interactions become no-ops so users with vestibular issues
+     don't get unexpected scaling on focus/hover. */
+  html.reduce-motion .hover-scale:hover,
+  html.reduce-motion .hover-scale:focus-visible {
+    transform: none !important;
+  }
+
+  /* ────────────────────────────────────────────────────────────────────────
+     A11y: Strong focus (toggled by `.strong-focus` on <html>).
+
+     Boosts the focus-visible affordance to 3px solid + 3px offset and
+     adds a 4px halo (box-shadow) using the active theme's `--ring` token
+     (= `--primary`). Because every theme defines `--ring` in HSL, the
+     rule scales correctly across dark + light variants without per-theme
+     overrides — green theme gets a green halo, amber theme gets amber, etc.
+
+     Stacks with `.hc :focus-visible` (defined above): when both are on, the
+     stronger `outline-width` (3px) wins because of source order, and the
+     halo from `.strong-focus` is additive.
+     ──────────────────────────────────────────────────────────────────────── */
+  html.strong-focus :focus-visible {
+    outline: 3px solid hsl(var(--ring)) !important;
+    outline-offset: 3px !important;
+    box-shadow: 0 0 0 4px hsl(var(--ring) / 0.35) !important;
+    border-radius: inherit;
+  }
+  /* Skip the halo on full-bleed bars where it would clip awkwardly. */
+  html.strong-focus header :focus-visible,
+  html.strong-focus nav :focus-visible {
+    box-shadow: 0 0 0 3px hsl(var(--ring) / 0.45) !important;
+  }
+
   .surface-card, .surface-elevated,
   [class*="bg-card"], [class*="bg-background"], [class*="bg-muted"], [class*="bg-popover"], [class*="bg-secondary"],
   aside, nav, main, header, footer, section, dialog,

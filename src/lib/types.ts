@@ -544,5 +544,13 @@ export interface AppSettings {
   accessibility?: {
     highContrast?: boolean;
     largeText?: boolean;
+    /**
+     * Premium contrast — pushes foreground tokens closer to pure white/black
+     * and slightly tightens borders, while keeping surface gradients and
+     * 180ms transitions intact. Designed to coexist with `highContrast`
+     * (which is the AA/utility boost) — `premiumContrast` is the polished
+     * default for users who want crisper labels without the AA aesthetic.
+     */
+    premiumContrast?: boolean;
   };
 }

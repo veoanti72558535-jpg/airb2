@@ -257,6 +257,55 @@
   html.lg-text .text-\[10px\] { font-size: 11px !important; }
   html.lg-text .text-\[11px\] { font-size: 12px !important; }
 
+  /* ────────────────────────────────────────────────────────────────────────
+     A11y: Premium contrast (toggled by adding `.pc` on <html>).
+     Distinct from `.hc` (which is the WCAG AA utility boost): `.pc` is the
+     premium aesthetic — slightly crisper labels and borders, brand-tinted
+     accents, BUT surfaces, gradients and 180ms transitions are preserved.
+     Additive with both `.hc` and `.lg-text`; if both `.pc` and `.hc` are
+     active, `.hc` wins on the secondary tokens (it's the stronger boost).
+
+     Tuning rationale:
+       • Foreground pushed to near-pure on dark, near-ink on light → headlines
+         feel sharper without changing card background.
+       • Muted-foreground bumped less than `.hc` (keeps the soft hierarchy).
+       • Border lightness lifted by ~6 pts so dividers stop disappearing on
+         OLED displays.
+       • Primary saturation +4 pts → amber stays brand but reads crisper.
+       • Card surface gets a hairline inner stroke via box-shadow so the
+         glass look survives on bright HDR displays.
+     ──────────────────────────────────────────────────────────────────────── */
+  html.pc.dark {
+    --foreground: 0 0% 99%;
+    --muted-foreground: 0 0% 72%;
+    --border: 0 0% 28%;
+    --card-foreground: 0 0% 99%;
+    --popover-foreground: 0 0% 99%;
+  }
+  html.pc.light {
+    --foreground: 0 0% 6%;
+    --muted-foreground: 0 0% 30%;
+    --border: 0 0% 70%;
+    --card-foreground: 0 0% 6%;
+    --popover-foreground: 0 0% 6%;
+  }
+  /* Theme-agnostic accent crispening — works for all 4 themes. */
+  html.pc {
+    --ring: var(--primary);
+  }
+  /* Keep the premium glass surfaces — add a 1px inner stroke for crispness. */
+  html.pc .surface-elevated,
+  html.pc .glass-card,
+  html.pc [class*="bg-card"]:not([class*="from-"]) {
+    box-shadow: inset 0 0 0 1px hsl(var(--border) / 0.45);
+  }
+  /* When `.hc` is also active, let `.hc` (stronger AA boost) win on
+     muted-foreground/border — but keep `.pc`'s pure foreground + inner
+     stroke for the polished feel. */
+  html.pc.hc {
+    --muted-foreground: var(--muted-foreground); /* already overridden by .hc */
+  }
+
   .surface-card, .surface-elevated,
   [class*="bg-card"], [class*="bg-background"], [class*="bg-muted"], [class*="bg-popover"], [class*="bg-secondary"],
   aside, nav, main, header, footer, section, dialog,

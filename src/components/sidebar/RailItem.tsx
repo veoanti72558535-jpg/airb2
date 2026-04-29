@@ -56,9 +56,32 @@ type ButtonProps = BaseProps & {
   onClick?: React.MouseEventHandler<HTMLButtonElement>;
   ariaLabel?: string;
   ariaExpanded?: boolean;
+  /**
+   * Optional id of the region this button controls (e.g. a panel/dialog).
+   * Surfaces `aria-controls` for screen-reader users so the relationship
+   * between trigger and disclosed region is announced.
+   */
+  ariaControls?: string;
+  /**
+   * When true, the button toggles a *disclosable* surface and `aria-pressed`
+   * is suppressed (Tab-and-toggle ambiguity). Use with `ariaExpanded` only.
+   */
+  isDisclosure?: boolean;
 };
 
-export type RailItemProps = LinkProps | ButtonProps;
+/**
+ * Optional callbacks shared by both flavours so consumers can surface
+ * additional state to assistive tech (e.g. emit a live-region update when
+ * an item is hovered while the sidebar is collapsed and labels are hidden).
+ */
+type SharedExtras = {
+  /** Suffix appended to `aria-label` for nav links — typically "(actif)" / "(active)". */
+  activeLabelSuffix?: string;
+  /** Hint announced when the rail is collapsed (e.g. "barre réduite"). */
+  collapsedHint?: string;
+};
+
+export type RailItemProps = (LinkProps | ButtonProps) & SharedExtras;
 
 /**
  * Shared base classes — exported so adjacent components (e.g. mobile bottom
@@ -133,6 +156,7 @@ const RailItemInner = forwardRef<HTMLElement, RailItemProps>(function RailItemIn
     className,
     children,
   } = props;
+  const { activeLabelSuffix, collapsedHint } = props;
 
   const cls = cn(railItemClass(active, variant), className);
 
@@ -151,12 +175,23 @@ const RailItemInner = forwardRef<HTMLElement, RailItemProps>(function RailItemIn
     );
 
   if ('to' in props && props.to !== undefined) {
+    // Announce active route + (optionally) the collapsed-rail context so
+    // screen-reader users get the same hierarchy sighted users see when
+    // the visible label is hidden in the icon-only sidebar.
+    const baseLabel = title ?? label;
+    const labelParts = [baseLabel];
+    if (active && activeLabelSuffix) labelParts.push(`(${activeLabelSuffix})`);
+    if (collapsedHint) labelParts.push(`— ${collapsedHint}`);
+    const linkAriaLabel = baseLabel ? labelParts.filter(Boolean).join(' ') : undefined;
     return (
       <Link
         ref={ref as React.Ref<HTMLAnchorElement>}
         to={props.to}
         title={title}
         aria-current={active ? 'page' : undefined}
+        aria-label={linkAriaLabel}
+        data-state={active ? 'active' : 'inactive'}
+        data-collapsed={!label || undefined}
         className={cls}
       >
         {content}
@@ -165,15 +200,27 @@ const RailItemInner = forwardRef<HTMLElement, RailItemProps>(function RailItemIn
   }
 
   const btnProps = props as ButtonProps;
+  const isDisclosure = btnProps.isDisclosure ?? btnProps.ariaExpanded !== undefined;
+  const baseBtnLabel = btnProps.ariaLabel ?? title ?? label;
+  const btnLabelParts = [baseBtnLabel];
+  if (active && activeLabelSuffix && !isDisclosure) btnLabelParts.push(`(${activeLabelSuffix})`);
+  if (collapsedHint) btnLabelParts.push(`— ${collapsedHint}`);
+  const btnAriaLabel = baseBtnLabel ? btnLabelParts.filter(Boolean).join(' ') : undefined;
   return (
     <button
       ref={ref as React.Ref<HTMLButtonElement>}
       type="button"
       onClick={btnProps.onClick}
       title={title}
-      aria-label={btnProps.ariaLabel ?? title ?? label}
+      aria-label={btnAriaLabel}
       aria-expanded={btnProps.ariaExpanded}
-      aria-pressed={btnProps.ariaExpanded === undefined ? undefined : active}
+      aria-controls={btnProps.ariaControls}
+      // For disclosure buttons (those owning a panel via aria-expanded),
+      // skip aria-pressed: the two states would conflict semantically.
+      // For plain toggles/segmented controls, expose pressed state.
+      aria-pressed={isDisclosure ? undefined : (active || undefined)}
+      data-state={active ? 'active' : 'inactive'}
+      data-collapsed={!label || undefined}
       className={cls}
     >
       {content}

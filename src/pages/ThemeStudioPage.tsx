@@ -13,6 +13,9 @@ import {
   Moon,
   Contrast,
   LayoutGrid,
+  Shuffle,
+  ShieldCheck,
+  AlertTriangle,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '@/lib/theme';

@@ -48,6 +48,7 @@ import { useTheme } from '@/lib/theme';
 import { THEMES, DEFAULT_THEME } from '@/lib/theme-constants';
 import { getSettings, saveSettings, sessionStore } from '@/lib/storage';
 import { toDisplay, getDefaultUnitPrefs, getUnitSymbol } from '@/lib/units';
+import { useUnits } from '@/hooks/use-units';
 import { getSortedFavorites, formatLastUsed, getLastSession } from '@/lib/session-favorites';
 import { markLocalUpdated, savePreferenceToSupabase } from '@/lib/preferences-sync';
 import { useAuth } from '@/lib/auth-context';
@@ -64,6 +65,7 @@ export function PreferencesPanel() {
   const { theme, setTheme, isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { prefs, setUnitPref } = useUnits();
   const settings = getSettings();
   // `advancedMode` is local-only (no Supabase column today). Locale and
   // theme have their own per-user sync paths inside their providers, so
@@ -313,6 +315,11 @@ export function PreferencesPanel() {
             user pick the unit system by SEEING the format, not by
             guessing the conversion. */}
         <UnitsComparison activeSystem={unitSystem} t={t} />
+        {/* Per-category fine-tune — quick toggle between the 2-3 most
+            common options for each category, with an inline preview.
+            Goes BEYOND the system-wide switch above: a user can pick
+            metric distances but imperial energy, for example. */}
+        <UnitsFineTune prefs={prefs} setUnitPref={(k, v) => { setUnitPref(k, v); force(); }} t={t} />
         <p className="text-[10px] text-muted-foreground">
           {t('settings.preferences.unitsHint' as any)}
         </p>

@@ -11,7 +11,7 @@ import { GripVertical, Star, Clock, Zap, Cloud, Brain, TrendingUp, Target } from
 import { useNavigate } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
 import { sessionStore, airgunStore, projectileStore, opticStore, getSettings } from '@/lib/storage';
-import { getSortedFavorites } from '@/lib/session-favorites';
+import { getSortedFavorites, formatLastUsed } from '@/lib/session-favorites';
 
 const WIDGET_ORDER_KEY = 'airballistik-widget-order';
 
@@ -153,6 +153,7 @@ function QuickStatsWidget() {
 // ── Widget: Favorites ──
 function FavoritesWidget() {
   const navigate = useNavigate();
+  const { locale } = useI18n();
   const favSessions = getSortedFavorites(sessionStore.getAll());
 
   return (
@@ -173,7 +174,7 @@ function FavoritesWidget() {
               <Star className="h-3 w-3 text-primary fill-primary shrink-0" />
               <span className="text-xs truncate">{s.name}</span>
               <span className="text-[10px] text-muted-foreground ml-auto font-mono shrink-0">
-                BC {s.input.bc}
+                {formatLastUsed(s.updatedAt, locale)}
               </span>
             </button>
           ))}

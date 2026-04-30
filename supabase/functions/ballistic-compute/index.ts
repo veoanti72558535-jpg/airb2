@@ -152,40 +152,17 @@ Deno.serve(async (req) => {
     );
   }
 
-  // Sentinel d'unités obligatoire AVANT toute autre validation — refus
-  // explicite de tout payload qui n'affirme pas être en SI.
-  if (
-    !body || typeof body !== 'object' ||
-    (body as Record<string, unknown>).units !== 'SI'
-  ) {
-    return jsonResponse(
-      {
-        ok: false,
-        code: 'missing-units-sentinel',
-        message: 'Payload must include `units: "SI"` at root. Display units (fps, yd, gr, °F, inHg, mph, …) are rejected by the engine endpoint.',
-      },
-      400,
-    );
-  }
-
-  // Garde-fou clés — refuse toute clé qui mentionne une unité d'affichage.
-  try {
-    assertNoDisplayUnitKeys(body);
-  } catch (e) {
-    const err = e as Error & { code?: string; offendingPath?: string };
-    return jsonResponse(
-      {
-        ok: false,
-        code: err.code ?? 'display-unit-detected',
-        message: err.message,
-        offendingPath: err.offendingPath,
-      },
-      422,
-    );
+  // Garde-fou SI partagé — sentinel `units: "SI"` + interdit toute clé
+  // suffixée d'une unité d'affichage (à n'importe quelle profondeur).
+  // Mutualisé pour TOUS les endpoints balistiques : voir
+  // `_shared/si-guardrail.ts` et `docs/engine/backend-si-contract.md`.
+  const guard = applySiGuardrail<Record<string, unknown>>(body);
+  if (!guard.ok) {
+    return jsonResponse(guard.error, guard.status);
   }
 
   // Validation structurelle Zod.
-  const parsed = inputSchema.safeParse(body);
+  const parsed = inputSchema.safeParse(guard.payload);
   if (!parsed.success) {
     return jsonResponse(
       {
@@ -217,10 +194,13 @@ Deno.serve(async (req) => {
 
 // Exports pour les tests unitaires (consommés via dynamic import en TS).
 export {
-  assertNoDisplayUnitKeys,
-  checkBound,
   enforceSiBounds,
   inputSchema,
+  // Re-exports du module partagé : permettent aux tests existants
+  // de continuer à importer ces helpers depuis ce fichier.
   keyMentionsDisplayUnit,
+  findDisplayUnitKey,
+  checkSiBound,
+  applySiGuardrail,
   SI_BOUNDS,
 };

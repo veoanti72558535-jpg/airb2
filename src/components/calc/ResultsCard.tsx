@@ -1,10 +1,3 @@
-        // Live-formatted spin guards label — sourced from provenance so
-        // a future change to SG_MAX_EFFECTIVE / MIN_SPIN_DRIFT_VELOCITY
-        // automatically reflects in the UI without touching strings.
-        const guards = provenance?.guards.spinDrift;
-        const spinModelLabel = guards
-          ? `Spin: ${guards.model} · SG ≤ ${guards.sgMaxEffective} · V ≥ ${guards.minVelocityMs} m/s`
-          : t('calc.driftBreakdown.spinModel');
 import { TrendingDown, Wind, Zap, Clock, Crosshair, Compass, Cloud, AlertTriangle, Globe2, Info } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { BallisticResult, OpticFocalPlane, WeatherSnapshot } from '@/lib/types';

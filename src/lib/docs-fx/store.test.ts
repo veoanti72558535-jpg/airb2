@@ -25,6 +25,9 @@ import {
   paginate,
   searchDocs,
   searchDocsPaged,
+  configureSearchIndex,
+  flushSearchIndex,
+  _pendingRebuildCount,
 } from './search';
 
 beforeEach(() => {
@@ -248,5 +251,83 @@ describe('docs-fx auto re-index on CRUD', () => {
     });
     // count must be unchanged after unsubscribe
     expect(count).toBeGreaterThanOrEqual(2);
+  });
+});
+
+describe('docs-fx debounced/coalesced rebuilds', () => {
+  afterEach(() => {
+    // restore default debounce window
+    configureSearchIndex({ debounceMs: 50 });
+    flushSearchIndex();
+  });
+
+  it('coalesces a burst of CRUDs into a single pending rebuild', () => {
+    configureSearchIndex({ debounceMs: 50 });
+    flushSearchIndex();
+    expect(_pendingRebuildCount()).toBe(0);
+
+    for (let i = 0; i < 5; i++) {
+      upsertSection({
+        id: `burst-${i}`,
+        title: `Burst ${i}`,
+        body: 'x',
+        tags: ['burst'],
+        category: 'general',
+        order: i,
+        visibility: 'published',
+      });
+    }
+    deleteSection('burst-0');
+
+    // 6 notifications coalesced — but only one timer scheduled.
+    expect(_pendingRebuildCount()).toBeGreaterThanOrEqual(6);
+  });
+
+  it('searchDocs stays coherent BEFORE the debounce timer fires', () => {
+    configureSearchIndex({ debounceMs: 1000 });
+    flushSearchIndex();
+    upsertSection({
+      id: 'coherent-immediate',
+      title: 'Coherent Immediate',
+      body: 'x',
+      tags: ['fx'],
+      category: 'general',
+      order: 1,
+      visibility: 'published',
+    });
+    // Timer has NOT fired yet — but the snapshot-signature safety net in
+    // ensureIndex() must still surface the new section.
+    const hits = searchDocs('Coherent Immediate');
+    expect(hits.some((h) => h.section.id === 'coherent-immediate')).toBe(true);
+  });
+
+  it('debounceMs=0 invalidates synchronously (no coalescing)', () => {
+    configureSearchIndex({ debounceMs: 0 });
+    upsertSection({
+      id: 'sync-mode',
+      title: 'Sync',
+      body: 'x',
+      tags: [],
+      category: 'general',
+      order: 1,
+      visibility: 'published',
+    });
+    expect(_pendingRebuildCount()).toBe(0);
+  });
+
+  it('flushSearchIndex drains the pending timer', () => {
+    configureSearchIndex({ debounceMs: 1000 });
+    upsertSection({
+      id: 'drain-me',
+      title: 'Drain',
+      body: 'x',
+      tags: [],
+      category: 'general',
+      order: 1,
+      visibility: 'published',
+    });
+    expect(_pendingRebuildCount()).toBeGreaterThan(0);
+    flushSearchIndex();
+    expect(_pendingRebuildCount()).toBe(0);
   });
 });

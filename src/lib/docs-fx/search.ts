@@ -5,6 +5,19 @@
  * returns a different snapshot (cheap reference check on length+ids+
  * updatedAt). Fuse.js scores tags slightly higher than the body so a tag
  * hit doesn't get drowned by long Markdown content.
+ *
+ * Rebuild coalescing
+ * ------------------
+ * A burst of CRUD operations (e.g. an admin doing upsert→upsert→delete in
+ * the same tick) used to invalidate the index N times. We now coalesce
+ * those notifications via `scheduleRebuild()`:
+ *  - same tick / within the debounce window → a single rebuild on flush
+ *  - cross-tab `storage` events still invalidate immediately so other tabs
+ *    converge without waiting for a debounce timer that may never fire if
+ *    nothing else happens locally
+ *  - any `searchDocs()` call before the timer fires is still 100% coherent
+ *    because `ensureIndex()` re-checks the snapshot signature on the hot
+ *    path (debounce is an optimization, not a correctness mechanism)
  */
 import Fuse, { type IFuseOptions } from 'fuse.js';
 import { listSections, subscribeOverrideChanges } from './store';
@@ -26,20 +39,76 @@ const FUSE_OPTIONS: IFuseOptions<DocSection> = {
 let fuse: Fuse<DocSection> | null = null;
 let signature = '';
 
-// Auto-invalidate the index whenever the override store mutates (this tab
-// or another tab). The signature check in `ensureIndex()` is still our
-// safety net, but this push-based hook makes the next `searchDocs()` call
-// O(1) hot path instead of paying for a snapshot diff.
+/* ---------------- Coalesced rebuild scheduler ---------------- */
+
+let debounceMs = 50;
+let pendingTimer: ReturnType<typeof setTimeout> | null = null;
+let pendingCount = 0;
+
+function doInvalidate(): void {
+  fuse = null;
+  signature = '';
+}
+
+function scheduleRebuild(): void {
+  if (debounceMs <= 0) {
+    doInvalidate();
+    return;
+  }
+  pendingCount += 1;
+  if (pendingTimer !== null) return; // already scheduled — coalesce
+  pendingTimer = setTimeout(() => {
+    pendingTimer = null;
+    pendingCount = 0;
+    doInvalidate();
+  }, debounceMs);
+}
+
 let _autoInvalidateBound = false;
 function bindAutoInvalidate(): void {
   if (_autoInvalidateBound) return;
   _autoInvalidateBound = true;
-  subscribeOverrideChanges(() => {
-    fuse = null;
-    signature = '';
-  });
+  subscribeOverrideChanges(() => scheduleRebuild());
+
+  // Cross-tab edits (storage event re-fired by store.ts) need immediate
+  // invalidation so the *other* tab converges without waiting on its own
+  // local debounce. We detect that path by piggy-backing on the same
+  // notifier but flushing right away when the call comes from a storage
+  // event — implemented by listening to `storage` here as well.
+  if (typeof window !== 'undefined') {
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'airballistik:docs-fx:overrides') {
+        flushSearchIndex();
+      }
+    });
+  }
 }
 bindAutoInvalidate();
+
+/** Test/diagnostic: how many coalesced notifications are pending. */
+export function _pendingRebuildCount(): number {
+  return pendingCount;
+}
+
+/** Force any pending coalesced rebuild to apply now. */
+export function flushSearchIndex(): void {
+  if (pendingTimer !== null) {
+    clearTimeout(pendingTimer);
+    pendingTimer = null;
+  }
+  pendingCount = 0;
+  doInvalidate();
+}
+
+/**
+ * Tune the coalescing window. `0` disables debouncing (every CRUD
+ * invalidates synchronously — the previous behaviour).
+ */
+export function configureSearchIndex(opts: { debounceMs: number }): void {
+  debounceMs = Math.max(0, Math.floor(opts.debounceMs));
+  // If we just disabled debouncing, drain anything pending.
+  if (debounceMs === 0) flushSearchIndex();
+}
 
 function snapshotSignature(sections: DocSection[]): string {
   return sections
@@ -169,6 +238,5 @@ export function listAllTags(includeDrafts = false): string[] {
  * after a manual `localStorage.clear()` that bypasses the store API).
  */
 export function invalidateSearchIndex(): void {
-  fuse = null;
-  signature = '';
+  flushSearchIndex();
 }

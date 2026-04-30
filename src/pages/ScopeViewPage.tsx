@@ -22,6 +22,7 @@ import { getChairgunReticles, type ChairgunReticle } from '@/lib/chairgun-reticl
 import type { BallisticInput, WeatherSnapshot } from '@/lib/types';
 import type { ProfileId } from '@/lib/ballistics/types';
 import { ArrowLeft, Crosshair, Settings } from 'lucide-react';
+import { useUnits } from '@/hooks/use-units';
 
 // ── Defaults ────────────────────────────────────────────────────────
 const DEFAULT_WEATHER: WeatherSnapshot = {
@@ -43,6 +44,7 @@ const PROFILE_OPTIONS: { id: ProfileId; label: string }[] = [
 ];
 
 export default function ScopeViewPage() {
+  const { display, symbol } = useUnits();
   const navigate = useNavigate();
 
   // Reticles from Supabase

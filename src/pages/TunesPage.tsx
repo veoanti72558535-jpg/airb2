@@ -4,6 +4,7 @@ import { useI18n } from '@/lib/i18n';
 import { tuneStore, airgunStore } from '@/lib/storage';
 import { motion } from 'framer-motion';
 import { useUnits } from '@/hooks/use-units';
+import { UnitTagSurface } from '@/components/devtools/UnitTagSurface';
 
 export default function TunesPage() {
   const { t } = useI18n();
@@ -22,6 +23,7 @@ export default function TunesPage() {
         <div className="flex items-center gap-2">
           <Music className="h-5 w-5 text-primary" />
           <h1 className="text-xl font-heading font-bold">{t('tunes.title')}</h1>
+        <UnitTagSurface categories={["velocity"]} label="TunesPage" />
         </div>
         <button className="px-3 py-1.5 bg-primary text-primary-foreground rounded-md text-sm font-medium flex items-center gap-1 hover:opacity-90">
           <Plus className="h-4 w-4" />{t('tunes.add')}

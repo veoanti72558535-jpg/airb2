@@ -6,6 +6,7 @@ import { useUnits } from '@/hooks/use-units';
 import { DetailLayout, DetailRow, DetailSection } from '@/components/library/DetailLayout';
 import { LinkedSessions } from '@/components/library/LinkedSessions';
 import { NotFoundDetail } from '@/components/library/NotFoundDetail';
+import { UnitTagSurface } from '@/components/devtools/UnitTagSurface';
 
 export default function AirgunDetailPage() {
   const { id = '' } = useParams<{ id: string }>();
@@ -35,7 +36,8 @@ export default function AirgunDetailPage() {
       editHref={`/library?tab=airguns&edit=${airgun.id}`}
       badges={
         <>
-          <span className="tactical-badge">{airgun.caliber}</span>
+
+        <UnitTagSurface categories={["velocity","energy","weight","length"]} label="AirgunDetailPage" />          <span className="tactical-badge">{airgun.caliber}</span>
           {airgun.barrelLength ? (
             <span className="tactical-badge">{airgun.barrelLength}{lengthSym}</span>
           ) : null}

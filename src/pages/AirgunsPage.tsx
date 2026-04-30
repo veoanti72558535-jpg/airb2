@@ -18,6 +18,7 @@ import { seedAirgunKey } from '@/lib/seed-airguns';
 import { TuneAdviceAgent } from '@/components/ai/agents/TuneAdviceAgent';
 import { AirgunReviewAgent } from '@/components/ai/agents/AirgunReviewAgent';
 import { AgentDialog } from '@/components/ai/agents/AgentDialog';
+import { UnitTagSurface } from '@/components/devtools/UnitTagSurface';
 
 const TWIST_OPTIONS = [12, 14, 16, 18, 20, 22, 24, 28, 32];
 
@@ -163,6 +164,7 @@ export default function AirgunsPage() {
         <div className="flex items-center gap-2">
           <Target className="h-5 w-5 text-primary" />
           <h1 className="text-xl font-heading font-bold">{t('airguns.title')}</h1>
+        <UnitTagSurface categories={["velocity","energy"]} label="AirgunsPage" />
         </div>
         <div className="flex gap-2">
           <button

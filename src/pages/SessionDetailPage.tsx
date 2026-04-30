@@ -78,6 +78,7 @@ import { ZeroIntersectionsCard } from '@/components/calc/ZeroIntersectionsCard';
 import { ReticleAssistPanel } from '@/components/calc/ReticleAssistPanel';
 import { TurretScopeView } from '@/components/sessions/TurretScopeView';
 import { generateDopeCardPDF } from '@/lib/dope-card-pdf';
+import { UnitTagSurface } from '@/components/devtools/UnitTagSurface';
 
 /**
  * Détail SESSION — route dédiée /sessions/:id.
@@ -274,6 +275,7 @@ export default function SessionDetailPage() {
                 <h1 className="text-lg font-heading font-bold leading-tight truncate">
                   {session.name}
                 </h1>
+        <UnitTagSurface categories={["velocity","distance","energy","length"]} label="SessionDetailPage" />
                 {session.favorite && (
                   <Star className="h-4 w-4 text-primary fill-primary shrink-0" />
                 )}

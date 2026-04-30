@@ -12,6 +12,7 @@ import { calculateTrajectory } from '@/lib/ballistics';
 import { sessionStore } from '@/lib/storage';
 import type { Session, BallisticResult } from '@/lib/types';
 import { useUnits } from '@/hooks/use-units';
+import { UnitTagSurface } from '@/components/devtools/UnitTagSurface';
 
 interface Shot {
   x: number; // mm offset from center
@@ -246,6 +247,7 @@ export default function RangeSimulatorPage() {
       <div className="flex items-center gap-2">
         <Target className="h-5 w-5 text-primary" />
         <h1 className="text-lg font-heading font-bold">{t('nav.rangeSimulator' as any) || 'Simulateur de Tir'}</h1>
+        <UnitTagSurface categories={["distance","velocity","length"]} label="RangeSimulatorPage" />
       </div>
 
       {/* Session selector */}

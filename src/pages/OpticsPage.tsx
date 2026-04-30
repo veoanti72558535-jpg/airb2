@@ -12,6 +12,7 @@ import { motion } from 'framer-motion';
 import { toast } from '@/hooks/use-toast';
 import { ImportPresetOpticsModal } from '@/components/optics/ImportPresetOpticsModal';
 import { OpticReticleLink } from '@/components/optics/OpticReticleLink';
+import { UnitTagSurface } from '@/components/devtools/UnitTagSurface';
 
 interface FormState {
   name: string;
@@ -180,6 +181,7 @@ export default function OpticsPage() {
         <div className="flex items-center gap-2">
           <Eye className="h-5 w-5 text-primary" />
           <h1 className="text-xl font-heading font-bold">{t('optics.title')}</h1>
+        <UnitTagSurface categories={["length"]} label="OpticsPage" />
         </div>
         <div className="flex gap-1.5">
           <button onClick={() => setShowImport(true)} className="px-3 py-1.5 bg-muted text-foreground rounded-md text-sm font-medium flex items-center gap-1 hover:bg-muted/70 border border-border">

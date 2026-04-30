@@ -23,6 +23,7 @@ import type { BallisticInput, WeatherSnapshot } from '@/lib/types';
 import type { ProfileId } from '@/lib/ballistics/types';
 import { ArrowLeft, Crosshair, Settings } from 'lucide-react';
 import { useUnits } from '@/hooks/use-units';
+import { UnitTagSurface } from '@/components/devtools/UnitTagSurface';
 
 // ── Defaults ────────────────────────────────────────────────────────
 const DEFAULT_WEATHER: WeatherSnapshot = {
@@ -198,6 +199,7 @@ export default function ScopeViewPage() {
             }}>
               Scope View
             </h1>
+        <UnitTagSurface categories={["velocity","distance","length"]} label="ScopeViewPage" />
           </div>
         </div>
 

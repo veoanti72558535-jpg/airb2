@@ -795,6 +795,7 @@ function Rules({ title, rules }: { title: string; rules: string[] }) {
  * left ring to draw the eye.
  */
 function DenseTrajectoryTableDemo({ rows }: { rows: BallisticResult[] }) {
+  const { display, symbol } = useUnits();
   const [energyMin, setEnergyMin] = useState(20);
   const [velocityMin, setVelocityMin] = useState(220);
 
@@ -803,14 +804,14 @@ function DenseTrajectoryTableDemo({ rows }: { rows: BallisticResult[] }) {
       <div className="flex flex-wrap items-center gap-3 px-3 py-2 border-b border-border bg-muted/20 text-[11px] font-mono">
         <ThresholdControl
           label="Energy floor"
-          unit="J"
+          unit={symbol('energy')}
           value={energyMin}
           step={1}
           onChange={setEnergyMin}
         />
         <ThresholdControl
           label="Velocity floor"
-          unit="m/s"
+          unit={symbol('velocity')}
           value={velocityMin}
           step={5}
           onChange={setVelocityMin}
@@ -861,7 +862,7 @@ function DenseTrajectoryTableDemo({ rows }: { rows: BallisticResult[] }) {
                     )}
                     title={
                       velocityBreach
-                        ? `${r.velocity.toFixed(0)} < ${velocityMin} m/s`
+                        ? `${display('velocity', r.velocity).toFixed(0)} < ${display('velocity', velocityMin).toFixed(0)} ${symbol('velocity')}`
                         : undefined
                     }
                   >

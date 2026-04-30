@@ -10,9 +10,14 @@ import { useI18n } from '@/lib/i18n';
 import { sessionStore, opticStore } from '@/lib/storage';
 import { calculateTrajectory } from '@/lib/ballistics';
 import type { BallisticResult, Session } from '@/lib/types';
+import { useUnits } from '@/hooks/use-units';
 
 export default function FieldModePage() {
   const { t } = useI18n();
+  const { display, symbol } = useUnits();
+  const lenSym = symbol('length');
+  const velSym = symbol('velocity');
+  const enSym = symbol('energy');
   const sessions = useMemo(() => sessionStore.getAll(), []);
   const [selectedSessionId, setSelectedSessionId] = useState<string>(
     sessions.length > 0 ? sessions[sessions.length - 1].id : '',

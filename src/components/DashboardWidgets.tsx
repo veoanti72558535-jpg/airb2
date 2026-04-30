@@ -13,6 +13,7 @@ import { useI18n } from '@/lib/i18n';
 import { sessionStore, airgunStore, projectileStore, opticStore, getSettings } from '@/lib/storage';
 import { getSortedFavorites, formatLastUsed, getLastSession } from '@/lib/session-favorites';
 import { useUnits } from '@/hooks/use-units';
+import { UnitTagSurface } from '@/components/devtools/UnitTagSurface';
 
 const WIDGET_ORDER_KEY = 'airballistik-widget-order';
 
@@ -109,6 +110,10 @@ function LastSessionWidget() {
     <button onClick={() => navigate(`/sessions/${last.id}`)} className="surface-elevated p-4 text-left w-full hover:border-primary/30 transition-colors">
       <div className="text-[10px] uppercase tracking-wide text-muted-foreground flex items-center gap-1 mb-2">
         <Clock className="h-3 w-3" /> Dernière session
+        <UnitTagSurface
+          categories={['velocity', 'energy', 'distance']}
+          label="LastSession"
+        />
       </div>
       <div className="text-sm font-semibold truncate">{last.name}</div>
       <div className="text-[10px] text-muted-foreground font-mono">{new Date(last.createdAt).toLocaleDateString(locale)}</div>

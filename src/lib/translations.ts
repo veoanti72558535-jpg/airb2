@@ -1915,6 +1915,12 @@ const fr = {
   'calc.driftBreakdown.zeroWind': 'Vent = 0 m/s — la dérive restante vient du spin et/ou de Coriolis.',
   'calc.driftBreakdown.right': 'D',
   'calc.driftBreakdown.left': 'G',
+  'calc.driftBreakdown.traceability': 'Traçabilité',
+  'calc.driftBreakdown.fieldTotal': 'Total latéral (mm)',
+  'calc.driftBreakdown.fieldSpin': 'Spin (mm)',
+  'calc.driftBreakdown.fieldCoriolis': 'Coriolis (mm)',
+  'calc.driftBreakdown.fieldWindOnly': 'Vent seul (recomposé)',
+  'calc.driftBreakdown.formulaLabel': 'Formule',
 
   // AI web-search agents (BUILD-IA web search)
   'agentSearch.searchProjectile': 'Rechercher un projectile (IA)',

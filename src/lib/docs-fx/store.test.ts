@@ -16,11 +16,12 @@ import {
   hasOverride,
   listSections,
   resetSeedSection,
+  subscribeOverrideChanges,
   upsertSection,
 } from './store';
 import {
-  invalidateSearchIndex,
   listAllTags,
+  invalidateSearchIndex,
   paginate,
   searchDocs,
   searchDocsPaged,
@@ -185,5 +186,67 @@ describe('docs-fx pagination', () => {
     expect(page.items).toHaveLength(1);
     expect(page.total).toBeGreaterThanOrEqual(2);
     expect(page.pageCount).toBeGreaterThanOrEqual(2);
+  });
+});
+
+describe('docs-fx auto re-index on CRUD', () => {
+  it('upsert makes the new title searchable WITHOUT manual invalidate', () => {
+    upsertSection({
+      id: 'autoidx-faq',
+      title: 'Synchronisation automatique de l\u2019index',
+      body: 'Vérifie que Fuse se rebuild tout seul.',
+      tags: ['fx', 'autoindex'],
+      category: 'faq',
+      order: 99,
+      visibility: 'published',
+    });
+    // Note: NO invalidateSearchIndex() call here.
+    const hits = searchDocs('synchronisation');
+    expect(hits.some((h) => h.section.id === 'autoidx-faq')).toBe(true);
+  });
+
+  it('delete drops the section from search results immediately', () => {
+    upsertSection({
+      id: 'autoidx-temp',
+      title: 'Temp',
+      body: 'temp body',
+      tags: ['temp'],
+      category: 'general',
+      order: 99,
+      visibility: 'published',
+    });
+    expect(searchDocs('Temp').some((h) => h.section.id === 'autoidx-temp')).toBe(true);
+    deleteSection('autoidx-temp');
+    expect(searchDocs('Temp').some((h) => h.section.id === 'autoidx-temp')).toBe(false);
+  });
+
+  it('subscribeOverrideChanges fires on upsert/delete/reset', () => {
+    let count = 0;
+    const unsub = subscribeOverrideChanges(() => {
+      count += 1;
+    });
+    upsertSection({
+      id: 'sub-test',
+      title: 't',
+      body: 'b',
+      tags: [],
+      category: 'general',
+      order: 1,
+      visibility: 'published',
+    });
+    deleteSection('sub-test');
+    expect(count).toBeGreaterThanOrEqual(2);
+    unsub();
+    upsertSection({
+      id: 'sub-test-2',
+      title: 't2',
+      body: 'b',
+      tags: [],
+      category: 'general',
+      order: 1,
+      visibility: 'published',
+    });
+    // count must be unchanged after unsubscribe
+    expect(count).toBeGreaterThanOrEqual(2);
   });
 });

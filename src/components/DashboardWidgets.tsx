@@ -194,7 +194,7 @@ function FavoritesWidget() {
 
 // ── Widget: Weather ──
 function WeatherWidget() {
-  const { symbol } = useUnits();
+  const { display, symbol } = useUnits();
   const sessions = sessionStore.getAll();
   const last = sessions.length > 0 ? sessions[sessions.length - 1] : null;
   const weather = last?.input.weather;
@@ -215,7 +215,15 @@ function WeatherWidget() {
             <div className="text-[8px] text-muted-foreground uppercase">hPa</div>
           </div>
           <div>
-            <div className="text-lg font-mono font-bold">{weather.windSpeed}</div>
+            {/*
+              SI source: weather.windSpeed is m/s. Convert to the user's
+              currently displayed velocity unit so the dashboard tile and
+              the QuickCalc EnvironmentSection wind input always show the
+              same number in the same unit.
+            */}
+            <div className="text-lg font-mono font-bold">
+              {display('velocity', weather.windSpeed).toFixed(1)}
+            </div>
             <div className="text-[8px] text-muted-foreground uppercase">{symbol('velocity')}</div>
           </div>
         </div>

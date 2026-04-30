@@ -43,17 +43,39 @@ const SURFACES = [
 const TRACKED_CATEGORIES = ['velocity', 'distance', 'length', 'energy', 'weight'] as const;
 type Cat = typeof TRACKED_CATEGORIES[number];
 
-/** Match `display('<cat>', expr).toFixed(N)` — N is captured. */
-function extractDecimals(src: string): Record<Cat, Set<number>> {
+/**
+ * Extract `display('<cat>', <expr>).toFixed(N)` call sites.
+ *
+ * Two metrics in the same category can legitimately use different
+ * decimal counts when they live on different scales — e.g. muzzle
+ * velocity (~280 m/s, no decimal needed) vs wind speed (~3 m/s, where
+ * 0 decimals would round 3.5 to "4"). The fidelity guarantee is therefore
+ * "same VARIABLE → same decimals across every surface", not blindly
+ * "same category". We use a normalised tail of the expression as the
+ * variable key (e.g. `weather.windSpeed`, `last.input.muzzleVelocity`,
+ * `r.energy`).
+ */
+interface DecimalEntry { variable: string; decimals: number; }
+
+function extractDecimals(src: string): Record<Cat, DecimalEntry[]> {
   const out = Object.fromEntries(
-    TRACKED_CATEGORIES.map(c => [c, new Set<number>()]),
-  ) as Record<Cat, Set<number>>;
+    TRACKED_CATEGORIES.map(c => [c, [] as DecimalEntry[]]),
+  ) as Record<Cat, DecimalEntry[]>;
 
   for (const cat of TRACKED_CATEGORIES) {
-    const re = new RegExp(`display\\(\\s*['"]${cat}['"][^)]*\\)\\.toFixed\\(\\s*(\\d+)\\s*\\)`, 'g');
+    // Capture group 1 = the value expression, group 2 = decimals.
+    const re = new RegExp(
+      `display\\(\\s*['"]${cat}['"]\\s*,\\s*([^)]+?)\\s*\\)\\.toFixed\\(\\s*(\\d+)\\s*\\)`,
+      'g',
+    );
     let m: RegExpExecArray | null;
     while ((m = re.exec(src)) !== null) {
-      out[cat].add(parseInt(m[1], 10));
+      const expr = m[1].trim();
+      // Variable key = last dotted segment(s), so `s.input.muzzleVelocity`
+      // and `last.input.muzzleVelocity` collide on `muzzleVelocity`.
+      const tail = expr.match(/([A-Za-z_$][\w$]*)\s*$/);
+      const variable = tail ? tail[1] : expr;
+      out[cat].push({ variable, decimals: parseInt(m[2], 10) });
     }
   }
   return out;
@@ -69,36 +91,42 @@ describe('Cross-surface conversion fidelity', () => {
   // same decimal count. We allow at most ONE distinct decimal value per
   // category across the whole app — otherwise "245" vs "245.0" drift.
   it('uses a consistent decimal count per category across surfaces', () => {
-    const perCategory = Object.fromEntries(
-      TRACKED_CATEGORIES.map(c => [c, new Map<number, string[]>()]),
-    ) as Record<Cat, Map<number, string[]>>;
+    // Grouped by (category, variable name) → decimals seen, with the
+    // surfaces that produced each value. Two surfaces formatting the
+    // SAME variable with different decimals = drift to flag. Two
+    // variables in the same category using different decimals = OK
+    // (e.g. muzzleVelocity 0 vs windSpeed 1).
+    type Bucket = Map<number, string[]>;
+    const perVar = new Map<string, Bucket>();
 
     for (const file of SURFACES) {
       const src = readSource(file);
       const decimals = extractDecimals(src);
       for (const cat of TRACKED_CATEGORIES) {
-        for (const d of decimals[cat]) {
-          const bucket = perCategory[cat].get(d) ?? [];
-          bucket.push(file);
-          perCategory[cat].set(d, bucket);
+        for (const { variable, decimals: d } of decimals[cat]) {
+          const key = `${cat}:${variable}`;
+          const bucket = perVar.get(key) ?? new Map<number, string[]>();
+          const files = bucket.get(d) ?? [];
+          files.push(file);
+          bucket.set(d, files);
+          perVar.set(key, bucket);
         }
       }
     }
 
     const drift: string[] = [];
-    for (const cat of TRACKED_CATEGORIES) {
-      const buckets = perCategory[cat];
+    for (const [key, buckets] of perVar.entries()) {
       if (buckets.size > 1) {
         const detail = Array.from(buckets.entries())
           .map(([d, files]) => `    ${d} decimals → ${files.join(', ')}`)
           .join('\n');
-        drift.push(`  • ${cat} renders with ${buckets.size} different decimal counts:\n${detail}`);
+        drift.push(`  • ${key} renders with ${buckets.size} different decimal counts:\n${detail}`);
       }
     }
 
     if (drift.length > 0) {
       throw new Error(
-        'Surfaces format the same metric with different decimals — pick one per category:\n' +
+        'Surfaces format the same VARIABLE with different decimals — pick one per (category, variable):\n' +
           drift.join('\n'),
       );
     }

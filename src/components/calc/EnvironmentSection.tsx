@@ -10,6 +10,7 @@ import { getSettings } from '@/lib/storage';
 import { WeatherLocationPicker } from './WeatherLocationPicker';
 import { WeatherSearchAgent } from '@/components/ai/agents/WeatherSearchAgent';
 import { AgentDialog } from '@/components/ai/agents/AgentDialog';
+import { useUnits } from '@/hooks/use-units';
 
 interface Props {
   weather: WeatherSnapshot;
@@ -22,6 +23,20 @@ interface Props {
 
 export function EnvironmentSection({ weather, onReplace, onPatchManual, advanced }: Props) {
   const { t } = useI18n();
+  // `weather.windSpeed` is canonical SI (m/s). UnitField, however, is
+  // documented to receive AND return a value already expressed in the
+  // user's currently displayed unit (cf. UnitField.tsx). We therefore
+  // bridge the two here:
+  //
+  //   SI (m/s)        → display(category, …)  → UnitField.value
+  //   UnitField onChange (display unit)  → toRef(category, …) → SI
+  //
+  // Without this bridge, switching the velocity preference to fps would
+  // silently store fps numbers as if they were m/s — exactly the
+  // re-injection bug the SI guardrail forbids. The user keeps editing
+  // in their preferred unit (mandatory), and the dashboard widget /
+  // results card / engine all see the same SI value.
+  const { display, toRef } = useUnits();
   const settings = getSettings();
   const autoEnabled = settings.weatherAutoSuggest !== false; // default on
   const api = useWeather(weather, onReplace);
@@ -47,9 +62,9 @@ export function EnvironmentSection({ weather, onReplace, onPatchManual, advanced
         <UnitField
           label={t('calc.windSpeed')}
           category="velocity"
-          value={weather.windSpeed}
+          value={display('velocity', weather.windSpeed)}
           step={0.5}
-          onChange={v => onPatchManual({ windSpeed: v })}
+          onChange={v => onPatchManual({ windSpeed: toRef('velocity', v) })}
         />
         <Field
           label={t('calc.windAngle')}

@@ -129,6 +129,31 @@ describe('docs-fx search', () => {
   });
 });
 
+describe('docs-fx manual-weather FAQ seed', () => {
+  it('ships the manual-weather-faq seed in the faq category', () => {
+    const all = listSections();
+    const faq = all.find((s) => s.id === 'manual-weather-faq');
+    expect(faq).toBeTruthy();
+    expect(faq!.fromSeed).toBe(true);
+    expect(faq!.category).toBe('faq');
+    expect(faq!.tags).toEqual(expect.arrayContaining(['météo', 'manuel', 'faq']));
+    expect(faq!.visibility).toBe('published');
+  });
+
+  it('is reachable via search by content keyword', () => {
+    const hits = searchDocs('manuelle');
+    expect(hits.some((h) => h.section.id === 'manual-weather-faq')).toBe(true);
+  });
+
+  it('admin can override the FAQ title without losing the body', () => {
+    const seed = listSections().find((s) => s.id === 'manual-weather-faq')!;
+    upsertSection({ ...seed, title: 'FAQ Météo (édité)' });
+    const after = listSections().find((s) => s.id === 'manual-weather-faq')!;
+    expect(after.title).toBe('FAQ Météo (édité)');
+    expect(after.body).toBe(seed.body);
+  });
+});
+
 describe('docs-fx pagination', () => {
   it('paginate slices the list and clamps out-of-range pages', () => {
     const items = Array.from({ length: 23 }, (_, i) => i + 1);

@@ -46,7 +46,7 @@ export function EnvironmentSection({ weather, onReplace, onPatchManual, advanced
   return (
     <Section icon={Wind} title={t('calc.sectionWeather')}>
       <UnitTagSurface
-        categories={['velocity', 'temperature', 'pressure']}
+        categories={['velocity', 'temperature', 'pressure', 'distance']}
         label="Environment"
       />
       <WeatherLocationPicker weather={weather} api={api} autoEnabled={autoEnabled} />
@@ -86,16 +86,19 @@ export function EnvironmentSection({ weather, onReplace, onPatchManual, advanced
             <UnitField
               label={t('calc.temperature')}
               category="temperature"
-              value={weather.temperature}
+              // Same SI↔display bridge as windSpeed (cf. wind-speed-sync test):
+              // engine stores °C, user edits in their preferred unit (°C or °F).
+              value={display('temperature', weather.temperature)}
               step={1}
-              onChange={v => onPatchManual({ temperature: v })}
+              onChange={v => onPatchManual({ temperature: toRef('temperature', v) })}
             />
             <UnitField
               label={t('calc.pressure')}
               category="pressure"
-              value={weather.pressure}
+              // SI is hPa ; display may be hPa / inHg / psi.
+              value={display('pressure', weather.pressure)}
               step={1}
-              onChange={v => onPatchManual({ pressure: v })}
+              onChange={v => onPatchManual({ pressure: toRef('pressure', v) })}
             />
           </div>
           <div className="grid grid-cols-2 gap-2.5">
@@ -109,9 +112,11 @@ export function EnvironmentSection({ weather, onReplace, onPatchManual, advanced
             <UnitField
               label={t('calc.altitude')}
               category="distance"
-              value={weather.altitude}
+              // SI is m ; display may be m / yd / ft according to the
+              // distance preference shared with range / zero fields.
+              value={display('distance', weather.altitude)}
               step={50}
-              onChange={v => onPatchManual({ altitude: v })}
+              onChange={v => onPatchManual({ altitude: toRef('distance', v) })}
             />
           </div>
         </>

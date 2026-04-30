@@ -3,6 +3,7 @@ import { useI18n } from '@/lib/i18n';
 import { useUnits } from '@/hooks/use-units';
 import { cn } from '@/lib/utils';
 import type { ZeroIntersections } from '@/lib/zero-intersections';
+import { UnitTagSurface } from '@/components/devtools/UnitTagSurface';
 
 /**
  * Tranche O — Bloc UI sobre Near Zero / Far Zero.

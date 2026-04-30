@@ -332,12 +332,14 @@ export default function DocsFxPage() {
               <Card className="overflow-hidden">
                 <button
                   onClick={() => toggleExpanded(section.id)}
-                  className="w-full text-left p-4 flex items-start justify-between gap-3 hover:bg-muted/40"
+                  className="w-full text-left p-3 sm:p-4 flex items-start justify-between gap-3 hover:bg-muted/40 min-h-[56px]"
                   aria-expanded={isOpen}
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h2 className="font-heading font-semibold text-base">{section.title}</h2>
+                      <h2 className="font-heading font-semibold text-sm sm:text-base leading-tight break-words">
+                        {section.title}
+                      </h2>
                       <Badge variant="outline" className="text-[10px]">
                         {t(`docsFx.category.${section.category}`)}
                       </Badge>
@@ -353,7 +355,7 @@ export default function DocsFxPage() {
                       )}
                     </div>
                     {section.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-2">
+                      <div className="flex flex-wrap gap-x-2 gap-y-1 mt-1.5">
                         {section.tags.map((tag) => (
                           <span key={tag} className="text-[10px] text-muted-foreground">
                             #{tag}
@@ -368,12 +370,18 @@ export default function DocsFxPage() {
                 </button>
 
                 {isOpen && (
-                  <div className="px-4 pb-4 border-t border-border">
-                    <div className="prose prose-sm prose-invert max-w-none mt-3">
+                  <div className="px-3 sm:px-4 pb-4 border-t border-border">
+                    {/*
+                      Reading mode tweaks for mobile:
+                      - prose-sm baseline keeps line-height comfortable
+                      - tables/code blocks scroll horizontally inside the card
+                      - break-words prevents long URLs from blowing out width
+                    */}
+                    <div className="prose prose-sm prose-invert max-w-none mt-3 break-words [&_pre]:overflow-x-auto [&_table]:block [&_table]:overflow-x-auto [&_img]:max-w-full">
                       <ReactMarkdown>{section.body}</ReactMarkdown>
                     </div>
                     {isAdmin && (
-                      <div className="flex items-center gap-2 mt-4 pt-3 border-t border-border/40">
+                      <div className="flex flex-wrap items-center gap-2 mt-4 pt-3 border-t border-border/40">
                         <Button size="sm" variant="outline" onClick={() => openEdit(section)}>
                           <Pencil className="h-3 w-3 mr-1" /> {t('common.edit')}
                         </Button>

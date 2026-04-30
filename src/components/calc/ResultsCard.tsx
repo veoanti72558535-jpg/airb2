@@ -436,6 +436,13 @@ export function ResultsCard({
         const windModel = provenance?.windModel ?? 'lateral-only';
         const userOverride = provenance?.userOverrides.spinDrift;
         const windZero = !weather?.windSpeed || weather.windSpeed === 0;
+        // Live-formatted spin guards label — sourced from provenance so
+        // a future change to SG_MAX_EFFECTIVE / MIN_SPIN_DRIFT_VELOCITY
+        // automatically reflects in the UI without touching strings.
+        const guards = provenance?.guards.spinDrift;
+        const spinModelLabel = guards
+          ? `Spin: ${guards.model} · SG ≤ ${guards.sgMaxEffective} · V ≥ ${guards.minVelocityMs} m/s`
+          : t('calc.driftBreakdown.spinModel');
 
         return (
           <div className="rounded-lg border border-border/40 bg-background/20 p-3 space-y-2">

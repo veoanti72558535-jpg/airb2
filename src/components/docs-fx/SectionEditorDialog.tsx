@@ -122,15 +122,20 @@ export function SectionEditorDialog({ open, onOpenChange, section, onSave }: Sec
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      {/*
+        Mobile: occupy the full viewport (h-[100dvh], rounded-none) so the
+        soft-keyboard can push the textarea around without clipping the
+        action bar. Desktop: keep the centered modal pattern.
+      */}
+      <DialogContent className="max-w-3xl w-screen sm:w-auto h-[100dvh] sm:h-auto sm:max-h-[90vh] rounded-none sm:rounded-lg p-0 sm:p-6 gap-0 sm:gap-4 flex flex-col overflow-hidden">
+        <DialogHeader className="px-4 sm:px-0 pt-4 sm:pt-0 shrink-0">
           <DialogTitle>
             {isNew ? t('docsFx.editor.titleNew') : t('docsFx.editor.titleEdit')}
           </DialogTitle>
           <DialogDescription>{t('docsFx.editor.description')}</DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-4 px-4 sm:px-0 py-4 sm:py-0 overflow-y-auto flex-1 min-h-0">
           <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-3">
             <div>
               <label className="text-xs text-muted-foreground">{t('docsFx.editor.fieldTitle')}</label>
@@ -149,7 +154,7 @@ export function SectionEditorDialog({ open, onOpenChange, section, onSave }: Sec
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             <div>
               <label className="text-xs text-muted-foreground">{t('docsFx.editor.fieldCategory')}</label>
               <Select value={category} onValueChange={(v) => setCategory(v as DocSection['category'])}>
@@ -165,11 +170,12 @@ export function SectionEditorDialog({ open, onOpenChange, section, onSave }: Sec
               <label className="text-xs text-muted-foreground">{t('docsFx.editor.fieldOrder')}</label>
               <Input
                 type="number"
+                inputMode="numeric"
                 value={order}
                 onChange={(e) => setOrder(parseInt(e.target.value, 10))}
               />
             </div>
-            <div>
+            <div className="col-span-2 md:col-span-1">
               <label className="text-xs text-muted-foreground">{t('docsFx.editor.fieldVisibility')}</label>
               <Select value={visibility} onValueChange={(v) => setVisibility(v as DocSection['visibility'])}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
@@ -199,7 +205,7 @@ export function SectionEditorDialog({ open, onOpenChange, section, onSave }: Sec
                 </Badge>
               ))}
               <Input
-                className="w-32 h-7"
+                className="w-32 h-8"
                 value={tagDraft}
                 onChange={(e) => setTagDraft(e.target.value)}
                 onKeyDown={(e) => {
@@ -216,30 +222,58 @@ export function SectionEditorDialog({ open, onOpenChange, section, onSave }: Sec
 
           <div>
             <label className="text-xs text-muted-foreground">{t('docsFx.editor.fieldBody')}</label>
-            <Tabs defaultValue="write" className="mt-1">
-              <TabsList>
-                <TabsTrigger value="write">{t('docsFx.editor.tabWrite')}</TabsTrigger>
-                <TabsTrigger value="preview">{t('docsFx.editor.tabPreview')}</TabsTrigger>
-              </TabsList>
-              <TabsContent value="write">
-                <Textarea
-                  value={body}
-                  onChange={(e) => setBody(e.target.value)}
-                  className="font-mono text-sm min-h-[260px]"
-                />
-              </TabsContent>
-              <TabsContent value="preview">
-                <div className="prose prose-invert max-w-none rounded border border-border bg-muted/40 p-4 min-h-[260px] text-sm">
-                  <ReactMarkdown>{body || `_${t('docsFx.editor.previewEmpty')}_`}</ReactMarkdown>
-                </div>
-              </TabsContent>
-            </Tabs>
+            {/*
+              Body editing strategy:
+              - Mobile (< md): tabbed Write / Preview to maximize each pane.
+              - Desktop (>= md): split-pane (textarea + live preview) so the
+                admin sees rendered output without tab-toggling.
+            */}
+            {/* Mobile: tabbed */}
+            <div className="md:hidden">
+              <Tabs defaultValue="write" className="mt-1">
+                <TabsList className="w-full grid grid-cols-2">
+                  <TabsTrigger value="write">{t('docsFx.editor.tabWrite')}</TabsTrigger>
+                  <TabsTrigger value="preview">{t('docsFx.editor.tabPreview')}</TabsTrigger>
+                </TabsList>
+                <TabsContent value="write">
+                  <Textarea
+                    value={body}
+                    onChange={(e) => setBody(e.target.value)}
+                    className="font-mono text-sm min-h-[45vh]"
+                  />
+                </TabsContent>
+                <TabsContent value="preview">
+                  <div className="prose prose-sm prose-invert max-w-none rounded border border-border bg-muted/40 p-3 min-h-[45vh] text-sm break-words [&_pre]:overflow-x-auto [&_table]:block [&_table]:overflow-x-auto">
+                    <ReactMarkdown>{body || `_${t('docsFx.editor.previewEmpty')}_`}</ReactMarkdown>
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </div>
+            {/* Desktop: split-pane */}
+            <div className="hidden md:grid md:grid-cols-2 md:gap-3 mt-1">
+              <Textarea
+                value={body}
+                onChange={(e) => setBody(e.target.value)}
+                className="font-mono text-sm min-h-[320px]"
+                aria-label={t('docsFx.editor.tabWrite')}
+              />
+              <div
+                className="prose prose-sm prose-invert max-w-none rounded border border-border bg-muted/40 p-4 min-h-[320px] text-sm overflow-y-auto break-words [&_pre]:overflow-x-auto [&_table]:block [&_table]:overflow-x-auto"
+                aria-label={t('docsFx.editor.tabPreview')}
+              >
+                <ReactMarkdown>{body || `_${t('docsFx.editor.previewEmpty')}_`}</ReactMarkdown>
+              </div>
+            </div>
           </div>
         </div>
 
-        <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>{t('common.cancel')}</Button>
-          <Button onClick={handleSave} disabled={!canSave}>{t('common.save')}</Button>
+        <DialogFooter className="px-4 sm:px-0 py-3 sm:py-0 border-t sm:border-t-0 border-border bg-background shrink-0 gap-2">
+          <Button variant="ghost" onClick={() => onOpenChange(false)} className="flex-1 sm:flex-none">
+            {t('common.cancel')}
+          </Button>
+          <Button onClick={handleSave} disabled={!canSave} className="flex-1 sm:flex-none">
+            {t('common.save')}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

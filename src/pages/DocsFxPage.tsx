@@ -54,9 +54,10 @@ import {
   hasOverride,
   listSections,
   resetSeedSection,
+  subscribeOverrideChanges,
   upsertSection,
 } from '@/lib/docs-fx/store';
-import { invalidateSearchIndex, listAllTags, paginate, searchDocs } from '@/lib/docs-fx/search';
+import { listAllTags, paginate, searchDocs } from '@/lib/docs-fx/search';
 import type { DocSection, DocCategory } from '@/lib/docs-fx/types';
 import { DOC_CATEGORIES } from '@/lib/docs-fx/types';
 import { SectionEditorDialog } from '@/components/docs-fx/SectionEditorDialog';
@@ -88,11 +89,10 @@ function useReadSections(includeDrafts: boolean): DocSection[] {
   // We track a tick to force refresh after writes.
   const [tick, setTick] = useState(0);
   useEffect(() => {
-    function onStorage(e: StorageEvent) {
-      if (e.key && e.key.startsWith('airballistik:docs-fx')) setTick((x) => x + 1);
-    }
-    window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
+    // Subscribe via the store's pub/sub so we react to BOTH same-tab
+    // mutations (which native `storage` events don't fire) AND cross-tab
+    // edits (re-broadcast by the store from the `storage` event).
+    return subscribeOverrideChanges(() => setTick((x) => x + 1));
   }, []);
   const sections = useMemo(() => {
     void tick;
@@ -116,8 +116,12 @@ export default function DocsFxPage() {
   const [confirmDelete, setConfirmDelete] = useState<DocSection | null>(null);
   const [refreshTick, setRefreshTick] = useState(0);
 
-  // Read sections (drafts only visible to admin)
+  // Read sections (drafts only visible to admin) AND keep the page tick in
+  // sync with override mutations (auto-invalidates Fuse via the store).
   void useReadSections(isAdmin);
+  useEffect(() => {
+    return subscribeOverrideChanges(() => setRefreshTick((x) => x + 1));
+  }, []);
 
   const allTags = useMemo(() => {
     void refreshTick;
@@ -159,11 +163,6 @@ export default function DocsFxPage() {
     });
   }
 
-  function refreshAll() {
-    invalidateSearchIndex();
-    setRefreshTick((x) => x + 1);
-  }
-
   function clearFilters() {
     setQuery('');
     setActiveTags([]);
@@ -180,40 +179,43 @@ export default function DocsFxPage() {
   }
   function handleSave(input: Parameters<typeof upsertSection>[0]) {
     upsertSection(input);
-    refreshAll();
     setEditorOpen(false);
     toast.success(t('docsFx.toast.saved'));
   }
   function handleDelete(section: DocSection) {
     deleteSection(section.id);
-    refreshAll();
     setConfirmDelete(null);
     toast.success(section.fromSeed ? t('docsFx.toast.hidden') : t('docsFx.toast.deleted'));
   }
   function handleResetSeed(section: DocSection) {
     resetSeedSection(section.id);
-    refreshAll();
     toast.success(t('docsFx.toast.reset'));
   }
 
   return (
-    <div className="container mx-auto max-w-4xl px-4 py-6 space-y-5">
+    <div className="container mx-auto max-w-4xl px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-5">
       <header className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="font-heading text-2xl font-semibold flex items-center gap-2">
+          <h1 className="font-heading text-xl sm:text-2xl font-semibold flex items-center gap-2">
             <BookOpen className="h-5 w-5 text-primary" />
             {t('docsFx.page.title')}
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">{t('docsFx.page.subtitle')}</p>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">{t('docsFx.page.subtitle')}</p>
         </div>
         {isAdmin && (
           <Button size="sm" onClick={openNew} className="shrink-0">
-            <Plus className="h-4 w-4 mr-1" /> {t('docsFx.page.newSection')}
+            <Plus className="h-4 w-4 sm:mr-1" />
+            <span className="hidden sm:inline">{t('docsFx.page.newSection')}</span>
           </Button>
         )}
       </header>
 
-      <div className="space-y-3">
+      {/*
+        Sticky search/filter rail on mobile so users keep search-as-you-type
+        accessible while scrolling through long sections. backdrop-blur keeps
+        the underlying content readable on dark backgrounds.
+      */}
+      <div className="space-y-3 sticky top-0 z-10 -mx-3 sm:mx-0 px-3 sm:px-0 py-2 sm:py-0 bg-background/85 sm:bg-transparent backdrop-blur sm:backdrop-blur-0">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -232,7 +234,7 @@ export default function DocsFxPage() {
             value={category}
             onValueChange={(v) => setCategory(v as DocCategory | typeof CATEGORY_ALL)}
           >
-            <SelectTrigger id="docsfx-category" className="h-8 w-[180px]">
+            <SelectTrigger id="docsfx-category" className="h-8 w-full max-w-[200px] sm:w-[180px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -254,15 +256,17 @@ export default function DocsFxPage() {
           )}
         </div>
         {allTags.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            <Tag className="h-4 w-4 text-muted-foreground self-center" />
+          // Single-row scrollable tag rail on mobile (no wrap blow-up); wraps
+          // on >= sm where vertical real estate is cheaper.
+          <div className="flex sm:flex-wrap gap-2 overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0 sm:overflow-visible scrollbar-thin">
+            <Tag className="h-4 w-4 text-muted-foreground self-center shrink-0" />
             {allTags.map((tag) => {
               const active = activeTags.includes(tag);
               return (
                 <button
                   key={tag}
                   onClick={() => toggleTag(tag)}
-                  className="focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+                  className="focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded shrink-0"
                   aria-pressed={active}
                 >
                   <Badge variant={active ? 'default' : 'outline'} className="cursor-pointer">
@@ -274,7 +278,7 @@ export default function DocsFxPage() {
             {activeTags.length > 0 && (
               <button
                 onClick={() => setActiveTags([])}
-                className="text-xs text-muted-foreground underline self-center"
+                className="text-xs text-muted-foreground underline self-center shrink-0"
               >
                 {t('docsFx.search.clearTags')}
               </button>
@@ -324,12 +328,14 @@ export default function DocsFxPage() {
               <Card className="overflow-hidden">
                 <button
                   onClick={() => toggleExpanded(section.id)}
-                  className="w-full text-left p-4 flex items-start justify-between gap-3 hover:bg-muted/40"
+                  className="w-full text-left p-3 sm:p-4 flex items-start justify-between gap-3 hover:bg-muted/40 min-h-[56px]"
                   aria-expanded={isOpen}
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h2 className="font-heading font-semibold text-base">{section.title}</h2>
+                      <h2 className="font-heading font-semibold text-sm sm:text-base leading-tight break-words">
+                        {section.title}
+                      </h2>
                       <Badge variant="outline" className="text-[10px]">
                         {t(`docsFx.category.${section.category}`)}
                       </Badge>
@@ -345,7 +351,7 @@ export default function DocsFxPage() {
                       )}
                     </div>
                     {section.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-2">
+                      <div className="flex flex-wrap gap-x-2 gap-y-1 mt-1.5">
                         {section.tags.map((tag) => (
                           <span key={tag} className="text-[10px] text-muted-foreground">
                             #{tag}
@@ -360,12 +366,18 @@ export default function DocsFxPage() {
                 </button>
 
                 {isOpen && (
-                  <div className="px-4 pb-4 border-t border-border">
-                    <div className="prose prose-sm prose-invert max-w-none mt-3">
+                  <div className="px-3 sm:px-4 pb-4 border-t border-border">
+                    {/*
+                      Reading mode tweaks for mobile:
+                      - prose-sm baseline keeps line-height comfortable
+                      - tables/code blocks scroll horizontally inside the card
+                      - break-words prevents long URLs from blowing out width
+                    */}
+                    <div className="prose prose-sm prose-invert max-w-none mt-3 break-words [&_pre]:overflow-x-auto [&_table]:block [&_table]:overflow-x-auto [&_img]:max-w-full">
                       <ReactMarkdown>{section.body}</ReactMarkdown>
                     </div>
                     {isAdmin && (
-                      <div className="flex items-center gap-2 mt-4 pt-3 border-t border-border/40">
+                      <div className="flex flex-wrap items-center gap-2 mt-4 pt-3 border-t border-border/40">
                         <Button size="sm" variant="outline" onClick={() => openEdit(section)}>
                           <Pencil className="h-3 w-3 mr-1" /> {t('common.edit')}
                         </Button>

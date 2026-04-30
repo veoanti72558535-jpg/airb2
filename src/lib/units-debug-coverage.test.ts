@@ -24,6 +24,9 @@ const ROOT = join(process.cwd(), 'src');
 const EXEMPT = new Set<string>([
   // Hooks/contextes : pas de rendu de valeur physique.
   'hooks/use-units.ts',
+  // Mécanisme du mode debug lui-même : pas de rendu de valeur physique,
+  // c'est le toggle qui pilote l'affichage des badges.
+  'lib/unit-debug.ts',
   // Panneau de réglage des unités : règle les unités, n'affiche pas de mesure.
   'components/settings/panels/UnitsPanel.tsx',
   'components/settings/panels/PreferencesPanel.tsx',

@@ -1,6 +1,8 @@
 import { useMemo } from 'react';
 import { getSettings, saveSettings } from '@/lib/storage';
 import { useI18n } from '@/lib/i18n';
+import { useAuth } from '@/lib/auth-context';
+import { markLocalUpdated, savePreferenceToSupabase } from '@/lib/preferences-sync';
 import {
   unitCategories,
   getDefaultUnitPrefs,
@@ -17,6 +19,7 @@ import {
  */
 export function useUnits() {
   const { locale } = useI18n();
+  const { user } = useAuth();
   const settings = getSettings();
 
   const prefs: UnitPreferences = useMemo(() => {
@@ -50,6 +53,13 @@ export function useUnits() {
   const setUnitPref = (categoryKey: string, unitValue: string) => {
     const newPrefs = { ...prefs, [categoryKey]: unitValue };
     saveSettings({ ...settings, unitPreferences: newPrefs });
+    markLocalUpdated();
+    // Cross-device sync: when the user is logged in, push the whole
+    // preferences map (jsonb column) so the override sticks on every
+    // device. Fire-and-forget — display never blocks on the network.
+    if (user) {
+      savePreferenceToSupabase(user.id, 'unit_preferences', newPrefs).catch(() => {});
+    }
   };
 
   return { prefs, symbol, categoryLabel, display, toRef, setUnitPref };

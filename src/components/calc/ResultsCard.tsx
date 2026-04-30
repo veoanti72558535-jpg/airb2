@@ -425,14 +425,16 @@ export function ResultsCard({
           const sign = mm >= 0 ? t('calc.driftBreakdown.right') : t('calc.driftBreakdown.left');
           return `${Math.abs(mm).toFixed(1)} ${lengthUnit} ${sign}`;
         };
-        // Resolve the user override so the panel can label "forced" states.
-        const userOverride = (() => {
-          try { return getSettings().featureFlags.spinDrift; } catch { return undefined; }
-        })();
-        const profileSpin = engineConfig?.postProcess?.spinDrift !== false;
-        const spinEnabled = userOverride !== undefined ? userOverride : profileSpin;
-        const coriolisEnabled = !!engineConfig?.postProcess?.coriolis;
-        const windModel = engineConfig?.windModel ?? 'lateral-only';
+        // All "is this active?" decisions come from the centralised
+        // provenance object — never re-derive locally so UI/engine stay
+        // bit-identical. Falls back to safe defaults when the caller
+        // didn't supply a provenance snapshot (e.g. a hydrated session
+        // displayed without re-running the engine).
+        const spinEnabled = provenance?.postProcess.spinDrift.enabled ?? false;
+        const spinSource = provenance?.postProcess.spinDrift.source ?? 'default';
+        const coriolisEnabled = provenance?.postProcess.coriolis.enabled ?? false;
+        const windModel = provenance?.windModel ?? 'lateral-only';
+        const userOverride = provenance?.userOverrides.spinDrift;
         const windZero = !weather?.windSpeed || weather.windSpeed === 0;
 
         return (

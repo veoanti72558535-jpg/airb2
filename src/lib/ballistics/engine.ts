@@ -34,9 +34,32 @@ import { getIntegrator, type IntegratorState } from './integrators';
 import { cdFromMero, hasMeroTable } from './drag/mero-tables';
 import type { EngineConfig } from './types';
 import { buildEngineProvenance } from './provenance';
+import type { EngineProvenance } from './provenance';
 
 const GRAVITY = 9.80665; // m/s²
 const GRAINS_TO_KG = 0.00006479891;
+
+/**
+ * Provenance snapshot of the most recent `calculateTrajectory` call.
+ *
+ * Stored at module scope (rather than threaded through the public
+ * return type) so legacy call sites — they all read the trajectory
+ * array directly — can opt into provenance without a breaking change.
+ * UI consumers (e.g. `ResultsCard`) read it via `getLastEngineProvenance`.
+ *
+ * Single-threaded by design: the engine itself is synchronous, so there
+ * is no race between two concurrent computations.
+ */
+let lastEngineProvenance: EngineProvenance | null = null;
+
+/**
+ * Returns the provenance object for the most recent trajectory
+ * computation, or `null` if no trajectory has been computed yet
+ * in this session.
+ */
+export function getLastEngineProvenance(): EngineProvenance | null {
+  return lastEngineProvenance;
+}
 
 /**
  * Build the Cd resolver for a given config. When the atmosphere model is

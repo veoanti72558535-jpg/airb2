@@ -7,6 +7,10 @@ import { toast } from 'sonner';
 import { useI18n } from '@/lib/i18n';
 import { calculateTrajectory } from '@/lib/ballistics';
 import {
+  validateBallisticInputSI,
+  isHardRejection,
+} from '@/lib/ballistic-compute-client';
+import {
   Airgun,
   BallisticInput,
   BallisticResult,
@@ -165,6 +169,17 @@ export default function QuickCalc() {
    */
   const [previewOriginId, setPreviewOriginId] = useState<string | null>(null);
   const [comparePickerOpen, setComparePickerOpen] = useState(false);
+  /**
+   * Statut de la dernière validation SI côté backend :
+   *   - 'verified'   → guardrail a accepté le payload (auth + ok)
+   *   - 'unverified' → guardrail indisponible (no-supabase / no-auth /
+   *     network-error). Calcul local autorisé, badge UI affiché.
+   *   - 'pending'    → en cours de validation (UI bloque le bouton).
+   *   - null         → aucun calcul lancé.
+   */
+  const [siStatus, setSiStatus] = useState<
+    null | 'pending' | 'verified' | 'unverified'
+  >(null);
   // Tranche J — Source de vérité partagée pour la grille d'affichage
   // (BallisticTable + ReticleAssistPanel). Initialisée paresseusement à
   // partir de la portée par défaut ; recalibrée à chaque calcul / chargement
@@ -480,7 +495,7 @@ export default function QuickCalc() {
     };
   };
 
-  const handleCalculate = () => {
+  const handleCalculate = async () => {
     const err = validate();
     if (err) {
       setError(err);
@@ -489,7 +504,30 @@ export default function QuickCalc() {
     }
     setError(null);
     const input = buildInput();
-    setResults(calculateTrajectory(input));
+    setSiStatus('pending');
+    // Garde-fou SI : appel obligatoire AVANT toute exécution du moteur.
+    // - Rejet dur (display-unit / out-of-si-range / invalid-input / …)
+    //   → on bloque le calcul et on affiche l'erreur du backend.
+    // - Rejet "infrastructure" (no-supabase / no-auth / network-error)
+    //   → fallback local autorisé, marqué 'unverified' dans l'UI
+    //   (cf. mémo Core : offline-first, localStorage / no backend yet).
+    const guard = await validateBallisticInputSI(input);
+    if (isHardRejection(guard)) {
+      const msg = guard.offendingPath
+        ? `${guard.message} (${guard.offendingPath})`
+        : guard.message;
+      setError(msg);
+      setResults(null);
+      setSiStatus(null);
+      toast.error(t('calc.errorTitle'), { description: msg });
+      return;
+    }
+    const verified = guard.ok === true;
+    setSiStatus(verified ? 'verified' : 'unverified');
+    // Sur succès SI on PRÉFÈRE le payload normalisé renvoyé par le
+    // guardrail (mêmes champs, sentinel `units: 'SI'` retiré côté types).
+    const safeInput = verified ? guard.normalized : input;
+    setResults(calculateTrajectory(safeInput));
     // Tranche J — recale la grille partagée sur la portée réellement calculée
     // tout en préservant les colonnes choisies par l'utilisateur.
     setTableConfig(prev => {
@@ -505,6 +543,7 @@ export default function QuickCalc() {
     setSessionName('');
     setPreviewOriginId(null);
     setTableConfig(defaultConfig(100));
+    setSiStatus(null);
   };
 
   const handleSave = () => {

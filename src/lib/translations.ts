@@ -1895,6 +1895,26 @@ const fr = {
   'settings.spinDriftAuto': 'Auto (profil)',
   'settings.spinDriftOn': 'Activée',
   'settings.spinDriftOff': 'Désactivée',
+  // Lateral-drift breakdown panel — surfaces wind / spin / Coriolis
+  // contributions and the active guards so the user understands why a
+  // non-zero drift appears even at 0 m/s wind.
+  'calc.driftBreakdown.title': "D'où vient la dérive ?",
+  'calc.driftBreakdown.total': 'Total latéral',
+  'calc.driftBreakdown.wind': 'Vent',
+  'calc.driftBreakdown.spin': 'Gyroscopique',
+  'calc.driftBreakdown.coriolis': 'Coriolis',
+  'calc.driftBreakdown.modelLabel': 'Modèle vent',
+  'calc.driftBreakdown.modelLateral': 'latéral seul (Didion)',
+  'calc.driftBreakdown.modelVectorial': 'vectoriel (tête + travers)',
+  'calc.driftBreakdown.spinModel': 'Spin : Litz · cap SG ≤ 2.5 · V ≥ 200 m/s',
+  'calc.driftBreakdown.spinOff': 'Spin drift désactivé (par profil ou réglage utilisateur)',
+  'calc.driftBreakdown.spinForcedOn': 'Spin drift forcé ON (réglages utilisateur)',
+  'calc.driftBreakdown.spinForcedOff': 'Spin drift forcé OFF (réglages utilisateur)',
+  'calc.driftBreakdown.coriolisOn': 'Coriolis actif',
+  'calc.driftBreakdown.coriolisOff': 'Coriolis désactivé',
+  'calc.driftBreakdown.zeroWind': 'Vent = 0 m/s — la dérive restante vient du spin et/ou de Coriolis.',
+  'calc.driftBreakdown.right': 'D',
+  'calc.driftBreakdown.left': 'G',
 
   // AI web-search agents (BUILD-IA web search)
   'agentSearch.searchProjectile': 'Rechercher un projectile (IA)',

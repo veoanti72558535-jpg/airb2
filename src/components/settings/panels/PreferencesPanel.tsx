@@ -74,14 +74,18 @@ export function PreferencesPanel() {
   const setNumberFormat = useCallback(
     (patch: Partial<NumberFormatPrefs>) => {
       const cur = getSettings();
-      saveSettings({
-        ...cur,
-        numberFormat: { ...(cur.numberFormat ?? {}), ...patch },
-      });
+      const merged = { ...(cur.numberFormat ?? {}), ...patch };
+      saveSettings({ ...cur, numberFormat: merged });
       markLocalUpdated();
+      // Cross-device sync (P-6 extension) — push the merged jsonb so the
+      // user finds the same decimals/scientific/grouping settings on every
+      // device. Fire-and-forget; UI doesn't wait for the network.
+      if (user) {
+        savePreferenceToSupabase(user.id, 'number_format', merged).catch(() => {});
+      }
       force();
     },
-    [],
+    [user],
   );
   // `advancedMode` is local-only (no Supabase column today). Locale and
   // theme have their own per-user sync paths inside their providers, so

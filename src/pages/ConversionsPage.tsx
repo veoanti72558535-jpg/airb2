@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { ArrowLeftRight, Wind, Search, X, History, Trash2, RotateCcw, Star, Copy, Check } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { ArrowLeftRight, Wind, Search, X, History, Trash2, RotateCcw, Star, Copy, Check, BookOpen } from 'lucide-react';
 import { toast } from 'sonner';
 import { useI18n } from '@/lib/i18n';
 import {
@@ -271,6 +272,20 @@ export default function ConversionsPage() {
         </div>
         <p className="text-xs text-muted-foreground font-mono">{t('conv.subtitle')}</p>
       </div>
+
+      {/* SI vs DSP doc shortcut — explains the unit contract to the user. */}
+      <Link
+        to="/docs/units"
+        className="flex items-center gap-2 rounded-md border border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors px-3 py-2 text-xs"
+      >
+        <BookOpen className="h-3.5 w-3.5 text-primary shrink-0" />
+        <span className="text-foreground">
+          {locale === 'fr'
+            ? 'Comprendre le contrat des unités (SI vs DSP)'
+            : 'Understand the unit contract (SI vs DSP)'}
+        </span>
+        <span className="ml-auto text-primary font-mono">→</span>
+      </Link>
 
       {/* Search bar */}
       <div className="relative">

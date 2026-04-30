@@ -876,7 +876,7 @@ function DenseTrajectoryTableDemo({ rows }: { rows: BallisticResult[] }) {
                     )}
                     title={
                       energyBreach
-                        ? `${r.energy.toFixed(1)} < ${energyMin} J`
+                        ? `${display('energy', r.energy).toFixed(1)} < ${display('energy', energyMin).toFixed(1)} ${symbol('energy')}`
                         : undefined
                     }
                   >
@@ -911,6 +911,9 @@ function DropSparklineDemo({
   rows: BallisticResult[];
   thresholdMm: number;
 }) {
+  const { display, symbol } = useUnits();
+  const lengthSym = symbol('length');
+  const thresholdDisplay = display('length', thresholdMm).toFixed(0);
   const W = 480;
   const H = 140;
   const PAD = { l: 36, r: 12, t: 10, b: 22 };
@@ -939,14 +942,14 @@ function DropSparklineDemo({
           Drop vs range
         </span>
         <span className="text-destructive">
-          threshold {thresholdMm} mm
+          threshold {thresholdDisplay} {lengthSym}
         </span>
       </div>
       <svg
         viewBox={`0 0 ${W} ${H}`}
         width="100%"
         role="img"
-        aria-label={`Drop sparkline, threshold at ${thresholdMm} mm`}
+        aria-label={`Drop sparkline, threshold at ${thresholdDisplay} ${lengthSym}`}
       >
         {/* destructive band above threshold */}
         <rect

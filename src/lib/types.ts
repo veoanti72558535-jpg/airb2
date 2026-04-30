@@ -387,6 +387,12 @@ export interface BallisticResult {
   windDriftMRAD: number;
   /** Estimated spin drift in mm (right-handed twist → positive = right). */
   spinDrift?: number;
+  /**
+   * Coriolis lateral deflection in mm (positive = right in northern
+   * hemisphere with default azimuth). Optional — only populated when the
+   * active engine profile enables `postProcess.coriolis`.
+   */
+  coriolisDrift?: number;
   clicksElevation?: number;
   clicksWindage?: number;
 }

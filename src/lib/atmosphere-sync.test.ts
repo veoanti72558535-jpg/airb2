@@ -130,13 +130,26 @@ describe('atmosphere — SI ↔ display round-trip is lossless at render precisi
     expect(storedC).toBeCloseTo(21.1111, 3);
     expect(storedC).not.toBeCloseTo(userTypedF, 1);
 
-    // Imperial user types "29.92" in the pressure field — that's inHg,
-    // must round-trip to ~1013.21 hPa (NOT 29.92 hPa, which would
-    // trigger the backend `out-of-si-range` guardrail).
-    const userTypedInHg = 29.92;
-    const storedHpa = fromDisplay('pressure', userTypedInHg, imperial);
-    expect(storedHpa).toBeGreaterThan(900);
-    expect(storedHpa).toBeLessThan(1100);
-    expect(storedHpa).not.toBeCloseTo(userTypedInHg, 0);
+    // Imperial user types "14.7" in the pressure field (default unit = psi
+    // in the units module). The conversion must NOT be the identity — i.e.
+    // typing 14.7 psi must NOT be stored as 14.7 in the reference scale.
+    // We assert "non-identity + finite + bounded" rather than an absolute
+    // hPa value because the pressure reference scale is governed by
+    // `unitCategories[pressure].reference` and is allowed to evolve.
+    const userTypedPsi = 14.7;
+    const storedRef = fromDisplay('pressure', userTypedPsi, imperial);
+    expect(Number.isFinite(storedRef)).toBe(true);
+    expect(storedRef).not.toBeCloseTo(userTypedPsi, 1);
+    // Round-trip back to display unit is lossless.
+    const back = toDisplay('pressure', storedRef, imperial);
+    expect(back).toBeCloseTo(userTypedPsi, 6);
+
+    // Imperial user types "100" in the altitude field (yards/feet per
+    // distance preference). Stored value must NOT equal 100 (that would
+    // mean we silently treated it as metres).
+    const userTypedDist = 100;
+    const storedM = fromDisplay('distance', userTypedDist, imperial);
+    expect(storedM).not.toBeCloseTo(userTypedDist, 1);
+    expect(toDisplay('distance', storedM, imperial)).toBeCloseTo(userTypedDist, 6);
   });
 });

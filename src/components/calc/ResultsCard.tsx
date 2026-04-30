@@ -4,8 +4,7 @@ import { BallisticResult, OpticFocalPlane, WeatherSnapshot } from '@/lib/types';
 import { useUnits } from '@/hooks/use-units';
 import { cn } from '@/lib/utils';
 import { UnitTagSurface } from '@/components/devtools/UnitTagSurface';
-import { getSettings } from '@/lib/storage';
-import type { EngineConfig } from '@/lib/ballistics/types';
+import type { EngineProvenance } from '@/lib/ballistics';
 
 interface Props {
   result: BallisticResult;
@@ -26,13 +25,14 @@ interface Props {
    */
   energyThresholdJ?: number | null;
   /**
-   * Engine config used to produce `result`. When provided, the
-   * "Where does the drift come from?" panel can name the active wind
-   * model and Coriolis state instead of inferring them. Optional —
-   * callers that don't pass an explicit profile (e.g. legacy QuickCalc)
-   * fall back to lateral-only / Coriolis-off.
+   * Centralised engine provenance produced alongside `result`
+   * (cf. `getLastEngineProvenance` / `buildEngineProvenance`).
+   *
+   * Single source of truth for which models / guard-rails were active —
+   * the "D'où vient la dérive ?" panel reads it instead of re-deriving
+   * the state, so the UI cannot drift from the engine.
    */
-  engineConfig?: EngineConfig;
+  provenance?: EngineProvenance | null;
 }
 
 function Stat({
@@ -129,7 +129,7 @@ export function ResultsCard({
   weather,
   zeroWeather,
   energyThresholdJ,
-  engineConfig,
+  provenance,
 }: Props) {
   const { t, locale } = useI18n();
   const { display, symbol } = useUnits();

@@ -117,8 +117,8 @@ function LastSessionWidget() {
           <span>MV {display('velocity', last.input.muzzleVelocity).toFixed(0)} {symbol('velocity')}</span>
           <span>BC {last.input.bc}</span>
           {/* Energy uses 1 decimal everywhere else (Dashboard, FieldMode,
-              SessionDetail) — keep parity here so the same row never reads
-              "32 J" in the widget and "32.9 J" two clicks deeper.
+              SessionDetail) — keep parity here so the same row never
+              shows a different rounded value depending on the surface.
               See src/lib/units-cross-surface.test.ts. */}
           <span>{display('energy', lastRow.energy).toFixed(1)}{symbol('energy')} @ {display('distance', lastRow.range).toFixed(0)}{symbol('distance')}</span>
         </div>

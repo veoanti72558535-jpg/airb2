@@ -20,6 +20,7 @@ import { useI18n } from '@/lib/i18n';
 import { useUnits } from '@/hooks/use-units';
 import { cn } from '@/lib/utils';
 import type { BallisticResult } from '@/lib/types';
+import { UnitTagSurface } from '@/components/devtools/UnitTagSurface';
 
 interface PbrOverlay {
   /** Diamètre de zone vitale (m). Trace la bande ± diameter/2 autour de LOS. */
@@ -307,6 +308,7 @@ export function TrajectoryMiniChart({
         <h3 className="text-[11px] uppercase tracking-wide font-semibold text-muted-foreground">
           {title ?? t('trajectoryChart.title')}
         </h3>
+        <UnitTagSurface categories={['distance', 'length']} label="TrajectoryMini" />
       </header>
 
       <svg

@@ -4061,6 +4061,11 @@ const en: Record<keyof typeof fr, string> = {
   'truing.errDistBeyondZero': 'Distance must exceed zero ({zero} m)',
   'settings.featureTruing': 'BC Calibration (Truing)',
   'settings.featureTruingDesc': 'Enable BC calibration panel on sessions',
+  'settings.featureSpinDrift': 'Gyroscopic spin drift',
+  'settings.featureSpinDriftDesc': 'Disabled by default for PCP profiles (sub-sonic velocities). Enable it for slugs > 250 m/s or to cross-check with centerfire ballistic apps.',
+  'settings.spinDriftAuto': 'Auto (profile)',
+  'settings.spinDriftOn': 'On',
+  'settings.spinDriftOff': 'Off',
 
   // AI web-search agents
   'agentSearch.searchProjectile': 'Search projectile (AI)',

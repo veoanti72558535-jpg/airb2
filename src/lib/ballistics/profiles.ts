@@ -29,7 +29,13 @@ export const LEGACY_PROFILE: BallisticProfile = {
     atmosphereModel: 'icao-simple',
     windModel: 'lateral-only',
     postProcess: {
-      spinDrift: true,
+      // PCP airgun regime: gyroscopic spin drift is physically
+      // negligible at sub-sonic velocities and the Litz estimator
+      // overshoots when SG is very high (typical for short heavy
+      // slugs in tight twists). Disabled by default — users can
+      // re-enable it from the engine settings panel for slug or
+      // .22LR work where it becomes meaningful.
+      spinDrift: false,
       coriolis: false,
       cant: false,
       slopeAngle: false,
@@ -57,7 +63,8 @@ export const MERO_PROFILE: BallisticProfile = {
     atmosphereModel: 'tetens-full',
     windModel: 'lateral-only',
     postProcess: {
-      spinDrift: true,
+      // Same rationale as LEGACY_PROFILE — MERO targets PCP shooters.
+      spinDrift: false,
       coriolis: false,
       cant: false,
       slopeAngle: false,

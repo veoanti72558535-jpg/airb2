@@ -10,6 +10,7 @@ import { MessageCircle, Send, Loader2, Trash2, Bot, User, Sparkles } from 'lucid
 import { useI18n } from '@/lib/i18n';
 import { sessionStore, airgunStore, projectileStore } from '@/lib/storage';
 import { calculateTrajectory } from '@/lib/ballistics';
+import { useUnits } from '@/hooks/use-units';
 
 interface ChatMessage {
   id: string;
@@ -34,10 +35,23 @@ function saveHistory(messages: ChatMessage[]) {
 }
 
 /**
+ * Helpers passed in so the assistant always formats with the user's
+ * current display preferences (no hardcoded m/s, mm, J).
+ */
+interface UnitFormatter {
+  display: (cat: string, v: number) => number;
+  symbol: (cat: string) => string;
+}
+
+function fmt(u: UnitFormatter, cat: string, v: number, decimals = 1): string {
+  return `${u.display(cat, v).toFixed(decimals)} ${u.symbol(cat)}`;
+}
+
+/**
  * Local ballistic assistant — processes queries about the user's data
  * without requiring an API key. Falls back to contextual help.
  */
-function processLocalQuery(query: string): string {
+function processLocalQuery(query: string, u: UnitFormatter): string {
   const q = query.toLowerCase().trim();
   const sessions = sessionStore.getAll();
   const airguns = airgunStore.getAll();
@@ -74,7 +88,7 @@ function processLocalQuery(query: string): string {
       try {
         const results = calculateTrajectory({ ...last.input, muzzleVelocity: newMv });
         const at50 = results.find(r => r.range === 50) ?? results[results.length - 1];
-        return `Avec une MV de **${newMv} m/s** (session "${last.name}") :\n- À ${at50.range}m : chute **${at50.drop.toFixed(1)} mm**, énergie **${at50.energy.toFixed(1)} J**\n- Holdover : ${at50.holdoverMRAD.toFixed(2)} MRAD`;
+        return `Avec une MV de **${fmt(u, 'velocity', newMv)}** (session "${last.name}") :\n- À ${fmt(u, 'distance', at50.range, 0)} : chute **${fmt(u, 'length', at50.drop)}**, énergie **${fmt(u, 'energy', at50.energy)}**\n- Holdover : ${at50.holdoverMRAD.toFixed(2)} MRAD`;
       } catch {
         return 'Erreur lors du calcul. Vérifiez que vos paramètres sont cohérents.';
       }
@@ -92,7 +106,7 @@ function processLocalQuery(query: string): string {
         weather: { ...last.input.weather, windSpeed: newWind, windAngle: 90 },
       });
       const at50 = results.find(r => r.range === 50) ?? results[results.length - 1];
-      return `Avec un vent de **${newWind} m/s** en travers (session "${last.name}") :\n- À ${at50.range}m : dérive vent **${at50.windDrift.toFixed(1)} mm**\n- Correction : ${at50.windDriftMRAD.toFixed(2)} MRAD`;
+      return `Avec un vent de **${fmt(u, 'velocity', newWind)}** en travers (session "${last.name}") :\n- À ${fmt(u, 'distance', at50.range, 0)} : dérive vent **${fmt(u, 'length', at50.windDrift)}**\n- Correction : ${at50.windDriftMRAD.toFixed(2)} MRAD`;
     } catch {
       return 'Erreur lors du calcul.';
     }
@@ -102,21 +116,23 @@ function processLocalQuery(query: string): string {
   if (q.includes('meilleur') || q.includes('best') || q.includes('favorite')) {
     const favs = sessions.filter(s => s.favorite);
     if (favs.length > 0) {
-      return `Vous avez **${favs.length} session(s) favorite(s)** :\n${favs.map(s => `⭐ **${s.name}** — BC ${s.input.bc}, MV ${s.input.muzzleVelocity} m/s`).join('\n')}`;
+      return `Vous avez **${favs.length} session(s) favorite(s)** :\n${favs.map(s => `⭐ **${s.name}** — BC ${s.input.bc}, MV ${fmt(u, 'velocity', s.input.muzzleVelocity)}`).join('\n')}`;
     }
     return 'Aucune session marquée comme favorite. Ouvrez une session et cliquez sur l\'étoile pour la mettre en favori.';
   }
 
-  // Help / capabilities
+  // Help / capabilities — example values formatted with current units
   if (q.includes('aide') || q.includes('help') || q.includes('quoi') || q.includes('capable') || q.includes('?')) {
-    return `Je peux vous aider avec :\n\n🔹 **Vos données** — "Combien de sessions ai-je ?", "Liste mes armes", "Mes projectiles"\n🔹 **Simulations** — "Et si ma vitesse était 280 m/s ?", "Avec un vent de 5 m/s ?"\n🔹 **Favoris** — "Quelles sont mes meilleures sessions ?"\n🔹 **Conseils** — "Comment améliorer ma précision ?", "Quel BC choisir ?"\n\nPosez votre question !`;
+    const exMv = fmt(u, 'velocity', 280);
+    const exWind = fmt(u, 'velocity', 5);
+    return `Je peux vous aider avec :\n\n🔹 **Vos données** — "Combien de sessions ai-je ?", "Liste mes armes", "Mes projectiles"\n🔹 **Simulations** — "Et si ma vitesse était ${exMv} ?", "Avec un vent de ${exWind} ?"\n🔹 **Favoris** — "Quelles sont mes meilleures sessions ?"\n🔹 **Conseils** — "Comment améliorer ma précision ?", "Quel BC choisir ?"\n\nPosez votre question !`;
   }
 
   // Default contextual response
   if (sessions.length > 0) {
     const last = sessions[sessions.length - 1];
     const lastResult = last.results?.[last.results.length - 1];
-    return `Je ne suis pas sûr de comprendre votre question. Voici un résumé de votre dernière session :\n\n📋 **${last.name}**\n- MV : ${last.input.muzzleVelocity} m/s | BC : ${last.input.bc}\n- Zéro : ${last.input.zeroRange}m | Max : ${last.input.maxRange}m\n${lastResult ? `- À ${lastResult.range}m : chute ${lastResult.drop.toFixed(1)}mm, énergie ${lastResult.energy.toFixed(1)}J` : ''}\n\nEssayez : "aide" pour voir ce que je peux faire.`;
+    return `Je ne suis pas sûr de comprendre votre question. Voici un résumé de votre dernière session :\n\n📋 **${last.name}**\n- MV : ${fmt(u, 'velocity', last.input.muzzleVelocity)} | BC : ${last.input.bc}\n- Zéro : ${fmt(u, 'distance', last.input.zeroRange, 0)} | Max : ${fmt(u, 'distance', last.input.maxRange, 0)}\n${lastResult ? `- À ${fmt(u, 'distance', lastResult.range, 0)} : chute ${fmt(u, 'length', lastResult.drop)}, énergie ${fmt(u, 'energy', lastResult.energy)}` : ''}\n\nEssayez : "aide" pour voir ce que je peux faire.`;
   }
 
   return 'Bienvenue ! Je suis votre assistant balistique. Créez d\'abord une session dans QuickCalc, puis revenez me poser vos questions. Tapez "aide" pour voir mes capacités.';
@@ -124,6 +140,7 @@ function processLocalQuery(query: string): string {
 
 export default function BallisticChatPage() {
   const { t } = useI18n();
+  const { display, symbol } = useUnits();
   const [messages, setMessages] = useState<ChatMessage[]>(() => loadHistory());
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -151,7 +168,7 @@ export default function BallisticChatPage() {
 
     // Simulate AI response with slight delay
     setTimeout(() => {
-      const response = processLocalQuery(text);
+      const response = processLocalQuery(text, { display, symbol });
       const assistantMsg: ChatMessage = {
         id: crypto.randomUUID(),
         role: 'assistant',
@@ -165,7 +182,7 @@ export default function BallisticChatPage() {
       });
       setIsTyping(false);
     }, 300 + Math.random() * 500);
-  }, [input]);
+  }, [input, display, symbol]);
 
   const clearHistory = () => {
     setMessages([]);
@@ -201,7 +218,12 @@ export default function BallisticChatPage() {
               </p>
             </div>
             <div className="flex flex-wrap gap-2 justify-center">
-              {['Liste mes armes', 'Combien de sessions ?', 'Si MV = 280 m/s ?', 'Aide'].map((q) => (
+              {[
+                'Liste mes armes',
+                'Combien de sessions ?',
+                `Si MV = ${fmt({ display, symbol }, 'velocity', 280)} ?`,
+                'Aide',
+              ].map((q) => (
                 <button
                   key={q}
                   onClick={() => { setInput(q); setTimeout(() => inputRef.current?.form?.requestSubmit(), 50); }}

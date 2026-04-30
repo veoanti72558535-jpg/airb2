@@ -20,6 +20,7 @@ import { Switch } from '@/components/ui/switch';
 import { ResponsivePreview } from '@/components/devtools/ResponsivePreview';
 import { BallisticResult, WeatherSnapshot } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { useUnits } from '@/hooks/use-units';
 
 /**
  * Internal design-system showcase. Mirrors what Claude Design documents in its
@@ -442,10 +443,14 @@ function FieldCorrectionTilesDemo() {
 }
 
 function FieldMiniStatsDemo() {
+  // Demo values are kept in SI then formatted via useUnits so the docs
+  // surface respects the user's current display preferences (no hardcoded
+  // mm / m/s / J literals — the engine truth-set rule applies even here).
+  const { display, symbol } = useUnits();
   const stats = [
-    { label: 'Chute', value: '12.4', unit: 'mm' },
-    { label: 'Vit.', value: '245', unit: 'm/s' },
-    { label: 'Énergie', value: '32.8', unit: 'J' },
+    { label: 'Chute', value: display('length', 12.4).toFixed(1), unit: symbol('length') },
+    { label: 'Vit.', value: display('velocity', 245).toFixed(0), unit: symbol('velocity') },
+    { label: 'Énergie', value: display('energy', 32.8).toFixed(1), unit: symbol('energy') },
     { label: 'TdV', value: '0.108', unit: 's' },
   ];
   return (
@@ -790,6 +795,7 @@ function Rules({ title, rules }: { title: string; rules: string[] }) {
  * left ring to draw the eye.
  */
 function DenseTrajectoryTableDemo({ rows }: { rows: BallisticResult[] }) {
+  const { display, symbol } = useUnits();
   const [energyMin, setEnergyMin] = useState(20);
   const [velocityMin, setVelocityMin] = useState(220);
 
@@ -798,14 +804,14 @@ function DenseTrajectoryTableDemo({ rows }: { rows: BallisticResult[] }) {
       <div className="flex flex-wrap items-center gap-3 px-3 py-2 border-b border-border bg-muted/20 text-[11px] font-mono">
         <ThresholdControl
           label="Energy floor"
-          unit="J"
+          unit={symbol('energy')}
           value={energyMin}
           step={1}
           onChange={setEnergyMin}
         />
         <ThresholdControl
           label="Velocity floor"
-          unit="m/s"
+          unit={symbol('velocity')}
           value={velocityMin}
           step={5}
           onChange={setVelocityMin}
@@ -856,7 +862,7 @@ function DenseTrajectoryTableDemo({ rows }: { rows: BallisticResult[] }) {
                     )}
                     title={
                       velocityBreach
-                        ? `${r.velocity.toFixed(0)} < ${velocityMin} m/s`
+                        ? `${display('velocity', r.velocity).toFixed(0)} < ${display('velocity', velocityMin).toFixed(0)} ${symbol('velocity')}`
                         : undefined
                     }
                   >
@@ -870,7 +876,7 @@ function DenseTrajectoryTableDemo({ rows }: { rows: BallisticResult[] }) {
                     )}
                     title={
                       energyBreach
-                        ? `${r.energy.toFixed(1)} < ${energyMin} J`
+                        ? `${display('energy', r.energy).toFixed(1)} < ${display('energy', energyMin).toFixed(1)} ${symbol('energy')}`
                         : undefined
                     }
                   >
@@ -905,6 +911,9 @@ function DropSparklineDemo({
   rows: BallisticResult[];
   thresholdMm: number;
 }) {
+  const { display, symbol } = useUnits();
+  const lengthSym = symbol('length');
+  const thresholdDisplay = display('length', thresholdMm).toFixed(0);
   const W = 480;
   const H = 140;
   const PAD = { l: 36, r: 12, t: 10, b: 22 };
@@ -933,14 +942,14 @@ function DropSparklineDemo({
           Drop vs range
         </span>
         <span className="text-destructive">
-          threshold {thresholdMm} mm
+          threshold {thresholdDisplay} {lengthSym}
         </span>
       </div>
       <svg
         viewBox={`0 0 ${W} ${H}`}
         width="100%"
         role="img"
-        aria-label={`Drop sparkline, threshold at ${thresholdMm} mm`}
+        aria-label={`Drop sparkline, threshold at ${thresholdDisplay} ${lengthSym}`}
       >
         {/* destructive band above threshold */}
         <rect

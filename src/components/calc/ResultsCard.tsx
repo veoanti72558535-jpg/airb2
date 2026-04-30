@@ -405,6 +405,94 @@ export function ResultsCard({
         </div>
       )}
 
+      {/* ── Drift breakdown ────────────────────────────────────────────
+          "Where does the drift come from?" — splits the total lateral
+          deflection (`result.windDrift` in mm) into its three physical
+          contributors: pure wind, gyroscopic spin, Coriolis. Surfaces
+          the active wind model and the current spin guards so users can
+          tell, at a glance, why the column shows a non-zero value at
+          0 m/s wind. Only rendered in `advanced` mode and at ranges > 0
+          (the muzzle row carries no drift). */}
+      {advanced && result.range > 0 && (() => {
+        const totalMm = result.windDrift ?? 0;
+        const spinMm = result.spinDrift ?? 0;
+        const corMm = result.coriolisDrift ?? 0;
+        // Pure-wind contribution = total − spin − Coriolis. Engine
+        // already rounds each component to 0.1 mm, so this stays
+        // numerically clean.
+        const windOnlyMm = +(totalMm - spinMm - corMm).toFixed(1);
+        const fmtSigned = (mm: number) => {
+          const sign = mm >= 0 ? t('calc.driftBreakdown.right') : t('calc.driftBreakdown.left');
+          return `${Math.abs(mm).toFixed(1)} ${lengthUnit} ${sign}`;
+        };
+        // Resolve the user override so the panel can label "forced" states.
+        const userOverride = (() => {
+          try { return getSettings().featureFlags.spinDrift; } catch { return undefined; }
+        })();
+        const profileSpin = engineConfig?.postProcess?.spinDrift !== false;
+        const spinEnabled = userOverride !== undefined ? userOverride : profileSpin;
+        const coriolisEnabled = !!engineConfig?.postProcess?.coriolis;
+        const windModel = engineConfig?.windModel ?? 'lateral-only';
+        const windZero = !weather?.windSpeed || weather.windSpeed === 0;
+
+        return (
+          <div className="rounded-lg border border-border/40 bg-background/20 p-3 space-y-2">
+            <h4 className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-1.5">
+              <Info className="h-3 w-3" />
+              {t('calc.driftBreakdown.title')}
+            </h4>
+            <div className="grid grid-cols-3 gap-1.5">
+              <Stat
+                icon={Wind}
+                label={t('calc.driftBreakdown.wind')}
+                value={fmtSigned(windOnlyMm)}
+              />
+              <Stat
+                icon={Compass}
+                label={t('calc.driftBreakdown.spin')}
+                value={spinEnabled ? fmtSigned(spinMm) : '—'}
+              />
+              <Stat
+                icon={Globe2}
+                label={t('calc.driftBreakdown.coriolis')}
+                value={coriolisEnabled ? fmtSigned(corMm) : '—'}
+              />
+            </div>
+            <div className="flex items-baseline justify-between text-[11px] font-mono pt-1 border-t border-border/30">
+              <span className="uppercase tracking-wide text-muted-foreground">
+                {t('calc.driftBreakdown.total')}
+              </span>
+              <span className="font-semibold">{fmtSigned(totalMm)}</span>
+            </div>
+            <ul className="text-[10px] text-muted-foreground/90 space-y-0.5 pt-1">
+              <li>
+                <span className="uppercase tracking-wide">{t('calc.driftBreakdown.modelLabel')}:</span>{' '}
+                {windModel === 'vectorial'
+                  ? t('calc.driftBreakdown.modelVectorial')
+                  : t('calc.driftBreakdown.modelLateral')}
+              </li>
+              <li>
+                {!spinEnabled
+                  ? userOverride === false
+                    ? t('calc.driftBreakdown.spinForcedOff')
+                    : t('calc.driftBreakdown.spinOff')
+                  : userOverride === true && !profileSpin
+                    ? `${t('calc.driftBreakdown.spinForcedOn')} — ${t('calc.driftBreakdown.spinModel')}`
+                    : t('calc.driftBreakdown.spinModel')}
+              </li>
+              <li>
+                {coriolisEnabled
+                  ? t('calc.driftBreakdown.coriolisOn')
+                  : t('calc.driftBreakdown.coriolisOff')}
+              </li>
+              {windZero && (totalMm !== 0) && (
+                <li className="text-warning">{t('calc.driftBreakdown.zeroWind')}</li>
+              )}
+            </ul>
+          </div>
+        );
+      })()}
+
       {rows && rows.length > 1 && (
         <div className="pt-2 border-t border-border/40">
           <h4 className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-2">

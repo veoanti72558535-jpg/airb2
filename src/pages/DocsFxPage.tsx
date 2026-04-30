@@ -66,6 +66,23 @@ import { toast } from 'sonner';
 const PAGE_SIZE = 8;
 const CATEGORY_ALL = '__all__' as const;
 
+/**
+ * Build a compact page list with ellipsis markers around the current page.
+ * Always includes first + last; collapses long ranges to keep the bar
+ * usable on mobile (target: ≤ 7 visible items).
+ */
+function buildPageList(current: number, total: number): Array<number | 'ellipsis'> {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const pages: Array<number | 'ellipsis'> = [1];
+  const start = Math.max(2, current - 1);
+  const end = Math.min(total - 1, current + 1);
+  if (start > 2) pages.push('ellipsis');
+  for (let p = start; p <= end; p++) pages.push(p);
+  if (end < total - 1) pages.push('ellipsis');
+  pages.push(total);
+  return pages;
+}
+
 function useReadSections(includeDrafts: boolean): DocSection[] {
   // Re-read on every render is cheap (≤ a few dozen entries).
   // We track a tick to force refresh after writes.

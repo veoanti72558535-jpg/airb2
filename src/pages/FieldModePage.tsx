@@ -11,6 +11,7 @@ import { sessionStore, opticStore } from '@/lib/storage';
 import { calculateTrajectory } from '@/lib/ballistics';
 import type { BallisticResult, Session } from '@/lib/types';
 import { useUnits } from '@/hooks/use-units';
+import { UnitTag } from '@/components/devtools/UnitTag';
 
 export default function FieldModePage() {
   const { t } = useI18n();
@@ -187,10 +188,10 @@ export default function FieldModePage() {
       {/* Secondary info strip */}
       {currentRow && (
         <div className="grid grid-cols-4 gap-2">
-          <MiniStat label="Chute" value={`${display('length', currentRow.drop).toFixed(1)}`} unit={lenSym} />
-          <MiniStat label="Vit." value={`${Math.round(display('velocity', currentRow.velocity))}`} unit={velSym} />
-          <MiniStat label="Énergie" value={`${display('energy', currentRow.energy).toFixed(1)}`} unit={enSym} />
-          <MiniStat label="TdV" value={`${currentRow.tof.toFixed(3)}`} unit="s" />
+          <MiniStat label="Chute" value={`${display('length', currentRow.drop).toFixed(1)}`} unit={lenSym} siRef="mm" />
+          <MiniStat label="Vit." value={`${Math.round(display('velocity', currentRow.velocity))}`} unit={velSym} siRef="m/s" />
+          <MiniStat label="Énergie" value={`${display('energy', currentRow.energy).toFixed(1)}`} unit={enSym} siRef="J" />
+          <MiniStat label="TdV" value={`${currentRow.tof.toFixed(3)}`} unit="s" siRef="s" isSi />
         </div>
       )}
 
@@ -238,13 +239,35 @@ export default function FieldModePage() {
   );
 }
 
-function MiniStat({ label, value, unit }: { label: string; value: string; unit: string }) {
+function MiniStat({
+  label,
+  value,
+  unit,
+  siRef,
+  isSi,
+}: {
+  label: string;
+  value: string;
+  unit: string;
+  /** Reference SI symbol for the underlying engine value (mm, m/s, J, s…). */
+  siRef?: string;
+  /** Set when `unit === siRef` (no conversion happened). */
+  isSi?: boolean;
+}) {
   return (
     <div className="surface-card rounded-xl px-2 py-2 text-center">
       <div className="text-[8px] uppercase tracking-wide text-muted-foreground">{label}</div>
       <div className="text-sm font-mono font-semibold tabular-nums">
         {value}
         <span className="text-[9px] text-muted-foreground ml-0.5">{unit}</span>
+        {siRef && (
+          <UnitTag
+            kind={isSi ? 'si' : 'display'}
+            reference={siRef}
+            display={unit}
+            label={label}
+          />
+        )}
       </div>
     </div>
   );

@@ -6,6 +6,7 @@ import { useI18n } from '@/lib/i18n';
 import { unitCategories } from '@/lib/units';
 import { convertUnit } from '@/lib/units-helpers';
 import { cn } from '@/lib/utils';
+import { UnitTag } from '@/components/devtools/UnitTag';
 
 interface UnitFieldProps {
   label: string;
@@ -48,6 +49,12 @@ export function UnitField({
 
   const cat = useMemo(() => unitCategories.find(c => c.key === category), [category]);
   const currentUnit = prefs[category] ?? cat?.reference ?? '';
+  // The input is "SI" only if the user happens to be displaying the
+  // category's reference unit. Otherwise the value entered is a display
+  // conversion that the parent must convert back via `useUnits().toRef()`
+  // before handing it to the engine — that's the most common
+  // re-injection bug, so we surface it explicitly.
+  const isSiInput = !!cat && currentUnit === cat.reference;
   const options = useMemo(() => {
     if (!cat) return [];
     if (!allowedUnits?.length) return cat.options;
@@ -71,6 +78,14 @@ export function UnitField({
       <div className="flex items-center justify-between gap-2">
         <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
           {label}
+          {cat && (
+            <UnitTag
+              kind={isSiInput ? 'si' : 'display'}
+              reference={cat.reference}
+              display={currentUnit}
+              label={label}
+            />
+          )}
         </label>
         {hint && <span className="text-[10px] text-muted-foreground/70">{hint}</span>}
       </div>

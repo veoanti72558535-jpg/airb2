@@ -10,6 +10,7 @@ import { TrajectoryMiniChart } from '@/components/calc/TrajectoryMiniChart';
 import { OnboardingWizard, useOnboarding } from '@/components/OnboardingWizard';
 import { DashboardWidgets } from '@/components/DashboardWidgets';
 import { useUnits } from '@/hooks/use-units';
+import { UnitTag } from '@/components/devtools/UnitTag';
 
 export default function Dashboard() {
   const { t } = useI18n();
@@ -117,11 +118,17 @@ export default function Dashboard() {
                   )}
                   <div className="flex justify-between items-center text-sm border-b border-border/40 pb-1">
                     <span className="text-muted-foreground">Vélocité</span>
-                    <span className="font-mono text-primary">{velocityDisp.toFixed(0)} {velocitySym}</span>
+                    <span className="font-mono text-primary">
+                      {velocityDisp.toFixed(0)} {velocitySym}
+                      <UnitTag kind="display" reference="m/s" display={velocitySym} label="Vélocité" />
+                    </span>
                   </div>
                   <div className="flex justify-between items-center text-sm border-b border-border/40 pb-1">
                     <span className="text-muted-foreground">Distance Zéro</span>
-                    <span className="font-mono">{zeroDistDisp.toFixed(0)} {distanceSym}</span>
+                    <span className="font-mono">
+                      {zeroDistDisp.toFixed(0)} {distanceSym}
+                      <UnitTag kind="display" reference="m" display={distanceSym} label="Distance zéro" />
+                    </span>
                   </div>
                 </div>
               </div>
@@ -129,11 +136,17 @@ export default function Dashboard() {
               <div className="grid grid-cols-2 gap-2 mt-4">
                 <div className="bg-background/50 rounded-lg p-2 border border-border/40">
                   <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Drop @ Zéro</div>
-                  <div className="font-mono font-bold">{dropAtZero} <span className="text-xs font-sans font-normal opacity-70">{lengthSym}</span></div>
+                  <div className="font-mono font-bold">
+                    {dropAtZero} <span className="text-xs font-sans font-normal opacity-70">{lengthSym}</span>
+                    <UnitTag kind="display" reference="mm" display={lengthSym} label="Drop" />
+                  </div>
                 </div>
                 <div className="bg-background/50 rounded-lg p-2 border border-border/40">
                   <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Énergie</div>
-                  <div className="font-mono font-bold">{energyAtZero} <span className="text-xs font-sans font-normal opacity-70">{energySym}</span></div>
+                  <div className="font-mono font-bold">
+                    {energyAtZero} <span className="text-xs font-sans font-normal opacity-70">{energySym}</span>
+                    <UnitTag kind="display" reference="J" display={energySym} label="Énergie" />
+                  </div>
                 </div>
               </div>
             </AppCard>

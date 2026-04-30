@@ -37,98 +37,17 @@
 import { z } from 'https://esm.sh/zod@3.23.8';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 import { corsHeaders, jsonResponse } from '../_shared/cors.ts';
-
-/**
- * Suffixes interdits — repèrent toute clé qui annonce explicitement
- * une unité d'affichage. Comparaison insensible à la casse, ancrée en
- * fin de nom (séparateur `_` ou camelCase final).
- */
-const FORBIDDEN_SUFFIXES = [
-  '_fps', '_yd', '_yds', '_gr', '_gn', '_in', '_inch', '_mph',
-  '_lbs', '_lb', '_oz', '_f', '_fahrenheit', '_inhg', '_psi',
-  '_kmh', '_kph', '_mi', '_mile', '_miles', '_ft', '_feet',
-  '_cm', '_mm_display', '_mil_display', '_moa_display',
-] as const;
-
-/** Mots-clés interdits anywhere dans une clé (cas camelCase).
- *  Match insensible à la casse : `muzzleVelocityFps` ⇒ "fps". */
-const FORBIDDEN_TOKENS = [
-  'fps', 'mph', 'inhg', 'lbs', 'grains', 'yards', 'inches',
-  'fahrenheit', 'displayunit', 'displayvalue',
-];
-
-function keyMentionsDisplayUnit(key: string): string | null {
-  const lower = key.toLowerCase();
-  for (const sfx of FORBIDDEN_SUFFIXES) {
-    if (lower.endsWith(sfx)) return sfx;
-  }
-  for (const tok of FORBIDDEN_TOKENS) {
-    if (lower.includes(tok)) return tok;
-  }
-  return null;
-}
-
-/**
- * Walks the payload depth-first; throws on any forbidden key.
- * Skips the top-level `units` sentinel (already validated).
- */
-function assertNoDisplayUnitKeys(node: unknown, path = '$'): void {
-  if (node === null || typeof node !== 'object') return;
-  if (Array.isArray(node)) {
-    node.forEach((item, i) => assertNoDisplayUnitKeys(item, `${path}[${i}]`));
-    return;
-  }
-  for (const [k, v] of Object.entries(node as Record<string, unknown>)) {
-    if (path === '$' && k === 'units') continue;
-    const hit = keyMentionsDisplayUnit(k);
-    if (hit) {
-      const err = new Error(
-        `Display-unit key detected at ${path}.${k} (suffix/token "${hit}"). ` +
-        `The ballistic engine accepts SI units only.`,
-      );
-      (err as { code?: string }).code = 'display-unit-detected';
-      (err as { offendingPath?: string }).offendingPath = `${path}.${k}`;
-      throw err;
-    }
-    assertNoDisplayUnitKeys(v, `${path}.${k}`);
-  }
-}
-
-/**
- * Bornes physiques SI plausibles pour une carabine PCP.
- * Hors de ces bornes ⇒ très probablement une unité d'affichage déguisée
- * (ex. 900 "m/s" = 900 fps mal converti). Volontairement larges pour
- * couvrir les armes à poudre testées en cross-validation, sans laisser
- * passer 2000 fps annoncés en m/s.
- */
-const SI_BOUNDS = {
-  // muzzleVelocity en m/s — pellet airgun ~150-380, slug ~250-300,
-  // poudre extrême ~1500. > 2000 m/s = forcément fps.
-  muzzleVelocity: { min: 30, max: 2000, unit: 'm/s' },
-  // BC sans dimension, ~0.005 (BB) à ~1.0 (long range).
-  bc: { min: 0.001, max: 1.5, unit: '(dimensionless)' },
-  // projectileWeight en GRAMS (interne SI projet — voir types.ts:301
-  // legacy "grains" mais le moteur convertit en interne ; on impose ici
-  // grams pour interdire toute injection en grains via cet endpoint).
-  // Pellet ~0.3 à slug ~5 g. > 100 g = sûrement grains.
-  projectileWeight: { min: 0.05, max: 100, unit: 'g' },
-  // sightHeight en mm.
-  sightHeight: { min: 0, max: 200, unit: 'mm' },
-  // distances en m.
-  zeroRange: { min: 1, max: 3000, unit: 'm' },
-  maxRange: { min: 1, max: 3000, unit: 'm' },
-  rangeStep: { min: 0.1, max: 500, unit: 'm' },
-  slopeAngle: { min: -90, max: 90, unit: 'deg' },
-  latitude: { min: -90, max: 90, unit: 'deg' },
-  shootingAzimuth: { min: 0, max: 360, unit: 'deg' },
-  // Weather SI :
-  temperature: { min: -60, max: 60, unit: '°C' },   // > 60 ⇒ probable °F
-  humidity: { min: 0, max: 100, unit: '%' },
-  pressure: { min: 500, max: 1100, unit: 'hPa' },   // < 500 ⇒ probable inHg
-  altitude: { min: -500, max: 9000, unit: 'm' },
-  windSpeed: { min: 0, max: 100, unit: 'm/s' },     // > 100 ⇒ probable fps/mph
-  windAngle: { min: 0, max: 360, unit: 'deg' },
-} as const;
+import {
+  applySiGuardrail,
+  findDisplayUnitKey,
+  keyMentionsDisplayUnit,
+  checkSiBound,
+  findOutOfSiRange,
+  SI_BOUNDS,
+  FORBIDDEN_SUFFIXES,
+  FORBIDDEN_TOKENS,
+  type SiBoundKey,
+} from '../_shared/si-guardrail.ts';
 
 /**
  * Schéma minimal des champs balistiques SI. `passthrough()` permet aux
@@ -163,16 +82,6 @@ const inputSchema = z
   })
   .passthrough();
 
-type SiBoundKey = keyof typeof SI_BOUNDS;
-
-function checkBound(field: SiBoundKey, value: number): string | null {
-  const b = SI_BOUNDS[field];
-  if (value < b.min || value > b.max) {
-    return `${field}=${value} is outside SI plausible range [${b.min}, ${b.max}] ${b.unit} — looks like a display-unit value (e.g. fps/grains/inHg/°F).`;
-  }
-  return null;
-}
-
 function enforceSiBounds(input: z.infer<typeof inputSchema>): string | null {
   const checks: Array<[SiBoundKey, number | undefined]> = [
     ['muzzleVelocity', input.muzzleVelocity],
@@ -192,12 +101,7 @@ function enforceSiBounds(input: z.infer<typeof inputSchema>): string | null {
     ['windSpeed', input.weather.windSpeed as number],
     ['windAngle', input.weather.windAngle as number],
   ];
-  for (const [field, value] of checks) {
-    if (value === undefined) continue;
-    const err = checkBound(field, value);
-    if (err) return err;
-  }
-  return null;
+  return findOutOfSiRange(checks);
 }
 
 /**
@@ -248,40 +152,17 @@ Deno.serve(async (req) => {
     );
   }
 
-  // Sentinel d'unités obligatoire AVANT toute autre validation — refus
-  // explicite de tout payload qui n'affirme pas être en SI.
-  if (
-    !body || typeof body !== 'object' ||
-    (body as Record<string, unknown>).units !== 'SI'
-  ) {
-    return jsonResponse(
-      {
-        ok: false,
-        code: 'missing-units-sentinel',
-        message: 'Payload must include `units: "SI"` at root. Display units (fps, yd, gr, °F, inHg, mph, …) are rejected by the engine endpoint.',
-      },
-      400,
-    );
-  }
-
-  // Garde-fou clés — refuse toute clé qui mentionne une unité d'affichage.
-  try {
-    assertNoDisplayUnitKeys(body);
-  } catch (e) {
-    const err = e as Error & { code?: string; offendingPath?: string };
-    return jsonResponse(
-      {
-        ok: false,
-        code: err.code ?? 'display-unit-detected',
-        message: err.message,
-        offendingPath: err.offendingPath,
-      },
-      422,
-    );
+  // Garde-fou SI partagé — sentinel `units: "SI"` + interdit toute clé
+  // suffixée d'une unité d'affichage (à n'importe quelle profondeur).
+  // Mutualisé pour TOUS les endpoints balistiques : voir
+  // `_shared/si-guardrail.ts` et `docs/engine/backend-si-contract.md`.
+  const guard = applySiGuardrail<Record<string, unknown>>(body);
+  if (!guard.ok) {
+    return jsonResponse(guard.error, guard.status);
   }
 
   // Validation structurelle Zod.
-  const parsed = inputSchema.safeParse(body);
+  const parsed = inputSchema.safeParse(guard.payload);
   if (!parsed.success) {
     return jsonResponse(
       {
@@ -313,10 +194,13 @@ Deno.serve(async (req) => {
 
 // Exports pour les tests unitaires (consommés via dynamic import en TS).
 export {
-  assertNoDisplayUnitKeys,
-  checkBound,
   enforceSiBounds,
   inputSchema,
+  // Re-exports du module partagé : permettent aux tests existants
+  // de continuer à importer ces helpers depuis ce fichier.
   keyMentionsDisplayUnit,
+  findDisplayUnitKey,
+  checkSiBound,
+  applySiGuardrail,
   SI_BOUNDS,
 };

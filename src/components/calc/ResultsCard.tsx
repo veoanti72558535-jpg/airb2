@@ -475,10 +475,10 @@ export function ResultsCard({
               </li>
               <li>
                 {!spinEnabled
-                  ? userOverride === false
+                  ? spinSource === 'user-override'
                     ? t('calc.driftBreakdown.spinForcedOff')
                     : t('calc.driftBreakdown.spinOff')
-                  : userOverride === true && !profileSpin
+                  : spinSource === 'user-override'
                     ? `${t('calc.driftBreakdown.spinForcedOn')} — ${t('calc.driftBreakdown.spinModel')}`
                     : t('calc.driftBreakdown.spinModel')}
               </li>

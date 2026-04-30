@@ -442,10 +442,14 @@ function FieldCorrectionTilesDemo() {
 }
 
 function FieldMiniStatsDemo() {
+  // Demo values are kept in SI then formatted via useUnits so the docs
+  // surface respects the user's current display preferences (no hardcoded
+  // mm / m/s / J literals — the engine truth-set rule applies even here).
+  const { display, symbol } = useUnits();
   const stats = [
-    { label: 'Chute', value: '12.4', unit: 'mm' },
-    { label: 'Vit.', value: '245', unit: 'm/s' },
-    { label: 'Énergie', value: '32.8', unit: 'J' },
+    { label: 'Chute', value: display('length', 12.4).toFixed(1), unit: symbol('length') },
+    { label: 'Vit.', value: display('velocity', 245).toFixed(0), unit: symbol('velocity') },
+    { label: 'Énergie', value: display('energy', 32.8).toFixed(1), unit: symbol('energy') },
     { label: 'TdV', value: '0.108', unit: 's' },
   ];
   return (

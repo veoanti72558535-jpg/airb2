@@ -1,6 +1,7 @@
 import React from 'react';
-import { FileText, Search, Filter, File } from 'lucide-react';
+import { FileText, Search, Filter, File, BookOpen, ArrowRight } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
 const mockDocs = [
@@ -22,6 +23,21 @@ export default function DocsPage() {
         </div>
         <p className="text-xs text-muted-foreground">{t('docs.subtitle')}</p>
       </div>
+
+      {/* FX docs hub — admin-editable, search by tags + content */}
+      <Link
+        to="/docs/fx"
+        className="surface-elevated p-4 flex items-center gap-3 hover:bg-muted/40 transition-colors"
+      >
+        <div className="p-2 rounded-md bg-primary/10 text-primary shrink-0">
+          <BookOpen className="h-5 w-5" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="text-sm font-semibold">{t('docsFx.page.title')}</div>
+          <div className="text-xs text-muted-foreground">{t('docsFx.page.subtitle')}</div>
+        </div>
+        <ArrowRight className="h-4 w-4 text-muted-foreground" />
+      </Link>
 
       {/* Search */}
       <div className="relative">

@@ -51,6 +51,12 @@ const SEED_META: Record<string, SeedMeta> = {
     category: 'protocol',
     order: 20,
   },
+  'manual-weather-faq': {
+    title: 'FAQ — Météo manuelle (saisie, erreurs, bonnes pratiques)',
+    tags: ['fx', 'météo', 'manuel', 'faq', 'erreur', 'si'],
+    category: 'faq',
+    order: 30,
+  },
 };
 
 function fileNameToId(path: string): string {

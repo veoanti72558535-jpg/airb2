@@ -581,9 +581,13 @@ function LangButton({
  */
 function UnitsComparison({
   activeSystem,
+  numberFormat,
+  locale,
   t,
 }: {
   activeSystem: 'metric' | 'imperial';
+  numberFormat: NumberFormatPrefs;
+  locale: 'fr' | 'en';
   t: (k: string) => string;
 }) {
   const metricPrefs = getDefaultUnitPrefs('metric');
@@ -595,8 +599,9 @@ function UnitsComparison({
     { cat: 'energy', refValue: 24, label: t('settings.preferences.unitsEnergy' as any) },
   ] as const;
 
-  const fmt = (v: number) =>
-    Number.isFinite(v) ? (Math.abs(v) >= 100 ? v.toFixed(0) : v.toFixed(2)) : '—';
+  // Delegating to the shared formatter keeps the comparison preview in
+  // sync with whatever the user picks in the precision controls below.
+  const fmt = (v: number) => formatNumber(v, numberFormat, locale);
 
   return (
     <div className="rounded-md border border-border/50 overflow-hidden">

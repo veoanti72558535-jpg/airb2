@@ -178,7 +178,7 @@ export default function FieldModePage() {
               clics ({clickUnit})
             </div>
             <div className="text-xs text-muted-foreground font-mono mt-2 border-t border-border/40 pt-2">
-              {currentRow.windDrift.toFixed(1)} mm
+              {display('length', currentRow.windDrift).toFixed(1)} {lenSym}
             </div>
           </div>
         </div>
@@ -187,9 +187,9 @@ export default function FieldModePage() {
       {/* Secondary info strip */}
       {currentRow && (
         <div className="grid grid-cols-4 gap-2">
-          <MiniStat label="Chute" value={`${currentRow.drop.toFixed(1)}`} unit="mm" />
-          <MiniStat label="Vit." value={`${Math.round(currentRow.velocity)}`} unit="m/s" />
-          <MiniStat label="Énergie" value={`${currentRow.energy.toFixed(1)}`} unit="J" />
+          <MiniStat label="Chute" value={`${display('length', currentRow.drop).toFixed(1)}`} unit={lenSym} />
+          <MiniStat label="Vit." value={`${Math.round(display('velocity', currentRow.velocity))}`} unit={velSym} />
+          <MiniStat label="Énergie" value={`${display('energy', currentRow.energy).toFixed(1)}`} unit={enSym} />
           <MiniStat label="TdV" value={`${currentRow.tof.toFixed(3)}`} unit="s" />
         </div>
       )}

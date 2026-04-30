@@ -11,6 +11,7 @@ import { useI18n } from '@/lib/i18n';
 import { calculateTrajectory } from '@/lib/ballistics';
 import { sessionStore } from '@/lib/storage';
 import type { Session, BallisticResult } from '@/lib/types';
+import { useUnits } from '@/hooks/use-units';
 
 interface Shot {
   x: number; // mm offset from center
@@ -42,6 +43,7 @@ function getKillZoneMm(distance: number): number {
 
 export default function RangeSimulatorPage() {
   const { t } = useI18n();
+  const { display, symbol } = useUnits();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const sessions = useMemo(() => sessionStore.getAll(), []);
   const [selectedSessionId, setSelectedSessionId] = useState(
@@ -141,7 +143,11 @@ export default function RangeSimulatorPage() {
     ctx.fillStyle = 'rgba(34, 197, 94, 0.6)';
     ctx.font = '10px monospace';
     ctx.textAlign = 'center';
-    ctx.fillText(`${killZoneMm}mm`, cx, cy + killRadius + 14);
+    ctx.fillText(
+      `${display('length', killZoneMm).toFixed(0)}${symbol('length')}`,
+      cx,
+      cy + killRadius + 14,
+    );
 
     // Crosshair
     ctx.strokeStyle = 'rgba(255,255,255,0.15)';
@@ -279,7 +285,7 @@ export default function RangeSimulatorPage() {
           </div>
           <div className="flex items-center gap-2">
             <button onClick={() => setDistance((d) => Math.max(10, d - 5))} className="p-1 rounded bg-muted hover:bg-muted/70"><ChevronDown className="h-3 w-3" /></button>
-            <span className="text-lg font-mono font-bold flex-1 text-center">{distance}<span className="text-xs text-muted-foreground ml-1">m</span></span>
+            <span className="text-lg font-mono font-bold flex-1 text-center">{display('distance', distance).toFixed(0)}<span className="text-xs text-muted-foreground ml-1">{symbol('distance')}</span></span>
             <button onClick={() => setDistance((d) => Math.min(100, d + 5))} className="p-1 rounded bg-muted hover:bg-muted/70"><ChevronUp className="h-3 w-3" /></button>
           </div>
         </div>
@@ -291,7 +297,7 @@ export default function RangeSimulatorPage() {
           </div>
           <div className="flex items-center gap-2">
             <button onClick={() => setWindSpeed((w) => Math.max(0, w - 1))} className="p-1 rounded bg-muted hover:bg-muted/70"><ChevronDown className="h-3 w-3" /></button>
-            <span className="text-lg font-mono font-bold flex-1 text-center">{windSpeed}<span className="text-xs text-muted-foreground ml-1">m/s</span></span>
+            <span className="text-lg font-mono font-bold flex-1 text-center">{display('velocity', windSpeed).toFixed(1)}<span className="text-xs text-muted-foreground ml-1">{symbol('velocity')}</span></span>
             <button onClick={() => setWindSpeed((w) => Math.min(15, w + 1))} className="p-1 rounded bg-muted hover:bg-muted/70"><ChevronUp className="h-3 w-3" /></button>
           </div>
         </div>

@@ -145,8 +145,9 @@ describe('preferences-sync', () => {
         expect.objectContaining({
           unit_system: 'metric',
           energy_threshold_j: 16.27,
-          unit_preferences: expect.anything(),
-          number_format: expect.anything(),
+          // null when local prefs are unset — the column exists in payload either way
+          unit_preferences: null,
+          number_format: null,
         }),
       );
     });

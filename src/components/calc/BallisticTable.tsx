@@ -13,6 +13,7 @@ import { ChevronDown, ChevronUp, Settings2, RotateCcw, Crosshair, Sparkles } fro
 import { useI18n } from '@/lib/i18n';
 import type { TranslationKey } from '@/lib/translations';
 import { useUnits } from '@/hooks/use-units';
+import { UnitTag } from '@/components/devtools/UnitTag';
 import { cn } from '@/lib/utils';
 import type { BallisticResult } from '@/lib/types';
 import {
@@ -264,6 +265,7 @@ export function BallisticTable({
                     {isColumnVisible(cfg, 'drop') && (
                       <th data-testid="bt-th-drop" className="text-right py-1.5 px-2">
                         {t('ballisticTable.drop')} ({lengthUnit})
+                        <UnitTag kind="display" reference="mm" display={lengthUnit} label="Drop" />
                       </th>
                     )}
                     {isColumnVisible(cfg, 'holdover') && (
@@ -279,6 +281,7 @@ export function BallisticTable({
                     {isColumnVisible(cfg, 'windDrift') && (
                       <th data-testid="bt-th-windDrift" className="text-right py-1.5 px-2">
                         {t('ballisticTable.windDrift')} ({lengthUnit})
+                        <UnitTag kind="display" reference="mm" display={lengthUnit} label="Wind drift" />
                       </th>
                     )}
                     {isColumnVisible(cfg, 'windClicks') && (
@@ -289,16 +292,19 @@ export function BallisticTable({
                     {isColumnVisible(cfg, 'velocity') && (
                       <th data-testid="bt-th-velocity" className="text-right py-1.5 px-2">
                         {t('ballisticTable.velocity')} ({velUnit})
+                        <UnitTag kind="display" reference="m/s" display={velUnit} label="Velocity" />
                       </th>
                     )}
                     {isColumnVisible(cfg, 'energy') && (
                       <th data-testid="bt-th-energy" className="text-right py-1.5 px-2">
                         {t('ballisticTable.energy')} ({energyUnit})
+                        <UnitTag kind="display" reference="J" display={energyUnit} label="Energy" />
                       </th>
                     )}
                     {isColumnVisible(cfg, 'tof') && (
                       <th data-testid="bt-th-tof" className="text-right py-1.5 pl-2">
                         {t('ballisticTable.timeOfFlight')} (s)
+                        <UnitTag kind="si" reference="s" label="Time of flight" />
                       </th>
                     )}
                     <th className="py-1.5 pl-2 w-0" />

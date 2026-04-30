@@ -73,7 +73,8 @@ describe('Debug-mode coverage — every display surface carries a SI/DSP badge',
       const src = readFileSync(join(ROOT, rel), 'utf8');
       const hasBadge =
         /<UnitTag\b/.test(src) ||
-        /<UnitValue\b/.test(src);
+        /<UnitValue\b/.test(src) ||
+        /<UnitTagSurface\b/.test(src);
       expect(
         hasBadge,
         `${rel} consomme useUnits().display/symbol mais ne rend ni <UnitTag> ni <UnitValue>. ` +

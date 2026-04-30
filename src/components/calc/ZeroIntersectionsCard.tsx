@@ -80,6 +80,7 @@ export function ZeroIntersectionsCard({ data, className, dense }: Props) {
         <h3 className="text-[11px] uppercase tracking-wide font-semibold text-muted-foreground">
           {t('zeroIntersections.title')}
         </h3>
+        <UnitTagSurface categories={['distance']} label="ZeroIntersections" />
       </header>
       <div className="grid grid-cols-2 gap-3">
         {renderSlot(

@@ -4109,6 +4109,12 @@ const en: Record<keyof typeof fr, string> = {
   'calc.driftBreakdown.zeroWind': 'Wind = 0 m/s — remaining drift comes from spin and/or Coriolis.',
   'calc.driftBreakdown.right': 'R',
   'calc.driftBreakdown.left': 'L',
+  'calc.driftBreakdown.traceability': 'Traceability',
+  'calc.driftBreakdown.fieldTotal': 'Total lateral (mm)',
+  'calc.driftBreakdown.fieldSpin': 'Spin (mm)',
+  'calc.driftBreakdown.fieldCoriolis': 'Coriolis (mm)',
+  'calc.driftBreakdown.fieldWindOnly': 'Wind only (recomposed)',
+  'calc.driftBreakdown.formulaLabel': 'Formula',
 
   // AI web-search agents
   'agentSearch.searchProjectile': 'Search projectile (AI)',

@@ -14,6 +14,7 @@ import { useAuth } from "@/lib/auth-context";
 import Layout from "@/components/Layout";
 import { PerfMonitorProvider } from "@/lib/perf-monitor";
 import { PerfOverlay } from "@/components/devtools/PerfOverlay";
+import { UnitDebugOverlay } from "@/components/devtools/UnitDebugOverlay";
 
 // ── Lazy-loaded pages (F1 — code splitting) ──────────────────────────────
 const Dashboard = lazy(() => import("@/pages/Dashboard"));
@@ -164,6 +165,7 @@ const App = () => (
               </Suspense>
             </Layout>
             <PerfOverlay />
+            <UnitDebugOverlay />
             </PerfMonitorProvider>
           </BrowserRouter>
           </TooltipProvider>

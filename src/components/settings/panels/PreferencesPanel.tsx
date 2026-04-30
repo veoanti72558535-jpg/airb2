@@ -65,7 +65,6 @@ export function PreferencesPanel() {
   const { theme, setTheme, isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { display, symbol } = useUnits();
   const settings = getSettings();
   // `advancedMode` is local-only (no Supabase column today). Locale and
   // theme have their own per-user sync paths inside their providers, so

@@ -830,6 +830,7 @@ export default function QuickCalc() {
             weather={form.weather}
             zeroWeather={form.useZeroWeather ? form.zeroWeather : undefined}
             energyThresholdJ={energyThresholdJ}
+            provenance={provenance}
           />
 
           {/* A9 — Energy hunting advisor for the hero distance. Optional

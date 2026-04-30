@@ -45,6 +45,7 @@ import { useI18n } from '@/lib/i18n';
 import { useTheme } from '@/lib/theme';
 import { THEMES, DEFAULT_THEME } from '@/lib/theme-constants';
 import { getSettings, saveSettings, sessionStore } from '@/lib/storage';
+import { getSortedFavorites, formatLastUsed } from '@/lib/session-favorites';
 import { markLocalUpdated, savePreferenceToSupabase } from '@/lib/preferences-sync';
 import { useAuth } from '@/lib/auth-context';
 import { useUnits } from '@/hooks/use-units';
@@ -95,7 +96,11 @@ export function PreferencesPanel() {
   // already wired below for the mode toggle. The star button calls
   // `sessionStore.update()` then `force()` so the list refreshes
   // without leaving the panel.
-  const favSessions = sessionStore.getAll().filter((s) => s.favorite);
+  //
+  // Sorting (last-used DESC, then name ASC) is delegated to the shared
+  // `getSortedFavorites` helper so this list stays in lockstep with the
+  // Dashboard "Favoris" widget — single source of truth, no drift.
+  const favSessions = getSortedFavorites(sessionStore.getAll());
 
   const toggleFav = useCallback(
     (id: string) => {
@@ -357,8 +362,11 @@ export function PreferencesPanel() {
                   )}
                 >
                   <span className="text-xs truncate">{s.name}</span>
+                  <span className="ml-auto text-[10px] text-muted-foreground font-mono shrink-0">
+                    {formatLastUsed(s.updatedAt, locale)}
+                  </span>
                   {typeof s.input?.bc === 'number' && (
-                    <span className="ml-auto text-[10px] text-muted-foreground font-mono shrink-0">
+                    <span className="text-[10px] text-muted-foreground font-mono shrink-0 hidden sm:inline">
                       BC {s.input.bc}
                     </span>
                   )}

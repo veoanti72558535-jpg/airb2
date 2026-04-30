@@ -31,6 +31,7 @@ const ComparePage = lazy(() => import("@/pages/ComparePage"));
 const ConversionsPage = lazy(() => import("@/pages/ConversionsPage"));
 const DocsPage = lazy(() => import("@/pages/DocsPage"));
 const UnitsContractPage = lazy(() => import("@/pages/UnitsContractPage"));
+const DocsFxPage = lazy(() => import("@/pages/DocsFxPage"));
 const SearchPage = lazy(() => import("@/pages/SearchPage"));
 const SettingsPage = lazy(() => import("@/pages/SettingsPage"));
 const AdminPage = lazy(() => import("@/pages/AdminPage"));
@@ -118,6 +119,7 @@ const App = () => (
                 <Route path="/conversions" element={<ConversionsPage />} />
                 <Route path="/docs" element={<DocsPage />} />
                 <Route path="/docs/units" element={<UnitsContractPage />} />
+                <Route path="/docs/fx" element={<DocsFxPage />} />
                 <Route path="/search" element={<SearchPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
                 {/* Friendly alias — /preferences deep-links to the unified

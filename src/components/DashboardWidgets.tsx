@@ -11,7 +11,7 @@ import { GripVertical, Star, Clock, Zap, Cloud, Brain, TrendingUp, Target } from
 import { useNavigate } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
 import { sessionStore, airgunStore, projectileStore, opticStore, getSettings } from '@/lib/storage';
-import { getSortedFavorites, formatLastUsed } from '@/lib/session-favorites';
+import { getSortedFavorites, formatLastUsed, getLastSession } from '@/lib/session-favorites';
 
 const WIDGET_ORDER_KEY = 'airballistik-widget-order';
 
@@ -86,8 +86,10 @@ function QuickActionsWidget() {
 function LastSessionWidget() {
   const { t, locale } = useI18n();
   const navigate = useNavigate();
-  const sessions = sessionStore.getAll();
-  const last = sessions.length > 0 ? sessions[sessions.length - 1] : null;
+  // Use the shared "last used" helper (most recent updatedAt) so the
+  // dashboard, the Preferences "Reprendre" shortcut and any future
+  // surface always agree on which session is "the last one".
+  const last = getLastSession(sessionStore.getAll());
 
   if (!last) {
     return (

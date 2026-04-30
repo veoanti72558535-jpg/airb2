@@ -49,8 +49,18 @@ const FILES = walk(ROOT);
 
 const consumers = FILES.filter((p) => {
   const src = readFileSync(p, 'utf8');
-  // Heuristique : le fichier consomme useUnits ET appelle display() ou symbol()
-  return /useUnits\s*\(\s*\)/.test(src) && /\.(display|symbol)\s*\(/.test(src);
+  // Heuristique : le fichier consomme useUnits ET produit une valeur
+  // d'affichage. On reconnaît :
+  //   - `useUnits()` (avec ou sans déstructuration)
+  //   - un appel `.display(`/`.symbol(` OU une déstructuration
+  //     `{ display, symbol }` directe.
+  if (!/useUnits\s*\(/.test(src)) return false;
+  if (/\.(display|symbol)\s*\(/.test(src)) return true;
+  if (/\b(display|symbol)\s*\(/.test(src) && /useUnits\s*\(\)/.test(src)) {
+    // Heuristique secondaire : déstructuration locale `{ display, symbol } = useUnits()`.
+    return /\{[^}]*\b(display|symbol)\b[^}]*\}\s*=\s*useUnits\s*\(\)/.test(src);
+  }
+  return false;
 }).map((p) => relative(ROOT, p).replace(/\\/g, '/'));
 
 describe('Debug-mode coverage — every display surface carries a SI/DSP badge', () => {

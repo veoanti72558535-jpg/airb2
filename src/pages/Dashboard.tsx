@@ -9,9 +9,11 @@ import { AppCard } from '@/components/ui/AppCard';
 import { TrajectoryMiniChart } from '@/components/calc/TrajectoryMiniChart';
 import { OnboardingWizard, useOnboarding } from '@/components/OnboardingWizard';
 import { DashboardWidgets } from '@/components/DashboardWidgets';
+import { useUnits } from '@/hooks/use-units';
 
 export default function Dashboard() {
   const { t } = useI18n();
+  const { display, symbol } = useUnits();
   const sessions = sessionStore.getAll();
   const last = sessions.length > 0 ? sessions[sessions.length - 1] : null;
   const { shouldShow: showOnboarding, markDone } = useOnboarding();
@@ -27,9 +29,17 @@ export default function Dashboard() {
   }, [last]);
 
   const zeroRow = lastResult?.find((r: BallisticResult) => r.range === (last?.input.zeroRange ?? 0));
-  const dropAtZero = zeroRow ? zeroRow.drop.toFixed(1) : '—';
-  const velocityAtZero = zeroRow ? Math.round(zeroRow.velocity).toString() : '—';
-  const energyAtZero = zeroRow ? zeroRow.energy.toFixed(1) : '—';
+  // The engine always works in SI reference units (mm for length, m/s for
+  // velocity, J for energy). Conversions happen here, at the rendering layer
+  // only, so calculations stay byte-identical regardless of preferences.
+  const dropAtZero = zeroRow ? display('length', zeroRow.drop).toFixed(1) : '—';
+  const energyAtZero = zeroRow ? display('energy', zeroRow.energy).toFixed(1) : '—';
+  const velocityDisp = last ? display('velocity', last.input.muzzleVelocity) : 0;
+  const zeroDistDisp = last ? display('distance', last.input.zeroRange) : 0;
+  const lengthSym = symbol('length');
+  const energySym = symbol('energy');
+  const velocitySym = symbol('velocity');
+  const distanceSym = symbol('distance');
 
   return (
     <div className="space-y-6">
@@ -107,11 +117,11 @@ export default function Dashboard() {
                   )}
                   <div className="flex justify-between items-center text-sm border-b border-border/40 pb-1">
                     <span className="text-muted-foreground">Vélocité</span>
-                    <span className="font-mono text-primary">{last.input.muzzleVelocity} m/s</span>
+                    <span className="font-mono text-primary">{velocityDisp.toFixed(0)} {velocitySym}</span>
                   </div>
                   <div className="flex justify-between items-center text-sm border-b border-border/40 pb-1">
                     <span className="text-muted-foreground">Distance Zéro</span>
-                    <span className="font-mono">{last.input.zeroRange} m</span>
+                    <span className="font-mono">{zeroDistDisp.toFixed(0)} {distanceSym}</span>
                   </div>
                 </div>
               </div>
@@ -119,11 +129,11 @@ export default function Dashboard() {
               <div className="grid grid-cols-2 gap-2 mt-4">
                 <div className="bg-background/50 rounded-lg p-2 border border-border/40">
                   <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Drop @ Zéro</div>
-                  <div className="font-mono font-bold">{dropAtZero} <span className="text-xs font-sans font-normal opacity-70">mm</span></div>
+                  <div className="font-mono font-bold">{dropAtZero} <span className="text-xs font-sans font-normal opacity-70">{lengthSym}</span></div>
                 </div>
                 <div className="bg-background/50 rounded-lg p-2 border border-border/40">
                   <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Énergie</div>
-                  <div className="font-mono font-bold">{energyAtZero} <span className="text-xs font-sans font-normal opacity-70">J</span></div>
+                  <div className="font-mono font-bold">{energyAtZero} <span className="text-xs font-sans font-normal opacity-70">{energySym}</span></div>
                 </div>
               </div>
             </AppCard>

@@ -12,6 +12,7 @@ import { useNavigate } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
 import { sessionStore, airgunStore, projectileStore, opticStore, getSettings } from '@/lib/storage';
 import { getSortedFavorites, formatLastUsed, getLastSession } from '@/lib/session-favorites';
+import { useUnits } from '@/hooks/use-units';
 
 const WIDGET_ORDER_KEY = 'airballistik-widget-order';
 
@@ -86,6 +87,7 @@ function QuickActionsWidget() {
 function LastSessionWidget() {
   const { t, locale } = useI18n();
   const navigate = useNavigate();
+  const { display, symbol } = useUnits();
   // Use the shared "last used" helper (most recent updatedAt) so the
   // dashboard, the Preferences "Reprendre" shortcut and any future
   // surface always agree on which session is "the last one".
@@ -112,9 +114,9 @@ function LastSessionWidget() {
       <div className="text-[10px] text-muted-foreground font-mono">{new Date(last.createdAt).toLocaleDateString(locale)}</div>
       {lastRow && (
         <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
-          <span>MV {last.input.muzzleVelocity} m/s</span>
+          <span>MV {display('velocity', last.input.muzzleVelocity).toFixed(0)} {symbol('velocity')}</span>
           <span>BC {last.input.bc}</span>
-          <span>{lastRow.energy.toFixed(0)}J @ {lastRow.range}m</span>
+          <span>{display('energy', lastRow.energy).toFixed(0)}{symbol('energy')} @ {display('distance', lastRow.range).toFixed(0)}{symbol('distance')}</span>
         </div>
       )}
     </button>
@@ -188,6 +190,7 @@ function FavoritesWidget() {
 
 // ── Widget: Weather ──
 function WeatherWidget() {
+  const { symbol } = useUnits();
   const sessions = sessionStore.getAll();
   const last = sessions.length > 0 ? sessions[sessions.length - 1] : null;
   const weather = last?.input.weather;
@@ -209,7 +212,7 @@ function WeatherWidget() {
           </div>
           <div>
             <div className="text-lg font-mono font-bold">{weather.windSpeed}</div>
-            <div className="text-[8px] text-muted-foreground uppercase">m/s</div>
+            <div className="text-[8px] text-muted-foreground uppercase">{symbol('velocity')}</div>
           </div>
         </div>
       ) : (

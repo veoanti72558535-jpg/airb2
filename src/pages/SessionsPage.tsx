@@ -25,6 +25,7 @@ import { normalizeSession } from '@/lib/session-normalize';
 import { BallisticTable } from '@/components/calc/BallisticTable';
 import { ZeroIntersectionsCard } from '@/components/calc/ZeroIntersectionsCard';
 import { TrajectoryMiniChart } from '@/components/calc/TrajectoryMiniChart';
+import { useUnits } from '@/hooks/use-units';
 import { PbrCard } from '@/components/calc/PbrCard';
 import { AdvancedTrajectoryChart } from '@/components/calc/AdvancedTrajectoryChart';
 import { computeZeroIntersections } from '@/lib/zero-intersections';
@@ -54,6 +55,11 @@ export default function SessionsPage() {
   const { t } = useI18n();
   const navigate = useNavigate();
   const settings = getSettings();
+  const { display, symbol } = useUnits();
+  const distSym = symbol('distance');
+  const lengthSym = symbol('length');
+  const velSym = symbol('velocity');
+  const weightSym = symbol('weight');
   const truingEnabled = settings.featureFlags.truing !== false;
   const isAdvanced = settings.advancedMode;
   const [sessions, setSessions] = useState<Session[]>(sessionStore.getAll());
@@ -254,7 +260,7 @@ export default function SessionsPage() {
             options={projectiles.map(p => ({
               id: p.id,
               label: `${p.brand} ${p.model}`,
-              sub: `${p.weight}gr · BC ${p.bc}`,
+              sub: `${display('weight', p.weight).toFixed(1)}${weightSym} · BC ${p.bc}`,
             }))}
             placeholder={t('common.all')}
             emptyText={t('calc.noProjectiles')}
@@ -349,7 +355,7 @@ export default function SessionsPage() {
                      )}
                     </div>
                     <div className="text-xs text-muted-foreground font-mono mt-1">
-                      {s.input.muzzleVelocity} m/s • BC {s.input.bc} • {s.input.projectileWeight} gr • Zero {s.input.zeroRange}m
+                      {display('velocity', s.input.muzzleVelocity).toFixed(0)} {velSym} • BC {s.input.bc} • {display('weight', s.input.projectileWeight).toFixed(1)} {weightSym} • Zero {display('distance', s.input.zeroRange).toFixed(0)}{distSym}
                     </div>
                     <div className="text-[11px] text-muted-foreground mt-0.5">
                       {new Date(s.createdAt).toLocaleString()}
@@ -404,8 +410,8 @@ export default function SessionsPage() {
                   <div className="mt-3 grid grid-cols-4 gap-2 text-center">
                     {s.results.filter(r => r.range > 0).slice(0, 4).map(r => (
                       <div key={r.range} className="bg-muted rounded p-2">
-                        <div className="text-[10px] text-muted-foreground">{r.range}m</div>
-                        <div className="text-xs font-mono font-semibold">{r.drop.toFixed(1)}<span className="text-muted-foreground">mm</span></div>
+                        <div className="text-[10px] text-muted-foreground">{display('distance', r.range).toFixed(0)}{distSym}</div>
+                        <div className="text-xs font-mono font-semibold">{display('length', r.drop).toFixed(1)}<span className="text-muted-foreground">{lengthSym}</span></div>
                       </div>
                     ))}
                   </div>

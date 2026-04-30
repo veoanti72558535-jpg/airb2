@@ -39,13 +39,15 @@ import {
   Star,
   ChevronRight,
   Ruler,
+  Clock,
+  PlayCircle,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
 import { useTheme } from '@/lib/theme';
 import { THEMES, DEFAULT_THEME } from '@/lib/theme-constants';
 import { getSettings, saveSettings, sessionStore } from '@/lib/storage';
-import { getSortedFavorites, formatLastUsed } from '@/lib/session-favorites';
+import { getSortedFavorites, formatLastUsed, getLastSession } from '@/lib/session-favorites';
 import { markLocalUpdated, savePreferenceToSupabase } from '@/lib/preferences-sync';
 import { useAuth } from '@/lib/auth-context';
 import { useUnits } from '@/hooks/use-units';
@@ -134,6 +136,12 @@ export function PreferencesPanel() {
   const themeMeta = THEMES.find((th) => th.id === theme) ?? THEMES[0];
   const themeLabel = locale === 'fr' ? themeMeta.labelFR : themeMeta.labelEN;
 
+  // Same source of truth as the Dashboard "Dernière session" widget —
+  // most recent `updatedAt`, fallback to `createdAt`. Re-read on every
+  // render (in-memory cache); `force()` after favorite-toggle keeps it
+  // in sync without a route change.
+  const lastSession = getLastSession(sessionStore.getAll());
+
   return (
     <div className="space-y-3">
       {/* Header */}
@@ -164,6 +172,38 @@ export function PreferencesPanel() {
           <span>{justReset ? t('settings.preferences.resetDone' as any) : t('settings.preferences.reset' as any)}</span>
         </button>
       </div>
+
+      {/* Resume — quick shortcut to the most recently touched session.
+          Hidden when there is nothing to resume. */}
+      {lastSession && (
+        <button
+          type="button"
+          onClick={() => navigate(`/sessions/${lastSession.id}`)}
+          className={cn(
+            'surface-elevated p-3 w-full text-left flex items-center gap-3',
+            'hover:border-primary/40 transition-colors',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md',
+          )}
+          aria-label={`${t('settings.preferences.resume' as any)} — ${lastSession.name}`}
+        >
+          <div className="h-8 w-8 rounded-md bg-primary/10 text-primary flex items-center justify-center shrink-0">
+            <PlayCircle className="h-4 w-4" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                {t('settings.preferences.resume' as any)}
+              </span>
+              <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground font-mono">
+                <Clock className="h-3 w-3" />
+                {formatLastUsed(lastSession.updatedAt, locale)}
+              </span>
+            </div>
+            <div className="text-sm font-medium truncate">{lastSession.name}</div>
+          </div>
+          <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+        </button>
+      )}
 
       {/* Language */}
       <section className="surface-elevated p-4 space-y-2">

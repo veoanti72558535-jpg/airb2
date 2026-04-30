@@ -1,7 +1,7 @@
-import { useMemo } from 'react';
+import { useContext, useMemo } from 'react';
 import { getSettings, saveSettings } from '@/lib/storage';
 import { useI18n } from '@/lib/i18n';
-import { useAuth } from '@/lib/auth-context';
+import { AuthContext } from '@/lib/auth-context-internals';
 import { markLocalUpdated, savePreferenceToSupabase } from '@/lib/preferences-sync';
 import {
   unitCategories,
@@ -19,7 +19,12 @@ import {
  */
 export function useUnits() {
   const { locale } = useI18n();
-  const { user } = useAuth();
+  // Read auth context defensively: `useUnits` is called from low-level UI
+  // (BallisticTable, UnitField, etc.) that may render in tests without an
+  // <AuthProvider>. Falling back to `null` keeps the hook crash-free —
+  // sync is simply skipped when nobody is logged in.
+  const authCtx = useContext(AuthContext);
+  const user = authCtx?.user ?? null;
   const settings = getSettings();
 
   const prefs: UnitPreferences = useMemo(() => {

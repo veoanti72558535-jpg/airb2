@@ -47,6 +47,7 @@ import { useI18n } from '@/lib/i18n';
 import { useTheme } from '@/lib/theme';
 import { THEMES, DEFAULT_THEME } from '@/lib/theme-constants';
 import { getSettings, saveSettings, sessionStore } from '@/lib/storage';
+import { toDisplay, getDefaultUnitPrefs, getUnitSymbol } from '@/lib/units';
 import { getSortedFavorites, formatLastUsed, getLastSession } from '@/lib/session-favorites';
 import { markLocalUpdated, savePreferenceToSupabase } from '@/lib/preferences-sync';
 import { useAuth } from '@/lib/auth-context';
@@ -309,31 +310,11 @@ export function PreferencesPanel() {
           />
         </div>
 
-        {/* Live conversion preview — values come from useUnits.display(),
-            so changing the system above instantly re-formats the row. */}
-        <div className="grid grid-cols-3 gap-2 pt-1">
-          {([
-            { cat: 'distance', refValue: 50, label: t('settings.preferences.unitsDistance' as any) },
-            { cat: 'velocity', refValue: 280, label: t('settings.preferences.unitsVelocity' as any) },
-            { cat: 'energy',   refValue: 24,  label: t('settings.preferences.unitsEnergy'   as any) },
-          ] as const).map(({ cat, refValue, label }) => {
-            const v = display(cat, refValue);
-            const formatted = Number.isFinite(v)
-              ? (Math.abs(v) >= 100 ? v.toFixed(0) : v.toFixed(2))
-              : '—';
-            return (
-              <div
-                key={cat}
-                className="rounded-md border border-border/40 bg-background/40 px-2 py-1.5"
-              >
-                <div className="text-[9px] uppercase text-muted-foreground">{label}</div>
-                <div className="text-xs font-mono font-semibold">
-                  {formatted} <span className="text-muted-foreground">{symbol(cat)}</span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        {/* Side-by-side comparison — both systems shown for the same
+            reference values, the active column highlighted. Lets the
+            user pick the unit system by SEEING the format, not by
+            guessing the conversion. */}
+        <UnitsComparison activeSystem={unitSystem} t={t} />
         <p className="text-[10px] text-muted-foreground">
           {t('settings.preferences.unitsHint' as any)}
         </p>

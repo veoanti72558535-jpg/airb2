@@ -51,7 +51,6 @@ import { toDisplay, getDefaultUnitPrefs, getUnitSymbol } from '@/lib/units';
 import { getSortedFavorites, formatLastUsed, getLastSession } from '@/lib/session-favorites';
 import { markLocalUpdated, savePreferenceToSupabase } from '@/lib/preferences-sync';
 import { useAuth } from '@/lib/auth-context';
-import { useUnits } from '@/hooks/use-units';
 import { ThemePicker } from '@/components/settings/ThemePicker';
 import { cn } from '@/lib/utils';
 

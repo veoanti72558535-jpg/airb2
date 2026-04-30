@@ -42,6 +42,7 @@ import {
   Clock,
   PlayCircle,
   ShieldCheck,
+  Hash,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
@@ -50,6 +51,7 @@ import { THEMES, DEFAULT_THEME } from '@/lib/theme-constants';
 import { getSettings, saveSettings, sessionStore } from '@/lib/storage';
 import { toDisplay, getDefaultUnitPrefs, getUnitSymbol } from '@/lib/units';
 import { useUnits } from '@/hooks/use-units';
+import { formatNumber, type NumberFormatPrefs } from '@/lib/number-format';
 import { getSortedFavorites, formatLastUsed, getLastSession } from '@/lib/session-favorites';
 import { markLocalUpdated, savePreferenceToSupabase } from '@/lib/preferences-sync';
 import { useAuth } from '@/lib/auth-context';
@@ -68,6 +70,19 @@ export function PreferencesPanel() {
   const { user } = useAuth();
   const { prefs, setUnitPref } = useUnits();
   const settings = getSettings();
+  const numberFormat: NumberFormatPrefs = settings.numberFormat ?? {};
+  const setNumberFormat = useCallback(
+    (patch: Partial<NumberFormatPrefs>) => {
+      const cur = getSettings();
+      saveSettings({
+        ...cur,
+        numberFormat: { ...(cur.numberFormat ?? {}), ...patch },
+      });
+      markLocalUpdated();
+      force();
+    },
+    [],
+  );
   // `advancedMode` is local-only (no Supabase column today). Locale and
   // theme have their own per-user sync paths inside their providers, so
   // this panel stays purely client-side.

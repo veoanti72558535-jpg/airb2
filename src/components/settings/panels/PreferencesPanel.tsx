@@ -506,3 +506,96 @@ function LangButton({
     </button>
   );
 }
+
+/**
+ * Side-by-side units preview.
+ *
+ * Why duplicate the conversion logic instead of reusing `useUnits()`?
+ * `useUnits` reads the user's CURRENT prefs — but here we want to show
+ * BOTH systems regardless of what's saved, so the user can compare
+ * before committing. We call `toDisplay()` directly with each system's
+ * default prefs (`getDefaultUnitPrefs('metric'|'imperial')`), keeping
+ * conversions deterministic and identical to what the rest of the app
+ * will render after the choice is saved.
+ */
+function UnitsComparison({
+  activeSystem,
+  t,
+}: {
+  activeSystem: 'metric' | 'imperial';
+  t: (k: string) => string;
+}) {
+  const metricPrefs = getDefaultUnitPrefs('metric');
+  const imperialPrefs = getDefaultUnitPrefs('imperial');
+
+  const rows = [
+    { cat: 'distance', refValue: 50, label: t('settings.preferences.unitsDistance' as any) },
+    { cat: 'velocity', refValue: 280, label: t('settings.preferences.unitsVelocity' as any) },
+    { cat: 'energy', refValue: 24, label: t('settings.preferences.unitsEnergy' as any) },
+  ] as const;
+
+  const fmt = (v: number) =>
+    Number.isFinite(v) ? (Math.abs(v) >= 100 ? v.toFixed(0) : v.toFixed(2)) : '—';
+
+  return (
+    <div className="rounded-md border border-border/50 overflow-hidden">
+      {/* Header */}
+      <div className="grid grid-cols-[1fr_auto_auto] gap-2 px-3 py-1.5 bg-muted/30 text-[9px] uppercase tracking-wider text-muted-foreground">
+        <span>{t('settings.preferences.unitsCompareValue' as any)}</span>
+        <span
+          className={cn(
+            'text-right tabular-nums px-2 rounded',
+            activeSystem === 'metric' && 'text-primary font-semibold',
+          )}
+        >
+          {t('common.metric')}
+        </span>
+        <span
+          className={cn(
+            'text-right tabular-nums px-2 rounded',
+            activeSystem === 'imperial' && 'text-primary font-semibold',
+          )}
+        >
+          {t('common.imperial')}
+        </span>
+      </div>
+      {/* Body */}
+      {rows.map(({ cat, refValue, label }) => {
+        const mVal = toDisplay(cat, refValue, metricPrefs);
+        const iVal = toDisplay(cat, refValue, imperialPrefs);
+        const mSym = getUnitSymbol(cat, metricPrefs[cat]);
+        const iSym = getUnitSymbol(cat, imperialPrefs[cat]);
+        return (
+          <div
+            key={cat}
+            className="grid grid-cols-[1fr_auto_auto] gap-2 px-3 py-1.5 border-t border-border/40 items-center"
+          >
+            <span className="text-[10px] text-muted-foreground uppercase">{label}</span>
+            <span
+              className={cn(
+                'text-xs font-mono text-right px-2 py-0.5 rounded',
+                activeSystem === 'metric'
+                  ? 'bg-primary/10 text-primary font-semibold'
+                  : 'text-muted-foreground',
+              )}
+              aria-current={activeSystem === 'metric' ? 'true' : undefined}
+            >
+              {fmt(mVal)} <span className="opacity-70">{mSym}</span>
+            </span>
+            <span
+              className={cn(
+                'text-xs font-mono text-right px-2 py-0.5 rounded',
+                activeSystem === 'imperial'
+                  ? 'bg-primary/10 text-primary font-semibold'
+                  : 'text-muted-foreground',
+              )}
+              aria-current={activeSystem === 'imperial' ? 'true' : undefined}
+            >
+              {fmt(iVal)} <span className="opacity-70">{iSym}</span>
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}

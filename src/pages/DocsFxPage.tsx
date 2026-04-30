@@ -43,6 +43,7 @@ import {
 import { invalidateSearchIndex, listAllTags, searchDocs } from '@/lib/docs-fx/search';
 import type { DocSection } from '@/lib/docs-fx/types';
 import { SectionEditorDialog } from '@/components/docs-fx/SectionEditorDialog';
+import { ErrorCodesTable } from '@/components/docs-fx/ErrorCodesTable';
 import { toast } from 'sonner';
 
 function useReadSections(includeDrafts: boolean): DocSection[] {
@@ -196,6 +197,18 @@ export default function DocsFxPage() {
       {hits.length === 0 && (
         <Card className="p-6 text-center text-sm text-muted-foreground">
           {t('docsFx.search.empty')}
+        </Card>
+      )}
+
+      {/*
+        Pinned, non-editable error catalog. Mounted unconditionally above
+        the editable sections so admins cannot accidentally hide it via
+        the section editor. Hidden when the user is actively filtering by
+        a non-error tag to keep the search results focused.
+      */}
+      {query.trim() === '' && activeTags.length === 0 && (
+        <Card className="p-4">
+          <ErrorCodesTable />
         </Card>
       )}
 

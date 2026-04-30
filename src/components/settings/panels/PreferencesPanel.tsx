@@ -679,10 +679,14 @@ function UnitsComparison({
 function UnitsFineTune({
   prefs,
   setUnitPref,
+  numberFormat,
+  locale,
   t,
 }: {
   prefs: Record<string, string>;
   setUnitPref: (categoryKey: string, unitValue: string) => void;
+  numberFormat: NumberFormatPrefs;
+  locale: 'fr' | 'en';
   t: (k: string) => string;
 }) {
   // Curated subset — the full option list lives in the `Unités` tab.
@@ -694,8 +698,7 @@ function UnitsFineTune({
     { cat: 'energy', refValue: 24, options: ['joules', 'ftlbs'] },
   ] as const;
 
-  const fmt = (v: number) =>
-    Number.isFinite(v) ? (Math.abs(v) >= 100 ? v.toFixed(0) : v.toFixed(2)) : '—';
+  const fmt = (v: number) => formatNumber(v, numberFormat, locale);
 
   return (
     <div className="space-y-2 pt-1">

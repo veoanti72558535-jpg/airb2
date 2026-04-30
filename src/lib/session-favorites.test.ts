@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { sortFavoriteSessions, getSortedFavorites } from './session-favorites';
+import { sortFavoriteSessions, getSortedFavorites, getLastSession } from './session-favorites';
 import type { Session } from './types';
 
 function mk(partial: Partial<Session>): Session {
@@ -43,5 +43,23 @@ describe('sortFavoriteSessions', () => {
     const notFav = mk({ id: 'n', favorite: false, updatedAt: '2025-12-01' });
     const out = getSortedFavorites([fav, notFav]);
     expect(out.map((s) => s.id)).toEqual(['f']);
+  });
+});
+
+describe('getLastSession', () => {
+  it('returns null on empty', () => {
+    expect(getLastSession([])).toBeNull();
+  });
+  it('picks the most recent updatedAt regardless of insertion order', () => {
+    const old = mk({ id: 'old', updatedAt: '2025-01-01T00:00:00Z' });
+    const recent = mk({ id: 'recent', updatedAt: '2025-04-29T00:00:00Z' });
+    const middle = mk({ id: 'middle', updatedAt: '2025-03-01T00:00:00Z' });
+    expect(getLastSession([old, recent, middle])?.id).toBe('recent');
+    expect(getLastSession([recent, old])?.id).toBe('recent');
+  });
+  it('falls back to createdAt when updatedAt is invalid', () => {
+    const a = mk({ id: 'a', updatedAt: 'bad', createdAt: '2025-04-29T00:00:00Z' });
+    const b = mk({ id: 'b', updatedAt: '2025-01-01T00:00:00Z' });
+    expect(getLastSession([a, b])?.id).toBe('a');
   });
 });

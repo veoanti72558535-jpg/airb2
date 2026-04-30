@@ -56,6 +56,25 @@ export interface SearchHit {
   score: number;
 }
 
+export interface PaginateOptions {
+  /** 1-based page number. Values < 1 are clamped to 1. */
+  page: number;
+  /** Page size (items per page). Values < 1 are clamped to 1. */
+  pageSize: number;
+}
+
+export interface PageResult<T> {
+  /** The slice of items for the current page. */
+  items: T[];
+  /** Echoed back, clamped to a valid range. */
+  page: number;
+  pageSize: number;
+  /** Total number of items across all pages (before slicing). */
+  total: number;
+  /** Total number of pages (≥ 1, even when total = 0). */
+  pageCount: number;
+}
+
 function matchesFilters(s: DocSection, opts: SearchOptions): boolean {
   if (!opts.includeDrafts && s.visibility !== 'published') return false;
   if (opts.category && s.category !== opts.category) return false;
@@ -86,6 +105,36 @@ export function searchDocs(query: string, opts: SearchOptions = {}): SearchHit[]
     .search(q)
     .filter((r) => matchesFilters(r.item, opts))
     .map((r) => ({ section: r.item, score: r.score ?? 1 }));
+}
+
+/**
+ * Slice a hit list into a single page. Stable + pure: callers control the
+ * page number, so deep linking / URL sync stays trivial.
+ *
+ * - `page` is 1-based and clamped into `[1, pageCount]`.
+ * - When `total === 0`, returns `pageCount: 1` and `items: []` (empty page).
+ */
+export function paginate<T>(items: T[], opts: PaginateOptions): PageResult<T> {
+  const pageSize = Math.max(1, Math.floor(opts.pageSize));
+  const total = items.length;
+  const pageCount = Math.max(1, Math.ceil(total / pageSize));
+  const page = Math.min(Math.max(1, Math.floor(opts.page)), pageCount);
+  const start = (page - 1) * pageSize;
+  return {
+    items: items.slice(start, start + pageSize),
+    page,
+    pageSize,
+    total,
+    pageCount,
+  };
+}
+
+/** Convenience: search + paginate in one call. */
+export function searchDocsPaged(
+  query: string,
+  opts: SearchOptions & PaginateOptions,
+): PageResult<SearchHit> {
+  return paginate(searchDocs(query, opts), opts);
 }
 
 /** All distinct tags across published sections (for the tag chip filter). */

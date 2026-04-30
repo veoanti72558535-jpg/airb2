@@ -18,7 +18,13 @@ import {
   resetSeedSection,
   upsertSection,
 } from './store';
-import { invalidateSearchIndex, listAllTags, searchDocs } from './search';
+import {
+  invalidateSearchIndex,
+  listAllTags,
+  paginate,
+  searchDocs,
+  searchDocsPaged,
+} from './search';
 
 beforeEach(() => {
   __clearOverridesForTests();
@@ -120,5 +126,39 @@ describe('docs-fx search', () => {
   it('listAllTags aggregates published tags', () => {
     const tags = listAllTags();
     expect(tags).toContain('fx');
+  });
+});
+
+describe('docs-fx pagination', () => {
+  it('paginate slices the list and clamps out-of-range pages', () => {
+    const items = Array.from({ length: 23 }, (_, i) => i + 1);
+    const p1 = paginate(items, { page: 1, pageSize: 10 });
+    expect(p1.items).toHaveLength(10);
+    expect(p1.pageCount).toBe(3);
+    expect(p1.total).toBe(23);
+
+    const p3 = paginate(items, { page: 3, pageSize: 10 });
+    expect(p3.items).toEqual([21, 22, 23]);
+
+    // Clamp: page 99 → last page
+    const pHi = paginate(items, { page: 99, pageSize: 10 });
+    expect(pHi.page).toBe(3);
+    // Clamp: page 0 → page 1
+    const pLo = paginate(items, { page: 0, pageSize: 10 });
+    expect(pLo.page).toBe(1);
+  });
+
+  it('paginate handles an empty list with pageCount=1', () => {
+    const p = paginate([], { page: 1, pageSize: 5 });
+    expect(p.items).toEqual([]);
+    expect(p.total).toBe(0);
+    expect(p.pageCount).toBe(1);
+  });
+
+  it('searchDocsPaged composes search + pagination', () => {
+    const page = searchDocsPaged('', { page: 1, pageSize: 1 });
+    expect(page.items).toHaveLength(1);
+    expect(page.total).toBeGreaterThanOrEqual(2);
+    expect(page.pageCount).toBeGreaterThanOrEqual(2);
   });
 });

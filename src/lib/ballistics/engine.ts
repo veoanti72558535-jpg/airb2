@@ -147,6 +147,13 @@ export function calculateTrajectory(input: BallisticInput): BallisticResult[] {
   const dt = engineConfig?.dt ?? 0.0005;
   const step = getIntegrator(engineConfig?.integrator ?? 'euler');
 
+  // Single source of truth for which post-process steps + guards are
+  // active. The flight loop reads this object instead of re-deriving the
+  // user override on every step, and the same object is exposed via
+  // `getLastEngineProvenance()` for the UI panel.
+  const provenance = buildEngineProvenance(engineConfig);
+  lastEngineProvenance = provenance;
+
   // State container for the integrator. Legacy code used loose locals; the
   // object form is allocation-free past the constructor and lets us share
   // the integrator dispatch with the zero solver.
@@ -237,16 +244,10 @@ export function calculateTrajectory(input: BallisticInput): BallisticResult[] {
       const energyJ = 0.5 * massKg * currentV * currentV;
 
       // ── Spin drift ────────────────────────────────────────────────
-      // Resolution order:
-      //   1. user override in app settings (`featureFlags.spinDrift`),
-      //   2. profile config (`engineConfig.postProcess.spinDrift`),
-      //   3. default ON (legacy behaviour for callers without a config).
-      const userOverride = readSpinDriftOverride();
-      const spinEnabled =
-        userOverride !== undefined
-          ? userOverride
-          : engineConfig?.postProcess?.spinDrift !== false;
-      const spin = spinEnabled
+      // Decision is centralised in `provenance.postProcess.spinDrift`
+      // (built once above) — guarantees the value displayed in the UI
+      // and the value actually used here cannot diverge.
+      const spin = provenance.postProcess.spinDrift.enabled
         ? spinDriftMm(
             currentV,
             t,

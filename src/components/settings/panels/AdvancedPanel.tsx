@@ -1,5 +1,5 @@
 import React from 'react';
-import { Target, Palette, ChevronRight } from 'lucide-react';
+import { Target, Palette, ChevronRight, Compass } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
 import { getSettings, saveSettings } from '@/lib/storage';
@@ -74,6 +74,60 @@ export function AdvancedPanel() {
           >
             {settings.featureFlags.truing !== false ? 'ON' : 'OFF'}
           </button>
+        </div>
+      </div>
+
+      {/*
+        Spin drift override — tri-state (auto / on / off).
+        Default `auto` lets each ballistic profile decide; PCP profiles
+        (legacy / mero) ship with spin drift OFF since gyroscopic drift
+        is physically negligible at sub-sonic airgun speeds.
+      */}
+      <div className="surface-elevated p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start gap-3 min-w-0">
+            <Compass className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+            <div className="min-w-0">
+              <div className="text-sm font-medium">{t('settings.featureSpinDrift')}</div>
+              <div className="text-[11px] text-muted-foreground">
+                {t('settings.featureSpinDriftDesc')}
+              </div>
+            </div>
+          </div>
+          <div className="flex shrink-0 rounded-md bg-muted/40 p-0.5">
+            {([
+              { v: undefined as boolean | undefined, label: t('settings.spinDriftAuto') },
+              { v: true,  label: t('settings.spinDriftOn') },
+              { v: false, label: t('settings.spinDriftOff') },
+            ]).map((opt, i) => {
+              const current = settings.featureFlags.spinDrift;
+              const active = current === opt.v;
+              return (
+                <button
+                  key={i}
+                  onClick={() => {
+                    const nextFlags = { ...settings.featureFlags };
+                    if (opt.v === undefined) {
+                      delete (nextFlags as { spinDrift?: boolean }).spinDrift;
+                    } else {
+                      nextFlags.spinDrift = opt.v;
+                    }
+                    saveSettings({ ...settings, featureFlags: nextFlags });
+                    markLocalUpdated();
+                    force();
+                  }}
+                  className={cn(
+                    'px-2 py-1 rounded text-[11px] font-medium transition-colors',
+                    active
+                      ? 'bg-primary/15 text-primary'
+                      : 'text-muted-foreground hover:bg-muted',
+                  )}
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 

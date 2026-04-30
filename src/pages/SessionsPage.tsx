@@ -44,6 +44,7 @@ import { TargetAnalysesHistory } from '@/components/sessions/TargetAnalysesHisto
 import { CalibrationHistoryBlock } from '@/components/sessions/CalibrationHistoryBlock';
 import { SessionReportButton } from '@/components/ai/agents/SessionReportButton';
 import { TrainingLogSummarizerButton } from '@/components/ai/agents/TrainingLogSummarizerButton';
+import { UnitTagSurface } from '@/components/devtools/UnitTagSurface';
 import {
   Dialog,
   DialogContent,
@@ -159,6 +160,7 @@ export default function SessionsPage() {
         <div className="flex items-center gap-2">
           <History className="h-5 w-5 text-primary" />
           <h1 className="text-xl font-heading font-bold">{t('sessions.title')}</h1>
+        <UnitTagSurface categories={["velocity","distance","energy","length"]} label="SessionsPage" />
         </div>
         <div className="flex gap-1 items-center">
           {!selectionMode ? (

@@ -22,6 +22,7 @@ import { BcSearchAgent } from '@/components/ai/agents/BcSearchAgent';
 import { VelocityForumAgent } from '@/components/ai/agents/VelocityForumAgent';
 import { AirgunReviewAgent } from '@/components/ai/agents/AirgunReviewAgent';
 import { AgentDialog } from '@/components/ai/agents/AgentDialog';
+import { UnitTagSurface } from '@/components/devtools/UnitTagSurface';
 
 /** Tranche K — un projectile a-t-il au moins une zone BC exploitable (informatif). */
 export function hasBcZones(p: Projectile): boolean {
@@ -235,6 +236,7 @@ export default function ProjectilesPage() {
         <div className="flex items-center gap-2">
           <Zap className="h-5 w-5 text-primary" />
           <h1 className="text-xl font-heading font-bold">{t('projectiles.title')}</h1>
+        <UnitTagSurface categories={["weight","length","velocity"]} label="ProjectilesPage" />
         </div>
         <div className="flex gap-2">
           <button

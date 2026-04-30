@@ -11,6 +11,7 @@ import { WeatherLocationPicker } from './WeatherLocationPicker';
 import { WeatherSearchAgent } from '@/components/ai/agents/WeatherSearchAgent';
 import { AgentDialog } from '@/components/ai/agents/AgentDialog';
 import { useUnits } from '@/hooks/use-units';
+import { UnitTagSurface } from '@/components/devtools/UnitTagSurface';
 
 interface Props {
   weather: WeatherSnapshot;
@@ -44,6 +45,10 @@ export function EnvironmentSection({ weather, onReplace, onPatchManual, advanced
 
   return (
     <Section icon={Wind} title={t('calc.sectionWeather')}>
+      <UnitTagSurface
+        categories={['velocity', 'temperature', 'pressure']}
+        label="Environment"
+      />
       <WeatherLocationPicker weather={weather} api={api} autoEnabled={autoEnabled} />
 
       <div>

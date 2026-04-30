@@ -21,6 +21,7 @@ import { ResponsivePreview } from '@/components/devtools/ResponsivePreview';
 import { BallisticResult, WeatherSnapshot } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { useUnits } from '@/hooks/use-units';
+import { UnitTagSurface } from '@/components/devtools/UnitTagSurface';
 
 /**
  * Internal design-system showcase. Mirrors what Claude Design documents in its
@@ -87,6 +88,7 @@ export default function DesignSystemPage() {
           </span>
         </div>
         <h1 className="text-2xl font-heading font-bold">AirBallistik UI Kit</h1>
+        <UnitTagSurface categories={["velocity","distance","length","energy"]} label="DesignSystemPage" />
         <p className="text-sm text-muted-foreground max-w-2xl">
           Live preview of <code className="text-primary">Section</code> and{' '}
           <code className="text-primary">ResultsCard</code> — the two anchor

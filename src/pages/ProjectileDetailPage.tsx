@@ -8,6 +8,7 @@ import { LinkedSessions } from '@/components/library/LinkedSessions';
 import { NotFoundDetail } from '@/components/library/NotFoundDetail';
 import { Bullets4ProjectileDetails } from '@/components/projectiles/Bullets4ProjectileDetails';
 import { ProjectileSummary } from '@/components/projectiles/ProjectileSummary';
+import { UnitTagSurface } from '@/components/devtools/UnitTagSurface';
 
 export default function ProjectileDetailPage() {
   const { id = '' } = useParams<{ id: string }>();
@@ -36,7 +37,8 @@ export default function ProjectileDetailPage() {
       editHref={`/library?tab=projectiles&edit=${p.id}`}
       badges={
         <>
-          <span className="tactical-badge">{p.caliber}</span>
+
+        <UnitTagSurface categories={["weight","length","velocity"]} label="ProjectileDetailPage" />          <span className="tactical-badge">{p.caliber}</span>
           <span className="tactical-badge">{p.weight} {weightSym}</span>
           <span className="tactical-badge">
             BC {p.bc}

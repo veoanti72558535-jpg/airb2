@@ -9,6 +9,7 @@ import { LinkedSessions } from '@/components/library/LinkedSessions';
 import { NotFoundDetail } from '@/components/library/NotFoundDetail';
 import { OpticReticleLink } from '@/components/optics/OpticReticleLink';
 import type { Optic } from '@/lib/types';
+import { UnitTagSurface } from '@/components/devtools/UnitTagSurface';
 
 export default function OpticDetailPage() {
   const { id = '' } = useParams<{ id: string }>();
@@ -42,7 +43,8 @@ export default function OpticDetailPage() {
       editHref={`/library?tab=optics&edit=${o.id}`}
       badges={
         <>
-          {fp && <span className="tactical-badge">{fp}</span>}
+
+        <UnitTagSurface categories={["length"]} label="OpticDetailPage" />          {fp && <span className="tactical-badge">{fp}</span>}
           <span className="tactical-badge">{o.clickValue} {o.clickUnit}/click</span>
           {o.tubeDiameter && (
             <span className="tactical-badge">⌀ {o.tubeDiameter}mm</span>

@@ -24,6 +24,7 @@ import { computeZeroIntersections } from '@/lib/zero-intersections';
 import { computePointBlankRange } from '@/lib/pbr';
 import type { Session } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { UnitTagSurface } from '@/components/devtools/UnitTagSurface';
 
 interface Props {
   session: Session;
@@ -85,6 +86,7 @@ export function PbrZeroReadout({ session, letter }: Props) {
           <h4 className="text-[11px] uppercase tracking-wide font-semibold text-muted-foreground truncate">
             {t('compare.pbrZeroTitle')}
           </h4>
+          <UnitTagSurface categories={['distance', 'length']} label="PbrZeroReadout" />
         </div>
         <span className="text-[10px] text-muted-foreground/80 font-mono whitespace-nowrap">
           {t('pbr.vitalZone')}: {vitalDisplay}

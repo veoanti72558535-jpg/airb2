@@ -11,6 +11,7 @@ import { useI18n } from '@/lib/i18n';
 import { sessionStore, airgunStore, projectileStore } from '@/lib/storage';
 import { calculateTrajectory } from '@/lib/ballistics';
 import { useUnits } from '@/hooks/use-units';
+import { UnitTagSurface } from '@/components/devtools/UnitTagSurface';
 
 interface ChatMessage {
   id: string;
@@ -196,6 +197,7 @@ export default function BallisticChatPage() {
         <div className="flex items-center gap-2">
           <MessageCircle className="h-5 w-5 text-primary" />
           <h1 className="text-lg font-heading font-bold">{t('nav.chat' as any) || 'Chat Balistique'}</h1>
+        <UnitTagSurface categories={["velocity","distance","length","energy","weight"]} label="BallisticChatPage" />
         </div>
         {messages.length > 0 && (
           <button onClick={clearHistory} className="p-2 text-muted-foreground hover:text-destructive transition-colors">

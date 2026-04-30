@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils';
 import type { BallisticResult } from '@/lib/types';
 import { computePointBlankRange } from '@/lib/pbr';
 import { PbrExplainerButton } from '@/components/ai/agents/PbrExplainerButton';
+import { UnitTagSurface } from '@/components/devtools/UnitTagSurface';
 
 interface Props {
   rows: BallisticResult[];
@@ -95,6 +96,7 @@ export function PbrCard({
           <h3 className="text-[11px] uppercase tracking-wide font-semibold text-muted-foreground">
             {t('pbr.title')}
           </h3>
+          <UnitTagSurface categories={['distance', 'length']} label="PBR" />
         </div>
         <label className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
           <span>

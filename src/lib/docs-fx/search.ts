@@ -7,7 +7,7 @@
  * hit doesn't get drowned by long Markdown content.
  */
 import Fuse, { type IFuseOptions } from 'fuse.js';
-import { listSections } from './store';
+import { listSections, subscribeOverrideChanges } from './store';
 import type { DocSection } from './types';
 
 const FUSE_OPTIONS: IFuseOptions<DocSection> = {
@@ -25,6 +25,21 @@ const FUSE_OPTIONS: IFuseOptions<DocSection> = {
 
 let fuse: Fuse<DocSection> | null = null;
 let signature = '';
+
+// Auto-invalidate the index whenever the override store mutates (this tab
+// or another tab). The signature check in `ensureIndex()` is still our
+// safety net, but this push-based hook makes the next `searchDocs()` call
+// O(1) hot path instead of paying for a snapshot diff.
+let _autoInvalidateBound = false;
+function bindAutoInvalidate(): void {
+  if (_autoInvalidateBound) return;
+  _autoInvalidateBound = true;
+  subscribeOverrideChanges(() => {
+    fuse = null;
+    signature = '';
+  });
+}
+bindAutoInvalidate();
 
 function snapshotSignature(sections: DocSection[]): string {
   return sections
@@ -147,7 +162,12 @@ export function listAllTags(includeDrafts = false): string[] {
   return [...set].sort((a, b) => a.localeCompare(b));
 }
 
-/** Force a rebuild on next query. Useful after upsert/delete. */
+/**
+ * Force a rebuild on next query. Normally NOT required from product code:
+ * the search index auto-invalidates on every override CRUD via
+ * `subscribeOverrideChanges`. Kept exported for tests and edge cases (e.g.
+ * after a manual `localStorage.clear()` that bypasses the store API).
+ */
 export function invalidateSearchIndex(): void {
   fuse = null;
   signature = '';

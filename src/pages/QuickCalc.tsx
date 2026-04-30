@@ -527,7 +527,13 @@ export default function QuickCalc() {
     // Sur succès SI on PRÉFÈRE le payload normalisé renvoyé par le
     // guardrail (mêmes champs, sentinel `units: 'SI'` retiré côté types).
     const safeInput = verified ? guard.normalized : input;
-    setResults(calculateTrajectory(safeInput));
+    const traj = calculateTrajectory(safeInput);
+    setResults(traj);
+    // Snapshot the engine provenance produced by the call above so the
+    // ResultsCard "D'où vient la dérive ?" panel can display the exact
+    // models / guards that were active. Captured eagerly because the
+    // module-level slot is overwritten on the next computation.
+    setProvenance(getLastEngineProvenance());
     // Tranche J — recale la grille partagée sur la portée réellement calculée
     // tout en préservant les colonnes choisies par l'utilisateur.
     setTableConfig(prev => {

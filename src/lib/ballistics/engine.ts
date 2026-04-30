@@ -38,6 +38,26 @@ const GRAVITY = 9.80665; // m/s²
 const GRAINS_TO_KG = 0.00006479891;
 
 /**
+ * Resolve the user-level spin-drift override stored under the app
+ * settings key. Returns `undefined` when no override is set or when
+ * localStorage is unavailable (SSR / tests). Pure read, no throw.
+ *
+ * The engine intentionally avoids a hard import on `src/lib/storage`
+ * to stay framework-free and keep its unit tests dependency-light.
+ */
+function readSpinDriftOverride(): boolean | undefined {
+  if (typeof localStorage === 'undefined') return undefined;
+  try {
+    const raw = localStorage.getItem('airballistik-settings');
+    if (!raw) return undefined;
+    const v = JSON.parse(raw)?.featureFlags?.spinDrift;
+    return typeof v === 'boolean' ? v : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
  * Build the Cd resolver for a given config. When the atmosphere model is
  * `tetens-full` AND the retardation mode is NOT `chairgun-direct`, we swap
  * the Cd source to MERO tables — because the `mero` profile is the primary

@@ -531,6 +531,16 @@ export function ResultsCard({
                     = {totalMm.toFixed(1)} − {spinMm.toFixed(1)} − {corMm.toFixed(1)} = {windOnlyMm.toFixed(1)} mm
                   </code>
                 </div>
+                {provenance && (
+                  <div className="pt-1 border-t border-border/20">
+                    <div className="text-muted-foreground uppercase tracking-wide text-[9px] mb-1">
+                      EngineProvenance · v{provenance.schemaVersion}
+                    </div>
+                    <pre className="text-[9.5px] leading-snug text-foreground/80 whitespace-pre-wrap break-all bg-background/40 rounded p-1.5 border border-border/30">
+{JSON.stringify(provenance, null, 2)}
+                    </pre>
+                  </div>
+                )}
               </div>
             </details>
           </div>

@@ -36,6 +36,7 @@ import { useUnits } from '@/hooks/use-units';
 import { cn } from '@/lib/utils';
 import { HoverHint } from '@/components/ui/hover-hint';
 import { toast } from 'sonner';
+import { UnitTagSurface } from '@/components/devtools/UnitTagSurface';
 
 const MIN_V = 200;
 const MAX_V = 380;
@@ -485,6 +486,10 @@ export function CompareProjectilesModal({
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 flex-wrap">
                 <h2 className="text-sm font-heading font-semibold">{t('projectiles.compareTitle')}</h2>
+                <UnitTagSurface
+                  categories={['velocity', 'distance', 'length', 'energy', 'weight']}
+                  label="CompareProjectiles"
+                />
                 {rows.length >= 2 && (() => {
                   // Reverse current row order — works in both auto and manual mode.
                   // Snapshots the visible order, flips it, and switches to manual mode

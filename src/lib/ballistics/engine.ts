@@ -256,7 +256,16 @@ export function calculateTrajectory(input: BallisticInput): BallisticResult[] {
       const energyJ = 0.5 * massKg * currentV * currentV;
 
       // ── Spin drift ────────────────────────────────────────────────
-      const spin = (engineConfig?.postProcess?.spinDrift !== false)
+      // Resolution order:
+      //   1. user override in app settings (`featureFlags.spinDrift`),
+      //   2. profile config (`engineConfig.postProcess.spinDrift`),
+      //   3. default ON (legacy behaviour for callers without a config).
+      const userOverride = readSpinDriftOverride();
+      const spinEnabled =
+        userOverride !== undefined
+          ? userOverride
+          : engineConfig?.postProcess?.spinDrift !== false;
+      const spin = spinEnabled
         ? spinDriftMm(
             currentV,
             t,

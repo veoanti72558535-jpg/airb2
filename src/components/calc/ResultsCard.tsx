@@ -120,7 +120,7 @@ export function ResultsCard({
   energyThresholdJ,
 }: Props) {
   const { t, locale } = useI18n();
-  const { symbol } = useUnits();
+  const { display, symbol } = useUnits();
   const distUnit = symbol('distance');
   const lengthUnit = symbol('length');
   const velUnit = symbol('velocity');
@@ -249,7 +249,8 @@ export function ResultsCard({
           )}
           <span className="text-muted-foreground/70">
             · {weather.temperature.toFixed(0)}°C / {weather.pressure.toFixed(0)}hPa /{' '}
-            {weather.humidity.toFixed(0)}% / {weather.windSpeed.toFixed(1)}m/s
+            {weather.humidity.toFixed(0)}% /{' '}
+            {display('velocity', weather.windSpeed).toFixed(1)}{symbol('velocity')}
           </span>
         </div>
       )}

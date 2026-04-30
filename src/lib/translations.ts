@@ -2815,6 +2815,7 @@ const en: Record<keyof typeof fr, string> = {
 
   'common.save': 'Save',
   'common.cancel': 'Cancel',
+  'common.confirm': 'Confirm',
   'common.delete': 'Delete',
   'common.edit': 'Edit',
   'common.search': 'Search',

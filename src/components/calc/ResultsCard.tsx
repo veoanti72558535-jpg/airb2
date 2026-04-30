@@ -129,6 +129,7 @@ export function ResultsCard({
   weather,
   zeroWeather,
   energyThresholdJ,
+  engineConfig,
 }: Props) {
   const { t, locale } = useI18n();
   const { display, symbol } = useUnits();

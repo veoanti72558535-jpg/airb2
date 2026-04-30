@@ -148,7 +148,9 @@ describe('Cross-surface conversion fidelity', () => {
       distance: '50 m',
       length:   '12.4 mm',
       energy:   '32.9 J',
-      weight:   '18.1 g', // metric default for weight = grams
+      // Reference weight unit is grains; metric default = grams.
+      // 18.13 gr × 0.0647989 g/gr ≈ 1.175 g → 1 decimal → "1.2 g".
+      weight:   '1.2 g',
     });
   });
 

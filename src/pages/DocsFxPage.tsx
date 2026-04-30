@@ -22,6 +22,22 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from '@/components/ui/pagination';
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -40,11 +56,15 @@ import {
   resetSeedSection,
   upsertSection,
 } from '@/lib/docs-fx/store';
-import { invalidateSearchIndex, listAllTags, searchDocs } from '@/lib/docs-fx/search';
-import type { DocSection } from '@/lib/docs-fx/types';
+import { invalidateSearchIndex, listAllTags, paginate, searchDocs } from '@/lib/docs-fx/search';
+import type { DocSection, DocCategory } from '@/lib/docs-fx/types';
+import { DOC_CATEGORIES } from '@/lib/docs-fx/types';
 import { SectionEditorDialog } from '@/components/docs-fx/SectionEditorDialog';
 import { ErrorCodesTable } from '@/components/docs-fx/ErrorCodesTable';
 import { toast } from 'sonner';
+
+const PAGE_SIZE = 8;
+const CATEGORY_ALL = '__all__' as const;
 
 function useReadSections(includeDrafts: boolean): DocSection[] {
   // Re-read on every render is cheap (≤ a few dozen entries).
@@ -71,6 +91,8 @@ export default function DocsFxPage() {
 
   const [query, setQuery] = useState('');
   const [activeTags, setActiveTags] = useState<string[]>([]);
+  const [category, setCategory] = useState<DocCategory | typeof CATEGORY_ALL>(CATEGORY_ALL);
+  const [page, setPage] = useState(1);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [editorOpen, setEditorOpen] = useState(false);
   const [editorTarget, setEditorTarget] = useState<DocSection | null>(null);
@@ -89,9 +111,24 @@ export default function DocsFxPage() {
     void refreshTick;
     return searchDocs(query, {
       tags: activeTags.length > 0 ? activeTags : undefined,
+      category: category === CATEGORY_ALL ? undefined : category,
       includeDrafts: isAdmin,
     });
-  }, [query, activeTags, isAdmin, refreshTick]);
+  }, [query, activeTags, category, isAdmin, refreshTick]);
+
+  // Any filter change resets pagination so the user lands on page 1.
+  useEffect(() => {
+    setPage(1);
+  }, [query, activeTags, category]);
+
+  const pageData = useMemo(
+    () => paginate(hits, { page, pageSize: PAGE_SIZE }),
+    [hits, page],
+  );
+  // Clamp the page if a refresh shrinks the result set below the current page.
+  useEffect(() => {
+    if (pageData.page !== page) setPage(pageData.page);
+  }, [pageData.page, page]);
 
   function toggleTag(tag: string) {
     setActiveTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]));
@@ -108,6 +145,12 @@ export default function DocsFxPage() {
   function refreshAll() {
     invalidateSearchIndex();
     setRefreshTick((x) => x + 1);
+  }
+
+  function clearFilters() {
+    setQuery('');
+    setActiveTags([]);
+    setCategory(CATEGORY_ALL);
   }
 
   function openNew() {
@@ -164,6 +207,35 @@ export default function DocsFxPage() {
             aria-label={t('docsFx.search.placeholder')}
           />
         </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <label className="text-xs text-muted-foreground" htmlFor="docsfx-category">
+            {t('docsFx.search.categoryLabel')}
+          </label>
+          <Select
+            value={category}
+            onValueChange={(v) => setCategory(v as DocCategory | typeof CATEGORY_ALL)}
+          >
+            <SelectTrigger id="docsfx-category" className="h-8 w-[180px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={CATEGORY_ALL}>{t('docsFx.search.categoryAll')}</SelectItem>
+              {DOC_CATEGORIES.map((cat) => (
+                <SelectItem key={cat} value={cat}>
+                  {t(`docsFx.category.${cat}`)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {(query.trim() !== '' || activeTags.length > 0 || category !== CATEGORY_ALL) && (
+            <button
+              onClick={clearFilters}
+              className="text-xs text-muted-foreground underline ml-auto"
+            >
+              {t('docsFx.search.clearAll')}
+            </button>
+          )}
+        </div>
         {allTags.length > 0 && (
           <div className="flex flex-wrap gap-2">
             <Tag className="h-4 w-4 text-muted-foreground self-center" />
@@ -194,6 +266,15 @@ export default function DocsFxPage() {
         )}
       </div>
 
+      {hits.length > 0 && (
+        <p className="text-xs text-muted-foreground">
+          {t('docsFx.search.resultsCount')
+            .replace('{count}', String(hits.length))
+            .replace('{from}', String((pageData.page - 1) * PAGE_SIZE + 1))
+            .replace('{to}', String((pageData.page - 1) * PAGE_SIZE + pageData.items.length))}
+        </p>
+      )}
+
       {hits.length === 0 && (
         <Card className="p-6 text-center text-sm text-muted-foreground">
           {t('docsFx.search.empty')}
@@ -206,14 +287,14 @@ export default function DocsFxPage() {
         the section editor. Hidden when the user is actively filtering by
         a non-error tag to keep the search results focused.
       */}
-      {query.trim() === '' && activeTags.length === 0 && (
+      {query.trim() === '' && activeTags.length === 0 && category === CATEGORY_ALL && page === 1 && (
         <Card className="p-4">
           <ErrorCodesTable />
         </Card>
       )}
 
       <div className="space-y-3">
-        {hits.map(({ section }) => {
+        {pageData.items.map(({ section }) => {
           const isOpen = expanded.has(section.id);
           const overridden = hasOverride(section.id);
           return (
@@ -294,6 +375,57 @@ export default function DocsFxPage() {
           );
         })}
       </div>
+
+      {pageData.pageCount > 1 && (
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                href="#"
+                aria-disabled={pageData.page <= 1}
+                className={pageData.page <= 1 ? 'pointer-events-none opacity-50' : ''}
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (pageData.page > 1) setPage(pageData.page - 1);
+                }}
+              />
+            </PaginationItem>
+            {buildPageList(pageData.page, pageData.pageCount).map((entry, idx) =>
+              entry === 'ellipsis' ? (
+                <PaginationItem key={`e-${idx}`}>
+                  <PaginationEllipsis />
+                </PaginationItem>
+              ) : (
+                <PaginationItem key={entry}>
+                  <PaginationLink
+                    href="#"
+                    isActive={entry === pageData.page}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setPage(entry);
+                    }}
+                  >
+                    {entry}
+                  </PaginationLink>
+                </PaginationItem>
+              ),
+            )}
+            <PaginationItem>
+              <PaginationNext
+                href="#"
+                aria-disabled={pageData.page >= pageData.pageCount}
+                className={
+                  pageData.page >= pageData.pageCount ? 'pointer-events-none opacity-50' : ''
+                }
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (pageData.page < pageData.pageCount) setPage(pageData.page + 1);
+                }}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      )}
 
       <SectionEditorDialog
         open={editorOpen}

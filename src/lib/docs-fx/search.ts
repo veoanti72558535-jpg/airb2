@@ -51,11 +51,11 @@ function doInvalidate(): void {
 }
 
 function scheduleRebuild(): void {
-  pendingCount += 1;
   if (debounceMs <= 0) {
     doInvalidate();
     return;
   }
+  pendingCount += 1;
   if (pendingTimer !== null) return; // already scheduled — coalesce
   pendingTimer = setTimeout(() => {
     pendingTimer = null;

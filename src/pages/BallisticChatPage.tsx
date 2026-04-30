@@ -76,7 +76,7 @@ function processLocalQuery(query: string, u: UnitFormatter): string {
   if (q.includes('projectile') || q.includes('plomb') || q.includes('slug') || q.includes('pellet')) {
     if (projectiles.length === 0) return 'Aucun projectile enregistré. Allez dans **Bibliothèque > Projectiles** pour en ajouter.';
     const top5 = projectiles.slice(0, 5);
-    return `Vous avez **${projectiles.length} projectile(s)**. Voici les premiers :\n${top5.map(p => `- **${p.brand} ${p.model}** — ${p.weight}gr, BC ${p.bc} (${p.bcModel ?? 'G1'})`).join('\n')}${projectiles.length > 5 ? `\n... et ${projectiles.length - 5} autres.` : ''}`;
+    return `Vous avez **${projectiles.length} projectile(s)**. Voici les premiers :\n${top5.map(p => `- **${p.brand} ${p.model}** — ${fmt(u, 'weight', p.weight, 1)}, BC ${p.bc} (${p.bcModel ?? 'G1'})`).join('\n')}${projectiles.length > 5 ? `\n... et ${projectiles.length - 5} autres.` : ''}`;
   }
 
   // What-if velocity

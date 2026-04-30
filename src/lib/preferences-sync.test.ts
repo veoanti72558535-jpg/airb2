@@ -51,14 +51,26 @@ describe('preferences-sync', () => {
   describe('loadPreferencesFromSupabase', () => {
     it('merges Supabase profile into localStorage', async () => {
       mockMaybeSingle.mockResolvedValue({
-        data: { unit_system: 'imperial', energy_threshold_j: 7.5, display_name: null, updated_at: '2026-01-01T00:00:00Z' },
+        data: {
+          unit_system: 'imperial',
+          energy_threshold_j: 7.5,
+          display_name: null,
+          unit_preferences: { velocity: 'fps', energy: 'ftlbs' },
+          number_format: { decimals: 2, scientific: false, groupThousands: true },
+          updated_at: '2026-01-01T00:00:00Z',
+        },
         error: null,
       });
 
       await loadPreferencesFromSupabase('user-123');
 
       expect(saveSettings).toHaveBeenCalledWith(
-        expect.objectContaining({ unitSystem: 'imperial', energyThresholdJ: 7.5 }),
+        expect.objectContaining({
+          unitSystem: 'imperial',
+          energyThresholdJ: 7.5,
+          unitPreferences: { velocity: 'fps', energy: 'ftlbs' },
+          numberFormat: { decimals: 2, scientific: false, groupThousands: true },
+        }),
       );
     });
 
@@ -80,6 +92,22 @@ describe('preferences-sync', () => {
       );
       expect(mockUpdateEq).toHaveBeenCalledWith('id', 'user-456');
     });
+
+    it('persists fine-grained unit preferences as jsonb', async () => {
+      const prefs = { velocity: 'fps', distance: 'yd', energy: 'ftlbs' };
+      await savePreferenceToSupabase('user-456', 'unit_preferences', prefs);
+      expect(mockUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({ unit_preferences: prefs }),
+      );
+    });
+
+    it('persists number-format prefs as jsonb', async () => {
+      const fmt = { decimals: 3, scientific: true, groupThousands: false };
+      await savePreferenceToSupabase('user-789', 'number_format', fmt);
+      expect(mockUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({ number_format: fmt }),
+      );
+    });
   });
 
   describe('syncPreferencesOnLogin', () => {
@@ -100,14 +128,27 @@ describe('preferences-sync', () => {
     it('pushes to Supabase when local is newer', async () => {
       localStorage.setItem('pcp-settings-updated-at', '2026-12-01T00:00:00Z');
       mockMaybeSingle.mockResolvedValue({
-        data: { unit_system: 'metric', energy_threshold_j: 16.27, display_name: null, updated_at: '2020-01-01T00:00:00Z' },
+        data: {
+          unit_system: 'metric',
+          energy_threshold_j: 16.27,
+          display_name: null,
+          unit_preferences: null,
+          number_format: null,
+          updated_at: '2020-01-01T00:00:00Z',
+        },
         error: null,
       });
 
       await syncPreferencesOnLogin('user-789');
 
       expect(mockUpdate).toHaveBeenCalledWith(
-        expect.objectContaining({ unit_system: 'metric', energy_threshold_j: 16.27 }),
+        expect.objectContaining({
+          unit_system: 'metric',
+          energy_threshold_j: 16.27,
+          // null when local prefs are unset — the column exists in payload either way
+          unit_preferences: null,
+          number_format: null,
+        }),
       );
     });
   });

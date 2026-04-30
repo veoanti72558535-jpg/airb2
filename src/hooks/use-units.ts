@@ -1,6 +1,8 @@
-import { useMemo } from 'react';
+import { useContext, useMemo } from 'react';
 import { getSettings, saveSettings } from '@/lib/storage';
 import { useI18n } from '@/lib/i18n';
+import { AuthContext } from '@/lib/auth-context-internals';
+import { markLocalUpdated, savePreferenceToSupabase } from '@/lib/preferences-sync';
 import {
   unitCategories,
   getDefaultUnitPrefs,
@@ -17,6 +19,12 @@ import {
  */
 export function useUnits() {
   const { locale } = useI18n();
+  // Read auth context defensively: `useUnits` is called from low-level UI
+  // (BallisticTable, UnitField, etc.) that may render in tests without an
+  // <AuthProvider>. Falling back to `null` keeps the hook crash-free —
+  // sync is simply skipped when nobody is logged in.
+  const authCtx = useContext(AuthContext);
+  const user = authCtx?.user ?? null;
   const settings = getSettings();
 
   const prefs: UnitPreferences = useMemo(() => {
@@ -50,6 +58,13 @@ export function useUnits() {
   const setUnitPref = (categoryKey: string, unitValue: string) => {
     const newPrefs = { ...prefs, [categoryKey]: unitValue };
     saveSettings({ ...settings, unitPreferences: newPrefs });
+    markLocalUpdated();
+    // Cross-device sync: when the user is logged in, push the whole
+    // preferences map (jsonb column) so the override sticks on every
+    // device. Fire-and-forget — display never blocks on the network.
+    if (user) {
+      savePreferenceToSupabase(user.id, 'unit_preferences', newPrefs).catch(() => {});
+    }
   };
 
   return { prefs, symbol, categoryLabel, display, toRef, setUnitPref };

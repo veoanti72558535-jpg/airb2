@@ -489,6 +489,48 @@ export function ResultsCard({
                 <li className="text-warning">{t('calc.driftBreakdown.zeroWind')}</li>
               )}
             </ul>
+            {/* ── Traceability block ────────────────────────────────────
+                Lists the *exact* fields read from the engine output and
+                the recomposition formula used to isolate the pure-wind
+                contribution. Collapsed by default to keep the panel
+                compact; opens for users who want to audit the math
+                (or feed it into a cross-check spreadsheet). */}
+            <details className="pt-1 border-t border-border/30">
+              <summary className="cursor-pointer text-[10px] uppercase tracking-wide text-muted-foreground hover:text-foreground transition-colors">
+                {t('calc.driftBreakdown.traceability')}
+              </summary>
+              <div className="mt-1.5 space-y-1 text-[10px] font-mono text-muted-foreground/90">
+                <div className="flex justify-between gap-2">
+                  <code className="text-foreground/80">result.windDrift</code>
+                  <span>
+                    {t('calc.driftBreakdown.fieldTotal')} = {totalMm.toFixed(1)}
+                  </span>
+                </div>
+                <div className="flex justify-between gap-2">
+                  <code className="text-foreground/80">result.spinDrift</code>
+                  <span>
+                    {t('calc.driftBreakdown.fieldSpin')} = {spinMm.toFixed(1)}
+                  </span>
+                </div>
+                <div className="flex justify-between gap-2">
+                  <code className="text-foreground/80">result.coriolisDrift</code>
+                  <span>
+                    {t('calc.driftBreakdown.fieldCoriolis')} = {corMm.toFixed(1)}
+                  </span>
+                </div>
+                <div className="pt-1 border-t border-border/20">
+                  <div className="text-muted-foreground uppercase tracking-wide text-[9px]">
+                    {t('calc.driftBreakdown.formulaLabel')}
+                  </div>
+                  <code className="block text-foreground/90 break-all">
+                    {t('calc.driftBreakdown.fieldWindOnly')} = result.windDrift − result.spinDrift − result.coriolisDrift
+                  </code>
+                  <code className="block text-foreground/90">
+                    = {totalMm.toFixed(1)} − {spinMm.toFixed(1)} − {corMm.toFixed(1)} = {windOnlyMm.toFixed(1)} mm
+                  </code>
+                </div>
+              </div>
+            </details>
           </div>
         );
       })()}

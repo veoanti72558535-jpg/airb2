@@ -604,3 +604,92 @@ function UnitsComparison({
     </div>
   );
 }
+
+/**
+ * Per-category fine-tune — lets the user override the system-wide unit
+ * choice for the three most-consulted categories: distance, velocity,
+ * energy. Stays in sync with the dedicated `Unités` tab via the shared
+ * `useUnits()` hook (same localStorage entry, same Supabase column),
+ * so any change here is reflected there and vice versa.
+ *
+ * Reference values mirror the side-by-side preview above for cognitive
+ * continuity (same 50 m / 280 m/s / 24 J).
+ */
+function UnitsFineTune({
+  prefs,
+  setUnitPref,
+  t,
+}: {
+  prefs: Record<string, string>;
+  setUnitPref: (categoryKey: string, unitValue: string) => void;
+  t: (k: string) => string;
+}) {
+  // Curated subset — the full option list lives in the `Unités` tab.
+  // Picking max 3 options per row keeps the segmented control tap-
+  // friendly on mobile (878 px and below).
+  const ROWS = [
+    { cat: 'distance', refValue: 50, options: ['meters', 'yards', 'feet'] },
+    { cat: 'velocity', refValue: 280, options: ['mps', 'fps', 'kmh'] },
+    { cat: 'energy', refValue: 24, options: ['joules', 'ftlbs'] },
+  ] as const;
+
+  const fmt = (v: number) =>
+    Number.isFinite(v) ? (Math.abs(v) >= 100 ? v.toFixed(0) : v.toFixed(2)) : '—';
+
+  return (
+    <div className="space-y-2 pt-1">
+      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+        {t('settings.preferences.unitsFineTitle' as any)}
+      </div>
+      {ROWS.map(({ cat, refValue, options }) => {
+        const current = prefs[cat] ?? options[0];
+        const previewVal = toDisplay(cat, refValue, prefs);
+        const previewSym = getUnitSymbol(cat, current);
+        const labelKey = `settings.preferences.units${
+          cat === 'distance' ? 'Distance' : cat === 'velocity' ? 'Velocity' : 'Energy'
+        }`;
+        return (
+          <div
+            key={cat}
+            className="flex items-center justify-between gap-2 py-1.5 border-t border-border/40 first:border-t-0"
+          >
+            <div className="min-w-0">
+              <div className="text-xs font-medium truncate">{t(labelKey as any)}</div>
+              <div className="text-[10px] text-muted-foreground font-mono">
+                {refValue} → {fmt(previewVal)} {previewSym}
+              </div>
+            </div>
+            <div
+              role="radiogroup"
+              aria-label={t(labelKey as any)}
+              className="inline-flex rounded-md border border-border bg-card p-0.5 shrink-0"
+            >
+              {options.map((opt) => {
+                const sym = getUnitSymbol(cat, opt);
+                const active = current === opt;
+                return (
+                  <button
+                    key={opt}
+                    type="button"
+                    role="radio"
+                    aria-checked={active}
+                    onClick={() => setUnitPref(cat, opt)}
+                    className={cn(
+                      'px-2 py-1 rounded text-[11px] font-mono transition-colors',
+                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                      active
+                        ? 'bg-primary/15 text-primary font-semibold ring-1 ring-inset ring-primary/25'
+                        : 'text-muted-foreground hover:bg-muted',
+                    )}
+                  >
+                    {sym}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}

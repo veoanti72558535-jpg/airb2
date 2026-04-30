@@ -277,6 +277,10 @@ export default function QuickCalc() {
     };
     setForm(hydrated);
     setResults(session.results ?? null);
+    // Loaded from a saved session — we don't replay the engine here, so
+    // there is no fresh provenance to display. Cleared explicitly to
+    // avoid showing stale info from a previous Compute action.
+    setProvenance(null);
     setSessionName(session.name);
     setPreviewOriginId(session.id);
     setTableConfig(prev => ({ ...defaultConfig(i.maxRange), columns: prev.columns }));
@@ -519,6 +523,7 @@ export default function QuickCalc() {
         : guard.message;
       setError(msg);
       setResults(null);
+      setProvenance(null);
       setSiStatus(null);
       toast.error(t('calc.errorTitle'), { description: msg });
       return;
@@ -546,6 +551,7 @@ export default function QuickCalc() {
   const handleReset = () => {
     setForm(defaultForm());
     setResults(null);
+    setProvenance(null);
     setError(null);
     setSessionName('');
     setPreviewOriginId(null);

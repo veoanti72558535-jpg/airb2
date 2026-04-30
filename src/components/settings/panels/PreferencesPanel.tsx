@@ -47,10 +47,10 @@ import { useI18n } from '@/lib/i18n';
 import { useTheme } from '@/lib/theme';
 import { THEMES, DEFAULT_THEME } from '@/lib/theme-constants';
 import { getSettings, saveSettings, sessionStore } from '@/lib/storage';
+import { toDisplay, getDefaultUnitPrefs, getUnitSymbol } from '@/lib/units';
 import { getSortedFavorites, formatLastUsed, getLastSession } from '@/lib/session-favorites';
 import { markLocalUpdated, savePreferenceToSupabase } from '@/lib/preferences-sync';
 import { useAuth } from '@/lib/auth-context';
-import { useUnits } from '@/hooks/use-units';
 import { ThemePicker } from '@/components/settings/ThemePicker';
 import { cn } from '@/lib/utils';
 
@@ -64,7 +64,6 @@ export function PreferencesPanel() {
   const { theme, setTheme, isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { display, symbol } = useUnits();
   const settings = getSettings();
   // `advancedMode` is local-only (no Supabase column today). Locale and
   // theme have their own per-user sync paths inside their providers, so
@@ -309,31 +308,11 @@ export function PreferencesPanel() {
           />
         </div>
 
-        {/* Live conversion preview — values come from useUnits.display(),
-            so changing the system above instantly re-formats the row. */}
-        <div className="grid grid-cols-3 gap-2 pt-1">
-          {([
-            { cat: 'distance', refValue: 50, label: t('settings.preferences.unitsDistance' as any) },
-            { cat: 'velocity', refValue: 280, label: t('settings.preferences.unitsVelocity' as any) },
-            { cat: 'energy',   refValue: 24,  label: t('settings.preferences.unitsEnergy'   as any) },
-          ] as const).map(({ cat, refValue, label }) => {
-            const v = display(cat, refValue);
-            const formatted = Number.isFinite(v)
-              ? (Math.abs(v) >= 100 ? v.toFixed(0) : v.toFixed(2))
-              : '—';
-            return (
-              <div
-                key={cat}
-                className="rounded-md border border-border/40 bg-background/40 px-2 py-1.5"
-              >
-                <div className="text-[9px] uppercase text-muted-foreground">{label}</div>
-                <div className="text-xs font-mono font-semibold">
-                  {formatted} <span className="text-muted-foreground">{symbol(cat)}</span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        {/* Side-by-side comparison — both systems shown for the same
+            reference values, the active column highlighted. Lets the
+            user pick the unit system by SEEING the format, not by
+            guessing the conversion. */}
+        <UnitsComparison activeSystem={unitSystem} t={t} />
         <p className="text-[10px] text-muted-foreground">
           {t('settings.preferences.unitsHint' as any)}
         </p>
@@ -523,5 +502,98 @@ function LangButton({
     >
       {label}
     </button>
+  );
+}
+
+/**
+ * Side-by-side units preview.
+ *
+ * Why duplicate the conversion logic instead of reusing `useUnits()`?
+ * `useUnits` reads the user's CURRENT prefs — but here we want to show
+ * BOTH systems regardless of what's saved, so the user can compare
+ * before committing. We call `toDisplay()` directly with each system's
+ * default prefs (`getDefaultUnitPrefs('metric'|'imperial')`), keeping
+ * conversions deterministic and identical to what the rest of the app
+ * will render after the choice is saved.
+ */
+function UnitsComparison({
+  activeSystem,
+  t,
+}: {
+  activeSystem: 'metric' | 'imperial';
+  t: (k: string) => string;
+}) {
+  const metricPrefs = getDefaultUnitPrefs('metric');
+  const imperialPrefs = getDefaultUnitPrefs('imperial');
+
+  const rows = [
+    { cat: 'distance', refValue: 50, label: t('settings.preferences.unitsDistance' as any) },
+    { cat: 'velocity', refValue: 280, label: t('settings.preferences.unitsVelocity' as any) },
+    { cat: 'energy', refValue: 24, label: t('settings.preferences.unitsEnergy' as any) },
+  ] as const;
+
+  const fmt = (v: number) =>
+    Number.isFinite(v) ? (Math.abs(v) >= 100 ? v.toFixed(0) : v.toFixed(2)) : '—';
+
+  return (
+    <div className="rounded-md border border-border/50 overflow-hidden">
+      {/* Header */}
+      <div className="grid grid-cols-[1fr_auto_auto] gap-2 px-3 py-1.5 bg-muted/30 text-[9px] uppercase tracking-wider text-muted-foreground">
+        <span>{t('settings.preferences.unitsCompareValue' as any)}</span>
+        <span
+          className={cn(
+            'text-right tabular-nums px-2 rounded',
+            activeSystem === 'metric' && 'text-primary font-semibold',
+          )}
+        >
+          {t('common.metric')}
+        </span>
+        <span
+          className={cn(
+            'text-right tabular-nums px-2 rounded',
+            activeSystem === 'imperial' && 'text-primary font-semibold',
+          )}
+        >
+          {t('common.imperial')}
+        </span>
+      </div>
+      {/* Body */}
+      {rows.map(({ cat, refValue, label }) => {
+        const mVal = toDisplay(cat, refValue, metricPrefs);
+        const iVal = toDisplay(cat, refValue, imperialPrefs);
+        const mSym = getUnitSymbol(cat, metricPrefs[cat]);
+        const iSym = getUnitSymbol(cat, imperialPrefs[cat]);
+        return (
+          <div
+            key={cat}
+            className="grid grid-cols-[1fr_auto_auto] gap-2 px-3 py-1.5 border-t border-border/40 items-center"
+          >
+            <span className="text-[10px] text-muted-foreground uppercase">{label}</span>
+            <span
+              className={cn(
+                'text-xs font-mono text-right px-2 py-0.5 rounded',
+                activeSystem === 'metric'
+                  ? 'bg-primary/10 text-primary font-semibold'
+                  : 'text-muted-foreground',
+              )}
+              aria-current={activeSystem === 'metric' ? 'true' : undefined}
+            >
+              {fmt(mVal)} <span className="opacity-70">{mSym}</span>
+            </span>
+            <span
+              className={cn(
+                'text-xs font-mono text-right px-2 py-0.5 rounded',
+                activeSystem === 'imperial'
+                  ? 'bg-primary/10 text-primary font-semibold'
+                  : 'text-muted-foreground',
+              )}
+              aria-current={activeSystem === 'imperial' ? 'true' : undefined}
+            >
+              {fmt(iVal)} <span className="opacity-70">{iSym}</span>
+            </span>
+          </div>
+        );
+      })}
+    </div>
   );
 }

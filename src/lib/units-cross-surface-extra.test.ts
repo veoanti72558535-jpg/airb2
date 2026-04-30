@@ -259,7 +259,11 @@ describe('Cross-surface fidelity — extended categories', () => {
     expect(dashboard).toEqual({
       altitude: '1500 m',
       temperature: '23 °C',
-      pressure: '1013 hPa',     // 1.01325 bar → 1013.25 mbar/hPa → 1013
+      // Metric default for pressure = bar (see unitCategories[*].defaultMetric).
+      // 1.01325 bar → integer rounding → "1 bar". A future pref switch to
+      // hPa would render "1013 hPa" — both are correct, this lock just
+      // pins the *current* default so a silent change is caught.
+      pressure: '1 bar',
       tof: '0.183 s',
       windDrift: '45.7 mm',
       humidity: '58 %',

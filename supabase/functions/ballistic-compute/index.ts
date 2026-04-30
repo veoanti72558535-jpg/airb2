@@ -50,10 +50,11 @@ const FORBIDDEN_SUFFIXES = [
   '_cm', '_mm_display', '_mil_display', '_moa_display',
 ] as const;
 
-/** Mots-clés interdits anywhere dans une clé (cas camelCase). */
+/** Mots-clés interdits anywhere dans une clé (cas camelCase).
+ *  Match insensible à la casse : `muzzleVelocityFps` ⇒ "fps". */
 const FORBIDDEN_TOKENS = [
-  'fps', 'mph', 'inHg', 'lbs', 'grains', 'yards', 'inches',
-  'fahrenheit', 'displayUnit', 'displayValue',
+  'fps', 'mph', 'inhg', 'lbs', 'grains', 'yards', 'inches',
+  'fahrenheit', 'displayunit', 'displayvalue',
 ];
 
 function keyMentionsDisplayUnit(key: string): string | null {
@@ -62,7 +63,7 @@ function keyMentionsDisplayUnit(key: string): string | null {
     if (lower.endsWith(sfx)) return sfx;
   }
   for (const tok of FORBIDDEN_TOKENS) {
-    if (key.includes(tok)) return tok;
+    if (lower.includes(tok)) return tok;
   }
   return null;
 }

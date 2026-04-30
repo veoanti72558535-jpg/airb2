@@ -19,8 +19,8 @@ const FORBIDDEN_SUFFIXES = [
 ] as const;
 
 const FORBIDDEN_TOKENS = [
-  'fps', 'mph', 'inHg', 'lbs', 'grains', 'yards', 'inches',
-  'fahrenheit', 'displayUnit', 'displayValue',
+  'fps', 'mph', 'inhg', 'lbs', 'grains', 'yards', 'inches',
+  'fahrenheit', 'displayunit', 'displayvalue',
 ];
 
 function keyMentionsDisplayUnit(key: string): string | null {
@@ -29,7 +29,7 @@ function keyMentionsDisplayUnit(key: string): string | null {
     if (lower.endsWith(sfx)) return sfx;
   }
   for (const tok of FORBIDDEN_TOKENS) {
-    if (key.includes(tok)) return tok;
+    if (lower.includes(tok)) return tok;
   }
   return null;
 }
@@ -74,7 +74,7 @@ describe('ballistic-compute SI guardrail — key detection', () => {
   it('rejects tokens embedded in camelCase keys', () => {
     expect(keyMentionsDisplayUnit('muzzleVelocityFps')).toBe('fps');
     expect(keyMentionsDisplayUnit('weightGrains')).toBe('grains');
-    expect(keyMentionsDisplayUnit('displayUnitOverride')).toBe('displayUnit');
+    expect(keyMentionsDisplayUnit('displayUnitOverride')).toBe('displayunit');
   });
 
   it('accepts legitimate SI keys', () => {

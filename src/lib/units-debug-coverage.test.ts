@@ -36,6 +36,8 @@ const EXEMPT = new Set<string>([
   'components/devtools/UnitValue.tsx',
   // Le composant UnitTag est lui-même la source du badge.
   'components/devtools/UnitTag.tsx',
+  // La sentinelle UnitTagSurface est elle-même la source du badge.
+  'components/devtools/UnitTagSurface.tsx',
 ]);
 
 function walk(dir: string, out: string[] = []): string[] {

@@ -20,3 +20,10 @@ verify_jwt = false
 
 [functions.ai-provider-dispatch]
 verify_jwt = false
+
+# ballistic-compute — garde-fou SI pour le moteur balistique.
+# JWT vérifié EN CODE (cf. requireAuthedUser dans index.ts) pour pouvoir
+# retourner un message métier (`no-auth` / `invalid-jwt`) au lieu d'un
+# 401 opaque du proxy.
+[functions.ballistic-compute]
+verify_jwt = false

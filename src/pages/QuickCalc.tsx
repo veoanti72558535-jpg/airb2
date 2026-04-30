@@ -5,7 +5,7 @@ import { Crosshair, RotateCcw, Save, Sparkles, Settings2, Zap, ArrowLeftRight } 
 import { SessionPickerDialog } from '@/components/compare/SessionPickerDialog';
 import { toast } from 'sonner';
 import { useI18n } from '@/lib/i18n';
-import { calculateTrajectory } from '@/lib/ballistics';
+import { calculateTrajectory, getLastEngineProvenance, type EngineProvenance } from '@/lib/ballistics';
 import {
   validateBallisticInputSI,
   isHardRejection,
@@ -152,6 +152,7 @@ export default function QuickCalc() {
   const [advanced, setAdvanced] = useState(settings.advancedMode);
   const [form, setForm] = useState<FormState>(defaultForm);
   const [results, setResults] = useState<BallisticResult[] | null>(null);
+  const [provenance, setProvenance] = useState<EngineProvenance | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sessionName, setSessionName] = useState('');
   /**

@@ -113,5 +113,6 @@ export type HardRejectionCode = (typeof HARD_REJECTION_CODES)[number];
 export function isHardRejection(
   res: BallisticComputeResponse,
 ): res is Extract<BallisticComputeResponse, { ok: false }> & { code: HardRejectionCode } {
-  return !res.ok && (HARD_REJECTION_CODES as readonly string[]).includes(res.code);
+  if (res.ok) return false;
+  return (HARD_REJECTION_CODES as readonly string[]).includes(res.code);
 }

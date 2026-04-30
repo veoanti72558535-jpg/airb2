@@ -3,9 +3,11 @@ import { Music, Plus } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { tuneStore, airgunStore } from '@/lib/storage';
 import { motion } from 'framer-motion';
+import { useUnits } from '@/hooks/use-units';
 
 export default function TunesPage() {
   const { t } = useI18n();
+  const { display, symbol } = useUnits();
   const tunes = tuneStore.getAll();
   const airguns = airgunStore.getAll();
 
@@ -35,7 +37,7 @@ export default function TunesPage() {
               <div className="font-semibold text-sm">{tune.name}</div>
               <div className="text-xs text-muted-foreground mt-1 font-mono">
                 {getAirgunName(tune.airgunId)}
-                {tune.nominalVelocity && ` • ${tune.nominalVelocity} m/s`}
+                {tune.nominalVelocity != null && ` • ${display('velocity', tune.nominalVelocity).toFixed(1)} ${symbol('velocity')}`}
               </div>
               {tune.notes && <p className="text-xs text-muted-foreground mt-2 italic">{tune.notes}</p>}
             </div>

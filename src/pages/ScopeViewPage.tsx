@@ -255,7 +255,7 @@ export default function ScopeViewPage() {
         </ControlGroup>
 
         {/* Wind */}
-        <ControlGroup label="Wind Speed" value={`${windSpeed.toFixed(1)} m/s`}>
+        <ControlGroup label="Wind Speed" value={`${display('velocity', windSpeed).toFixed(1)} ${symbol('velocity')}`}>
           <input
             type="range" min={0} max={15} step={0.5}
             value={windSpeed}

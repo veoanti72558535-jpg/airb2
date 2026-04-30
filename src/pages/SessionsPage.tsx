@@ -354,7 +354,7 @@ export default function SessionsPage() {
                      )}
                     </div>
                     <div className="text-xs text-muted-foreground font-mono mt-1">
-                      {s.input.muzzleVelocity} m/s • BC {s.input.bc} • {s.input.projectileWeight} gr • Zero {s.input.zeroRange}m
+                      {display('velocity', s.input.muzzleVelocity).toFixed(0)} {velSym} • BC {s.input.bc} • {s.input.projectileWeight} gr • Zero {display('distance', s.input.zeroRange).toFixed(0)}{distSym}
                     </div>
                     <div className="text-[11px] text-muted-foreground mt-0.5">
                       {new Date(s.createdAt).toLocaleString()}
@@ -409,8 +409,8 @@ export default function SessionsPage() {
                   <div className="mt-3 grid grid-cols-4 gap-2 text-center">
                     {s.results.filter(r => r.range > 0).slice(0, 4).map(r => (
                       <div key={r.range} className="bg-muted rounded p-2">
-                        <div className="text-[10px] text-muted-foreground">{r.range}m</div>
-                        <div className="text-xs font-mono font-semibold">{r.drop.toFixed(1)}<span className="text-muted-foreground">mm</span></div>
+                        <div className="text-[10px] text-muted-foreground">{display('distance', r.range).toFixed(0)}{distSym}</div>
+                        <div className="text-xs font-mono font-semibold">{display('length', r.drop).toFixed(1)}<span className="text-muted-foreground">{lengthSym}</span></div>
                       </div>
                     ))}
                   </div>

@@ -758,10 +758,13 @@ export default function QuickCalc() {
         <div className="flex flex-col sm:flex-row gap-2">
           <button
             onClick={handleCalculate}
-            className="flex-1 px-5 py-3 bg-primary text-primary-foreground rounded-lg font-semibold text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2 shadow-md"
+            disabled={siStatus === 'pending'}
+            data-testid="quickcalc-calculate"
+            data-si-status={siStatus ?? 'idle'}
+            className="flex-1 px-5 py-3 bg-primary text-primary-foreground rounded-lg font-semibold text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2 shadow-md disabled:opacity-60 disabled:cursor-not-allowed"
           >
             <Crosshair className="h-4 w-4" />
-            {t('calc.calculate')}
+            {siStatus === 'pending' ? '…' : t('calc.calculate')}
           </button>
           <button
             onClick={handleReset}

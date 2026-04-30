@@ -23,7 +23,8 @@ export type BallisticComputeResponse =
         | 'no-auth' | 'invalid-jwt'
         | 'bad-json' | 'missing-units-sentinel'
         | 'display-unit-detected' | 'out-of-si-range' | 'invalid-input'
-        | 'method-not-allowed' | 'server-misconfigured';
+        | 'method-not-allowed' | 'server-misconfigured'
+        | 'no-supabase' | 'network-error';
       message: string;
       offendingPath?: string;
       issues?: unknown;
@@ -36,19 +37,82 @@ export type BallisticComputeResponse =
 export async function validateBallisticInputSI(
   input: BallisticInput,
 ): Promise<BallisticComputeResponse> {
-  const payload: SiBallisticPayload = { ...input, units: 'SI' };
-  const { data, error } = await supabase.functions.invoke<BallisticComputeResponse>(
-    'ballistic-compute',
-    { body: payload },
-  );
-  if (error) {
-    // supabase-js throws on non-2xx; the function's body is still in `error.context`.
-    // Surface a uniform shape so callers branch on `ok` only.
+  // Self-hosted / offline fallback : when Supabase is not configured the
+  // guardrail edge function is unreachable. Callers MUST treat this as
+  // "unverified" rather than a hard rejection (offline-first contract).
+  if (!supabase) {
     return {
       ok: false,
-      code: 'invalid-input',
-      message: error.message,
+      code: 'no-supabase',
+      message: 'Supabase client not configured — backend guardrail unavailable.',
     };
   }
-  return data!;
+  // Same idea for unauthenticated visitors : the edge function requires a
+  // JWT. We surface a dedicated `no-auth` code so QuickCalc / future call
+  // sites can decide between "block" and "fall back to local-only".
+  try {
+    const { data: sess } = await supabase.auth.getSession();
+    if (!sess?.session) {
+      return {
+        ok: false,
+        code: 'no-auth',
+        message: 'No authenticated session — guardrail skipped.',
+      };
+    }
+  } catch (e) {
+    return {
+      ok: false,
+      code: 'no-auth',
+      message: e instanceof Error ? e.message : 'Auth check failed.',
+    };
+  }
+  const payload: SiBallisticPayload = { ...input, units: 'SI' };
+  try {
+    const { data, error } = await supabase.functions.invoke<BallisticComputeResponse>(
+      'ballistic-compute',
+      { body: payload },
+    );
+    if (error) {
+      // supabase-js throws on non-2xx; the function's body is still in `error.context`.
+      // Surface a uniform shape so callers branch on `ok` only.
+      return {
+        ok: false,
+        code: 'network-error',
+        message: error.message,
+      };
+    }
+    return data!;
+  } catch (e) {
+    return {
+      ok: false,
+      code: 'network-error',
+      message: e instanceof Error ? e.message : 'Network call failed.',
+    };
+  }
+}
+
+/**
+ * Codes returned by the guardrail that represent a HARD rejection
+ * (the input itself violates the SI contract). Any other failure code
+ * (`no-supabase`, `no-auth`, `network-error`, `server-misconfigured`,
+ * `method-not-allowed`) means the guardrail could not run — callers
+ * may decide to fall back to a local-only computation marked as
+ * "unverified" in the UI.
+ */
+export const HARD_REJECTION_CODES = [
+  'bad-json',
+  'missing-units-sentinel',
+  'display-unit-detected',
+  'out-of-si-range',
+  'invalid-input',
+  'invalid-jwt',
+] as const;
+
+export type HardRejectionCode = (typeof HARD_REJECTION_CODES)[number];
+
+export function isHardRejection(
+  res: BallisticComputeResponse,
+): res is Extract<BallisticComputeResponse, { ok: false }> & { code: HardRejectionCode } {
+  return res.ok === false
+    && (HARD_REJECTION_CODES as readonly string[]).includes(res.code);
 }

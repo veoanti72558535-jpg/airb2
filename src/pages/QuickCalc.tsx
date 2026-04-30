@@ -7,6 +7,10 @@ import { toast } from 'sonner';
 import { useI18n } from '@/lib/i18n';
 import { calculateTrajectory } from '@/lib/ballistics';
 import {
+  validateBallisticInputSI,
+  isHardRejection,
+} from '@/lib/ballistic-compute-client';
+import {
   Airgun,
   BallisticInput,
   BallisticResult,
@@ -165,6 +169,17 @@ export default function QuickCalc() {
    */
   const [previewOriginId, setPreviewOriginId] = useState<string | null>(null);
   const [comparePickerOpen, setComparePickerOpen] = useState(false);
+  /**
+   * Statut de la dernière validation SI côté backend :
+   *   - 'verified'   → guardrail a accepté le payload (auth + ok)
+   *   - 'unverified' → guardrail indisponible (no-supabase / no-auth /
+   *     network-error). Calcul local autorisé, badge UI affiché.
+   *   - 'pending'    → en cours de validation (UI bloque le bouton).
+   *   - null         → aucun calcul lancé.
+   */
+  const [siStatus, setSiStatus] = useState<
+    null | 'pending' | 'verified' | 'unverified'
+  >(null);
   // Tranche J — Source de vérité partagée pour la grille d'affichage
   // (BallisticTable + ReticleAssistPanel). Initialisée paresseusement à
   // partir de la portée par défaut ; recalibrée à chaque calcul / chargement
@@ -480,7 +495,7 @@ export default function QuickCalc() {
     };
   };
 
-  const handleCalculate = () => {
+  const handleCalculate = async () => {
     const err = validate();
     if (err) {
       setError(err);
@@ -489,7 +504,30 @@ export default function QuickCalc() {
     }
     setError(null);
     const input = buildInput();
-    setResults(calculateTrajectory(input));
+    setSiStatus('pending');
+    // Garde-fou SI : appel obligatoire AVANT toute exécution du moteur.
+    // - Rejet dur (display-unit / out-of-si-range / invalid-input / …)
+    //   → on bloque le calcul et on affiche l'erreur du backend.
+    // - Rejet "infrastructure" (no-supabase / no-auth / network-error)
+    //   → fallback local autorisé, marqué 'unverified' dans l'UI
+    //   (cf. mémo Core : offline-first, localStorage / no backend yet).
+    const guard = await validateBallisticInputSI(input);
+    if (isHardRejection(guard)) {
+      const msg = guard.offendingPath
+        ? `${guard.message} (${guard.offendingPath})`
+        : guard.message;
+      setError(msg);
+      setResults(null);
+      setSiStatus(null);
+      toast.error(t('calc.errorTitle'), { description: msg });
+      return;
+    }
+    const verified = guard.ok === true;
+    setSiStatus(verified ? 'verified' : 'unverified');
+    // Sur succès SI on PRÉFÈRE le payload normalisé renvoyé par le
+    // guardrail (mêmes champs, sentinel `units: 'SI'` retiré côté types).
+    const safeInput = verified ? guard.normalized : input;
+    setResults(calculateTrajectory(safeInput));
     // Tranche J — recale la grille partagée sur la portée réellement calculée
     // tout en préservant les colonnes choisies par l'utilisateur.
     setTableConfig(prev => {
@@ -505,6 +543,7 @@ export default function QuickCalc() {
     setSessionName('');
     setPreviewOriginId(null);
     setTableConfig(defaultConfig(100));
+    setSiStatus(null);
   };
 
   const handleSave = () => {
@@ -719,10 +758,13 @@ export default function QuickCalc() {
         <div className="flex flex-col sm:flex-row gap-2">
           <button
             onClick={handleCalculate}
-            className="flex-1 px-5 py-3 bg-primary text-primary-foreground rounded-lg font-semibold text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2 shadow-md"
+            disabled={siStatus === 'pending'}
+            data-testid="quickcalc-calculate"
+            data-si-status={siStatus ?? 'idle'}
+            className="flex-1 px-5 py-3 bg-primary text-primary-foreground rounded-lg font-semibold text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2 shadow-md disabled:opacity-60 disabled:cursor-not-allowed"
           >
             <Crosshair className="h-4 w-4" />
-            {t('calc.calculate')}
+            {siStatus === 'pending' ? '…' : t('calc.calculate')}
           </button>
           <button
             onClick={handleReset}
@@ -744,6 +786,26 @@ export default function QuickCalc() {
           animate={{ opacity: 1, y: 0 }}
           className="space-y-4"
         >
+          {siStatus === 'verified' && (
+            <div
+              data-testid="si-guardrail-badge"
+              data-status="verified"
+              className="inline-flex items-center gap-1 rounded-md border border-primary/40 bg-primary/10 px-2 py-0.5 text-[10px] font-mono uppercase tracking-wide text-primary"
+              title="Payload validé par le guardrail SI backend."
+            >
+              SI ✓ verified
+            </div>
+          )}
+          {siStatus === 'unverified' && (
+            <div
+              data-testid="si-guardrail-badge"
+              data-status="unverified"
+              className="inline-flex items-center gap-1 rounded-md border border-warning/40 bg-warning/10 px-2 py-0.5 text-[10px] font-mono uppercase tracking-wide text-warning"
+              title="Guardrail backend indisponible (offline / non authentifié) — calcul local uniquement."
+            >
+              SI · local-only (unverified)
+            </div>
+          )}
           <ResultsCard
             result={heroResult}
             rows={tableRows}

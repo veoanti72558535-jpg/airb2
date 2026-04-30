@@ -65,9 +65,54 @@ function writeOverrides(map: Record<string, DocOverride>): void {
   if (typeof localStorage === 'undefined') return;
   try {
     localStorage.setItem(OVERRIDES_STORAGE_KEY, JSON.stringify(map));
+    notifyChange();
   } catch {
     // quota / private mode — silently ignored, edits will be lost on reload
   }
+}
+
+/* ------------------------------------------------------------------ *
+ *  Change notification (decoupled from search.ts to avoid a cycle).  *
+ *                                                                    *
+ *  Any module that maintains derived state over `listSections()`     *
+ *  (e.g. the Fuse.js index) subscribes here and is notified after    *
+ *  every successful write to the overrides map. Cross-tab edits are  *
+ *  also broadcast via the standard `storage` event.                  *
+ * ------------------------------------------------------------------ */
+
+type Listener = () => void;
+const listeners = new Set<Listener>();
+let crossTabBound = false;
+
+function notifyChange(): void {
+  for (const fn of listeners) {
+    try {
+      fn();
+    } catch {
+      /* listener errors must not break the write path */
+    }
+  }
+}
+
+function bindCrossTabOnce(): void {
+  if (crossTabBound || typeof window === 'undefined') return;
+  crossTabBound = true;
+  window.addEventListener('storage', (e) => {
+    if (e.key === OVERRIDES_STORAGE_KEY) notifyChange();
+  });
+}
+
+/**
+ * Subscribe to override mutations (create / update / delete / reset),
+ * including those triggered from other browser tabs.
+ * Returns an unsubscribe handle.
+ */
+export function subscribeOverrideChanges(fn: Listener): () => void {
+  listeners.add(fn);
+  bindCrossTabOnce();
+  return () => {
+    listeners.delete(fn);
+  };
 }
 
 function applyOverride(seed: DocSection, ov: DocOverride): DocSection {

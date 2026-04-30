@@ -330,12 +330,32 @@ export function PreferencesPanel() {
             reference values, the active column highlighted. Lets the
             user pick the unit system by SEEING the format, not by
             guessing the conversion. */}
-        <UnitsComparison activeSystem={unitSystem} t={t} />
+        <UnitsComparison
+          activeSystem={unitSystem}
+          numberFormat={numberFormat}
+          locale={locale}
+          t={t}
+        />
         {/* Per-category fine-tune — quick toggle between the 2-3 most
             common options for each category, with an inline preview.
             Goes BEYOND the system-wide switch above: a user can pick
             metric distances but imperial energy, for example. */}
-        <UnitsFineTune prefs={prefs} setUnitPref={(k, v) => { setUnitPref(k, v); force(); }} t={t} />
+        <UnitsFineTune
+          prefs={prefs}
+          setUnitPref={(k, v) => { setUnitPref(k, v); force(); }}
+          numberFormat={numberFormat}
+          locale={locale}
+          t={t}
+        />
+        {/* Precision & rounding controls — see `formatNumber()`.
+            Lives next to the unit selectors because that's where users
+            care about readability of converted values. */}
+        <NumberFormatControls
+          numberFormat={numberFormat}
+          setNumberFormat={setNumberFormat}
+          locale={locale}
+          t={t}
+        />
         {/* Determinism notice — visually distinct from the cosmetic
             `unitsHint` paragraph: a primary-tinted badge that makes
             crystal clear the engine never recomputes when units

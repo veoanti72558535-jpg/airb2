@@ -658,6 +658,7 @@ const fr = {
   // Common
   'common.save': 'Enregistrer',
   'common.cancel': 'Annuler',
+  'common.confirm': 'Confirmer',
   'common.delete': 'Supprimer',
   'common.edit': 'Modifier',
   'common.search': 'Rechercher',

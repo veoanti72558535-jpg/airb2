@@ -3,6 +3,7 @@ import { useI18n } from '@/lib/i18n';
 import { BallisticResult, OpticFocalPlane, WeatherSnapshot } from '@/lib/types';
 import { useUnits } from '@/hooks/use-units';
 import { cn } from '@/lib/utils';
+import { UnitTagSurface } from '@/components/devtools/UnitTagSurface';
 
 interface Props {
   result: BallisticResult;

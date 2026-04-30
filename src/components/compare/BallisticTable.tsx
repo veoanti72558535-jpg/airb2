@@ -4,6 +4,7 @@ import { BallisticResult } from '@/lib/types';
 import { useI18n } from '@/lib/i18n';
 import { useUnits } from '@/hooks/use-units';
 import { cn } from '@/lib/utils';
+import { UnitTagSurface } from '@/components/devtools/UnitTagSurface';
 
 interface Props {
   rows: BallisticResult[];
@@ -54,6 +55,10 @@ export function BallisticTable({
         <h4 className="text-xs font-heading font-semibold uppercase tracking-wide text-muted-foreground">
           {title ?? t('calc.rangeBreakdown')}
         </h4>
+        <UnitTagSurface
+          categories={['distance', 'length', 'velocity', 'energy']}
+          label="CompareTable"
+        />
         <button
           type="button"
           onClick={() => setAdv(v => !v)}

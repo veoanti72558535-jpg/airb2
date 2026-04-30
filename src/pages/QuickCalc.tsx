@@ -5,7 +5,7 @@ import { Crosshair, RotateCcw, Save, Sparkles, Settings2, Zap, ArrowLeftRight } 
 import { SessionPickerDialog } from '@/components/compare/SessionPickerDialog';
 import { toast } from 'sonner';
 import { useI18n } from '@/lib/i18n';
-import { calculateTrajectory } from '@/lib/ballistics';
+import { calculateTrajectory, getLastEngineProvenance, type EngineProvenance } from '@/lib/ballistics';
 import {
   validateBallisticInputSI,
   isHardRejection,
@@ -152,6 +152,7 @@ export default function QuickCalc() {
   const [advanced, setAdvanced] = useState(settings.advancedMode);
   const [form, setForm] = useState<FormState>(defaultForm);
   const [results, setResults] = useState<BallisticResult[] | null>(null);
+  const [provenance, setProvenance] = useState<EngineProvenance | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sessionName, setSessionName] = useState('');
   /**
@@ -276,6 +277,10 @@ export default function QuickCalc() {
     };
     setForm(hydrated);
     setResults(session.results ?? null);
+    // Loaded from a saved session — we don't replay the engine here, so
+    // there is no fresh provenance to display. Cleared explicitly to
+    // avoid showing stale info from a previous Compute action.
+    setProvenance(null);
     setSessionName(session.name);
     setPreviewOriginId(session.id);
     setTableConfig(prev => ({ ...defaultConfig(i.maxRange), columns: prev.columns }));
@@ -518,6 +523,7 @@ export default function QuickCalc() {
         : guard.message;
       setError(msg);
       setResults(null);
+      setProvenance(null);
       setSiStatus(null);
       toast.error(t('calc.errorTitle'), { description: msg });
       return;
@@ -527,7 +533,13 @@ export default function QuickCalc() {
     // Sur succès SI on PRÉFÈRE le payload normalisé renvoyé par le
     // guardrail (mêmes champs, sentinel `units: 'SI'` retiré côté types).
     const safeInput = verified ? guard.normalized : input;
-    setResults(calculateTrajectory(safeInput));
+    const traj = calculateTrajectory(safeInput);
+    setResults(traj);
+    // Snapshot the engine provenance produced by the call above so the
+    // ResultsCard "D'où vient la dérive ?" panel can display the exact
+    // models / guards that were active. Captured eagerly because the
+    // module-level slot is overwritten on the next computation.
+    setProvenance(getLastEngineProvenance());
     // Tranche J — recale la grille partagée sur la portée réellement calculée
     // tout en préservant les colonnes choisies par l'utilisateur.
     setTableConfig(prev => {
@@ -539,6 +551,7 @@ export default function QuickCalc() {
   const handleReset = () => {
     setForm(defaultForm());
     setResults(null);
+    setProvenance(null);
     setError(null);
     setSessionName('');
     setPreviewOriginId(null);
@@ -817,6 +830,7 @@ export default function QuickCalc() {
             weather={form.weather}
             zeroWeather={form.useZeroWeather ? form.zeroWeather : undefined}
             energyThresholdJ={energyThresholdJ}
+            provenance={provenance}
           />
 
           {/* A9 — Energy hunting advisor for the hero distance. Optional

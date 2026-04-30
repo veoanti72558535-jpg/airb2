@@ -18,4 +18,6 @@ export {
   dragDecel,
   findZeroAngle,
   calculateTrajectory,
+  getLastEngineProvenance,
+  type EngineProvenance,
 } from './ballistics/index';

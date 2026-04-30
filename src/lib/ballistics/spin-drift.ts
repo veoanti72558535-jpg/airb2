@@ -19,11 +19,18 @@
 
 const MM_TO_IN = 1 / 25.4;
 
-/** Hard cap on the SG term used inside the Litz formula (see header). */
-const SG_MAX_EFFECTIVE = 2.5;
+/**
+ * Hard cap on the SG term used inside the Litz formula (see file header).
+ * Exported so the provenance object surfaced in the UI stays in sync with
+ * the actual numerical guard — never duplicate this value elsewhere.
+ */
+export const SG_MAX_EFFECTIVE = 2.5;
 
-/** Velocity below which spin drift is forced to 0 (PCP regime). */
-const MIN_SPIN_DRIFT_VELOCITY = 200;
+/**
+ * Velocity (m/s) below which spin drift is forced to 0 (PCP regime).
+ * Exported for the same reason as `SG_MAX_EFFECTIVE` — provenance traceability.
+ */
+export const MIN_SPIN_DRIFT_VELOCITY = 200;
 
 /**
  * Estimate Litz spin drift in mm at a given time of flight.

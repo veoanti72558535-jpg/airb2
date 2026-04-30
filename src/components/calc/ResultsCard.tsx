@@ -4,8 +4,7 @@ import { BallisticResult, OpticFocalPlane, WeatherSnapshot } from '@/lib/types';
 import { useUnits } from '@/hooks/use-units';
 import { cn } from '@/lib/utils';
 import { UnitTagSurface } from '@/components/devtools/UnitTagSurface';
-import { getSettings } from '@/lib/storage';
-import type { EngineConfig } from '@/lib/ballistics/types';
+import type { EngineProvenance } from '@/lib/ballistics';
 
 interface Props {
   result: BallisticResult;
@@ -26,13 +25,14 @@ interface Props {
    */
   energyThresholdJ?: number | null;
   /**
-   * Engine config used to produce `result`. When provided, the
-   * "Where does the drift come from?" panel can name the active wind
-   * model and Coriolis state instead of inferring them. Optional —
-   * callers that don't pass an explicit profile (e.g. legacy QuickCalc)
-   * fall back to lateral-only / Coriolis-off.
+   * Centralised engine provenance produced alongside `result`
+   * (cf. `getLastEngineProvenance` / `buildEngineProvenance`).
+   *
+   * Single source of truth for which models / guard-rails were active —
+   * the "D'où vient la dérive ?" panel reads it instead of re-deriving
+   * the state, so the UI cannot drift from the engine.
    */
-  engineConfig?: EngineConfig;
+  provenance?: EngineProvenance | null;
 }
 
 function Stat({
@@ -129,7 +129,7 @@ export function ResultsCard({
   weather,
   zeroWeather,
   energyThresholdJ,
-  engineConfig,
+  provenance,
 }: Props) {
   const { t, locale } = useI18n();
   const { display, symbol } = useUnits();
@@ -425,15 +425,24 @@ export function ResultsCard({
           const sign = mm >= 0 ? t('calc.driftBreakdown.right') : t('calc.driftBreakdown.left');
           return `${Math.abs(mm).toFixed(1)} ${lengthUnit} ${sign}`;
         };
-        // Resolve the user override so the panel can label "forced" states.
-        const userOverride = (() => {
-          try { return getSettings().featureFlags.spinDrift; } catch { return undefined; }
-        })();
-        const profileSpin = engineConfig?.postProcess?.spinDrift !== false;
-        const spinEnabled = userOverride !== undefined ? userOverride : profileSpin;
-        const coriolisEnabled = !!engineConfig?.postProcess?.coriolis;
-        const windModel = engineConfig?.windModel ?? 'lateral-only';
+        // All "is this active?" decisions come from the centralised
+        // provenance object — never re-derive locally so UI/engine stay
+        // bit-identical. Falls back to safe defaults when the caller
+        // didn't supply a provenance snapshot (e.g. a hydrated session
+        // displayed without re-running the engine).
+        const spinEnabled = provenance?.postProcess.spinDrift.enabled ?? false;
+        const spinSource = provenance?.postProcess.spinDrift.source ?? 'default';
+        const coriolisEnabled = provenance?.postProcess.coriolis.enabled ?? false;
+        const windModel = provenance?.windModel ?? 'lateral-only';
+        const userOverride = provenance?.userOverrides.spinDrift;
         const windZero = !weather?.windSpeed || weather.windSpeed === 0;
+        // Live-formatted spin guards label — sourced from provenance so
+        // a future change to SG_MAX_EFFECTIVE / MIN_SPIN_DRIFT_VELOCITY
+        // automatically reflects in the UI without touching strings.
+        const guards = provenance?.guards.spinDrift;
+        const spinModelLabel = guards
+          ? `Spin: ${guards.model} · SG ≤ ${guards.sgMaxEffective} · V ≥ ${guards.minVelocityMs} m/s`
+          : t('calc.driftBreakdown.spinModel');
 
         return (
           <div className="rounded-lg border border-border/40 bg-background/20 p-3 space-y-2">
@@ -473,12 +482,12 @@ export function ResultsCard({
               </li>
               <li>
                 {!spinEnabled
-                  ? userOverride === false
+                  ? spinSource === 'user-override'
                     ? t('calc.driftBreakdown.spinForcedOff')
                     : t('calc.driftBreakdown.spinOff')
-                  : userOverride === true && !profileSpin
-                    ? `${t('calc.driftBreakdown.spinForcedOn')} — ${t('calc.driftBreakdown.spinModel')}`
-                    : t('calc.driftBreakdown.spinModel')}
+                  : spinSource === 'user-override'
+                    ? `${t('calc.driftBreakdown.spinForcedOn')} — ${spinModelLabel}`
+                    : spinModelLabel}
               </li>
               <li>
                 {coriolisEnabled
@@ -529,6 +538,16 @@ export function ResultsCard({
                     = {totalMm.toFixed(1)} − {spinMm.toFixed(1)} − {corMm.toFixed(1)} = {windOnlyMm.toFixed(1)} mm
                   </code>
                 </div>
+                {provenance && (
+                  <div className="pt-1 border-t border-border/20">
+                    <div className="text-muted-foreground uppercase tracking-wide text-[9px] mb-1">
+                      EngineProvenance · v{provenance.schemaVersion}
+                    </div>
+                    <pre className="text-[9.5px] leading-snug text-foreground/80 whitespace-pre-wrap break-all bg-background/40 rounded p-1.5 border border-border/30">
+{JSON.stringify(provenance, null, 2)}
+                    </pre>
+                  </div>
+                )}
               </div>
             </details>
           </div>

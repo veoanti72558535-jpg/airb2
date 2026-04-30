@@ -17,6 +17,14 @@ export { dragDecel, type CdResolver, type RetardationMode } from './drag/retarda
 export { decomposeWind, type WindComponents } from './wind';
 export { findZeroAngle } from './zero-solver';
 export { calculateTrajectory } from './engine';
+export { getLastEngineProvenance } from './engine';
+export {
+  buildEngineProvenance,
+  type EngineProvenance,
+  type PostProcessProvenance,
+  type PostProcessSource,
+  type SpinDriftGuards,
+} from './provenance';
 
 // Profiles & engine config (P1 surface — opt-in for callers).
 export {

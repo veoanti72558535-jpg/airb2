@@ -33,28 +33,32 @@ import { findZeroAngle } from './zero-solver';
 import { getIntegrator, type IntegratorState } from './integrators';
 import { cdFromMero, hasMeroTable } from './drag/mero-tables';
 import type { EngineConfig } from './types';
+import { buildEngineProvenance } from './provenance';
+import type { EngineProvenance } from './provenance';
 
 const GRAVITY = 9.80665; // m/s²
 const GRAINS_TO_KG = 0.00006479891;
 
 /**
- * Resolve the user-level spin-drift override stored under the app
- * settings key. Returns `undefined` when no override is set or when
- * localStorage is unavailable (SSR / tests). Pure read, no throw.
+ * Provenance snapshot of the most recent `calculateTrajectory` call.
  *
- * The engine intentionally avoids a hard import on `src/lib/storage`
- * to stay framework-free and keep its unit tests dependency-light.
+ * Stored at module scope (rather than threaded through the public
+ * return type) so legacy call sites — they all read the trajectory
+ * array directly — can opt into provenance without a breaking change.
+ * UI consumers (e.g. `ResultsCard`) read it via `getLastEngineProvenance`.
+ *
+ * Single-threaded by design: the engine itself is synchronous, so there
+ * is no race between two concurrent computations.
  */
-function readSpinDriftOverride(): boolean | undefined {
-  if (typeof localStorage === 'undefined') return undefined;
-  try {
-    const raw = localStorage.getItem('pcp-settings');
-    if (!raw) return undefined;
-    const v = JSON.parse(raw)?.featureFlags?.spinDrift;
-    return typeof v === 'boolean' ? v : undefined;
-  } catch {
-    return undefined;
-  }
+let lastEngineProvenance: EngineProvenance | null = null;
+
+/**
+ * Returns the provenance object for the most recent trajectory
+ * computation, or `null` if no trajectory has been computed yet
+ * in this session.
+ */
+export function getLastEngineProvenance(): EngineProvenance | null {
+  return lastEngineProvenance;
 }
 
 /**
@@ -166,6 +170,13 @@ export function calculateTrajectory(input: BallisticInput): BallisticResult[] {
   const dt = engineConfig?.dt ?? 0.0005;
   const step = getIntegrator(engineConfig?.integrator ?? 'euler');
 
+  // Single source of truth for which post-process steps + guards are
+  // active. The flight loop reads this object instead of re-deriving the
+  // user override on every step, and the same object is exposed via
+  // `getLastEngineProvenance()` for the UI panel.
+  const provenance = buildEngineProvenance(engineConfig);
+  lastEngineProvenance = provenance;
+
   // State container for the integrator. Legacy code used loose locals; the
   // object form is allocation-free past the constructor and lets us share
   // the integrator dispatch with the zero solver.
@@ -256,16 +267,10 @@ export function calculateTrajectory(input: BallisticInput): BallisticResult[] {
       const energyJ = 0.5 * massKg * currentV * currentV;
 
       // ── Spin drift ────────────────────────────────────────────────
-      // Resolution order:
-      //   1. user override in app settings (`featureFlags.spinDrift`),
-      //   2. profile config (`engineConfig.postProcess.spinDrift`),
-      //   3. default ON (legacy behaviour for callers without a config).
-      const userOverride = readSpinDriftOverride();
-      const spinEnabled =
-        userOverride !== undefined
-          ? userOverride
-          : engineConfig?.postProcess?.spinDrift !== false;
-      const spin = spinEnabled
+      // Decision is centralised in `provenance.postProcess.spinDrift`
+      // (built once above) — guarantees the value displayed in the UI
+      // and the value actually used here cannot diverge.
+      const spin = provenance.postProcess.spinDrift.enabled
         ? spinDriftMm(
             currentV,
             t,

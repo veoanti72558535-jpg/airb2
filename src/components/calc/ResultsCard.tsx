@@ -203,6 +203,10 @@ export function ResultsCard({
             )}
           </p>
         </div>
+        <UnitTagSurface
+          categories={['distance', 'velocity', 'energy', 'length', 'windSpeed']}
+          label="Results"
+        />
       </header>
 
       {/* Energy threshold warning — surfaced prominently right under the

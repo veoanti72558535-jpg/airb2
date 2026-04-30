@@ -48,7 +48,7 @@ const GRAINS_TO_KG = 0.00006479891;
 function readSpinDriftOverride(): boolean | undefined {
   if (typeof localStorage === 'undefined') return undefined;
   try {
-    const raw = localStorage.getItem('airballistik-settings');
+    const raw = localStorage.getItem('pcp-settings');
     if (!raw) return undefined;
     const v = JSON.parse(raw)?.featureFlags?.spinDrift;
     return typeof v === 'boolean' ? v : undefined;

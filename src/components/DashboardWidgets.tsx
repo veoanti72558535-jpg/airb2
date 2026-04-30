@@ -116,7 +116,11 @@ function LastSessionWidget() {
         <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
           <span>MV {display('velocity', last.input.muzzleVelocity).toFixed(0)} {symbol('velocity')}</span>
           <span>BC {last.input.bc}</span>
-          <span>{display('energy', lastRow.energy).toFixed(0)}{symbol('energy')} @ {display('distance', lastRow.range).toFixed(0)}{symbol('distance')}</span>
+          {/* Energy uses 1 decimal everywhere else (Dashboard, FieldMode,
+              SessionDetail) — keep parity here so the same row never
+              shows a different rounded value depending on the surface.
+              See src/lib/units-cross-surface.test.ts. */}
+          <span>{display('energy', lastRow.energy).toFixed(1)}{symbol('energy')} @ {display('distance', lastRow.range).toFixed(0)}{symbol('distance')}</span>
         </div>
       )}
     </button>

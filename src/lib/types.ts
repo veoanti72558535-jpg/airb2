@@ -536,6 +536,27 @@ export interface AppSettings {
    */
   energyThresholdJ?: number | null;
   /**
+   * Display-only number formatting for unit conversions and other
+   * derived metrics. Has ZERO effect on the ballistic engine — it
+   * still operates in SI reference (see
+   * `ballistics-units-determinism.test.ts`).
+   *
+   * - `decimals`  : 0..6 fractional digits forced on every formatted
+   *                 value. `auto` (undefined) keeps the legacy heuristic
+   *                 (≥100 → 0 dec, otherwise 2).
+   * - `scientific`: when true, values whose absolute magnitude falls
+   *                 outside `[1e-3, 1e6)` switch to exponent notation
+   *                 ("3.45e-4"), preventing dense rows of zeros for
+   *                 very small BCs or very large kJ values.
+   * - `groupThousands`: insert the active locale's thousands separator
+   *                 (NBSP in fr-FR, comma in en-US). Defaults to true.
+   */
+  numberFormat?: {
+    decimals?: number;
+    scientific?: boolean;
+    groupThousands?: boolean;
+  };
+  /**
    * A11y preferences applied at the root (`<html>`) level.
    * - `highContrast` boosts label/border contrast for both dark & light themes.
    * - `largeText` bumps the base font-size for better legibility.

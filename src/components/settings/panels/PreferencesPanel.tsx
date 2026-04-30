@@ -42,6 +42,7 @@ import {
   Clock,
   PlayCircle,
   ShieldCheck,
+  Hash,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
@@ -50,6 +51,7 @@ import { THEMES, DEFAULT_THEME } from '@/lib/theme-constants';
 import { getSettings, saveSettings, sessionStore } from '@/lib/storage';
 import { toDisplay, getDefaultUnitPrefs, getUnitSymbol } from '@/lib/units';
 import { useUnits } from '@/hooks/use-units';
+import { formatNumber, type NumberFormatPrefs } from '@/lib/number-format';
 import { getSortedFavorites, formatLastUsed, getLastSession } from '@/lib/session-favorites';
 import { markLocalUpdated, savePreferenceToSupabase } from '@/lib/preferences-sync';
 import { useAuth } from '@/lib/auth-context';
@@ -68,6 +70,19 @@ export function PreferencesPanel() {
   const { user } = useAuth();
   const { prefs, setUnitPref } = useUnits();
   const settings = getSettings();
+  const numberFormat: NumberFormatPrefs = settings.numberFormat ?? {};
+  const setNumberFormat = useCallback(
+    (patch: Partial<NumberFormatPrefs>) => {
+      const cur = getSettings();
+      saveSettings({
+        ...cur,
+        numberFormat: { ...(cur.numberFormat ?? {}), ...patch },
+      });
+      markLocalUpdated();
+      force();
+    },
+    [],
+  );
   // `advancedMode` is local-only (no Supabase column today). Locale and
   // theme have their own per-user sync paths inside their providers, so
   // this panel stays purely client-side.
@@ -315,12 +330,32 @@ export function PreferencesPanel() {
             reference values, the active column highlighted. Lets the
             user pick the unit system by SEEING the format, not by
             guessing the conversion. */}
-        <UnitsComparison activeSystem={unitSystem} t={t} />
+        <UnitsComparison
+          activeSystem={unitSystem}
+          numberFormat={numberFormat}
+          locale={locale}
+          t={t}
+        />
         {/* Per-category fine-tune — quick toggle between the 2-3 most
             common options for each category, with an inline preview.
             Goes BEYOND the system-wide switch above: a user can pick
             metric distances but imperial energy, for example. */}
-        <UnitsFineTune prefs={prefs} setUnitPref={(k, v) => { setUnitPref(k, v); force(); }} t={t} />
+        <UnitsFineTune
+          prefs={prefs}
+          setUnitPref={(k, v) => { setUnitPref(k, v); force(); }}
+          numberFormat={numberFormat}
+          locale={locale}
+          t={t}
+        />
+        {/* Precision & rounding controls — see `formatNumber()`.
+            Lives next to the unit selectors because that's where users
+            care about readability of converted values. */}
+        <NumberFormatControls
+          numberFormat={numberFormat}
+          setNumberFormat={setNumberFormat}
+          locale={locale}
+          t={t}
+        />
         {/* Determinism notice — visually distinct from the cosmetic
             `unitsHint` paragraph: a primary-tinted badge that makes
             crystal clear the engine never recomputes when units
@@ -546,9 +581,13 @@ function LangButton({
  */
 function UnitsComparison({
   activeSystem,
+  numberFormat,
+  locale,
   t,
 }: {
   activeSystem: 'metric' | 'imperial';
+  numberFormat: NumberFormatPrefs;
+  locale: 'fr' | 'en';
   t: (k: string) => string;
 }) {
   const metricPrefs = getDefaultUnitPrefs('metric');
@@ -560,8 +599,9 @@ function UnitsComparison({
     { cat: 'energy', refValue: 24, label: t('settings.preferences.unitsEnergy' as any) },
   ] as const;
 
-  const fmt = (v: number) =>
-    Number.isFinite(v) ? (Math.abs(v) >= 100 ? v.toFixed(0) : v.toFixed(2)) : '—';
+  // Delegating to the shared formatter keeps the comparison preview in
+  // sync with whatever the user picks in the precision controls below.
+  const fmt = (v: number) => formatNumber(v, numberFormat, locale);
 
   return (
     <div className="rounded-md border border-border/50 overflow-hidden">
@@ -639,10 +679,14 @@ function UnitsComparison({
 function UnitsFineTune({
   prefs,
   setUnitPref,
+  numberFormat,
+  locale,
   t,
 }: {
   prefs: Record<string, string>;
   setUnitPref: (categoryKey: string, unitValue: string) => void;
+  numberFormat: NumberFormatPrefs;
+  locale: 'fr' | 'en';
   t: (k: string) => string;
 }) {
   // Curated subset — the full option list lives in the `Unités` tab.
@@ -654,8 +698,7 @@ function UnitsFineTune({
     { cat: 'energy', refValue: 24, options: ['joules', 'ftlbs'] },
   ] as const;
 
-  const fmt = (v: number) =>
-    Number.isFinite(v) ? (Math.abs(v) >= 100 ? v.toFixed(0) : v.toFixed(2)) : '—';
+  const fmt = (v: number) => formatNumber(v, numberFormat, locale);
 
   return (
     <div className="space-y-2 pt-1">
@@ -712,5 +755,165 @@ function UnitsFineTune({
         );
       })}
     </div>
+  );
+}
+
+/**
+ * Precision & rounding controls.
+ *
+ * Three orthogonal knobs persisted to `AppSettings.numberFormat`:
+ *   • Decimals — `auto` or 0..4 (clamped to 6 by the formatter).
+ *   • Scientific — toggles exponent notation for values outside
+ *     [1e-3, 1e6).
+ *   • Group thousands — locale-aware separator (NBSP in fr, comma in en).
+ *
+ * A live preview row shows the same three sample values used by the
+ * comparison table above, so the user instantly sees the effect of
+ * each change. Reminder: this is display-only; ballistic calculations
+ * remain bit-exact (see `ballistics-units-determinism.test.ts`).
+ */
+function NumberFormatControls({
+  numberFormat,
+  setNumberFormat,
+  locale,
+  t,
+}: {
+  numberFormat: NumberFormatPrefs;
+  setNumberFormat: (patch: Partial<NumberFormatPrefs>) => void;
+  locale: 'fr' | 'en';
+  t: (k: string) => string;
+}) {
+  const decimalsValue = numberFormat.decimals;
+  const decimalsLabel = decimalsValue === undefined ? 'auto' : String(decimalsValue);
+
+  const samples = [
+    { label: '50 m → yd', value: 50 * 1.0936133 },
+    { label: '0.00012', value: 0.00012 },
+    { label: '12 345.678', value: 12345.678 },
+  ];
+
+  return (
+    <div className="space-y-2 pt-2 border-t border-border/40">
+      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+        {t('settings.preferences.numberFormatTitle' as any)}
+      </div>
+
+      {/* Decimals segmented control: auto + 0..4 */}
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-xs text-muted-foreground">
+          {t('settings.preferences.numberFormatDecimals' as any)}
+        </span>
+        <div
+          role="radiogroup"
+          aria-label={t('settings.preferences.numberFormatDecimals' as any)}
+          className="inline-flex rounded-md border border-border bg-card p-0.5 shrink-0"
+        >
+          {([undefined, 0, 1, 2, 3, 4] as const).map((d) => {
+            const active = decimalsValue === d;
+            const lbl = d === undefined ? t('settings.preferences.numberFormatAuto' as any) : String(d);
+            return (
+              <button
+                key={String(d)}
+                type="button"
+                role="radio"
+                aria-checked={active}
+                onClick={() => setNumberFormat({ decimals: d })}
+                className={cn(
+                  'px-2 py-1 rounded text-[11px] font-mono transition-colors',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                  active
+                    ? 'bg-primary/15 text-primary font-semibold ring-1 ring-inset ring-primary/25'
+                    : 'text-muted-foreground hover:bg-muted',
+                )}
+              >
+                {lbl}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Boolean toggles */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <ToggleRow
+          label={t('settings.preferences.numberFormatScientific' as any)}
+          desc={t('settings.preferences.numberFormatScientificDesc' as any)}
+          checked={numberFormat.scientific === true}
+          onChange={(v) => setNumberFormat({ scientific: v })}
+        />
+        <ToggleRow
+          label={t('settings.preferences.numberFormatGrouping' as any)}
+          desc={t('settings.preferences.numberFormatGroupingDesc' as any)}
+          checked={numberFormat.groupThousands !== false}
+          onChange={(v) => setNumberFormat({ groupThousands: v })}
+        />
+      </div>
+
+      {/* Live preview — three representative magnitudes */}
+      <div className="grid grid-cols-3 gap-2 pt-1">
+        {samples.map((s) => (
+          <div
+            key={s.label}
+            className="rounded-md border border-border/40 bg-background/40 px-2 py-1.5"
+          >
+            <div className="text-[9px] uppercase text-muted-foreground truncate">{s.label}</div>
+            <div className="text-xs font-mono font-semibold tabular-nums">
+              {formatNumber(s.value, numberFormat, locale)}
+            </div>
+          </div>
+        ))}
+      </div>
+      <p className="text-[10px] text-muted-foreground">
+        <span className="font-mono text-primary">{decimalsLabel}</span>
+        {' · '}
+        {numberFormat.scientific ? 'sci' : 'dec'}
+        {' · '}
+        {numberFormat.groupThousands === false ? 'no-group' : 'grouped'}
+      </p>
+    </div>
+  );
+}
+
+function ToggleRow({
+  label,
+  desc,
+  checked,
+  onChange,
+}: {
+  label: string;
+  desc: string;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={() => onChange(!checked)}
+      className={cn(
+        'flex items-start justify-between gap-2 rounded-md border p-2 text-left transition-colors',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+        checked ? 'border-primary/40 bg-primary/5' : 'border-border hover:bg-muted',
+      )}
+    >
+      <div className="min-w-0">
+        <div className="text-xs font-medium truncate">{label}</div>
+        <div className="text-[10px] text-muted-foreground">{desc}</div>
+      </div>
+      <div
+        className={cn(
+          'mt-0.5 h-4 w-7 rounded-full p-0.5 shrink-0 transition-colors',
+          checked ? 'bg-primary' : 'bg-muted',
+        )}
+      >
+        <div
+          className={cn(
+            'h-3 w-3 rounded-full bg-background transition-transform',
+            checked && 'translate-x-3',
+          )}
+        />
+      </div>
+    </button>
   );
 }

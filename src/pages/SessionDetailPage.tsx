@@ -50,6 +50,7 @@ import {
 import { computePointBlankRange } from '@/lib/pbr';
 import { computeZeroIntersections } from '@/lib/zero-intersections';
 import { usePbrPrefs } from '@/hooks/use-pbr-prefs';
+import { useUnits } from '@/hooks/use-units';
 import {
   buildDistanceList,
   defaultConfig,

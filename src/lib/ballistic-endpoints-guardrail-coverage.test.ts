@@ -64,7 +64,8 @@ describe('Backend SI guardrail coverage — every ballistic-* endpoint', () => {
       it('invokes `applySiGuardrail(...)` at least once', () => {
         // The helper is the single entry point: sentinel + key audit
         // (+ optional bounds). Skipping it = vulnerable endpoint.
-        const calls = src.match(/\bapplySiGuardrail\s*\(/g) ?? [];
+        // Tolerate explicit type parameters: `applySiGuardrail<T>(body)`.
+        const calls = src.match(/\bapplySiGuardrail\s*(?:<[^>]*>)?\s*\(/g) ?? [];
         expect(
           calls.length,
           `${rel} must call applySiGuardrail(body) before any computation. ` +
@@ -96,7 +97,8 @@ describe('Backend SI guardrail coverage — every ballistic-* endpoint', () => {
       it('runs the guardrail BEFORE the structural Zod schema parse', () => {
         // Order matters: guardrail first (sentinel + key audit),
         // then structural validation, then bounds, then logic.
-        const guardIdx = src.search(/\bapplySiGuardrail\s*\(/);
+        // Skip the IMPORT occurrence — only call sites count.
+        const guardIdx = src.search(/\bapplySiGuardrail\s*(?:<[^>]*>)?\s*\(/);
         const zodIdx   = src.search(/\.safeParse\s*\(|\.parse\s*\(/);
         if (guardIdx === -1 || zodIdx === -1) return; // covered by the other tests
         expect(

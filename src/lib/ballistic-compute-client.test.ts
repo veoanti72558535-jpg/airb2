@@ -35,7 +35,8 @@ const REF_INPUT: BallisticInput = {
   muzzleVelocity: 280,
   sightHeight: 40,
   zeroRange: 30,
-  targetDistance: 50,
+  maxRange: 100,
+  rangeStep: 10,
   weather: {
     temperature: 15,
     humidity: 50,

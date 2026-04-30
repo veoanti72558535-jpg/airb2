@@ -823,6 +823,7 @@ function SessionReticleTab({ session }: { session: Session }) {
 /** Bloc compact : 3 distances (zéro, médian, max) avec deltas A vs B. */
 function InlineCompareBlock({ a, b }: { a: Session; b: Session }) {
   const { t } = useI18n();
+  const { display, symbol } = useUnits();
   const [fullOpen, setFullOpen] = useState(false);
   const range = useMemo(() => defaultRange(a, b), [a, b]);
   const rows = useMemo(
@@ -862,7 +863,7 @@ function InlineCompareBlock({ a, b }: { a: Session; b: Session }) {
                   <span className="text-muted-foreground">Δ drop</span>
                   <span className={dropDelta != null && Math.abs(dropDelta) > 0.5 ? 'text-primary font-semibold' : ''}>
                     {dropDelta != null
-                      ? `${dropDelta > 0 ? '+' : ''}${dropDelta.toFixed(1)} mm`
+                      ? `${dropDelta > 0 ? '+' : ''}${display('length', dropDelta).toFixed(1)} ${symbol('length')}`
                       : '—'}
                   </span>
                 </div>
@@ -870,7 +871,7 @@ function InlineCompareBlock({ a, b }: { a: Session; b: Session }) {
                   <span className="text-muted-foreground">Δ V</span>
                   <span>
                     {velDelta != null
-                      ? `${velDelta > 0 ? '+' : ''}${velDelta.toFixed(1)} m/s`
+                      ? `${velDelta > 0 ? '+' : ''}${display('velocity', velDelta).toFixed(1)} ${symbol('velocity')}`
                       : '—'}
                   </span>
                 </div>

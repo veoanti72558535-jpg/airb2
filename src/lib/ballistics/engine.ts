@@ -38,6 +38,26 @@ const GRAVITY = 9.80665; // m/s²
 const GRAINS_TO_KG = 0.00006479891;
 
 /**
+ * Resolve the user-level spin-drift override stored under the app
+ * settings key. Returns `undefined` when no override is set or when
+ * localStorage is unavailable (SSR / tests). Pure read, no throw.
+ *
+ * The engine intentionally avoids a hard import on `src/lib/storage`
+ * to stay framework-free and keep its unit tests dependency-light.
+ */
+function readSpinDriftOverride(): boolean | undefined {
+  if (typeof localStorage === 'undefined') return undefined;
+  try {
+    const raw = localStorage.getItem('pcp-settings');
+    if (!raw) return undefined;
+    const v = JSON.parse(raw)?.featureFlags?.spinDrift;
+    return typeof v === 'boolean' ? v : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
  * Build the Cd resolver for a given config. When the atmosphere model is
  * `tetens-full` AND the retardation mode is NOT `chairgun-direct`, we swap
  * the Cd source to MERO tables — because the `mero` profile is the primary
@@ -236,7 +256,16 @@ export function calculateTrajectory(input: BallisticInput): BallisticResult[] {
       const energyJ = 0.5 * massKg * currentV * currentV;
 
       // ── Spin drift ────────────────────────────────────────────────
-      const spin = (engineConfig?.postProcess?.spinDrift !== false)
+      // Resolution order:
+      //   1. user override in app settings (`featureFlags.spinDrift`),
+      //   2. profile config (`engineConfig.postProcess.spinDrift`),
+      //   3. default ON (legacy behaviour for callers without a config).
+      const userOverride = readSpinDriftOverride();
+      const spinEnabled =
+        userOverride !== undefined
+          ? userOverride
+          : engineConfig?.postProcess?.spinDrift !== false;
+      const spin = spinEnabled
         ? spinDriftMm(
             currentV,
             t,

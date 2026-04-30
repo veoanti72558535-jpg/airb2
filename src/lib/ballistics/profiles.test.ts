@@ -32,9 +32,10 @@ describe('profiles — P1 registry', () => {
     expect(LEGACY_PROFILE.config.dt).toBe(0.0005);
   });
 
-  it('post-processings: only spin drift active in legacy', () => {
+  it('post-processings: legacy disables spin drift by default (PCP regime)', () => {
     expect(LEGACY_PROFILE.config.postProcess).toEqual({
-      spinDrift: true,
+      // PCP airgun default — see comment in profiles.ts.
+      spinDrift: false,
       coriolis: false,
       cant: false,
       slopeAngle: false,

@@ -1890,6 +1890,11 @@ const fr = {
   'truing.errDistBeyondZero': 'Distance doit dépasser le zéro ({zero} m)',
   'settings.featureTruing': 'Calibration BC (Truing)',
   'settings.featureTruingDesc': 'Activer le panneau de calibration BC sur les sessions',
+  'settings.featureSpinDrift': 'Dérive gyroscopique (spin drift)',
+  'settings.featureSpinDriftDesc': 'Désactivée par défaut pour les profils PCP (vitesses sub-soniques). Activez-la pour les slugs > 250 m/s ou pour comparer avec des balisticiens centerfire.',
+  'settings.spinDriftAuto': 'Auto (profil)',
+  'settings.spinDriftOn': 'Activée',
+  'settings.spinDriftOff': 'Désactivée',
 
   // AI web-search agents (BUILD-IA web search)
   'agentSearch.searchProjectile': 'Rechercher un projectile (IA)',
@@ -4056,6 +4061,11 @@ const en: Record<keyof typeof fr, string> = {
   'truing.errDistBeyondZero': 'Distance must exceed zero ({zero} m)',
   'settings.featureTruing': 'BC Calibration (Truing)',
   'settings.featureTruingDesc': 'Enable BC calibration panel on sessions',
+  'settings.featureSpinDrift': 'Gyroscopic spin drift',
+  'settings.featureSpinDriftDesc': 'Disabled by default for PCP profiles (sub-sonic velocities). Enable it for slugs > 250 m/s or to cross-check with centerfire ballistic apps.',
+  'settings.spinDriftAuto': 'Auto (profile)',
+  'settings.spinDriftOn': 'On',
+  'settings.spinDriftOff': 'Off',
 
   // AI web-search agents
   'agentSearch.searchProjectile': 'Search projectile (AI)',

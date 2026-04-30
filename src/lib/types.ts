@@ -526,6 +526,18 @@ export interface AppSettings {
     weather: boolean;
     /** When true, the BC truing panel is available on sessions. Default true. */
     truing?: boolean;
+    /**
+     * Spin drift override (tri-state):
+     *  - `undefined` → use the profile's `postProcess.spinDrift` (default).
+     *  - `true`  → force spin drift ON regardless of profile.
+     *  - `false` → force spin drift OFF regardless of profile.
+     *
+     * Default behaviour leaves PCP-class profiles (legacy / mero) with
+     * spin drift OFF — gyroscopic drift is physically negligible at
+     * sub-sonic airgun velocities. Slug shooters reaching 250+ m/s can
+     * opt-in here without switching profile.
+     */
+    spinDrift?: boolean;
   };
   /** When true, the calculator may suggest auto-fill from a weather provider. */
   weatherAutoSuggest?: boolean;

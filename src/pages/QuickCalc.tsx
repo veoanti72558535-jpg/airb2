@@ -783,6 +783,26 @@ export default function QuickCalc() {
           animate={{ opacity: 1, y: 0 }}
           className="space-y-4"
         >
+          {siStatus === 'verified' && (
+            <div
+              data-testid="si-guardrail-badge"
+              data-status="verified"
+              className="inline-flex items-center gap-1 rounded-md border border-primary/40 bg-primary/10 px-2 py-0.5 text-[10px] font-mono uppercase tracking-wide text-primary"
+              title="Payload validé par le guardrail SI backend."
+            >
+              SI ✓ verified
+            </div>
+          )}
+          {siStatus === 'unverified' && (
+            <div
+              data-testid="si-guardrail-badge"
+              data-status="unverified"
+              className="inline-flex items-center gap-1 rounded-md border border-warning/40 bg-warning/10 px-2 py-0.5 text-[10px] font-mono uppercase tracking-wide text-warning"
+              title="Guardrail backend indisponible (offline / non authentifié) — calcul local uniquement."
+            >
+              SI · local-only (unverified)
+            </div>
+          )}
           <ResultsCard
             result={heroResult}
             rows={tableRows}

@@ -64,8 +64,12 @@ describe('Backend SI guardrail coverage — every ballistic-* endpoint', () => {
       it('invokes `applySiGuardrail(...)` at least once', () => {
         // The helper is the single entry point: sentinel + key audit
         // (+ optional bounds). Skipping it = vulnerable endpoint.
-        // Tolerate explicit type parameters: `applySiGuardrail<T>(body)`.
-        const calls = src.match(/\bapplySiGuardrail\s*(?:<[^>]*>)?\s*\(/g) ?? [];
+        // Tolerate explicit type parameters, including nested generics
+        // like `applySiGuardrail<Record<string, unknown>>(body)`. We
+        // match any chars up to the call paren, conservatively excluding
+        // newlines (so `import { applySiGuardrail, …\n}` is not counted).
+        const calls =
+          src.match(/\bapplySiGuardrail\s*(?:<[^\n;]*>)?\s*\(/g) ?? [];
         expect(
           calls.length,
           `${rel} must call applySiGuardrail(body) before any computation. ` +
@@ -98,7 +102,9 @@ describe('Backend SI guardrail coverage — every ballistic-* endpoint', () => {
         // Order matters: guardrail first (sentinel + key audit),
         // then structural validation, then bounds, then logic.
         // Skip the IMPORT occurrence — only call sites count.
-        const guardIdx = src.search(/\bapplySiGuardrail\s*(?:<[^>]*>)?\s*\(/);
+        const guardIdx = src.search(
+          /\bapplySiGuardrail\s*(?:<[^\n;]*>)?\s*\(/,
+        );
         const zodIdx   = src.search(/\.safeParse\s*\(|\.parse\s*\(/);
         if (guardIdx === -1 || zodIdx === -1) return; // covered by the other tests
         expect(

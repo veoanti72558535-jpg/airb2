@@ -54,9 +54,10 @@ import {
   hasOverride,
   listSections,
   resetSeedSection,
+  subscribeOverrideChanges,
   upsertSection,
 } from '@/lib/docs-fx/store';
-import { invalidateSearchIndex, listAllTags, paginate, searchDocs } from '@/lib/docs-fx/search';
+import { listAllTags, paginate, searchDocs } from '@/lib/docs-fx/search';
 import type { DocSection, DocCategory } from '@/lib/docs-fx/types';
 import { DOC_CATEGORIES } from '@/lib/docs-fx/types';
 import { SectionEditorDialog } from '@/components/docs-fx/SectionEditorDialog';
@@ -88,11 +89,10 @@ function useReadSections(includeDrafts: boolean): DocSection[] {
   // We track a tick to force refresh after writes.
   const [tick, setTick] = useState(0);
   useEffect(() => {
-    function onStorage(e: StorageEvent) {
-      if (e.key && e.key.startsWith('airballistik:docs-fx')) setTick((x) => x + 1);
-    }
-    window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
+    // Subscribe via the store's pub/sub so we react to BOTH same-tab
+    // mutations (which native `storage` events don't fire) AND cross-tab
+    // edits (re-broadcast by the store from the `storage` event).
+    return subscribeOverrideChanges(() => setTick((x) => x + 1));
   }, []);
   const sections = useMemo(() => {
     void tick;
@@ -116,8 +116,12 @@ export default function DocsFxPage() {
   const [confirmDelete, setConfirmDelete] = useState<DocSection | null>(null);
   const [refreshTick, setRefreshTick] = useState(0);
 
-  // Read sections (drafts only visible to admin)
+  // Read sections (drafts only visible to admin) AND keep the page tick in
+  // sync with override mutations (auto-invalidates Fuse via the store).
   void useReadSections(isAdmin);
+  useEffect(() => {
+    return subscribeOverrideChanges(() => setRefreshTick((x) => x + 1));
+  }, []);
 
   const allTags = useMemo(() => {
     void refreshTick;
@@ -159,11 +163,6 @@ export default function DocsFxPage() {
     });
   }
 
-  function refreshAll() {
-    invalidateSearchIndex();
-    setRefreshTick((x) => x + 1);
-  }
-
   function clearFilters() {
     setQuery('');
     setActiveTags([]);
@@ -180,19 +179,16 @@ export default function DocsFxPage() {
   }
   function handleSave(input: Parameters<typeof upsertSection>[0]) {
     upsertSection(input);
-    refreshAll();
     setEditorOpen(false);
     toast.success(t('docsFx.toast.saved'));
   }
   function handleDelete(section: DocSection) {
     deleteSection(section.id);
-    refreshAll();
     setConfirmDelete(null);
     toast.success(section.fromSeed ? t('docsFx.toast.hidden') : t('docsFx.toast.deleted'));
   }
   function handleResetSeed(section: DocSection) {
     resetSeedSection(section.id);
-    refreshAll();
     toast.success(t('docsFx.toast.reset'));
   }
 

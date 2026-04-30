@@ -41,6 +41,7 @@ import {
   Ruler,
   Clock,
   PlayCircle,
+  ShieldCheck,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
@@ -320,6 +321,26 @@ export function PreferencesPanel() {
             Goes BEYOND the system-wide switch above: a user can pick
             metric distances but imperial energy, for example. */}
         <UnitsFineTune prefs={prefs} setUnitPref={(k, v) => { setUnitPref(k, v); force(); }} t={t} />
+        {/* Determinism notice — visually distinct from the cosmetic
+            `unitsHint` paragraph: a primary-tinted badge that makes
+            crystal clear the engine never recomputes when units
+            change. Mirrors the contract enforced by
+            `ballistics-units-determinism.test.ts`. */}
+        <div
+          role="note"
+          aria-label={t('settings.preferences.unitsDeterministic' as any)}
+          className="flex items-start gap-2 rounded-md border border-primary/25 bg-primary/5 p-2.5"
+        >
+          <ShieldCheck className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+          <div className="min-w-0">
+            <div className="text-[11px] font-medium text-primary">
+              {t('settings.preferences.unitsDeterministic' as any)}
+            </div>
+            <p className="text-[10px] text-muted-foreground leading-relaxed">
+              {t('settings.preferences.unitsDeterministicDesc' as any)}
+            </p>
+          </div>
+        </div>
         <p className="text-[10px] text-muted-foreground">
           {t('settings.preferences.unitsHint' as any)}
         </p>

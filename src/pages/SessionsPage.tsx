@@ -25,6 +25,7 @@ import { normalizeSession } from '@/lib/session-normalize';
 import { BallisticTable } from '@/components/calc/BallisticTable';
 import { ZeroIntersectionsCard } from '@/components/calc/ZeroIntersectionsCard';
 import { TrajectoryMiniChart } from '@/components/calc/TrajectoryMiniChart';
+import { useUnits } from '@/hooks/use-units';
 import { PbrCard } from '@/components/calc/PbrCard';
 import { AdvancedTrajectoryChart } from '@/components/calc/AdvancedTrajectoryChart';
 import { computeZeroIntersections } from '@/lib/zero-intersections';
@@ -54,6 +55,10 @@ export default function SessionsPage() {
   const { t } = useI18n();
   const navigate = useNavigate();
   const settings = getSettings();
+  const { display, symbol } = useUnits();
+  const distSym = symbol('distance');
+  const lengthSym = symbol('length');
+  const velSym = symbol('velocity');
   const truingEnabled = settings.featureFlags.truing !== false;
   const isAdvanced = settings.advancedMode;
   const [sessions, setSessions] = useState<Session[]>(sessionStore.getAll());

@@ -64,3 +64,32 @@ export function formatLastUsed(iso: string | undefined, locale: 'fr' | 'en'): st
   const y = Math.round(d / 365);
   return locale === 'fr' ? `il y a ${y} an${y > 1 ? 's' : ''}` : `${y}y ago`;
 }
+
+/**
+ * Return the "last used" session — the one with the most recent
+ * `updatedAt`, falling back to `createdAt` if `updatedAt` is missing
+ * or invalid (legacy rows). This is the canonical "Reprendre la
+ * dernière session" target shared by:
+ *   • the Dashboard "Dernière session" widget,
+ *   • the Preferences "Reprendre" shortcut.
+ *
+ * Returns `null` when the store is empty.
+ *
+ * Why not just use `sessions[length - 1]`? Insertion order doesn't
+ * track usage — opening, recalculating or favoriting a session bumps
+ * `updatedAt`, so this function reflects what the user actually
+ * touched last, not just what they saved last.
+ */
+export function getLastSession(sessions: readonly Session[]): Session | null {
+  if (sessions.length === 0) return null;
+  let best: Session | null = null;
+  let bestT = -Infinity;
+  for (const s of sessions) {
+    const t = Date.parse(s.updatedAt) || Date.parse(s.createdAt) || 0;
+    if (t > bestT) {
+      bestT = t;
+      best = s;
+    }
+  }
+  return best;
+}

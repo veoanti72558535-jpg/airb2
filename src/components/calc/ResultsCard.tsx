@@ -1,9 +1,11 @@
-import { TrendingDown, Wind, Zap, Clock, Crosshair, Compass, Cloud, AlertTriangle } from 'lucide-react';
+import { TrendingDown, Wind, Zap, Clock, Crosshair, Compass, Cloud, AlertTriangle, Globe2, Info } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { BallisticResult, OpticFocalPlane, WeatherSnapshot } from '@/lib/types';
 import { useUnits } from '@/hooks/use-units';
 import { cn } from '@/lib/utils';
 import { UnitTagSurface } from '@/components/devtools/UnitTagSurface';
+import { getSettings } from '@/lib/storage';
+import type { EngineConfig } from '@/lib/ballistics/types';
 
 interface Props {
   result: BallisticResult;
@@ -23,6 +25,14 @@ interface Props {
    * warning entirely. `undefined` falls back to a sensible default.
    */
   energyThresholdJ?: number | null;
+  /**
+   * Engine config used to produce `result`. When provided, the
+   * "Where does the drift come from?" panel can name the active wind
+   * model and Coriolis state instead of inferring them. Optional —
+   * callers that don't pass an explicit profile (e.g. legacy QuickCalc)
+   * fall back to lateral-only / Coriolis-off.
+   */
+  engineConfig?: EngineConfig;
 }
 
 function Stat({
